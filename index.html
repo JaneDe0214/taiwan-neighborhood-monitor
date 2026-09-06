@@ -9835,8 +9835,8 @@ class MonitorApp {
         }
       }
 
-      // 依中心需求切換預設宮格：觀光名勝開啟預設全部宮格 (grid-all)
-      if (centerId === 'tourist') {
+      // 依中心需求切換預設宮格：桃園青埔、新北新埔與觀光名勝頁面預設全部宮格 (grid-all)
+      if (centerId === 'tourist' || centerId === 'qingpu' || centerId === 'banqiao') {
         this.currentGridMode = 'grid-all';
         this.previousGridMode = 'grid-all';
         this.focusedCamId = null;
@@ -9851,9 +9851,9 @@ class MonitorApp {
             btn.classList.remove('active');
           }
         });
-      } else if (this.currentGridMode === 'grid-all') {
-        // 從觀光名勝切回其他生活圈時，若當前為全部宮格，自動復原為該中心標準預設宮格 (如雙城預設 6 宮格)
-        const defaultMode = (centerId === 'dual') ? 'grid-6' : 'grid-6';
+      } else if (centerId === 'dual') {
+        // 從單一生活圈切回雙城同步生活圈時，自動套用雙城標準預設宮格 (雙城預設 6 宮格：青埔 3 + 新埔 3 各半均分)
+        const defaultMode = 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
         this.focusedCamId = null;
