@@ -6153,7 +6153,10 @@ class WeatherEnvironmentMonitor {
     ];
     this.isSnapshotMode = false; // 積極連線模式
     this.youbikeRealtimeFetched = false;
-    this.youbikeUpdateTime = '連線中...';
+    const nowInit = new Date();
+    const initH = String(nowInit.getHours()).padStart(2, '0');
+    const initM = String(nowInit.getMinutes()).padStart(2, '0');
+    this.youbikeUpdateTime = `${initH}:${initM}`;
     // 立即積極抓取最新車況
     this.fetchRealtimeYouBike(true);
     // 每 30 秒積極持續輪詢 YouBike 2.0 官方即時數據 (交通部 TDX 官方直連)
@@ -7395,46 +7398,46 @@ class WeatherEnvironmentMonitor {
       return;
     }
 
-    // 判斷是否為本機開發環境 (localhost / 127.0.0.1 / file:)
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+    // 判斷是否為 Android 原生應用程式環境 (APK 運作中，擁有原生注入橋接或 file: 協議)
+    const isAndroidApp = typeof window !== 'undefined' && 
+      (window.AndroidBridge != null || window.location.protocol === 'file:');
 
-    // 1. 同源整合資料端點 (適用於 GitHub Pages 純靜態環境，同源零 CORS 且秒開)
-    const staticDataUrls = [
+    // 僅在真正的本機 Node.js 開發環境才啟用 3000 埠代理 (排除 Android APK 原生環境，徹底杜絕逾時卡滯)
+    const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    // 雲端與同源整合資料端點 (GitHub Actions 每 5 分鐘自動推送最新車況，支援純靜態/APK 免 CORS 直連)
+    const cloudDataUrls = [
+      'https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/youbike.json',
+      'https://janede0214.github.io/taiwan-neighborhood-monitor/data/youbike.json',
       'data/youbike.json',
       './data/youbike.json',
       '../data/youbike.json'
     ];
 
-    // 2. 本機代理端點 (僅本機環境啟用，線上環境跳過以避免 Mixed Content 警告)
-    const ntpcEndpoints = isLocal ? [
+    // 本機代理端點 (僅真正的本機 Node.js 環境啟用)
+    const ntpcEndpoints = isLocalNodeServer ? [
       '/api/youbike/ntpc',
-      'http://127.0.0.1:3000/api/youbike/ntpc',
-      'http://localhost:3000/api/youbike/ntpc'
+      'http://127.0.0.1:3000/api/youbike/ntpc'
     ] : [];
 
-    const tycgEndpoints = isLocal ? [
+    const tycgEndpoints = isLocalNodeServer ? [
       '/api/youbike/tycg',
-      'http://127.0.0.1:3000/api/youbike/tycg',
-      'http://localhost:3000/api/youbike/tycg'
+      'http://127.0.0.1:3000/api/youbike/tycg'
     ] : [];
 
-    // 安全取得 JSON 函式 (針對同源靜態檔案加入 Cache-Busting 時間戳與 no-store，確保常駐網頁無需手動重開即可即時捕捉 GitHub Actions 最新更新)
+    // 安全取得 JSON 函式 (支援快取破除時間戳與 3500ms 快速容錯)
     const fetchJsonSafe = async (urls) => {
       const ts = Date.now();
       for (const rawUrl of urls) {
         try {
-          const isStatic = !rawUrl.startsWith('http') && !rawUrl.startsWith('/api');
           const sep = rawUrl.includes('?') ? '&' : '?';
-          const fetchUrl = isStatic ? `${rawUrl}${sep}_t=${ts}` : rawUrl;
-          const fetchOptions = isStatic ? {
+          const fetchUrl = `${rawUrl}${sep}_t=${ts}`;
+          const res = await fetch(fetchUrl, {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-            signal: AbortSignal.timeout(4000)
-          } : {
-            signal: AbortSignal.timeout(4000)
-          };
-          const res = await fetch(fetchUrl, fetchOptions);
+            signal: AbortSignal.timeout(3500)
+          });
           if (res.ok) {
             const data = await res.json();
             if (data) return data;
@@ -7451,8 +7454,25 @@ class WeatherEnvironmentMonitor {
       let tycgRaw = null;
       let staticUpdateTime = '';
 
-      // 步驟 A: 若為本機環境，優先嘗試讀取本機即時代理 (node server.js)
-      if (isLocal && ntpcEndpoints.length > 0) {
+      // 途徑 1：若是 Android 原生環境，優先調用原生 AndroidNativeBridge 高速直取雲端或內建資產庫 (零 CORS、零阻擋)
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+        try {
+          const cloudStr = window.AndroidBridge.getLatestCloudData('youbike');
+          if (cloudStr && cloudStr.trim().startsWith('{')) {
+            const parsed = JSON.parse(cloudStr);
+            if (parsed && (parsed.ntpc || parsed.tycg)) {
+              ntpcData = parsed.ntpc || null;
+              tycgRaw = parsed.tycg || null;
+              if (parsed.updateTimeDisplay) staticUpdateTime = parsed.updateTimeDisplay;
+            }
+          }
+        } catch (e) {
+          console.warn('[YouBike 原生橋接直取]', e.message);
+        }
+      }
+
+      // 途徑 2：若為電腦本機開發環境，優先嘗試本機伺服器代理
+      if (!ntpcData && !tycgRaw && isLocalNodeServer && ntpcEndpoints.length > 0) {
         let [ntpcRes, tycgRes] = await Promise.allSettled([
           fetchJsonSafe(ntpcEndpoints),
           fetchJsonSafe(tycgEndpoints)
@@ -7461,14 +7481,14 @@ class WeatherEnvironmentMonitor {
         tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
       }
 
-      // 步驟 B: 若非本機環境 (GitHub Pages 純靜態環境) 或本機代理未啟動，立即讀取同源 data/youbike.json
+      // 途徑 3：雲端資料庫直連 (GitHub Actions 每 5 分鐘推送最新資料庫) 與同源備援
       if (!ntpcData && !tycgRaw) {
-        const staticJson = await fetchJsonSafe(staticDataUrls);
-        if (staticJson) {
-          ntpcData = staticJson.ntpc || null;
-          tycgRaw = staticJson.tycg || null;
-          if (staticJson.updateTimeDisplay) {
-            staticUpdateTime = staticJson.updateTimeDisplay;
+        const cloudJson = await fetchJsonSafe(cloudDataUrls);
+        if (cloudJson) {
+          ntpcData = cloudJson.ntpc || null;
+          tycgRaw = cloudJson.tycg || null;
+          if (cloudJson.updateTimeDisplay) {
+            staticUpdateTime = cloudJson.updateTimeDisplay;
           }
         }
       }
@@ -7654,7 +7674,7 @@ class WeatherEnvironmentMonitor {
     const syncBadgeEl = document.getElementById('youbikeSyncText');
     if (syncBadgeEl) {
       const cleanTime = (this.youbikeUpdateTime || '').replace(/[^0-9:]/g, '').trim();
-      const displayTime = cleanTime || '連線中...';
+      const displayTime = cleanTime || '即時同步';
       syncBadgeEl.textContent = `${displayTime} 更新`;
       syncBadgeEl.title = this.youbikeRealtimeFetched ? '官方即時連線更新' : '官方最新數據';
       if (syncBadgeEl.style) syncBadgeEl.style.cursor = 'default';
@@ -8626,41 +8646,72 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 非同步抓取台北捷運/環狀線即時到站看板與車廂擁擠度 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
+  // 非同步抓取台北捷運/環狀線即時到站看板與車廂擁擠度 (Android 原生直通 + GitHub 雲端每 5 分鐘資料庫 + 本地資產多重容錯)
   async fetchMetroLiveboard(force = false) {
     const nowMs = Date.now();
     if (!force && nowMs - this.metroLastFetchTime < 15000) return;
 
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+    const isAndroidApp = typeof window !== 'undefined' && 
+      (window.AndroidBridge != null || window.location.protocol === 'file:');
+    const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
     try {
       let res = null;
       let weightRes = null;
 
-      if (isLocal) {
+      // 途徑 1：若是 Android 原生環境，優先調用原生 AndroidNativeBridge 高速直取
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+        try {
+          const raw = window.AndroidBridge.getLatestCloudData('metro-live');
+          if (raw && raw.trim().startsWith('{')) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.trains)) {
+              res = { 
+                success: true, 
+                data: parsed.trains,
+                updatedAt: parsed.updatedAt || null 
+              };
+            }
+            if (parsed && parsed.carWeight) {
+              weightRes = { success: true, data: parsed.carWeight };
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 途徑 2：若為電腦本機開發環境，嘗試本機 Node.js 代理
+      if (!res && isLocalNodeServer) {
         res = await fetch('/api/metro/liveboard', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
         weightRes = await fetch('/api/metro/carweight', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
       }
 
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援
       if (!res) {
-        // GitHub Pages 純靜態環境：帶時間戳讀取同源 data/metro-live.json，穿透 CDN/瀏覽器快取
-        const staticLive = await fetch(`data/metro-live.json?_t=${nowMs}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-          signal: AbortSignal.timeout(4000)
-        }).then(r => r.ok ? r.json() : null).catch(() => null);
+        const candidateUrls = [
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json?_t=${nowMs}`,
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json?_t=${nowMs}`,
+          `data/metro-live.json?_t=${nowMs}`
+        ];
+        for (const u of candidateUrls) {
+          const staticLive = await fetch(u, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+            signal: AbortSignal.timeout(3500)
+          }).then(r => r.ok ? r.json() : null).catch(() => null);
 
-        if (staticLive) {
-          if (Array.isArray(staticLive.trains)) {
-            res = { 
-              success: true, 
-              data: staticLive.trains,
-              updatedAt: staticLive.updatedAt || null 
-            };
-          }
-          if (staticLive.carWeight) {
-            weightRes = { success: true, data: staticLive.carWeight };
+          if (staticLive) {
+            if (Array.isArray(staticLive.trains)) {
+              res = { 
+                success: true, 
+                data: staticLive.trains,
+                updatedAt: staticLive.updatedAt || null 
+              };
+            }
+            if (staticLive.carWeight) {
+              weightRes = { success: true, data: staticLive.carWeight };
+            }
+            break;
           }
         }
       }
@@ -8682,30 +8733,55 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 非同步抓取高鐵桃園站即時剩餘停車位 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
+  // 非同步抓取高鐵桃園站即時剩餘停車位 (Android 原生直通 + GitHub 雲端資料庫 + 本地資產多重容錯)
   async fetchParkingData(force = false) {
     const nowMs = Date.now();
     if (!force && this.parkingLastFetchTime && nowMs - this.parkingLastFetchTime < 30000) return;
 
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+    const isAndroidApp = typeof window !== 'undefined' && 
+      (window.AndroidBridge != null || window.location.protocol === 'file:');
+    const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
     try {
       let res = null;
-      if (isLocal) {
+
+      // 途徑 1：Android 原生直取
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+        try {
+          const raw = window.AndroidBridge.getLatestCloudData('parking');
+          if (raw && raw.trim().startsWith('{')) {
+            const parsed = JSON.parse(raw);
+            if (parsed && Array.isArray(parsed.lots)) {
+              res = { success: true, lots: parsed.lots };
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 途徑 2：本機 Node.js 代理
+      if (!res && isLocalNodeServer) {
         res = await fetch('/api/parking/thsr', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
       }
 
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援
       if (!res || !res.lots) {
-        // GitHub Pages 純靜態環境：帶時間戳讀取同源 data/parking.json，穿透 CDN/瀏覽器快取
-        const staticParking = await fetch(`data/parking.json?_t=${nowMs}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-          signal: AbortSignal.timeout(4000)
-        }).then(r => r.ok ? r.json() : null).catch(() => null);
+        const candidateUrls = [
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json?_t=${nowMs}`,
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json?_t=${nowMs}`,
+          `data/parking.json?_t=${nowMs}`
+        ];
+        for (const u of candidateUrls) {
+          const staticParking = await fetch(u, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+            signal: AbortSignal.timeout(3500)
+          }).then(r => r.ok ? r.json() : null).catch(() => null);
 
-        if (staticParking && Array.isArray(staticParking.lots)) {
-          res = { success: true, lots: staticParking.lots };
+          if (staticParking && Array.isArray(staticParking.lots)) {
+            res = { success: true, lots: staticParking.lots };
+            break;
+          }
         }
       }
 
@@ -8938,37 +9014,62 @@ class TwinCityTransitMonitor {
     return true;
   }
 
-  // 非同步抓取最新台灣高鐵官方班表 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
+  // 非同步抓取最新台灣高鐵官方班表 (Android 原生直通 + GitHub 雲端資料庫 + 本地資產多重容錯)
   async fetchThsrRealtime(force = false) {
     const nowMs = Date.now();
     // 至少間隔 5 分鐘再請求一次 (若指定 force 則強制穿透)
     if (!force && nowMs - this.thsrLastFetchTime < 300000) return;
 
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+    const isAndroidApp = typeof window !== 'undefined' && 
+      (window.AndroidBridge != null || window.location.protocol === 'file:');
+    const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
     try {
       let southRes = null;
       let northRes = null;
 
-      if (isLocal) {
+      // 途徑 1：Android 原生直取
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+        try {
+          const raw = window.AndroidBridge.getLatestCloudData('thsr');
+          if (raw && raw.trim().startsWith('{')) {
+            const parsed = JSON.parse(raw);
+            if (parsed) {
+              southRes = parsed.south;
+              northRes = parsed.north;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 途徑 2：本機 Node.js 代理
+      if (!southRes && !northRes && isLocalNodeServer) {
         [southRes, northRes] = await Promise.all([
           fetch('/api/thsr/south', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null),
           fetch('/api/thsr/north', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
       }
 
-      // 若非本機環境 (GitHub Pages 純靜態環境) 或本機代理未開啟，讀取同源 data/thsr.json (帶時間戳穿透快取)
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援
       if (!southRes && !northRes) {
-        const thsrJson = await fetch(`data/thsr.json?_t=${nowMs}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-          signal: AbortSignal.timeout(4000)
-        }).then(r => r.ok ? r.json() : null).catch(() => null);
+        const candidateUrls = [
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json?_t=${nowMs}`,
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json?_t=${nowMs}`,
+          `data/thsr.json?_t=${nowMs}`
+        ];
+        for (const u of candidateUrls) {
+          const thsrJson = await fetch(u, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+            signal: AbortSignal.timeout(3500)
+          }).then(r => r.ok ? r.json() : null).catch(() => null);
 
-        if (thsrJson) {
-          southRes = thsrJson.south;
-          northRes = thsrJson.north;
+          if (thsrJson) {
+            southRes = thsrJson.south;
+            northRes = thsrJson.north;
+            break;
+          }
         }
       }
 
@@ -9010,37 +9111,62 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 非同步抓取最新桃園機場捷運官方班表 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
+  // 非同步抓取最新桃園機場捷運官方班表 (Android 原生直通 + GitHub 雲端資料庫 + 本地資產多重容錯)
   async fetchTymetroRealtime(force = false) {
     const nowMs = Date.now();
     // 至少間隔 5 分鐘再請求一次 (若指定 force 則強制穿透)
     if (!force && nowMs - this.tymetroLastFetchTime < 300000) return;
 
-    const isLocal = typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+    const isAndroidApp = typeof window !== 'undefined' && 
+      (window.AndroidBridge != null || window.location.protocol === 'file:');
+    const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
     try {
       let southRes = null;
       let northRes = null;
 
-      if (isLocal) {
+      // 途徑 1：Android 原生直取
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+        try {
+          const raw = window.AndroidBridge.getLatestCloudData('tymetro');
+          if (raw && raw.trim().startsWith('{')) {
+            const parsed = JSON.parse(raw);
+            if (parsed) {
+              southRes = parsed.south;
+              northRes = parsed.north;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 途徑 2：本機 Node.js 代理
+      if (!southRes && !northRes && isLocalNodeServer) {
         [southRes, northRes] = await Promise.all([
           fetch('/api/tymetro/south', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null),
           fetch('/api/tymetro/north', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null)
         ]);
       }
 
-      // 若非本機環境 (GitHub Pages 純靜態環境) 或本機代理未開啟，讀取同源 data/tymetro.json (帶時間戳穿透快取)
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援
       if (!southRes && !northRes) {
-        const tymetroJson = await fetch(`data/tymetro.json?_t=${nowMs}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-          signal: AbortSignal.timeout(4000)
-        }).then(r => r.ok ? r.json() : null).catch(() => null);
+        const candidateUrls = [
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json?_t=${nowMs}`,
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json?_t=${nowMs}`,
+          `data/tymetro.json?_t=${nowMs}`
+        ];
+        for (const u of candidateUrls) {
+          const tymetroJson = await fetch(u, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+            signal: AbortSignal.timeout(3500)
+          }).then(r => r.ok ? r.json() : null).catch(() => null);
 
-        if (tymetroJson) {
-          southRes = tymetroJson.south;
-          northRes = tymetroJson.north;
+          if (tymetroJson) {
+            southRes = tymetroJson.south;
+            northRes = tymetroJson.north;
+            break;
+          }
         }
       }
 

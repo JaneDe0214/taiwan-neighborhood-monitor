@@ -89,6 +89,10 @@ class MainActivity : ComponentActivity() {
         s.builtInZoomControls = false
         s.allowFileAccess = true
         s.allowContentAccess = true
+        @Suppress("DEPRECATION")
+        s.allowFileAccessFromFileURLs = true
+        @Suppress("DEPRECATION")
+        s.allowUniversalAccessFromFileURLs = true
 
         // 允許即時視訊串流自動起播，無需使用者點擊
         s.mediaPlaybackRequiresUserGesture = false
@@ -129,14 +133,17 @@ class MainActivity : ComponentActivity() {
                 request: WebResourceRequest?
             ): WebResourceResponse? {
                 val url = request?.url?.toString() ?: return null
-                // 針對即時大眾運輸與天氣 API 透過原生網路層加速
-                if (url.contains("/api/") || url.contains("opendata.vip") || url.contains("tdx")) {
-                    try {
-                        val nativeRes = fetchNativeUrl(url)
-                        if (nativeRes != null) {
-                            return nativeRes
-                        }
-                    } catch (_: Exception) {}
+                // 針對外部雲端資料庫與各官方 API 走原生網路連線，秒開且無 CORS 限制
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                    if (url.contains("raw.githubusercontent.com") || url.contains("janede0214.github.io") ||
+                        url.contains("opendata.vip") || url.contains("tdx") || url.contains("data.ntpc.gov.tw") ||
+                        url.contains("opendata.tycg.gov.tw") || url.contains("cwa.gov.tw") || url.contains("thsrc.com.tw")
+                    ) {
+                        try {
+                            val nativeRes = fetchNativeUrl(url)
+                            if (nativeRes != null) return nativeRes
+                        } catch (_: Exception) {}
+                    }
                 }
                 return super.shouldInterceptRequest(view, request)
             }
@@ -265,6 +272,88 @@ class AndroidNativeBridge(
 
     @JavascriptInterface
     fun getPlatformName(): String = if (isTv) "GoogleTV" else "AndroidMobile"
+
+    /**
+     * 原生直接以 HTTPS GET 抓取遠端字串 (免除瀏覽器同源 CORS 與 Mixed Content 限制)
+     */
+    @JavascriptInterface
+    fun fetchHttp(urlString: String, timeoutMs: Int): String {
+        return try {
+            val url = URL(urlString)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = if (timeoutMs > 0) timeoutMs else 4000
+                readTimeout = if (timeoutMs > 0) timeoutMs else 4000
+                requestMethod = "GET"
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
+            }
+            conn.connect()
+            if (conn.responseCode in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else {
+                ""
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * 原生秒讀 Assets 內的資料快照
+     */
+    @JavascriptInterface
+    fun fetchAsset(assetPath: String): String {
+        return try {
+            activity.assets.open(assetPath).bufferedReader().use { it.readText() }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * 原生整合獲取最新資料庫 (youbike, metro-live, parking, thsr, tymetro)
+     * 策略：優先嘗試 GitHub 雲端 (Actions 每 5 分鐘推送最新資料) -> 若網路離線秒降級 Assets 本地快照
+     * 100% 獨立自主，完全不依賴任何電腦端本機伺服器！
+     */
+    @JavascriptInterface
+    fun getLatestCloudData(dataType: String): String {
+        val cloudUrls = when (dataType) {
+            "youbike" -> listOf(
+                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/youbike.json",
+                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/youbike.json"
+            )
+            "metro", "metro-live" -> listOf(
+                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json",
+                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json"
+            )
+            "parking" -> listOf(
+                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json",
+                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json"
+            )
+            "thsr" -> listOf(
+                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json",
+                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json"
+            )
+            "tymetro" -> listOf(
+                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json",
+                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json"
+            )
+            else -> emptyList()
+        }
+
+        for (url in cloudUrls) {
+            val res = fetchHttp(url, 3500)
+            if (res.isNotBlank() && res.trim().startsWith("{")) {
+                return res
+            }
+        }
+
+        // 若雲端暫時逾時或處於離線狀態，秒級回傳 Assets 本地快照
+        val assetFile = when (dataType) {
+            "metro", "metro-live" -> "data/metro-live.json"
+            else -> "data/$dataType.json"
+        }
+        return fetchAsset(assetFile)
+    }
 
     @JavascriptInterface
     fun forceRefreshAll() {
