@@ -159,7 +159,7 @@ body {
   text-transform: uppercase;
 }
 
-/* 中心切換選擇器 (雙城同步、青埔、新埔、觀光名勝) */
+/* 中心切換選擇器 (雙埔、青埔、新埔、觀光) */
 .center-switch-group {
   display: flex;
   background: rgba(16, 24, 40, 0.9);
@@ -555,7 +555,7 @@ body {
               visibility 0.4s;
 }
 
-/* 雙城區域專屬標籤 */
+/* 雙埔區域專屬標籤 */
 .area-tag {
   font-size: 0.68rem;
   font-weight: 800;
@@ -1263,7 +1263,7 @@ a.coord-tag:hover {
   border-left-color: var(--color-primary);
 }
 
-/* 雙城同步環境資訊卡片專用樣式 */
+/* 雙埔環境資訊卡片專用樣式 */
 .dual-weather-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1343,7 +1343,7 @@ a.coord-tag:hover {
   gap: 5px;
 }
 
-/* 雙城詳細氣象指標：採用單欄左右分散對齊，徹底杜絕省略號 (...) 截斷 */
+/* 雙埔詳細氣象指標：採用單欄左右分散對齊，徹底杜絕省略號 (...) 截斷 */
 .dual-metrics-mini {
   display: flex;
   flex-direction: column;
@@ -1396,7 +1396,7 @@ a.coord-tag:hover {
   text-overflow: clip;
 }
 
-/* 雙城 AQI 對照網格 */
+/* 雙埔 AQI 對照網格 */
 .dual-aqi-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1434,7 +1434,7 @@ a.coord-tag:hover {
   justify-content: space-between;
 }
 
-/* 雙城走勢分組 */
+/* 雙埔走勢分組 */
 .dual-rain-group {
   display: flex;
   flex-direction: column;
@@ -1786,7 +1786,7 @@ a.coord-tag:hover {
 .matrix-refreshing .cam-card:nth-child(16) { animation-delay: 0.32s; }
 
 /* ==========================================================================
-   雙城大眾運輸即時通勤走廊 (全寬最長路徑 ‧ 月台等車倒數 ‧ 超矮收合狀態)
+   雙埔大眾運輸即時通勤走廊 (全寬最長路徑 ‧ 月台等車倒數 ‧ 超矮收合狀態)
    ========================================================================== */
 
 .transit-corridor-bar {
@@ -2413,7 +2413,7 @@ a.coord-tag:hover {
   box-sizing: border-box;
 }
 
-/* 桃園青埔 ➔ 新北新埔：首段為高鐵/機捷長區間 (2.5fr)，次段為台北捷運短區間 (1fr) */
+/* 青埔 ➔ 新埔：首段為高鐵/機捷長區間 (2.5fr)，次段為台北捷運短區間 (1fr) */
 .multi-rail-corridor.full-span-rail.dir-to-xinpu {
   grid-template-columns: auto 2.5fr auto 1fr auto;
 }
@@ -3419,7 +3419,7 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
-   降雨機率走勢與雙城降雨走勢橫向滑動預測 (支援往右滑動查看最長未來 7 日即時預測)
+   降雨機率走勢與雙埔降雨走勢橫向滑動預測 (支援往右滑動查看最長未來 7 日即時預測)
    ========================================================================== */
 .rain-header-controls {
   display: flex;
@@ -4209,23 +4209,23 @@ body {
       </div>
     </div>
 
-    <!-- 監控中心切換 (首頁預設雙城同步 vs 桃園青埔 vs 新北新埔 vs 觀光名勝) -->
+    <!-- 監控中心切換 (首頁預設雙埔 vs 青埔 vs 新埔 vs 觀光) -->
     <div class="center-switch-group">
-      <button class="center-btn active" data-center="dual" title="雙城同步：青埔與新埔各半平均顯示 (4格/6格/10格/12格/16格)">
+      <button class="center-btn active" data-center="dual" title="雙埔：青埔與新埔各半平均顯示 (4格/6格/10格/12格/16格)">
         <i class="fa-solid fa-layer-group"></i>
-        <span>雙城同步</span>
+        <span>雙埔</span>
       </button>
-      <button class="center-btn" data-center="qingpu" title="桃園青埔生活圈">
+      <button class="center-btn" data-center="qingpu" title="青埔生活圈">
         <i class="fa-solid fa-building-user"></i>
-        <span>桃園青埔</span>
+        <span>青埔</span>
       </button>
-      <button class="center-btn" data-center="banqiao" title="新北新埔生活圈">
+      <button class="center-btn" data-center="banqiao" title="新埔生活圈">
         <i class="fa-solid fa-house-signal"></i>
-        <span>新北新埔</span>
+        <span>新埔</span>
       </button>
       <button class="center-btn" data-center="tourist" title="九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水">
         <i class="fa-solid fa-plane-arrival"></i>
-        <span>觀光名勝</span>
+        <span>觀光</span>
       </button>
     </div>
 
@@ -4236,8 +4236,8 @@ body {
         <button class="grid-btn" data-grid="grid-1" title="單一焦點特寫"><i class="fa-regular fa-square"></i> 1格</button>
         <button class="grid-btn" data-grid="grid-4" title="四分割標準"><i class="fa-solid fa-table-cells-large"></i> 4格</button>
         <button class="grid-btn active" data-grid="grid-6" title="六重視角 (雙域模式：青埔3 + 新埔3各半均分)"><i class="fa-solid fa-table-cells"></i> 6格</button>
-        <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙城模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
-        <button class="grid-btn" data-grid="grid-10" title="雙城十分割緊湊並排 (青埔5 + 新埔5)"><i class="fa-solid fa-table-columns"></i> 10格</button>
+        <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙埔模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
+        <button class="grid-btn" data-grid="grid-10" title="雙埔十分割緊湊並排 (青埔5 + 新埔5)"><i class="fa-solid fa-table-columns"></i> 10格</button>
         <button class="grid-btn" data-grid="grid-12" title="十二分割廣域監控"><i class="fa-solid fa-grip"></i> 12格</button>
         <button class="grid-btn" data-grid="grid-16" title="十六分割全量掌握"><i class="fa-solid fa-grip-vertical"></i> 16格</button>
         <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
@@ -4276,7 +4276,7 @@ body {
     
     <!-- 左側視訊矩陣區 -->
     <section class="matrix-section">
-      <!-- 雙城大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
+      <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
       <div id="transitTransitBar" class="transit-corridor-bar is-collapsed-bar"></div>
 
       <!-- 攝影機視訊卡片網格 -->
@@ -5534,7 +5534,7 @@ window.CctvPlayer = CameraPlayerEngine;
 
 /* 即時環境氣象與空氣品質模組 */
 /**
- * 區域環境即時影像監控系統 - 天氣、降雨與空氣品質監控模組 (支援單城與雙城同步對照)
+ * 區域環境即時影像監控系統 - 天氣、降雨與空氣品質監控模組 (支援單城與雙埔對照)
  */
 
 class WeatherEnvironmentMonitor {
@@ -5578,7 +5578,7 @@ class WeatherEnvironmentMonitor {
   // 初始化雙埔核心 YouBike 2.0 站點基礎資料
   initYouBikeStations() {
     this.youbikeStations = [
-      // 桃園青埔生活圈 (高鐵特區與體育園區)
+      // 青埔生活圈 (高鐵特區與體育園區)
       { id: 'qp-1', city: 'qp', cityName: '青埔', name: '高鐵桃園站(前站)', total: 68, bikes: 34, ebikes: 8, spaces: 26, lat: 25.0130, lon: 121.2148 },
       { id: 'qp-2', city: 'qp', cityName: '青埔', name: '捷運桃園體育園區站(A19)', total: 46, bikes: 21, ebikes: 5, spaces: 20, lat: 25.0028, lon: 121.2012 },
       { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青塘園生態公園', total: 32, bikes: 15, ebikes: 4, spaces: 13, lat: 25.0068, lon: 121.2058 },
@@ -5586,7 +5586,7 @@ class WeatherEnvironmentMonitor {
       { id: 'qp-5', city: 'qp', cityName: '青埔', name: '青埔國小(致遠一路)', total: 28, bikes: 13, ebikes: 3, spaces: 12, lat: 25.0175, lon: 121.2225 },
       { id: 'qp-6', city: 'qp', cityName: '青埔', name: '洽溪公園站', total: 30, bikes: 16, ebikes: 4, spaces: 10, lat: 25.0089, lon: 121.1983 },
 
-      // 新北新埔/板橋生活圈 (捷運新埔商圈與新板特區)
+      // 新埔/板橋生活圈 (捷運新埔商圈與新板特區)
       { id: 'bp-1', city: 'bp', cityName: '新埔', name: '捷運新埔站(1號出口)', total: 74, bikes: 38, ebikes: 9, spaces: 27, lat: 25.0238, lon: 121.4682 },
       { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(4號出口)', total: 52, bikes: 25, ebikes: 6, spaces: 21, lat: 25.0226, lon: 121.4685 },
       { id: 'bp-3', city: 'bp', cityName: '新埔', name: '新埔民生站(環狀線)', total: 38, bikes: 19, ebikes: 4, spaces: 15, lat: 25.0261, lon: 121.4668 },
@@ -6006,7 +6006,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 2. 雙城同步載入環境資訊 (青埔 + 新埔)
+  // 2. 雙埔載入環境資訊 (青埔 + 新埔)
   async fetchDualEnvironment(qpInfo, bpInfo, isAuto = false) {
     const now = Date.now();
     if (!isAuto && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
@@ -6038,11 +6038,11 @@ class WeatherEnvironmentMonitor {
       this.refreshRadar();
       this.updateCountdownDisplay();
     } catch (err) {
-      console.error('更新雙城環境資訊失敗:', err);
+      console.error('更新雙埔環境資訊失敗:', err);
     }
   }
 
-  // 渲染雙城氣象對照卡片 (保留即時秒數倒數器與脈衝呼吸燈)
+  // 渲染雙埔氣象對照卡片 (保留即時秒數倒數器與脈衝呼吸燈)
   renderDualWeather(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
     const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)') || document.querySelector('.sidebar-section .widget-card');
@@ -6075,7 +6075,7 @@ class WeatherEnvironmentMonitor {
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
-          <i class="fa-solid fa-cloud-sun"></i> 雙城即時氣象
+          <i class="fa-solid fa-cloud-sun"></i> 雙埔即時氣象
         </div>
         <div class="live-sync-badge">
           <span class="pulse-live-dot"></span>
@@ -6179,7 +6179,7 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 渲染雙城空氣品質對照卡片
+  // 渲染雙埔空氣品質對照卡片
   renderDualAqi(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
     const card = document.querySelector('.sidebar-section .widget-card:nth-child(3)') || document.querySelectorAll('.sidebar-section .widget-card')[1];
@@ -6200,7 +6200,7 @@ class WeatherEnvironmentMonitor {
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
-          <i class="fa-solid fa-mask-face"></i> 雙城空氣品質
+          <i class="fa-solid fa-mask-face"></i> 雙埔空氣品質
         </div>
         <div class="live-sync-badge">
           <span class="pulse-live-dot"></span>
@@ -6254,7 +6254,7 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 渲染雙城降雨走勢 (支援橫向滑動查看最長未來 7 日 / 168 小時即時預測)
+  // 渲染雙埔降雨走勢 (支援橫向滑動查看最長未來 7 日 / 168 小時即時預測)
   renderDualHourly(qpHourly, bpHourly) {
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !qpHourly?.precipitation_probability || !bpHourly?.precipitation_probability) return;
@@ -6272,7 +6272,7 @@ class WeatherEnvironmentMonitor {
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
-          <i class="fa-solid fa-umbrella"></i> 雙城降雨走勢
+          <i class="fa-solid fa-umbrella"></i> 雙埔降雨走勢
         </div>
         <div class="rain-header-controls">
           <span class="rain-legend-tag"><span class="rain-legend-dot" style="background:#00f0ff;"></span>青埔</span>
@@ -6340,7 +6340,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 渲染雙城生活安全管家
+  // 渲染雙埔生活安全管家
   renderDualLifeAssistant(qpData, bpData, qpInfo, bpInfo) {
     const container = document.getElementById('lifeAssistantList');
     if (!container) return;
@@ -6904,7 +6904,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 啟動定時自動刷新 (雙城高頻極速同步：30 秒週期)
+  // 啟動定時自動刷新 (雙埔高頻極速同步：30 秒週期)
   startAutoRefreshDual(qpInfo, bpInfo) {
     this.activeMode = 'dual';
     this.activeDualParams = { qpInfo, bpInfo };
@@ -7025,9 +7025,9 @@ class NeighborhoodRadarMap {
     });
 
     if (isDual) {
-      // 雙城同步模式：桃園青埔 + 新北新埔 (去識別化生活圈中心)
-      const homeQp = { name: '桃園青埔', addr: '桃園青埔生活圈', lat: 25.0153, lon: 121.2213, color: '#00f0ff' };
-      const homeBp = { name: '新北新埔', addr: '新北新埔生活圈', lat: 25.0232, lon: 121.4688, color: '#a855f7' };
+      // 雙埔模式：青埔 + 新埔 (去識別化生活圈中心)
+      const homeQp = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213, color: '#00f0ff' };
+      const homeBp = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688, color: '#a855f7' };
       
       [homeQp, homeBp].forEach(home => {
         const m = L.marker([home.lat, home.lon], { icon: makeCenterIcon(home.color) })
@@ -7118,7 +7118,7 @@ class NeighborhoodRadarMap {
       this.cameraMarkers.push(marker);
     });
 
-    // 若為雙城模式，自動調整地圖視野囊括雙城居所與全部攝影機
+    // 若為雙埔模式，自動調整地圖視野囊括雙埔居所與全部攝影機
     if (isDual && this.cameraMarkers.length > 0) {
       const allMarkers = [...this.centerMarkers, ...this.cameraMarkers];
       const group = L.featureGroup(allMarkers);
@@ -7131,9 +7131,9 @@ window.NeighborhoodRadarMap = NeighborhoodRadarMap;
 window.RadarMap = NeighborhoodRadarMap;
 
 
-/* 雙城大眾運輸通勤整合模組 (高鐵極速線 + 環狀機捷線) */
+/* 雙埔大眾運輸通勤整合模組 (高鐵極速線 + 環狀機捷線) */
 /**
- * 區域環境即時影像監控系統 - 雙城即時大眾運輸通勤整合模組 (Twin City Transit Corridor Monitor)
+ * 區域環境即時影像監控系統 - 雙埔即時大眾運輸通勤整合模組 (Twin City Transit Corridor Monitor)
  * 
  * 全新最佳化特色：
  *  1. 全寬最長路徑呈現：每條路線採 100% 橫向貫穿延展，路途完整舒展，空間大器。
@@ -7874,7 +7874,7 @@ class TwinCityTransitMonitor {
     const tymetro = this.calculateTymetroState(now);
     const plans = this.generateDeparturePlans(now);
 
-    const directionLabel = isToQingpu ? '新北新埔 ➔ 桃園青埔' : '桃園青埔 ➔ 新北新埔';
+    const directionLabel = isToQingpu ? '新埔 ➔ 青埔' : '青埔 ➔ 新埔';
     const displayStations = isToQingpu ? this.tymetroStations : [...this.tymetroStations].reverse();
 
     if (typeof document === 'undefined') {
@@ -8294,7 +8294,7 @@ class TwinCityTransitMonitor {
             <i class="fa-solid fa-train-subway"></i>
           </div>
           <div class="transit-main-title">
-            <span>🚆 雙城大眾運輸 ‧ 即時路網</span>
+            <span>🚆 雙埔大眾運輸 ‧ 即時路網</span>
           </div>
         </div>
 
@@ -8564,36 +8564,36 @@ if (typeof module !== 'undefined' && module.exports) {
 
 
 /* 核心控制器 (含內嵌完整攝影機資料庫) */
-// 內嵌完整攝影機資料庫（包含雙城同步中心、桃園官方 HLS、新北官方 FLV、北部國際觀光名勝原生串流）
+// 內嵌完整攝影機資料庫（包含雙埔中心、桃園官方 HLS、新北官方 FLV、北部國際觀光原生串流）
 window.CAMERAS_DATA = {
   "centers": [
     {
       "id": "dual",
-      "name": "雙城同步",
+      "name": "雙埔",
       "address": "",
       "lat": 25.0153,
       "lon": 121.2213,
-      "description": "雙城同步：青埔與新埔各半平均顯示 (4格/6格/10格/12格/16格)"
+      "description": "雙埔：青埔與新埔各半平均顯示 (4格/6格/10格/12格/16格)"
     },
     {
       "id": "qingpu",
-      "name": "桃園青埔",
+      "name": "青埔",
       "address": "",
       "lat": 25.0153,
       "lon": 121.2213,
-      "description": "桃園青埔生活圈"
+      "description": "青埔生活圈"
     },
     {
       "id": "banqiao",
-      "name": "新北新埔",
+      "name": "新埔",
       "address": "",
       "lat": 25.0232,
       "lon": 121.4688,
-      "description": "新北新埔生活圈"
+      "description": "新埔生活圈"
     },
     {
       "id": "tourist",
-      "name": "觀光名勝",
+      "name": "觀光",
       "address": "",
       "lat": 25.0425,
       "lon": 121.5053,
@@ -10139,7 +10139,7 @@ window.CAMERAS_DATA = {
 
 /**
  * 區域環境即時影像監控 - 核心應用控制器 (MonitorApp)
- * 支援：雙城同步/桃園青埔/新北新埔/觀光名勝
+ * 支援：雙埔/青埔/新埔/觀光
  * 特色：
  *  1. 最原始官方原生來源 (桃園 HLS、新北 FLV、台北 HLS/iframe)
  *  2. 低延遲極速秒開 (20ms 起播延遲) 與自動追幀看門狗 (累積延遲 > 1.8s 自動跳至 Live Edge)
@@ -10181,13 +10181,13 @@ class MonitorApp {
     this.initClock();
     this.bindEvents();
 
-    // 啟動首頁：預設雙城同步
+    // 啟動首頁：預設雙埔
     await this.switchCenter(this.currentCenterId);
 
     // 視窗自適應計算
     this.applyAdaptiveViewportFit();
 
-    console.log('雙埔環境即時資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙城通勤走廊)');
+    console.log('雙埔環境即時資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊)');
   }
 
   // 數位時鐘
@@ -10391,7 +10391,7 @@ class MonitorApp {
     const transitBar = document.getElementById('transitTransitBar');
     const transitHeight = transitBar && transitBar.offsetHeight > 0 && window.getComputedStyle(transitBar).display !== 'none' ? transitBar.offsetHeight + 12 : 0;
 
-    // 計算可用高度 (納入雙城大眾運輸即時走廊高度，確保一屏免垂直捲動零切角)
+    // 計算可用高度 (納入雙埔大眾運輸即時走廊高度，確保一屏免垂直捲動零切角)
     const paddingOffset = 16;
     const availableHeight = Math.max(300, window.innerHeight - headerHeight - secHeaderHeight - transitHeight - paddingOffset);
 
@@ -10406,7 +10406,7 @@ class MonitorApp {
     }
   }
 
-  // 全局立即刷新 (視訊影像、即時環境氣象、雙城大眾運輸)
+  // 全局立即刷新 (視訊影像、即時環境氣象、雙埔大眾運輸)
   refreshAll() {
     this.switchCenter(this.currentCenterId);
     if (this.transitMonitor) {
@@ -10457,9 +10457,9 @@ class MonitorApp {
       const sortIndicator = document.querySelector('.sort-indicator span');
       if (sortIndicator) {
         if (centerId === 'dual') {
-          sortIndicator.innerText = '雙城公平呈現：青埔與新埔各半均分 (零切角自適應)';
+          sortIndicator.innerText = '雙埔公平呈現：青埔與新埔各半均分 (零切角自適應)';
         } else if (centerId === 'tourist') {
-          sortIndicator.innerText = '觀光名勝精選：九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水 (4K UHD / 1080P FHD 動態串流)';
+          sortIndicator.innerText = '觀光精選：九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水 (4K UHD / 1080P FHD 動態串流)';
         } else if (centerId === 'qingpu') {
           sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
         } else if (centerId === 'banqiao') {
@@ -10469,7 +10469,7 @@ class MonitorApp {
         }
       }
 
-      // 依中心需求切換預設宮格：桃園青埔、新北新埔與觀光名勝頁面預設全部宮格 (grid-all)
+      // 依中心需求切換預設宮格：青埔、新埔與觀光頁面預設全部宮格 (grid-all)
       if (centerId === 'tourist' || centerId === 'qingpu' || centerId === 'banqiao') {
         this.currentGridMode = 'grid-all';
         this.previousGridMode = 'grid-all';
@@ -10486,7 +10486,7 @@ class MonitorApp {
           }
         });
       } else if (centerId === 'dual') {
-        // 從單一生活圈切回雙城同步生活圈時，自動套用雙城標準預設宮格 (雙城預設 6 宮格：青埔 3 + 新埔 3 各半均分)
+        // 從單一生活圈切回雙埔生活圈時，自動套用雙埔標準預設宮格 (雙埔預設 6 宮格：青埔 3 + 新埔 3 各半均分)
         const defaultMode = 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
@@ -10507,10 +10507,10 @@ class MonitorApp {
       // 渲染視訊牆
       this.renderVideoMatrix();
 
-      // 載入雙城即時環境氣象與空氣品質
+      // 載入雙埔即時環境氣象與空氣品質
       if (centerId === 'dual') {
-        const qpInfo = { name: '桃園青埔', addr: '桃園青埔生活圈', lat: 25.0153, lon: 121.2213 };
-        const bpInfo = { name: '新北新埔', addr: '新北新埔生活圈', lat: 25.0232, lon: 121.4688 };
+        const qpInfo = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213 };
+        const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
         this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
         this.weatherMonitor.startAutoRefreshDual(qpInfo, bpInfo);
       } else {
@@ -10592,7 +10592,7 @@ class MonitorApp {
         sortIndicator.innerText = `單格特寫模式：${visibleCams[0].name} (按兩下縮小回到原本多宮格)`;
       }
     } else if (this.currentCenterId === 'dual') {
-      // 雙城分配：偶數時各半均分；奇數時(如9宮格無法平分)青埔多1個以完整填滿，絕不浪費格子只顯示8個
+      // 雙埔分配：偶數時各半均分；奇數時(如9宮格無法平分)青埔多1個以完整填滿，絕不浪費格子只顯示8個
       const qpQuota = Math.ceil(maxDisplay / 2);
       const bpQuota = Math.floor(maxDisplay / 2);
       const qpList = this.currentCameras.filter(c => c.areaTag === '青埔').slice(0, qpQuota);
@@ -10604,9 +10604,9 @@ class MonitorApp {
         const qpCount = qpList.length;
         const bpCount = bpList.length;
         if (qpCount === bpCount) {
-          sortIndicator.innerText = `雙城公平呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 各半均分`;
+          sortIndicator.innerText = `雙埔公平呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 各半均分`;
         } else {
-          sortIndicator.innerText = `雙城呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 九宮格滿版全開 (青埔+1)`;
+          sortIndicator.innerText = `雙埔呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 九宮格滿版全開 (青埔+1)`;
         }
       }
     } else {
@@ -10631,8 +10631,8 @@ class MonitorApp {
   refreshAll() {
     this.playerEngine.refreshSnapshots();
     if (this.currentCenterId === 'dual') {
-      const qpInfo = { name: '桃園青埔', addr: '桃園青埔生活圈', lat: 25.0153, lon: 121.2213 };
-      const bpInfo = { name: '新北新埔', addr: '新北新埔生活圈', lat: 25.0232, lon: 121.4688 };
+      const qpInfo = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213 };
+      const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
       this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
     } else if (this.currentCenterData) {
       this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name);
