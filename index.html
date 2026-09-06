@@ -8054,6 +8054,8 @@ class TwinCityTransitMonitor {
     // 向後相容別名
     this.tymetroSouthMinutes = this.tymetroSouthTrains;
     this.tymetroNorthMinutes = this.tymetroNorthTrains;
+    this.isTymetroOnline = false;
+    this.tymetroLastFetchTime = 0;
 
     // 桃園機場捷運 (A3 新北產業園區 ↔ A18 高鐵桃園站) 沿途全數 16 個車站定義
     // 包含代號 (A幾)、站名、是否為直達車停靠大站 (isMajor)、以及滑過顯示的提示資訊
@@ -8346,11 +8348,11 @@ class TwinCityTransitMonitor {
     return true;
   }
 
-  // 非同步向本機代理伺服器抓取最新台灣高鐵官方班表
+  // 非同步向本機代理伺服器抓取最新台灣高鐵官方班表 (每 5 分鐘即時檢查與同步最新改動)
   async fetchThsrRealtime() {
     const nowMs = Date.now();
-    // 至少間隔 30 分鐘再向代理伺服器請求一次，節省資源
-    if (nowMs - this.thsrLastFetchTime < 1800000) return;
+    // 至少間隔 5 分鐘再向代理伺服器請求一次，即時掌握臨時改班與異常
+    if (nowMs - this.thsrLastFetchTime < 300000) return;
 
     try {
       const [southRes, northRes] = await Promise.all([
@@ -8393,6 +8395,56 @@ class TwinCityTransitMonitor {
     } catch (err) {
       // 離線或靜態展示環境平滑退回使用內建之官方基準班表
       this.isThsrOnline = false;
+    }
+  }
+
+  // 非同步向本機代理伺服器抓取最新桃園機場捷運官方班表 (每 5 分鐘即時檢查與同步最新改動)
+  async fetchTymetroRealtime() {
+    const nowMs = Date.now();
+    // 至少間隔 5 分鐘再向代理伺服器請求一次，即時掌握臨時改班與異常
+    if (nowMs - this.tymetroLastFetchTime < 300000) return;
+
+    try {
+      const [southRes, northRes] = await Promise.all([
+        fetch('/api/tymetro/south').then(r => r.ok ? r.json() : null),
+        fetch('/api/tymetro/north').then(r => r.ok ? r.json() : null)
+      ]);
+
+      if (southRes && Array.isArray(southRes.trains) && southRes.trains.length > 0) {
+        this.tymetroSouthTrains = southRes.trains.map(t => ({
+          trainNo: t.trainNo,
+          depTime: t.depTime,
+          arrTime: t.arrTime,
+          duration: t.duration,
+          isExpress: t.isExpress,
+          type: t.type,
+          depMinutes: t.depMinutes,
+          min: parseInt(t.depTime.split(':')[1], 10),
+          stopsAtA18: true
+        }));
+        this.tymetroSouthMinutes = this.tymetroSouthTrains;
+      }
+
+      if (northRes && Array.isArray(northRes.trains) && northRes.trains.length > 0) {
+        this.tymetroNorthTrains = northRes.trains.map(t => ({
+          trainNo: t.trainNo,
+          depTime: t.depTime,
+          arrTime: t.arrTime,
+          duration: t.duration,
+          isExpress: t.isExpress,
+          type: t.type,
+          depMinutes: t.depMinutes,
+          min: parseInt(t.depTime.split(':')[1], 10),
+          stopsAtA18: true
+        }));
+        this.tymetroNorthMinutes = this.tymetroNorthTrains;
+      }
+
+      this.isTymetroOnline = true;
+      this.tymetroLastFetchTime = nowMs;
+    } catch (err) {
+      // 離線或靜態展示環境平滑退回使用內建之官方基準班表
+      this.isTymetroOnline = false;
     }
   }
 
@@ -8775,6 +8827,10 @@ class TwinCityTransitMonitor {
   render() {
     const now = new Date();
     const isToQingpu = this.direction === 'to_qingpu';
+
+    // 週期性向後端代理確認最新官方時刻表 (內部具備 5 分鐘節流與快取防抖保護)
+    this.fetchThsrRealtime();
+    this.fetchTymetroRealtime();
 
     const bannan = this.calculateBannanState(now);
     const circular = this.calculateCircularState(now);
@@ -9595,10 +9651,11 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態，並定時同步官方高鐵時刻)
+  // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態，並每 5 分鐘自動同步官方高鐵與機捷最新時刻)
   start() {
     this.stop();
     this.fetchThsrRealtime();
+    this.fetchTymetroRealtime();
     this.render();
     this.timerId = setInterval(() => {
       this.render();

@@ -16,12 +16,14 @@ const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010e5b15-3823-4b20-b401-
 const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download';
 const THSR_SEARCH_URL = 'https://www.thsrc.com.tw/TimeTable/Search';
 
-// 記憶體快取 (YouBike 快取 30 秒；高鐵時刻表快取 1 小時)
+// 記憶體快取 (YouBike 快取 30 秒；高鐵與機場捷運官方時刻表快取 5 分鐘)
 const cache = {
   ntpc: { data: null, expireAt: 0 },
   tycg: { data: null, expireAt: 0 },
   thsrSouth: { data: null, expireAt: 0 },
-  thsrNorth: { data: null, expireAt: 0 }
+  thsrNorth: { data: null, expireAt: 0 },
+  tymetroSouth: { data: null, expireAt: 0 },
+  tymetroNorth: { data: null, expireAt: 0 }
 };
 
 // 內部抓取遠端 JSON 函式
@@ -170,7 +172,7 @@ async function handleThsrProxy(req, res, direction) {
     });
     cache[cacheKey] = {
       data: serialized,
-      expireAt: now + (3600 * 1000) // 快取 1 小時
+      expireAt: now + (300 * 1000) // 快取 5 分鐘 (300秒)
     };
     res.writeHead(200);
     res.end(serialized);
@@ -182,6 +184,130 @@ async function handleThsrProxy(req, res, direction) {
     } else {
       res.writeHead(502);
       res.end(JSON.stringify({ success: false, error: '無法自台灣高鐵取得即時時刻表', detail: err.message }));
+    }
+  }
+}
+
+// 抓取桃園機場捷運官方時刻表函式 (原生 HTTPS GET + 官方表格即時解析)
+function fetchOfficialTymetroTimetable(direction) {
+  return new Promise((resolve, reject) => {
+    const stationCode = direction === 'south' ? 'A3' : 'A18';
+    const tableIndex = direction === 'south' ? 1 : 0;
+    const targetUrl = `https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable.php?station=${stationCode}`;
+
+    const req = https.get(targetUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0' } }, (res) => {
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP Status ${res.statusCode}`));
+      }
+      let rawData = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => { rawData += chunk; });
+      res.on('end', () => {
+        try {
+          const tables = rawData.match(/<table[\s\S]*?<\/table>/g) || [];
+          const tbl = tables[tableIndex];
+          if (!tbl) {
+            return reject(new Error('未找到官方時刻表表格'));
+          }
+          const rows = tbl.match(/<tr>[\s\S]*?<\/tr>/g) || [];
+          const list = [];
+
+          rows.forEach(r => {
+            const hourMatch = r.match(/<th[^>]*scope="row"[^>]*>(\d{1,2})<\/th>/);
+            if (!hourMatch) return;
+            const h = hourMatch[1].padStart(2, '0');
+            const tds = r.match(/<td[\s\S]*?<\/td>/g) || [];
+            tds.forEach(td => {
+              const mMatch = td.match(/<i>(\d{1,2})<\/i>/);
+              if (!mMatch) return;
+              const m = mMatch[1].padStart(2, '0');
+              const isExp = td.includes('直達車');
+              const isPeakA18 = td.includes('停靠A18') || td.includes('尖峰增停直達車');
+              const depTime = `${h}:${m}`;
+              const minutes = parseInt(h, 10) * 60 + parseInt(m, 10);
+              const stopsAtA18 = !isExp || isPeakA18;
+
+              if (!stopsAtA18) return; // 嚴格只保留停靠 A18 的可用班次
+
+              const duration = isExp ? 28 : 38;
+              const arrMinutes = minutes + duration;
+              const arrH = String(Math.floor(arrMinutes / 60) % 24).padStart(2, '0');
+              const arrM = String(arrMinutes % 60).padStart(2, '0');
+
+              list.push({
+                trainNo: `${direction === 'south' ? 'A3➔A18' : 'A18➔A3'}-${depTime}`,
+                depTime,
+                arrTime: `${arrH}:${arrM}`,
+                duration,
+                isExpress: isExp,
+                type: isExp ? '尖峰直達' : '普通車',
+                depMinutes: minutes,
+                min: parseInt(m, 10),
+                stopsAtA18: true
+              });
+            });
+          });
+
+          list.sort((a, b) => a.depMinutes - b.depMinutes);
+          resolve(list);
+        } catch (e) {
+          reject(new Error(`解析機捷官方資料失敗: ${e.message}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error('機捷官方連線逾時'));
+    });
+  });
+}
+
+// 處理機捷代理請求 (南下: A3➔A18 / 北上: A18➔A3)
+async function handleTymetroProxy(req, res, direction) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const cacheKey = direction === 'south' ? 'tymetroSouth' : 'tymetroNorth';
+  const now = Date.now();
+
+  if (cache[cacheKey].data && now < cache[cacheKey].expireAt) {
+    res.writeHead(200);
+    res.end(cache[cacheKey].data);
+    return;
+  }
+
+  try {
+    const trains = await fetchOfficialTymetroTimetable(direction);
+    const serialized = JSON.stringify({
+      success: true,
+      direction,
+      date: getTaiwanDateString(),
+      count: trains.length,
+      trains
+    });
+    cache[cacheKey] = {
+      data: serialized,
+      expireAt: now + (300 * 1000) // 快取 5 分鐘 (300秒)
+    };
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cache[cacheKey].data) {
+      // 官方網路短暫異常時，使用既有快取
+      res.writeHead(200);
+      res.end(cache[cacheKey].data);
+    } else {
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法自桃園捷運取得即時時刻表', detail: err.message }));
     }
   }
 }
@@ -247,6 +373,14 @@ const server = http.createServer((req, res) => {
     handleThsrProxy(req, res, 'north');
     return;
   }
+  if (pathname === '/api/tymetro/south') {
+    handleTymetroProxy(req, res, 'south');
+    return;
+  }
+  if (pathname === '/api/tymetro/north') {
+    handleTymetroProxy(req, res, 'north');
+    return;
+  }
 
   // 2. 靜態檔案路由
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
@@ -293,6 +427,8 @@ if (require.main === module) {
     console.log(`[API 代理] 桃園市 YouBike 2.0: http://localhost:${PORT}/api/youbike/tycg`);
     console.log(`[API 代理] 台灣高鐵 (板橋➔桃園): http://localhost:${PORT}/api/thsr/south`);
     console.log(`[API 代理] 台灣高鐵 (桃園➔板橋): http://localhost:${PORT}/api/thsr/north`);
+    console.log(`[API 代理] 機場捷運 (A3➔A18):   http://localhost:${PORT}/api/tymetro/south`);
+    console.log(`[API 代理] 機場捷運 (A18➔A3):   http://localhost:${PORT}/api/tymetro/north`);
   });
 }
 
