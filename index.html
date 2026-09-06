@@ -8779,7 +8779,7 @@ class TwinCityTransitMonitor {
     return `
       <div class="transit-compact-bar">
         <div class="compact-left-group">
-          <span class="compact-badge-dir"><i class="fa-solid fa-arrows-left-right"></i> ${directionLabel}</span>
+          <span class="compact-badge-dir">${directionLabel}</span>
           
           ${activeAlert ? `
             <span class="incident-badge pulse-red" style="cursor:pointer;" onclick="window.transitMonitor.toggleCollapse()" title="${activeAlert.lineName}${activeAlert.title}：${activeAlert.desc}">
