@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>區域環境 ‧ 即時影像監控</title>
   
   <!-- FontAwesome 6 圖示庫 -->
@@ -3601,6 +3601,305 @@ a.coord-tag:hover {
 .ntpc-manual-retry-btn:hover {
   filter: brightness(1.15);
   transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   全功能智慧型手機與行動裝置自適應系統 (Mobile Responsive Layout & Anti-Overflow)
+   ========================================================================== */
+
+/* 全域防止水平溢出與全螢幕手機安全邊界支援 */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* --------------------------------------------------------------------------
+   平板與中型螢幕自適應 (max-width: 1024px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    grid-template-columns: 1fr !important;
+    padding: 12px 16px !important;
+    gap: 14px !important;
+  }
+
+  .sidebar-section {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .dashboard-container.sidebar-collapsed {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .dashboard-container.sidebar-collapsed .sidebar-section {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   智慧型手機標準直向與窄螢幕 (max-width: 768px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* 頂部科技指揮導航列：多層次排列，空間利用最大化 */
+  .top-nav {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .brand-section {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .brand-badge {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 16px !important;
+  }
+
+  .brand-title {
+    font-size: 1.05rem !important;
+  }
+
+  .brand-subtitle {
+    font-size: 0.65rem !important;
+  }
+
+  /* 監控中心切換選擇器：支援手指平滑水平滑動 */
+  .center-switch-group {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important;
+    padding: 3px !important;
+    scrollbar-width: none;
+    box-sizing: border-box !important;
+  }
+  .center-switch-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .center-btn {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    flex-shrink: 0 !important;
+    gap: 5px !important;
+  }
+
+  /* 網格切換與控制動作列整齊自適應 */
+  .nav-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .grid-selector {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: calc(100% - 136px) !important;
+    scrollbar-width: none;
+  }
+  .grid-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .grid-btn {
+    padding: 5px 8px !important;
+    font-size: 0.74rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mode-toggle-btn {
+    padding: 5px 8px !important;
+    font-size: 0.74rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .clock-widget {
+    display: none !important; /* 手機頂部已有系統狀態列時鐘，隱藏以省下垂直視野 */
+  }
+
+  /* 主工作區緊湊安全邊距 */
+  .dashboard-container {
+    padding: 8px !important;
+    gap: 10px !important;
+  }
+
+  /* 攝影機網格在手機直向下的黃金雙欄比例 (清晰可見且無縫滑動) */
+  .camera-grid.grid-1 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .camera-grid.grid-4,
+  .camera-grid.grid-6,
+  .camera-grid.grid-9,
+  .camera-grid.grid-10,
+  .camera-grid.grid-12,
+  .camera-grid.grid-16 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    min-height: 0 !important;
+  }
+
+  .camera-grid.grid-all {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 6px !important;
+  }
+
+  .cam-card-header {
+    padding: 4px 6px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .cam-card-footer {
+    padding: 4px 6px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .cam-name-text {
+    font-size: 0.72rem !important;
+  }
+
+  /* 大眾運輸通勤走廊手機專屬配置 */
+  .transit-compact-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+
+  .compact-left-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 4px !important;
+    padding-bottom: 2px !important;
+    scrollbar-width: none;
+  }
+  .compact-left-group::-webkit-scrollbar {
+    display: none;
+  }
+
+  .compact-route-pill {
+    padding: 2px 6px !important;
+    font-size: 0.68rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .compact-actions-group {
+    width: 100% !important;
+    display: flex !important;
+    gap: 4px !important;
+  }
+
+  .compact-btn {
+    flex: 1 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 4px 6px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* 展開狀態標題與控制列 */
+  .transit-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+  }
+
+  .transit-controls-group {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  .dir-toggle-btn {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .transit-plan-toggle-btn,
+  .transit-collapse-btn {
+    padding: 3px 6px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* 軌道車站文字防止擠壓 */
+  .segment-stations-row {
+    font-size: 0.6rem !important;
+  }
+
+  /* 出門時間表抽屜卡片手機寬度 */
+  .plan-card {
+    flex: 0 0 240px !important;
+    min-width: 240px !important;
+  }
+
+  /* 彈窗在手機上的滿版適配 */
+  .modal-overlay {
+    padding: 8px !important;
+  }
+  .modal-content {
+    width: 96% !important;
+    max-height: 94vh !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   極窄小型手機強化 (max-width: 420px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 420px) {
+  .top-nav {
+    padding: 6px 8px !important;
+  }
+
+  .camera-grid.grid-4,
+  .camera-grid.grid-6,
+  .camera-grid.grid-9,
+  .camera-grid.grid-10,
+  .camera-grid.grid-12,
+  .camera-grid.grid-16 {
+    grid-template-columns: 1fr !important; /* 極小螢幕直向單欄流動，畫面最大最清晰 */
+    gap: 8px !important;
+  }
+
+  .nav-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .grid-selector {
+    max-width: 100% !important;
+  }
+
+  .center-btn {
+    padding: 5px 9px !important;
+    font-size: 0.74rem !important;
+  }
+
+  .compact-btn {
+    font-size: 0.68rem !important;
+    padding: 3px 4px !important;
+  }
 }
 
 </style>
@@ -9438,7 +9737,8 @@ class MonitorApp {
     const grid = document.getElementById('cameraGrid');
     if (!grid) return;
 
-    if (!this.isAdaptiveFit) {
+    // 手機直向窄螢幕 (<= 768px) 採用流暢捲動模式，保護視訊卡片維持 16:9 黃金比例不被扁平壓縮
+    if (!this.isAdaptiveFit || (typeof window !== 'undefined' && window.innerWidth <= 768)) {
       if (document.body) document.body.classList.remove('adaptive-viewport-mode');
       if (container) container.classList.remove('adaptive-fit');
       grid.style.height = '';
@@ -10033,6 +10333,11 @@ class MonitorApp {
       }, 200);
     }
   }
+}
+
+// 掛載至全域
+if (typeof window !== 'undefined') {
+  window.MonitorApp = MonitorApp;
 }
 
 // 網頁載入完成後啟動應用程式
