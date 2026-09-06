@@ -1942,6 +1942,19 @@ a.coord-tag:hover {
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+.compact-btn.btn-youbike-main {
+  background: rgba(250, 204, 21, 0.12);
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #facc15;
+  font-weight: 700;
+}
+
+.compact-btn.btn-youbike-main:hover {
+  background: rgba(250, 204, 21, 0.22);
+  border-color: rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
+}
+
 .compact-btn.btn-expand-main {
   background: rgba(0, 240, 255, 0.12);
   border-color: rgba(0, 240, 255, 0.35);
@@ -8354,11 +8367,7 @@ class TwinCityTransitMonitor {
             ${tymetroPillHtml}
           </div>
         
-          <!-- 雙埔核心 6 站 YouBike 迷你狀態膠囊 -->
-          <div class="compact-route-pill youbike-pill" title="雙埔生活圈核心 6 站 YouBike 即時動態 (青埔 4 站 + 新埔 2 站)" onclick="window.transitMonitor.toggleCollapse()" style="cursor: pointer;">
-            <span class="pill-tag" style="background: rgba(250, 204, 21, 0.2); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.4);"><i class="fa-solid fa-bicycle"></i> YouBike</span>
-            <span class="pill-seg" style="color: #fef08a;">青埔 4 站 ‧ 新埔 2 站 即時車況</span>
-          </div>
+
         </div>
 
         <div class="compact-actions-group">
@@ -8367,6 +8376,9 @@ class TwinCityTransitMonitor {
           </button>
           <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看出門搭車到站時間表">
             <span>🕒 出門時間表</span>
+          </button>
+          <button class="compact-btn btn-youbike-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看雙埔核心 YouBike 2.0 車位動態與全線路網">
+            <span>🚲 YouBike 車況</span> <i class="fa-solid fa-chevron-down"></i>
           </button>
           <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看全線即時列車行駛動態與全寬軌道">
             <span>🚄 列車行駛動態</span> <i class="fa-solid fa-chevron-down"></i>
