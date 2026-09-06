@@ -23,7 +23,8 @@ const cache = {
   thsrSouth: { data: null, expireAt: 0 },
   thsrNorth: { data: null, expireAt: 0 },
   tymetroSouth: { data: null, expireAt: 0 },
-  tymetroNorth: { data: null, expireAt: 0 }
+  tymetroNorth: { data: null, expireAt: 0 },
+  metroLive: { data: null, expireAt: 0 }
 };
 
 // 內部抓取遠端 JSON 函式
@@ -351,6 +352,95 @@ async function handleYouBikeProxy(req, res, cityKey, sourceUrl) {
   }
 }
 
+// 抓取台北捷運與環狀線新埔即時到站看板 (串接 TDX / opendata.vip，秒級連動)
+function fetchMetroLiveBoard() {
+  return new Promise((resolve, reject) => {
+    https.get('https://www.opendata.vip/metro/departure/%E6%96%B0%E5%9F%94', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      }
+    }, (res) => {
+      let d = '';
+      res.on('data', chunk => { d += chunk; });
+      res.on('end', () => {
+        try {
+          const reg = /<div class="departStation">\s*([^<]+)\s*<\/div>[\s\S]*?<div class="destinationStation">\s*([^<]+)\s*<\/div>[\s\S]*?class="countDown"[^>]*data-start="([^"]+)"/g;
+          const list = [];
+          let m;
+          while ((m = reg.exec(d)) !== null) {
+            const from = m[1].trim();
+            const to = m[2].trim();
+            const countdown = m[3].trim();
+            
+            let totalSec = 0;
+            if (countdown.includes(':')) {
+              const parts = countdown.split(':').map(Number);
+              totalSec = parts[0] * 60 + parts[1];
+            } else if (countdown === '進站中' || countdown === '列車進站' || countdown === '即將進站') {
+              totalSec = 20;
+            }
+
+            list.push({
+              station: from,
+              dest: to,
+              countdownText: countdown,
+              remainSec: totalSec,
+              line: from.includes('民生') ? '環狀線' : '板南線'
+            });
+          }
+          resolve(list);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on('error', reject);
+  });
+}
+
+// 處理台北捷運與環狀線即時到站看板代理請求
+async function handleMetroLiveProxy(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const now = Date.now();
+  if (cache.metroLive.data && now < cache.metroLive.expireAt) {
+    res.writeHead(200);
+    res.end(cache.metroLive.data);
+    return;
+  }
+
+  try {
+    const list = await fetchMetroLiveBoard();
+    const serialized = JSON.stringify({
+      success: true,
+      updatedAt: new Date().toISOString(),
+      data: list
+    });
+    cache.metroLive = {
+      data: serialized,
+      expireAt: now + 15000 // 快取 15 秒，提供平滑且近即時的看板
+    };
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cache.metroLive.data) {
+      res.writeHead(200);
+      res.end(cache.metroLive.data);
+    } else {
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法取得捷運即時到站資料', detail: err.message }));
+    }
+  }
+}
+
 // 建立 HTTP 伺服器
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
@@ -379,6 +469,10 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/api/tymetro/north') {
     handleTymetroProxy(req, res, 'north');
+    return;
+  }
+  if (pathname === '/api/metro/liveboard') {
+    handleMetroLiveProxy(req, res);
     return;
   }
 
@@ -429,6 +523,7 @@ if (require.main === module) {
     console.log(`[API 代理] 台灣高鐵 (桃園➔板橋): http://localhost:${PORT}/api/thsr/north`);
     console.log(`[API 代理] 機場捷運 (A3➔A18):   http://localhost:${PORT}/api/tymetro/south`);
     console.log(`[API 代理] 機場捷運 (A18➔A3):   http://localhost:${PORT}/api/tymetro/north`);
+    console.log(`[API 代理] 台北捷運 (即時看板): http://localhost:${PORT}/api/metro/liveboard`);
   });
 }
 

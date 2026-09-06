@@ -8081,11 +8081,123 @@ class TwinCityTransitMonitor {
     // 相容性別名
     this.tymetroMinutes = this.tymetroSouthMinutes;
 
-    // 台北捷運板南線 (新埔 BL08 <-> 板橋 BL07) (每 3 分鐘一班，行車約 2.5 分鐘)
+    // 台北捷運板南線官方全量真實時刻表 (新埔站平日296班+假日263班；板橋站平日292班+假日260班)
+    this.bannanXinpuWd = [
+      '06:02', '06:10', '06:18', '06:23', '06:30', '06:36', '06:44', '06:49', '06:53', '06:59', '07:05', '07:11',
+      '07:17', '07:21', '07:24', '07:26', '07:29', '07:32', '07:35', '07:40', '07:43', '07:45', '07:49', '07:52',
+      '07:54', '07:57', '07:59', '08:02', '08:06', '08:09', '08:13', '08:16', '08:19', '08:22', '08:26', '08:29',
+      '08:33', '08:35', '08:39', '08:42', '08:44', '08:47', '08:49', '08:51', '08:54', '08:56', '08:58', '09:02',
+      '09:05', '09:08', '09:10', '09:13', '09:16', '09:18', '09:21', '09:25', '09:28', '09:31', '09:35', '09:37',
+      '09:40', '09:44', '09:47', '09:50', '09:54', '09:57', '10:00', '10:04', '10:06', '10:10', '10:13', '10:17',
+      '10:19', '10:22', '10:25', '10:29', '10:34', '10:38', '10:43', '10:47', '10:52', '10:56', '11:01', '11:05',
+      '11:10', '11:14', '11:19', '11:23', '11:28', '11:32', '11:37', '11:41', '11:46', '11:50', '11:55', '11:59',
+      '12:04', '12:08', '12:13', '12:17', '12:22', '12:26', '12:31', '12:35', '12:40', '12:44', '12:49', '12:53',
+      '12:58', '13:02', '13:07', '13:11', '13:16', '13:20', '13:25', '13:29', '13:34', '13:38', '13:43', '13:47',
+      '13:52', '13:56', '14:01', '14:05', '14:10', '14:14', '14:19', '14:23', '14:28', '14:32', '14:37', '14:41',
+      '14:46', '14:50', '14:55', '14:59', '15:04', '15:08', '15:13', '15:17', '15:22', '15:26', '15:31', '15:35',
+      '15:40', '15:44', '15:48', '15:53', '15:57', '16:02', '16:06', '16:11', '16:15', '16:19', '16:24', '16:29',
+      '16:33', '16:38', '16:42', '16:46', '16:50', '16:53', '16:58', '17:00', '17:05', '17:08', '17:12', '17:15',
+      '17:20', '17:22', '17:27', '17:30', '17:33', '17:36', '17:40', '17:43', '17:47', '17:50', '17:54', '17:56',
+      '17:59', '18:02', '18:05', '18:07', '18:10', '18:13', '18:15', '18:18', '18:21', '18:23', '18:25', '18:28',
+      '18:30', '18:32', '18:35', '18:37', '18:39', '18:42', '18:44', '18:46', '18:49', '18:51', '18:53', '18:56',
+      '18:58', '19:00', '19:04', '19:06', '19:08', '19:11', '19:14', '19:17', '19:20', '19:24', '19:27', '19:31',
+      '19:35', '19:39', '19:42', '19:46', '19:49', '19:53', '19:56', '20:00', '20:03', '20:07', '20:10', '20:14',
+      '20:17', '20:21', '20:24', '20:28', '20:31', '20:35', '20:38', '20:42', '20:45', '20:49', '20:52', '20:56',
+      '20:59', '21:03', '21:06', '21:10', '21:13', '21:17', '21:20', '21:24', '21:27', '21:31', '21:34', '21:38',
+      '21:41', '21:45', '21:48', '21:52', '21:55', '21:59', '22:02', '22:06', '22:09', '22:13', '22:16', '22:19',
+      '22:23', '22:27', '22:30', '22:34', '22:37', '22:41', '22:44', '22:48', '22:51', '22:55', '22:58', '23:02',
+      '23:05', '23:09', '23:12', '23:16', '23:19', '23:23', '23:26', '23:30', '23:33', '23:36', '23:43', '23:50',
+      '23:58', '00:06', '00:14', '00:22', '00:30', '00:41', '00:50', '00:55'
+    ];
+
+    this.bannanXinpuWe = [
+      '06:02', '06:10', '06:18', '06:23', '06:30', '06:39', '06:47', '06:56', '07:04', '07:13', '07:21', '07:30',
+      '07:38', '07:46', '07:55', '07:59', '08:04', '08:13', '08:22', '08:27', '08:31', '08:41', '08:46', '08:51',
+      '08:56', '09:00', '09:05', '09:10', '09:15', '09:20', '09:25', '09:29', '09:34', '09:39', '09:44', '09:48',
+      '09:54', '09:58', '10:03', '10:08', '10:13', '10:18', '10:23', '10:27', '10:33', '10:37', '10:42', '10:47',
+      '10:51', '10:57', '11:01', '11:06', '11:11', '11:16', '11:20', '11:24', '11:28', '11:32', '11:36', '11:40',
+      '11:44', '11:48', '11:52', '11:56', '12:00', '12:04', '12:08', '12:12', '12:16', '12:20', '12:24', '12:28',
+      '12:32', '12:36', '12:40', '12:44', '12:48', '12:52', '12:56', '13:00', '13:04', '13:08', '13:12', '13:16',
+      '13:20', '13:24', '13:28', '13:32', '13:36', '13:40', '13:44', '13:48', '13:52', '13:56', '14:00', '14:04',
+      '14:08', '14:12', '14:16', '14:20', '14:24', '14:28', '14:32', '14:36', '14:40', '14:44', '14:48', '14:52',
+      '14:56', '15:00', '15:04', '15:08', '15:12', '15:16', '15:20', '15:24', '15:28', '15:32', '15:36', '15:39',
+      '15:44', '15:48', '15:52', '15:56', '16:00', '16:04', '16:08', '16:11', '16:16', '16:19', '16:24', '16:27',
+      '16:31', '16:35', '16:39', '16:43', '16:48', '16:52', '16:56', '17:00', '17:04', '17:07', '17:11', '17:15',
+      '17:18', '17:22', '17:25', '17:29', '17:32', '17:36', '17:39', '17:43', '17:46', '17:50', '17:53', '17:57',
+      '18:00', '18:04', '18:07', '18:11', '18:14', '18:18', '18:21', '18:25', '18:28', '18:32', '18:35', '18:39',
+      '18:42', '18:46', '18:50', '18:53', '18:57', '19:00', '19:04', '19:07', '19:11', '19:14', '19:18', '19:21',
+      '19:25', '19:28', '19:32', '19:35', '19:39', '19:42', '19:46', '19:49', '19:53', '19:56', '20:00', '20:03',
+      '20:07', '20:10', '20:14', '20:17', '20:21', '20:24', '20:28', '20:31', '20:35', '20:38', '20:42', '20:45',
+      '20:49', '20:52', '20:56', '20:59', '21:03', '21:06', '21:10', '21:13', '21:17', '21:20', '21:24', '21:27',
+      '21:31', '21:34', '21:38', '21:41', '21:45', '21:48', '21:52', '21:55', '21:59', '22:02', '22:06', '22:09',
+      '22:13', '22:16', '22:19', '22:23', '22:27', '22:30', '22:34', '22:37', '22:41', '22:44', '22:48', '22:51',
+      '22:55', '22:58', '23:02', '23:05', '23:09', '23:12', '23:16', '23:19', '23:23', '23:26', '23:30', '23:33',
+      '23:36', '23:43', '23:50', '23:58', '00:06', '00:14', '00:22', '00:30', '00:41', '00:50', '00:55'
+    ];
+
+    this.bannanBanqiaoWd = [
+      '06:03', '06:08', '06:13', '06:21', '06:24', '06:28', '06:34', '06:41', '06:46', '06:49', '06:53', '06:57',
+      '07:00', '07:03', '07:06', '07:08', '07:12', '07:15', '07:18', '07:22', '07:25', '07:28', '07:31', '07:34',
+      '07:37', '07:39', '07:41', '07:44', '07:46', '07:48', '07:50', '07:52', '07:54', '07:57', '07:59', '08:01',
+      '08:05', '08:07', '08:10', '08:14', '08:16', '08:18', '08:18', '08:20', '08:23', '08:25', '08:27', '08:29',
+      '08:31', '08:33', '08:36', '08:38', '08:41', '08:44', '08:47', '08:51', '08:54', '08:57', '09:00', '09:03',
+      '09:06', '09:10', '09:13', '09:17', '09:20', '09:23', '09:26', '09:30', '09:33', '09:36', '09:39', '09:45',
+      '09:49', '09:54', '09:58', '10:03', '10:07', '10:12', '10:16', '10:21', '10:25', '10:30', '10:34', '10:39',
+      '10:43', '10:48', '10:52', '10:57', '11:01', '11:06', '11:10', '11:15', '11:19', '11:24', '11:28', '11:33',
+      '11:37', '11:42', '11:46', '11:51', '11:55', '12:00', '12:04', '12:09', '12:13', '12:18', '12:22', '12:27',
+      '12:31', '12:36', '12:40', '12:45', '12:49', '12:54', '12:58', '13:03', '13:07', '13:12', '13:16', '13:21',
+      '13:25', '13:30', '13:34', '13:39', '13:43', '13:48', '13:52', '13:57', '14:01', '14:06', '14:10', '14:15',
+      '14:19', '14:24', '14:28', '14:33', '14:37', '14:42', '14:46', '14:51', '14:55', '15:00', '15:04', '15:09',
+      '15:13', '15:18', '15:22', '15:27', '15:31', '15:36', '15:40', '15:45', '15:49', '15:53', '15:58', '16:02',
+      '16:05', '16:08', '16:12', '16:16', '16:19', '16:23', '16:26', '16:30', '16:33', '16:37', '16:40', '16:44',
+      '16:47', '16:51', '16:54', '16:58', '17:00', '17:03', '17:05', '17:08', '17:12', '17:14', '17:17', '17:19',
+      '17:22', '17:26', '17:29', '17:32', '17:34', '17:36', '17:39', '17:41', '17:45', '17:47', '17:50', '17:54',
+      '17:57', '18:00', '18:04', '18:07', '18:10', '18:13', '18:17', '18:20', '18:23', '18:26', '18:28', '18:32',
+      '18:35', '18:38', '18:41', '18:44', '18:47', '18:50', '18:54', '18:56', '18:59', '19:01', '19:05', '19:07',
+      '19:09', '19:12', '19:15', '19:19', '19:21', '19:24', '19:26', '19:30', '19:33', '19:37', '19:40', '19:44',
+      '19:47', '19:51', '19:54', '19:58', '20:01', '20:05', '20:08', '20:12', '20:15', '20:19', '20:22', '20:26',
+      '20:29', '20:33', '20:36', '20:40', '20:43', '20:47', '20:50', '20:54', '20:57', '21:01', '21:04', '21:08',
+      '21:11', '21:15', '21:18', '21:22', '21:25', '21:29', '21:32', '21:36', '21:39', '21:43', '21:46', '21:50',
+      '21:53', '21:57', '22:00', '22:04', '22:07', '22:11', '22:14', '22:18', '22:21', '22:25', '22:28', '22:32',
+      '22:35', '22:43', '22:51', '22:59', '23:07', '23:15', '23:23', '23:30', '23:35', '23:42', '23:50', '23:58',
+      '00:06', '00:13', '00:23', '00:32'
+    ];
+
+    this.bannanBanqiaoWe = [
+      '06:03', '06:13', '06:21', '06:29', '06:38', '06:47', '06:51', '06:55', '07:04', '07:13', '07:18', '07:21',
+      '07:30', '07:39', '07:44', '07:48', '07:52', '07:57', '08:03', '08:08', '08:13', '08:17', '08:22', '08:27',
+      '08:32', '08:37', '08:42', '08:46', '08:51', '08:56', '09:01', '09:06', '09:11', '09:15', '09:20', '09:25',
+      '09:30', '09:35', '09:40', '09:44', '09:49', '09:54', '09:59', '10:04', '10:08', '10:12', '10:16', '10:20',
+      '10:24', '10:28', '10:32', '10:36', '10:40', '10:43', '10:48', '10:51', '10:56', '10:59', '11:04', '11:07',
+      '11:12', '11:15', '11:20', '11:23', '11:28', '11:31', '11:36', '11:39', '11:44', '11:47', '11:52', '11:55',
+      '12:00', '12:03', '12:08', '12:11', '12:16', '12:19', '12:24', '12:27', '12:32', '12:35', '12:40', '12:43',
+      '12:48', '12:51', '12:56', '12:59', '13:04', '13:07', '13:12', '13:15', '13:20', '13:23', '13:28', '13:31',
+      '13:36', '13:39', '13:44', '13:47', '13:52', '13:55', '14:00', '14:03', '14:08', '14:11', '14:16', '14:19',
+      '14:24', '14:27', '14:32', '14:35', '14:40', '14:43', '14:48', '14:51', '14:56', '14:59', '15:04', '15:07',
+      '15:12', '15:15', '15:20', '15:23', '15:28', '15:31', '15:36', '15:39', '15:44', '15:47', '15:52', '15:55',
+      '16:00', '16:03', '16:07', '16:11', '16:14', '16:18', '16:21', '16:25', '16:28', '16:32', '16:35', '16:39',
+      '16:42', '16:46', '16:49', '16:53', '16:56', '17:00', '17:03', '17:07', '17:11', '17:14', '17:18', '17:21',
+      '17:25', '17:28', '17:32', '17:35', '17:39', '17:42', '17:46', '17:49', '17:53', '17:56', '18:00', '18:03',
+      '18:07', '18:10', '18:14', '18:17', '18:21', '18:24', '18:28', '18:31', '18:35', '18:38', '18:42', '18:45',
+      '18:49', '18:52', '18:56', '19:01', '19:05', '19:09', '19:12', '19:16', '19:19', '19:23', '19:26', '19:30',
+      '19:33', '19:37', '19:40', '19:44', '19:47', '19:51', '19:54', '19:58', '20:01', '20:05', '20:08', '20:12',
+      '20:15', '20:19', '20:22', '20:26', '20:29', '20:33', '20:36', '20:40', '20:43', '20:47', '20:50', '20:54',
+      '20:57', '21:01', '21:04', '21:08', '21:11', '21:15', '21:18', '21:22', '21:25', '21:29', '21:32', '21:36',
+      '21:39', '21:43', '21:46', '21:50', '21:53', '21:57', '22:00', '22:04', '22:07', '22:11', '22:14', '22:18',
+      '22:21', '22:25', '22:28', '22:32', '22:35', '22:43', '22:51', '22:59', '23:07', '23:15', '23:23', '23:30',
+      '23:35', '23:42', '23:50', '23:58', '00:06', '00:13', '00:23', '00:32'
+    ];
+
+    // 台北捷運與環狀線即時到站看板快取與狀態 (支援 TDX 秒級連動與純靜態全量時刻表雙模)
+    this.isMetroOnline = false;
+    this.metroLiveData = null;
+    this.metroLastFetchTime = 0;
+
+    // 台北捷運板南線 (新埔 BL08 <-> 板橋 BL07) (行車約 2.5 分鐘)
     this.bannanIntervalMin = 3;
     this.bannanDurationMin = 2.5;
 
-    // 台北捷運環狀線 (新埔民生 Y17 <-> 新北產業園區 Y20) (每 7 分鐘一班，行車約 7 分鐘)
+    // 台北捷運環狀線 (新埔民生 Y17 <-> 新北產業園區 Y20) (行車約 7 分鐘)
     this.circularIntervalMin = 7;
     this.circularDurationMin = 7;
 
@@ -8239,12 +8351,96 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 計算台北捷運板南線即時進度與月台狀態 (去虛擬化：移除假車號，加入夜間收班檢核)
-  calculateBannanState(now = new Date()) {
-    const currentHour = now.getHours();
-    const isOutOfService = currentHour >= 0 && currentHour < 6; // 00:00 ~ 06:00 為夜間非營運時段
+  // 轉換時間字串至當日連續營運分鐘數 (凌晨 00:xx 視為 24:xx，即 1440 + m 分鐘)
+  timeToOperatingMinutes(timeStr) {
+    if (!timeStr || !timeStr.includes(':')) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return h < 4 ? (h + 24) * 60 + m : h * 60 + m;
+  }
 
-    if (isOutOfService) {
+  // 取得台北捷運板南線官方時刻表 (依當前方向與平假日自動切換)
+  getBannanSchedule(now = new Date(), isToQingpu = this.direction === 'to_qingpu') {
+    const day = now.getDay();
+    const isWeekend = (day === 0 || day === 6);
+    if (isToQingpu) {
+      return isWeekend ? this.bannanXinpuWe : this.bannanXinpuWd;
+    } else {
+      return isWeekend ? this.bannanBanqiaoWe : this.bannanBanqiaoWd;
+    }
+  }
+
+  // 非同步向代理伺服器抓取台北捷運/環狀線新埔站即時到站看板 (每 15 秒更新一次；純靜態或離線環境平滑退回全量時刻表)
+  async fetchMetroLiveboard() {
+    const nowMs = Date.now();
+    if (nowMs - this.metroLastFetchTime < 15000) return;
+
+    try {
+      const res = await fetch('/api/metro/liveboard').then(r => r.ok ? r.json() : null);
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        this.metroLiveData = res.data;
+        this.isMetroOnline = true;
+        this.metroLastFetchTime = nowMs;
+      } else {
+        this.isMetroOnline = false;
+      }
+    } catch (err) {
+      // 離線或 GitHub Pages 純靜態環境平滑退回使用內建之官方全量真實時刻表
+      this.isMetroOnline = false;
+    }
+  }
+
+  // 計算台北捷運板南線即時進度與月台狀態 (雙模自適應：支援 TDX 秒級即時看板 + 官方全量時刻表精確推算)
+  calculateBannanState(now = new Date()) {
+    const isToQingpu = this.direction === 'to_qingpu';
+    const curH = now.getHours();
+    const curM = now.getMinutes();
+    const curS = now.getSeconds();
+    const curOpMin = (curH < 4 ? curH + 24 : curH) * 60 + curM + curS / 60;
+
+    // 1. 優先檢查 TDX 即時看板數據 (有後端或即時通道時秒級連動)
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData)) {
+      const match = this.metroLiveData.find(item => {
+        if (isToQingpu) {
+          return item.station.includes('新埔') && !item.station.includes('民生') && (item.dest.includes('頂埔') || item.dest.includes('亞東'));
+        } else {
+          return item.dest.includes('南港') || item.station.includes('板橋');
+        }
+      });
+
+      if (match) {
+        const remainSec = match.remainSec;
+        const isArriving = remainSec <= 35 || match.countdownText.includes('進站');
+        const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((180 - Math.min(180, remainSec)) / 180) * 100)));
+        return {
+          lineName: '台北捷運板南線',
+          shortName: '板南線',
+          trainNo: isToQingpu ? '新埔 ➔ 板橋' : '板橋 ➔ 新埔',
+          progressPercent,
+          isRunning: !isArriving,
+          isOutOfService: false,
+          isLive: true,
+          sourceTag: 'TDX即時',
+          runStatusText: isArriving ? '列車進站中' : '即時在途倒數',
+          durationText: '車程 2.5分',
+          remainSec,
+          countdownText: match.countdownText,
+          platformStatus: isArriving ? '列車進站' : `${match.countdownText} 進站`,
+          sourceBadgeHtml: '<span class="feed-live-badge tdx-live"><i class="fa-solid fa-satellite-dish"></i> TDX即時</span>'
+        };
+      }
+    }
+
+    // 2. 官方全量真實時刻表基準 (保底軌道，在純靜態 GitHub Pages 下分秒精確對齊)
+    const schedule = this.getBannanSchedule(now, isToQingpu);
+    const mapped = schedule.map(t => ({
+      timeStr: t,
+      opMin: this.timeToOperatingMinutes(t)
+    }));
+
+    const upcoming = mapped.filter(t => t.opMin >= curOpMin);
+
+    // 收班時段檢查 (凌晨 00:56 ~ 06:01)
+    if (upcoming.length === 0 || (curH >= 1 && curH < 6)) {
       return {
         lineName: '台北捷運板南線',
         shortName: '板南線',
@@ -8252,46 +8448,51 @@ class TwinCityTransitMonitor {
         progressPercent: 0,
         isRunning: false,
         isOutOfService: true,
-        runStatusText: '今日已收班 (首班 06:00)',
+        isLive: false,
+        sourceTag: '今日收班',
+        runStatusText: '今日已收班 (首班 06:02)',
         durationText: '車程 2.5分',
         remainSec: 0,
         countdownText: '--:--',
-        platformStatus: '非營運 (首班 06:00)'
+        platformStatus: '非營運 (首班 06:02)',
+        sourceBadgeHtml: '<span class="feed-live-badge"><i class="fa-solid fa-moon"></i> 今日收班</span>'
       };
     }
 
-    const totalSec = now.getMinutes() * 60 + now.getSeconds();
-    const cycleSec = this.bannanIntervalMin * 60;
-    const runSec = this.bannanDurationMin * 60;
-    const currentInCycle = totalSec % cycleSec;
+    const nextTrain = upcoming[0];
+    const diffMin = nextTrain.opMin - curOpMin;
+    const remainSec = Math.max(0, Math.floor(diffMin * 60));
+    const isArriving = remainSec <= 40;
+    const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((180 - Math.min(180, remainSec)) / 180) * 100)));
 
-    const isRunning = currentInCycle < runSec;
-    const progressPercent = isRunning ? Math.round((currentInCycle / runSec) * 100) : 98;
-    const runStatusText = isRunning ? '行駛中' : '進站停靠中';
-
-    const remainSec = cycleSec - currentInCycle;
-    const countdownText = this.formatCountdown(remainSec);
-    const platformStatus = remainSec <= 40 ? '即將進站' : `班距約 2~4分`;
+    const m = Math.floor(remainSec / 60);
+    const s = remainSec % 60;
+    const countdownText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 
     return {
       lineName: '台北捷運板南線',
       shortName: '板南線',
-      trainNo: 'BL08 ↔ BL07',
-      progressPercent: Math.max(2, Math.min(98, progressPercent)),
-      isRunning,
+      trainNo: isToQingpu ? '新埔 ➔ 板橋' : '板橋 ➔ 新埔',
+      progressPercent,
+      isRunning: !isArriving,
       isOutOfService: false,
-      runStatusText,
+      isLive: false,
+      sourceTag: '官方時刻表',
+      nextDepTime: nextTrain.timeStr,
+      runStatusText: isArriving ? '列車進站中' : '行駛中',
       durationText: '車程 2.5分',
       remainSec,
       countdownText,
-      platformStatus
+      platformStatus: isArriving ? '即將進站' : `${nextTrain.timeStr} 發車 (${countdownText})`,
+      sourceBadgeHtml: '<span class="feed-live-badge sched-badge"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>'
     };
   }
 
-  // 計算台北捷運環狀線即時進度與月台狀態 (去虛擬化：移除假車號，加入夜間收班檢核)
+  // 計算台北捷運環狀線即時進度與月台狀態 (支援 TDX 即時看板連動 + 去虛擬化平穩班距)
   calculateCircularState(now = new Date()) {
-    const currentHour = now.getHours();
-    const isOutOfService = currentHour >= 0 && currentHour < 6; // 00:00 ~ 06:00 為夜間非營運時段
+    const isToQingpu = this.direction === 'to_qingpu';
+    const curH = now.getHours();
+    const isOutOfService = curH >= 0 && curH < 6; // 00:00 ~ 06:00 為夜間非營運時段
 
     if (isOutOfService) {
       return {
@@ -8301,14 +8502,51 @@ class TwinCityTransitMonitor {
         progressPercent: 0,
         isRunning: false,
         isOutOfService: true,
+        isLive: false,
+        sourceTag: '今日收班',
         runStatusText: '今日已收班 (首班 06:00)',
         durationText: '車程 7分',
         remainSec: 0,
         countdownText: '--:--',
-        platformStatus: '非營運 (首班 06:00)'
+        platformStatus: '非營運 (首班 06:00)',
+        sourceBadgeHtml: '<span class="feed-live-badge"><i class="fa-solid fa-moon"></i> 今日收班</span>'
       };
     }
 
+    // 1. 優先檢查 TDX 即時看板數據 (新埔民生站)
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData)) {
+      const match = this.metroLiveData.find(item => {
+        if (isToQingpu) {
+          return item.station.includes('新埔民生') && item.dest.includes('新北產業園區');
+        } else {
+          return item.station.includes('新埔民生') && item.dest.includes('大坪林');
+        }
+      });
+
+      if (match) {
+        const remainSec = match.remainSec;
+        const isArriving = remainSec <= 40 || match.countdownText.includes('進站');
+        const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((420 - Math.min(420, remainSec)) / 420) * 100)));
+        return {
+          lineName: '台北捷運環狀線',
+          shortName: '環狀線',
+          trainNo: isToQingpu ? '新埔民生 ➔ 新北產園' : '新北產園 ➔ 新埔民生',
+          progressPercent,
+          isRunning: !isArriving,
+          isOutOfService: false,
+          isLive: true,
+          sourceTag: 'TDX即時',
+          runStatusText: isArriving ? '列車進站中' : '即時在途倒數',
+          durationText: '車程 7分',
+          remainSec,
+          countdownText: match.countdownText,
+          platformStatus: isArriving ? '列車進站' : `${match.countdownText} 進站`,
+          sourceBadgeHtml: '<span class="feed-live-badge tdx-live"><i class="fa-solid fa-satellite-dish"></i> TDX即時</span>'
+        };
+      }
+    }
+
+    // 2. 平穩班距基準
     const totalSec = now.getMinutes() * 60 + now.getSeconds();
     const cycleSec = this.circularIntervalMin * 60;
     const runSec = this.circularDurationMin * 60;
@@ -8329,11 +8567,14 @@ class TwinCityTransitMonitor {
       progressPercent: Math.max(2, Math.min(98, progressPercent)),
       isRunning,
       isOutOfService: false,
+      isLive: false,
+      sourceTag: '常態班距',
       runStatusText,
       durationText: '車程 7分',
       remainSec,
       countdownText,
-      platformStatus
+      platformStatus,
+      sourceBadgeHtml: '<span class="feed-live-badge sched-badge"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>'
     };
   }
 
@@ -8734,10 +8975,45 @@ class TwinCityTransitMonitor {
       const waitSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
       if (waitSec < 0) continue;
 
-      // 計算最佳建議出門時間：提前 bufferMins 出門，若剛好趕上則為現在出門
-      const leaveDate = waitSec / 60 >= thsrBufferMins 
-        ? this.addMinutes(depDate, -thsrBufferMins) 
-        : new Date(now);
+      // 依板南線官方全量時刻表計算精確銜接班次與建議出門時間
+      let metroTrainStr = null;
+      let leaveDate = null;
+      const thsrDepOpMin = this.timeToOperatingMinutes(t.depTime);
+
+      if (isToQingpu) {
+        // 新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔
+        // 抵達板橋高鐵月台最晚時間：thsrDepOpMin - 5 (驗票進站)
+        // 捷運新埔發車最晚時間：thsrDepOpMin - 5 - 2.5 = thsrDepOpMin - 7.5 分鐘
+        const latestMetroDepMin = thsrDepOpMin - 7.5;
+        const bannanSched = this.getBannanSchedule(now, true);
+        const validTrains = bannanSched
+          .map(timeStr => ({ timeStr, opMin: this.timeToOperatingMinutes(timeStr) }))
+          .filter(m => m.opMin <= latestMetroDepMin && m.opMin >= nowDayMinutes + 5);
+
+        if (validTrains.length > 0) {
+          const chosen = validTrains[validTrains.length - 1];
+          metroTrainStr = chosen.timeStr;
+          const [mH, mM] = chosen.timeStr.split(':').map(Number);
+          const mDate = new Date(now);
+          mDate.setHours(mH, mM, 0, 0);
+          leaveDate = this.addMinutes(mDate, -5); // 提早 5 分鐘步程出門
+        } else {
+          leaveDate = waitSec / 60 >= thsrBufferMins ? this.addMinutes(depDate, -thsrBufferMins) : new Date(now);
+        }
+      } else {
+        // 青埔目的地 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔
+        leaveDate = waitSec / 60 >= thsrBufferMins ? this.addMinutes(depDate, -thsrBufferMins) : new Date(now);
+        const arrTrainDate = this.addMinutes(depDate, t.duration);
+        const arrTrainOpMin = (arrTrainDate.getHours() < 4 ? arrTrainDate.getHours() + 24 : arrTrainDate.getHours()) * 60 + arrTrainDate.getMinutes();
+        const earliestMetroDepMin = arrTrainOpMin + 5; // 站內步行轉乘 5 分鐘
+        const bannanSched = this.getBannanSchedule(now, false);
+        const validReturnTrains = bannanSched
+          .map(timeStr => ({ timeStr, opMin: this.timeToOperatingMinutes(timeStr) }))
+          .filter(m => m.opMin >= earliestMetroDepMin);
+        if (validReturnTrains.length > 0) {
+          metroTrainStr = validReturnTrains[0].timeStr;
+        }
+      }
 
       const arrTrainDate = this.addMinutes(depDate, t.duration);
       const finalDestArr = isToQingpu ? this.addMinutes(arrTrainDate, 15) : this.addMinutes(arrTrainDate, 5);
@@ -8759,8 +9035,8 @@ class TwinCityTransitMonitor {
         name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次 [${trainTypeShort}]` : `高鐵 ${t.trainNo}次 [${trainTypeShort}] ➔ 板南線`,
         route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔目的地' : '青埔目的地 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
         detail: isToQingpu
-          ? `${this.formatTime(leaveDate)} 出門 ➔ 步5分搭板南線至板橋 ➔ 轉乘5分搭高鐵 (${t.trainNo}次 ${t.depTime}發 ‧ 停靠桃園) ➔ 抵桃園高鐵步15分 ➔ ${this.formatTime(finalDestArr)} 抵達目的地`
-          : `${this.formatTime(leaveDate)} 出門 ➔ 步15分抵桃園高鐵 ➔ 搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ 板橋轉乘5分搭板南線 ➔ 步5分於 ${this.formatTime(finalDestArr)} 抵達新埔`,
+          ? `${this.formatTime(leaveDate)} 出門 ➔ 步5分搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往板橋'}) ➔ 抵板橋轉乘5分搭高鐵 (${t.trainNo}次 ${t.depTime}發 ‧ 停靠桃園) ➔ 抵桃園高鐵步15分 ➔ ${this.formatTime(finalDestArr)} 抵達目的地`
+          : `${this.formatTime(leaveDate)} 出門 ➔ 步15分抵桃園高鐵 ➔ 搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ ${this.formatTime(arrTrainDate)}抵板橋 ➔ 轉乘搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往新埔'}) ➔ 步5分於 ${this.formatTime(finalDestArr)} 抵達新埔`,
         highlight: false
       });
     }
@@ -8828,9 +9104,10 @@ class TwinCityTransitMonitor {
     const now = new Date();
     const isToQingpu = this.direction === 'to_qingpu';
 
-    // 週期性向後端代理確認最新官方時刻表 (內部具備 5 分鐘節流與快取防抖保護)
+    // 週期性向後端代理確認最新官方時刻表 (內部具備 5 分鐘節流與快取防抖保護，捷運看板每15秒更新)
     this.fetchThsrRealtime();
     this.fetchTymetroRealtime();
+    this.fetchMetroLiveboard();
 
     const bannan = this.calculateBannanState(now);
     const circular = this.calculateCircularState(now);
@@ -9014,7 +9291,7 @@ class TwinCityTransitMonitor {
           <div class="pids-title-group">
             <span class="leg-dot bannan-dot"></span>
             <span class="leg-title">捷運板南線</span>
-            <span class="pids-train-pill">高頻班距 2~4分</span>
+            ${bannan.sourceBadgeHtml ? bannan.sourceBadgeHtml : '<span class="pids-train-pill">高頻班距 2~4分</span>'}
           </div>
           <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> 月台 ${bannan.platformStatus}</span>
           <span class="leg-info">車程 2.5分</span>
@@ -9099,7 +9376,7 @@ class TwinCityTransitMonitor {
           <div class="pids-title-group">
             <span class="leg-dot circular-dot"></span>
             <span class="leg-title">捷運環狀線</span>
-            <span class="pids-train-pill circular-train-pill">平均班距 7~10分</span>
+            ${circular.sourceBadgeHtml ? circular.sourceBadgeHtml : '<span class="pids-train-pill circular-train-pill">平均班距 7~10分</span>'}
           </div>
           <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> 月台 ${circular.platformStatus}</span>
           <span class="leg-info">車程 7分</span>
@@ -9651,11 +9928,12 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態，並每 5 分鐘自動同步官方高鐵與機捷最新時刻)
+  // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態，並每 5 分鐘自動同步官方高鐵與機捷最新時刻，每 15 秒同步捷運看板)
   start() {
     this.stop();
     this.fetchThsrRealtime();
     this.fetchTymetroRealtime();
+    this.fetchMetroLiveboard();
     this.render();
     this.timerId = setInterval(() => {
       this.render();
