@@ -2,9 +2,14 @@ name: 自動更新雙埔大眾運輸與 YouBike 數據
 
 on:
   schedule:
-    # 每 10 分鐘定時全自動更新 (高鐵、機捷、捷運看板與 YouBike)
-    - cron: '*/10 * * * *'
+    # 官方支援最高頻率：每 5 分鐘極速定時全自動更新 (高鐵、機捷、捷運看板與 YouBike)
+    - cron: '*/5 * * * *'
   workflow_dispatch:
+
+# 避免高頻執行時 Git push 衝突，確保同一時間僅有一組更新作業執行
+concurrency:
+  group: transit-data-sync
+  cancel-in-progress: false
 
 jobs:
   update-transit-data:
@@ -28,4 +33,4 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/*.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: 自動更新全線大眾運輸與 YouBike 即時數據 [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: 極速更新全線大眾運輸與 YouBike 即時數據 [skip ci]" && git push)
