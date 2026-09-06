@@ -206,41 +206,87 @@ async function syncTymetro(outDir) {
   }
 }
 
-// 4. 同步台北捷運新埔站 / 環狀線新埔民生站即時到站看板
+// 4. 同步台北捷運新埔/板橋即時到站看板與車廂擁擠度 (BL08 新埔 / BL07 板橋)
 async function syncMetroLive(outDir) {
-  console.log('[4/4] 正在自 opendata.vip 同步捷運新埔即時看板動態...');
+  console.log('[4/5] 正在自 opendata.vip 同步捷運新埔/板橋即時看板與車廂擁擠度...');
   try {
-    const liveTrains = await server.fetchMetroLiveBoard();
+    const [liveTrains, carWeightData] = await Promise.all([
+      server.fetchMetroLiveBoard().catch(err => {
+        console.warn('  - 即時到站看板暫時異常:', err.message);
+        return [];
+      }),
+      server.fetchCarWeightData('all').catch(err => {
+        console.warn('  - 車廂擁擠度暫時異常:', err.message);
+        return {};
+      })
+    ]);
+
+    const outFile = path.join(outDir, 'metro-live.json');
+    let existingData = {};
+    if (fs.existsSync(outFile)) {
+      try {
+        existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+      } catch (e) {}
+    }
+
     const payload = {
       updatedAt: getTaiwanNow().toISOString(),
       updateTimeDisplay: getTaiwanTimeString(),
-      count: liveTrains.length,
-      trains: liveTrains
+      count: liveTrains.length > 0 ? liveTrains.length : (existingData.count || 0),
+      trains: liveTrains.length > 0 ? liveTrains : (existingData.trains || []),
+      carWeight: (carWeightData && Object.keys(carWeightData).length > 0) ? carWeightData : (existingData.carWeight || {})
     };
 
-    const outFile = path.join(outDir, 'metro-live.json');
     fs.writeFileSync(outFile, JSON.stringify(payload));
-    console.log(`  -> 已寫入 ${outFile} (看板共 ${liveTrains.length} 筆即時進站資訊)`);
+    console.log(`  -> 已寫入 ${outFile} (看板共 ${payload.trains.length} 筆即時進站資訊，車廂擁擠度涵蓋 ${Object.keys(payload.carWeight).length} 站)`);
   } catch (err) {
     console.error('  - 捷運看板同步失敗 (維持既有快照):', err.message);
   }
 }
 
+// 5. 同步高鐵桃園站即時剩餘停車位 (P1/P2/P3 停車場)
+async function syncParking(outDir) {
+  console.log('[5/5] 正在自 opendata.vip 同步高鐵即時停車場剩餘車位...');
+  try {
+    const lots = await server.fetchThsrParkingData();
+    const outFile = path.join(outDir, 'parking.json');
+    let existingLots = [];
+    if (fs.existsSync(outFile)) {
+      try {
+        const d = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+        if (Array.isArray(d.lots)) existingLots = d.lots;
+      } catch (e) {}
+    }
+
+    const payload = {
+      updatedAt: getTaiwanNow().toISOString(),
+      updateTimeDisplay: getTaiwanTimeString(),
+      lots: lots.length > 0 ? lots : existingLots
+    };
+
+    fs.writeFileSync(outFile, JSON.stringify(payload));
+    console.log(`  -> 已寫入 ${outFile} (停車場共 ${payload.lots.length} 處即時車位資料)`);
+  } catch (err) {
+    console.error('  - 高鐵停車場同步失敗 (維持既有快照):', err.message);
+  }
+}
+
 async function main() {
   const t0 = Date.now();
-  console.log('=== [雙埔大眾運輸] 開始全域雲端自動同步 (高頻最佳化) ===\n');
+  console.log('=== [雙埔大眾運輸] 開始全域雲端自動同步 (全維度極速版) ===\n');
 
   const outDir = path.join(__dirname, '../data');
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
-  // 平行執行四大資料同步任務
+  // 平行執行五大資料同步任務
   await Promise.allSettled([
     syncYouBike(outDir),
     syncThsr(outDir),
     syncTymetro(outDir),
-    syncMetroLive(outDir)
+    syncMetroLive(outDir),
+    syncParking(outDir)
   ]);
 
   console.log(`\n=== 全域同步作業圓滿完成！(總耗時: ${Date.now() - t0} ms) ===`);

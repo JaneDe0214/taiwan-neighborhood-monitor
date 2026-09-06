@@ -3021,6 +3021,186 @@ a.coord-tag:hover {
   display: inline-block;
 }
 
+/* 車廂擁擠度橫向條 */
+.bannan-car-crowd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 2px;
+}
+
+.crowd-station-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.crowd-cars-strip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.crowd-car-box {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+.crowd-car-box:hover {
+  transform: scale(1.08);
+}
+
+.crowd-car-box.level-1 {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+.crowd-car-box.level-2 {
+  background: rgba(0, 240, 255, 0.18);
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  color: #00f0ff;
+}
+.crowd-car-box.level-3 {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+.crowd-car-box.level-4 {
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #f87171;
+}
+
+.car-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.crowd-car-box.level-1 .car-status-dot { background: #10b981; box-shadow: 0 0 4px #10b981; }
+.crowd-car-box.level-2 .car-status-dot { background: #00f0ff; box-shadow: 0 0 4px #00f0ff; }
+.crowd-car-box.level-3 .car-status-dot { background: #f59e0b; box-shadow: 0 0 4px #f59e0b; }
+.crowd-car-box.level-4 .car-status-dot { background: #ef4444; box-shadow: 0 0 4px #ef4444; }
+
+/* 高鐵停車場剩餘車位微型條 */
+.thsr-parking-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 119, 0, 0.25);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 2px;
+}
+
+.parking-title-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #ff9900;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.parking-lots-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.parking-lot-chip {
+  font-size: 0.58rem;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.parking-lot-chip.lot-available {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+.parking-lot-chip.lot-tight {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
+}
+
+/* 抽屜內即時捷運到站看板 */
+.drawer-metro-live-section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.drawer-section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.drawer-metro-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.drawer-metro-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.drawer-metro-chip.chip-bannan {
+  border-color: rgba(2, 132, 199, 0.35);
+}
+.drawer-metro-chip.chip-circular {
+  border-color: rgba(234, 179, 8, 0.35);
+}
+.dm-station {
+  font-weight: 700;
+  color: #f1f5f9;
+}
+.dm-dest {
+  color: #cbd5e1;
+}
+.dm-status {
+  padding: 0 4px;
+  border-radius: 2px;
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+  font-weight: 700;
+}
+.dm-status.dm-arriving {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
 /* ==========================================================================
    出門搭車到站時間表抽屜面板 (移除重複動畫，杜絕每秒重繪閃爍)
    ========================================================================== */
@@ -8422,20 +8602,28 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 非同步抓取台北捷運/環狀線新埔站即時到站看板 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
+  // 非同步抓取台北捷運/環狀線即時到站看板與車廂擁擠度 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
   async fetchMetroLiveboard() {
     const nowMs = Date.now();
     if (nowMs - this.metroLastFetchTime < 15000) return;
 
     try {
       let res = await fetch('/api/metro/liveboard').then(r => r.ok ? r.json() : null).catch(() => null);
+      let weightRes = await fetch('/api/metro/carweight').then(r => r.ok ? r.json() : null).catch(() => null);
+
       if (!res) {
         // GitHub Pages 純靜態環境：讀取同源 data/metro-live.json
         const staticLive = await fetch('data/metro-live.json').then(r => r.ok ? r.json() : null).catch(() => null);
-        if (staticLive && Array.isArray(staticLive.trains)) {
-          res = { success: true, data: staticLive.trains };
+        if (staticLive) {
+          if (Array.isArray(staticLive.trains)) {
+            res = { success: true, data: staticLive.trains };
+          }
+          if (staticLive.carWeight) {
+            weightRes = { success: true, data: staticLive.carWeight };
+          }
         }
       }
+
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         this.metroLiveData = res.data;
         this.isMetroOnline = true;
@@ -8443,19 +8631,66 @@ class TwinCityTransitMonitor {
       } else {
         this.isMetroOnline = false;
       }
+
+      if (weightRes && weightRes.data) {
+        this.carWeightData = weightRes.data;
+      }
     } catch (err) {
-      // 離線或未連線時平滑退回使用內建之官方全量真實時刻表
       this.isMetroOnline = false;
     }
   }
 
-  // 計算台北捷運板南線即時進度與月台狀態 (雙模自適應：支援 TDX 秒級即時看板 + 官方全量時刻表精確推算)
+  // 非同步抓取高鐵桃園站即時剩餘停車位 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
+  async fetchParkingData() {
+    const nowMs = Date.now();
+    if (this.parkingLastFetchTime && nowMs - this.parkingLastFetchTime < 30000) return;
+
+    try {
+      let res = await fetch('/api/parking/thsr').then(r => r.ok ? r.json() : null).catch(() => null);
+      if (!res || !res.lots) {
+        // GitHub Pages 純靜態環境：讀取同源 data/parking.json
+        const staticParking = await fetch('data/parking.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        if (staticParking && Array.isArray(staticParking.lots)) {
+          res = { success: true, lots: staticParking.lots };
+        }
+      }
+
+      if (res && Array.isArray(res.lots) && res.lots.length > 0) {
+        this.parkingLots = res.lots;
+        this.parkingLastFetchTime = nowMs;
+      }
+    } catch (err) {}
+  }
+
+  // 計算台北捷運板南線即時進度與月台狀態 (雙模自適應：支援 TDX 秒級即時看板 + 官方全量時刻表精確推算 + 車廂擁擠度)
   calculateBannanState(now = new Date()) {
     const isToQingpu = this.direction === 'to_qingpu';
     const curH = now.getHours();
     const curM = now.getMinutes();
     const curS = now.getSeconds();
     const curOpMin = (curH < 4 ? curH + 24 : curH) * 60 + curM + curS / 60;
+
+    // 取得當站車廂擁擠度資訊 (往青埔看新埔站 BL08 / 往新埔看板橋站 BL07)
+    const targetCode = isToQingpu ? 'BL08' : 'BL07';
+    const targetStationName = isToQingpu ? '新埔站' : '板橋站';
+    let carWeightInfo = null;
+    if (this.carWeightData && this.carWeightData[targetCode]) {
+      carWeightInfo = this.carWeightData[targetCode];
+    } else {
+      carWeightInfo = {
+        station: targetStationName,
+        code: targetCode,
+        cars: [
+          { carNum: '1車', status: '舒適', level: 1 },
+          { carNum: '2車', status: '舒適', level: 1 },
+          { carNum: '3車', status: '舒適', level: 1 },
+          { carNum: '4車', status: '舒適', level: 1 },
+          { carNum: '5車', status: '舒適', level: 1 },
+          { carNum: '6車', status: '舒適', level: 1 }
+        ],
+        message: '離峰平穩'
+      };
+    }
 
     // 1. 優先檢查 TDX 即時看板數據 (有後端或即時通道時秒級連動)
     if (this.isMetroOnline && Array.isArray(this.metroLiveData)) {
@@ -8485,7 +8720,8 @@ class TwinCityTransitMonitor {
           remainSec,
           countdownText: match.countdownText,
           platformStatus: isArriving ? '列車進站' : `${match.countdownText} 進站`,
-          sourceBadgeHtml: '<span class="feed-live-badge tdx-live"><i class="fa-solid fa-satellite-dish"></i> TDX即時</span>'
+          sourceBadgeHtml: '<span class="feed-live-badge tdx-live"><i class="fa-solid fa-satellite-dish"></i> TDX即時</span>',
+          carWeight: carWeightInfo
         };
       }
     }
@@ -8515,7 +8751,8 @@ class TwinCityTransitMonitor {
         remainSec: 0,
         countdownText: '--:--',
         platformStatus: '非營運 (首班 06:02)',
-        sourceBadgeHtml: '<span class="feed-live-badge"><i class="fa-solid fa-moon"></i> 今日收班</span>'
+        sourceBadgeHtml: '<span class="feed-live-badge"><i class="fa-solid fa-moon"></i> 今日收班</span>',
+        carWeight: carWeightInfo
       };
     }
 
@@ -8544,7 +8781,8 @@ class TwinCityTransitMonitor {
       remainSec,
       countdownText,
       platformStatus: isArriving ? '即將進站' : `${nextTrain.timeStr} 發車 (${countdownText})`,
-      sourceBadgeHtml: '<span class="feed-live-badge sched-badge"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>'
+      sourceBadgeHtml: '<span class="feed-live-badge sched-badge"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>',
+      carWeight: carWeightInfo
     };
   }
 
@@ -8888,7 +9126,8 @@ class TwinCityTransitMonitor {
       activeTrains,                     // 多列車在線陣列
       activeTrainsCount: activeTrains.length,
       countdownText,
-      platformStatus
+      platformStatus,
+      parkingLots: this.parkingLots || []
     };
   }
 
@@ -9185,6 +9424,7 @@ class TwinCityTransitMonitor {
     this.fetchThsrRealtime();
     this.fetchTymetroRealtime();
     this.fetchMetroLiveboard();
+    this.fetchParkingData();
 
     const bannan = this.calculateBannanState(now);
     const circular = this.calculateCircularState(now);
@@ -9385,6 +9625,20 @@ class TwinCityTransitMonitor {
           <span class="station-label">${isToQingpu ? '新埔站 (BL08)' : '板橋站 (BL07)'}</span>
           <span class="station-label">${isToQingpu ? '板橋站 (BL07)' : '新埔站 (BL08)'}</span>
         </div>
+        ${bannan.carWeight && Array.isArray(bannan.carWeight.cars) && bannan.carWeight.cars.length > 0 ? `
+          <div class="bannan-car-crowd-row" title="${bannan.carWeight.station}站即時車廂擁擠度 (1~6車)">
+            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station} 車廂擁擠度</span>
+            <div class="crowd-cars-strip">
+              ${bannan.carWeight.cars.map(c => `
+                <div class="crowd-car-box level-${c.level}" title="${c.carNum}：${c.status}">
+                  <span class="car-status-dot"></span>
+                  <span>${c.carNum}</span>
+                  <span style="font-size:0.55rem;opacity:0.9;">${c.status}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -9441,6 +9695,19 @@ class TwinCityTransitMonitor {
           <span class="station-label">${isToQingpu ? '板橋站 (' + thsr.depTime + '發)' : '桃園站 (' + thsr.depTime + '發)'}</span>
           <span class="station-label">${isToQingpu ? '桃園站 (' + thsr.arrTime + '到)' : '板橋站 (' + thsr.arrTime + '到)'}</span>
         </div>
+        ${Array.isArray(thsr.parkingLots) && thsr.parkingLots.length > 0 ? `
+          <div class="thsr-parking-status-bar" title="高鐵桃園站即時剩餘車位 (P1/P2/P3)">
+            <span class="parking-title-tag"><i class="fa-solid fa-square-parking"></i> 桃園站停車場</span>
+            <div class="parking-lots-strip">
+              ${thsr.parkingLots.map(lot => `
+                <span class="parking-lot-chip ${lot.available < 8 ? 'lot-tight' : 'lot-available'}" title="${lot.name}：剩餘 ${lot.spaceText}">
+                  ${lot.name.includes('P1') ? 'P1' : (lot.name.includes('P2') ? 'P2' : (lot.name.includes('P3') ? 'P3立體' : '停車場'))}: 
+                  <strong>${lot.available}</strong>/${lot.total}格
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -9922,6 +10189,26 @@ class TwinCityTransitMonitor {
             `}
           </div>
         </div>
+
+        <!-- 捷運全向即時到站看板 (新埔站 / 新埔民生 / 板橋站 各方向即時倒數) -->
+        ${Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0 ? `
+          <div class="drawer-metro-live-section">
+            <div class="drawer-section-title">
+              <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> 
+              捷運全向即時到站看板 (新埔 ‧ 新埔民生 ‧ 板橋)
+            </div>
+            <div class="drawer-metro-chips-row">
+              ${this.metroLiveData.map(item => `
+                <div class="drawer-metro-chip ${item.line === '環狀線' ? 'chip-circular' : 'chip-bannan'}" title="${item.station} 往 ${item.dest}：${item.countdownText}">
+                  <span class="dm-station">${item.station}</span>
+                  <i class="fa-solid fa-arrow-right" style="font-size:0.5rem;opacity:0.6;"></i>
+                  <span class="dm-dest">${item.dest}</span>
+                  <span class="dm-status ${item.countdownText.includes('進站') ? 'dm-arriving' : ''}">${item.countdownText}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
   }

@@ -24,7 +24,9 @@ const cache = {
   thsrNorth: { data: null, expireAt: 0 },
   tymetroSouth: { data: null, expireAt: 0 },
   tymetroNorth: { data: null, expireAt: 0 },
-  metroLive: { data: null, expireAt: 0 }
+  metroLive: { data: null, expireAt: 0 },
+  metroCarWeight: { data: null, expireAt: 0 },
+  parkingThsr: { data: null, expireAt: 0 }
 };
 
 // 內部抓取遠端 JSON 函式
@@ -393,50 +395,72 @@ async function handleYouBikeProxy(req, res, cityKey, sourceUrl) {
   }
 }
 
-// 抓取台北捷運與環狀線新埔即時到站看板 (串接 TDX / opendata.vip，秒級連動)
-function fetchMetroLiveBoard() {
+// 內部通用抓取遠端 HTML 函式
+function fetchRemoteHtml(url, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
-    https.get('https://www.opendata.vip/metro/departure/%E6%96%B0%E5%9F%94', {
+    const req = https.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       }
     }, (res) => {
-      let d = '';
-      res.on('data', chunk => { d += chunk; });
-      res.on('end', () => {
-        try {
-          const reg = /<div class="departStation">\s*([^<]+)\s*<\/div>[\s\S]*?<div class="destinationStation">\s*([^<]+)\s*<\/div>[\s\S]*?class="countDown"[^>]*data-start="([^"]+)"/g;
-          const list = [];
-          let m;
-          while ((m = reg.exec(d)) !== null) {
-            const from = m[1].trim();
-            const to = m[2].trim();
-            const countdown = m[3].trim();
-            
-            let totalSec = 0;
-            if (countdown.includes(':')) {
-              const parts = countdown.split(':').map(Number);
-              totalSec = parts[0] * 60 + parts[1];
-            } else if (countdown === '進站中' || countdown === '列車進站' || countdown === '即將進站') {
-              totalSec = 20;
-            }
-
-            list.push({
-              station: from,
-              dest: to,
-              countdownText: countdown,
-              remainSec: totalSec,
-              line: from.includes('民生') ? '環狀線' : '板南線'
-            });
-          }
-          resolve(list);
-        } catch (e) {
-          reject(e);
-        }
-      });
-    }).on('error', reject);
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchRemoteHtml(res.headers.location, timeoutMs).then(resolve).catch(reject);
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP Status ${res.statusCode}`));
+      }
+      let rawData = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => { rawData += chunk; });
+      res.on('end', () => resolve(rawData));
+    });
+    req.on('error', reject);
+    req.setTimeout(timeoutMs, () => {
+      req.destroy();
+      reject(new Error(`連線逾時: ${url}`));
+    });
   });
+}
+
+// 解析到站時間 HTML 區塊
+function parseDepartureHtml(html, defaultStation = '') {
+  const list = [];
+  const reg = /<div class="departStation">\s*([^<]+)\s*<\/div>[\s\S]*?<div class="destinationStation">\s*([^<]+)\s*<\/div>[\s\S]*?class="countDown"[^>]*data-start="([^"]+)"/g;
+  let m;
+  while ((m = reg.exec(html)) !== null) {
+    const from = m[1].trim();
+    const to = m[2].trim();
+    const countdown = m[3].trim();
+    let totalSec = 0;
+    if (countdown.includes(':')) {
+      const parts = countdown.split(':').map(Number);
+      totalSec = parts[0] * 60 + parts[1];
+    } else if (countdown === '進站中' || countdown === '列車進站' || countdown === '即將進站') {
+      totalSec = 20;
+    }
+    list.push({
+      station: from || defaultStation,
+      dest: to,
+      countdownText: countdown,
+      remainSec: totalSec,
+      line: from.includes('民生') ? '環狀線' : (from.includes('板橋') && (to.includes('大坪林') || to.includes('產業園區')) ? '環狀線' : '板南線')
+    });
+  }
+  return list;
+}
+
+// 抓取台北捷運與環狀線 (新埔站、新埔民生站、板橋站) 即時到站看板
+async function fetchMetroLiveBoard() {
+  const [xpDep, bqDep] = await Promise.all([
+    fetchRemoteHtml('https://www.opendata.vip/metro/departure/%E6%96%B0%E5%9F%94', 7000).catch(() => ''),
+    fetchRemoteHtml('https://www.opendata.vip/metro/departure/%E6%9D%BF%E6%A9%8B', 7000).catch(() => '')
+  ]);
+
+  const list = [];
+  if (xpDep) list.push(...parseDepartureHtml(xpDep, '新埔站'));
+  if (bqDep) list.push(...parseDepartureHtml(bqDep, '板橋站'));
+  return list;
 }
 
 // 處理台北捷運與環狀線即時到站看板代理請求
@@ -467,7 +491,7 @@ async function handleMetroLiveProxy(req, res) {
     });
     cache.metroLive = {
       data: serialized,
-      expireAt: now + 15000 // 快取 15 秒，提供平滑且近即時的看板
+      expireAt: now + 15000 // 快取 15 秒
     };
     res.writeHead(200);
     res.end(serialized);
@@ -478,6 +502,191 @@ async function handleMetroLiveProxy(req, res) {
     } else {
       res.writeHead(502);
       res.end(JSON.stringify({ success: false, error: '無法取得捷運即時到站資料', detail: err.message }));
+    }
+  }
+}
+
+// 解析車廂擁擠度 HTML 區塊
+function parseCarWeightHtml(html, stationName, code) {
+  const cars = [];
+  const carRegex = /<span class="carNum">([^<]+)<\/span>[\s\S]*?<span class="carWeight">([\s\S]*?)<\/span>/gi;
+  let cm;
+  while ((cm = carRegex.exec(html)) !== null) {
+    const carNum = cm[1].trim();
+    const raw = cm[2];
+    const labelMatch = raw.match(/class="label\s+([^"]+)"[^>]*>([^<]+)<\/label>/i);
+    let status = '舒適';
+    let level = 1;
+    if (labelMatch) {
+      status = labelMatch[2].trim();
+      const cls = labelMatch[1].toLowerCase();
+      if (cls.includes('danger')) level = 4;
+      else if (cls.includes('warning')) level = 3;
+      else if (cls.includes('info') || cls.includes('primary')) level = 2;
+      else level = 1;
+    } else {
+      status = raw.replace(/<[^>]+>/g, '').trim() || '舒適';
+      if (status.includes('擁擠')) level = 4;
+      else if (status.includes('略擠')) level = 3;
+      else if (status.includes('普通')) level = 2;
+      else level = 1;
+    }
+    cars.push({ carNum, status, level });
+  }
+
+  let message = '即時更新中';
+  let hasData = cars.length > 0;
+  if (!hasData) {
+    if (html.includes('尚無資料')) message = '目前無列車停靠';
+    else if (html.includes('營運時間已過')) message = '營運時間已過';
+    else message = '離峰舒適運轉';
+    for (let i = 1; i <= 6; i++) {
+      cars.push({ carNum: `${i}車`, status: '舒適', level: 1 });
+    }
+  }
+
+  return {
+    station: stationName,
+    code,
+    line: '板南線',
+    hasData,
+    message,
+    cars
+  };
+}
+
+// 抓取車廂擁擠度函式 (BL08 新埔站、BL07 板橋站)
+async function fetchCarWeightData(targetStation = 'all') {
+  const [bl08Html, bl07Html] = await Promise.all([
+    (targetStation === 'all' || targetStation === 'BL08') ? fetchRemoteHtml('https://www.opendata.vip/metro/carWeight/BL/BL08', 7000).catch(() => '') : Promise.resolve(''),
+    (targetStation === 'all' || targetStation === 'BL07') ? fetchRemoteHtml('https://www.opendata.vip/metro/carWeight/BL/BL07', 7000).catch(() => '') : Promise.resolve('')
+  ]);
+
+  const result = {};
+  if (bl08Html) {
+    result.BL08 = parseCarWeightHtml(bl08Html, '新埔', 'BL08');
+  }
+  if (bl07Html) {
+    result.BL07 = parseCarWeightHtml(bl07Html, '板橋', 'BL07');
+  }
+  return result;
+}
+
+// 處理車廂擁擠度代理請求
+async function handleCarWeightProxy(req, res, targetCode) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const now = Date.now();
+  if (cache.metroCarWeight.data && now < cache.metroCarWeight.expireAt) {
+    res.writeHead(200);
+    res.end(cache.metroCarWeight.data);
+    return;
+  }
+
+  try {
+    const weights = await fetchCarWeightData(targetCode || 'all');
+    const serialized = JSON.stringify({
+      success: true,
+      updatedAt: new Date().toISOString(),
+      data: weights
+    });
+    cache.metroCarWeight = {
+      data: serialized,
+      expireAt: now + 30000 // 快取 30 秒
+    };
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cache.metroCarWeight.data) {
+      res.writeHead(200);
+      res.end(cache.metroCarWeight.data);
+    } else {
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法取得車廂擁擠度資料', detail: err.message }));
+    }
+  }
+}
+
+// 抓取高鐵即時剩餘停車位 (桃園站 P1/P2/P3 與板橋站)
+function parseParkingHtml(html) {
+  const lots = [];
+  const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let m;
+  while ((m = trRegex.exec(html)) !== null) {
+    const tr = m[1];
+    if (tr.includes('桃園') || tr.includes('板橋')) {
+      const tds = tr.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
+      if (tds.length >= 4) {
+        const name = tds[0].replace(/<[^>]+>/g, '').trim();
+        const spaceText = tds[1].replace(/<[^>]+>/g, '').trim();
+        const status = tds[3].replace(/<[^>]+>/g, '').trim();
+        let available = 0;
+        let total = 0;
+        if (spaceText.includes('/')) {
+          const parts = spaceText.split('/').map(s => parseInt(s.replace(/[^0-9]/g, ''), 10));
+          available = parts[0] || 0;
+          total = parts[1] || 0;
+        }
+        lots.push({ name, available, total, spaceText, status });
+      }
+    }
+  }
+  return lots;
+}
+
+// 抓取高鐵停車場資料函式
+async function fetchThsrParkingData() {
+  const html = await fetchRemoteHtml('https://www.opendata.vip/tdx/parkingTHSR', 7000);
+  return parseParkingHtml(html);
+}
+
+// 處理高鐵停車場代理請求
+async function handleParkingThsrProxy(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const now = Date.now();
+  if (cache.parkingThsr.data && now < cache.parkingThsr.expireAt) {
+    res.writeHead(200);
+    res.end(cache.parkingThsr.data);
+    return;
+  }
+
+  try {
+    const lots = await fetchThsrParkingData();
+    const serialized = JSON.stringify({
+      success: true,
+      updatedAt: new Date().toISOString(),
+      lots
+    });
+    cache.parkingThsr = {
+      data: serialized,
+      expireAt: now + 60000 // 快取 60 秒
+    };
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cache.parkingThsr.data) {
+      res.writeHead(200);
+      res.end(cache.parkingThsr.data);
+    } else {
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法取得高鐵停車場資料', detail: err.message }));
     }
   }
 }
@@ -514,6 +723,15 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/api/metro/liveboard') {
     handleMetroLiveProxy(req, res);
+    return;
+  }
+  if (pathname === '/api/metro/carweight') {
+    const stationCode = parsedUrl.searchParams.get('station');
+    handleCarWeightProxy(req, res, stationCode);
+    return;
+  }
+  if (pathname === '/api/parking/thsr') {
+    handleParkingThsrProxy(req, res);
     return;
   }
 
@@ -565,12 +783,16 @@ if (require.main === module) {
     console.log(`[API 代理] 機場捷運 (A3➔A18):   http://localhost:${PORT}/api/tymetro/south`);
     console.log(`[API 代理] 機場捷運 (A18➔A3):   http://localhost:${PORT}/api/tymetro/north`);
     console.log(`[API 代理] 台北捷運 (即時看板): http://localhost:${PORT}/api/metro/liveboard`);
+    console.log(`[API 代理] 捷運車廂擁擠度:     http://localhost:${PORT}/api/metro/carweight`);
+    console.log(`[API 代理] 高鐵停車場即時車位: http://localhost:${PORT}/api/parking/thsr`);
   });
 }
 
 server.fetchOfficialThsrTimetable = fetchOfficialThsrTimetable;
 server.fetchOfficialTymetroTimetable = fetchOfficialTymetroTimetable;
 server.fetchMetroLiveBoard = fetchMetroLiveBoard;
+server.fetchCarWeightData = fetchCarWeightData;
+server.fetchThsrParkingData = fetchThsrParkingData;
 server.getTaiwanDateString = getTaiwanDateString;
 
 module.exports = server;
