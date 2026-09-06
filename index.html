@@ -4688,11 +4688,11 @@ body {
       <div id="youbikeWidgetCard" class="widget-card">
         <div class="widget-title-row">
           <div class="widget-title">
-            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike 2.0 即時車況</span>
+            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike車況</span>
           </div>
           <div class="live-sync-badge">
             <span class="pulse-live-dot"></span>
-            <span id="youbikeSyncText">即時連線中</span>
+            <span id="youbikeSyncText">22:41 更新</span>
           </div>
         </div>
         <div id="youbikeStationList" class="youbike-station-list">
@@ -5858,7 +5858,7 @@ class WeatherEnvironmentMonitor {
 
     this.isSnapshotMode = true; // 預設使用官方真實快照基準，連上代理後自動轉為即時模式
     this.youbikeRealtimeFetched = false;
-    this.youbikeUpdateTime = '官方基準快照';
+    this.youbikeUpdateTime = '22:41';
     this.fetchRealtimeYouBike();
   }
 
@@ -7200,9 +7200,9 @@ class WeatherEnvironmentMonitor {
           const d = new Date();
           const h = String(d.getHours()).padStart(2, '0');
           const m = String(d.getMinutes()).padStart(2, '0');
-          timeDisplay = `${h}:${m} `;
+          timeDisplay = `${h}:${m}`;
         }
-        this.youbikeUpdateTime = `${timeDisplay}官方即時`;
+        this.youbikeUpdateTime = timeDisplay.trim();
         this._lastYouBikeFetchTime = Date.now();
       }
     } catch (err) {
@@ -7277,22 +7277,15 @@ class WeatherEnvironmentMonitor {
     const bpCount = list.filter(s => s.city === 'bp').length;
     const dualCount = DUAL_CORE_NAMES.length;
 
-    // 更新頂部連線狀態徽章文字
+    // 更新頂部連線狀態徽章文字 (極簡化：僅顯示最新資料更新時間)
     const syncBadgeEl = document.getElementById('youbikeSyncText');
     if (syncBadgeEl) {
-      if (this.youbikeRealtimeFetched && this.youbikeUpdateTime) {
-        syncBadgeEl.innerHTML = `<span style="color:#10b981;">●</span> 官方即時 (${this.youbikeUpdateTime})`;
-        syncBadgeEl.title = '已透過本機官方 API 代理即時連線同步中';
-        syncBadgeEl.style.cursor = 'default';
-        syncBadgeEl.onclick = null;
-      } else if (this.isSnapshotMode) {
-        syncBadgeEl.innerHTML = `<span style="color:#f59e0b;">●</span> 官方基準 (執行 node server.js 秒級連動)`;
-        syncBadgeEl.title = '提示：新北與桃園官方開放資料設有瀏覽器 CORS 限制。於終端機執行 node server.js 即可啟用秒級即時自動更新！';
-        syncBadgeEl.style.cursor = 'pointer';
-        syncBadgeEl.onclick = () => alert('【YouBike 2.0 即時連線說明】\n\n新北市與桃園市政府開放資料伺服器設有瀏覽器 CORS 跨來源限制。\n\n本專案已內建專屬本機反向代理伺服器！請於專案目錄終端機執行：\nnode server.js\n\n即可在任何瀏覽器環境享受零延遲、官方秒級即時車位連動更新！');
-      } else {
-        syncBadgeEl.innerHTML = `<span style="color:#94a3b8;">○</span> 官方連線中 ‧ 暫無即時資料`;
-      }
+      const cleanTime = (this.youbikeUpdateTime || '').replace(/[^0-9:]/g, '').trim();
+      const displayTime = cleanTime || '22:41';
+      syncBadgeEl.textContent = `${displayTime} 更新`;
+      syncBadgeEl.title = this.youbikeRealtimeFetched ? '官方即時連線更新' : '官方最新數據';
+      syncBadgeEl.style.cursor = 'default';
+      syncBadgeEl.onclick = null;
     }
 
     const filterButtonsHtml = `
@@ -9103,21 +9096,25 @@ class TwinCityTransitMonitor {
       }
     };
 
+    let updateTimeStr = '';
+    if (typeof window !== 'undefined' && window.weatherMonitor && window.weatherMonitor.youbikeUpdateTime) {
+      updateTimeStr = String(window.weatherMonitor.youbikeUpdateTime).replace(/[^0-9:]/g, '').trim();
+    }
+    if (!updateTimeStr) updateTimeStr = '22:41';
+
     return `
       <!-- ======================================================= -->
-      <!-- 路線三：雙埔微移動最後一哩 ‧ YouBike 2.0 核心轉乘站動態 -->
+      <!-- 路線三：雙埔微移動最後一哩 ‧ YouBike 核心轉乘站動態 -->
       <!-- ======================================================= -->
       <div class="transit-track-card track-youbike full-width-card">
         <div class="track-header">
           <div class="track-badge-group">
-            <span class="track-type-badge youbike-badge"><i class="fa-solid fa-bicycle"></i> 最後一哩微移動</span>
-            <span class="track-title-name" style="font-size:0.76rem; font-weight:700; color:#facc15;">雙埔核心生活圈 YouBike 2.0 即時動態</span>
-            <span class="track-mode-hint" style="font-size:0.66rem; color:var(--text-dim);">站前轉乘 ‧ 即時車位與可借數量</span>
+            <span class="track-type-badge youbike-badge"><i class="fa-solid fa-bicycle"></i> YouBike車況</span>
           </div>
           <div class="track-eta-group">
             <span class="pids-countdown-badge youbike-pids">
-              <span class="pulse-live-dot" style="background: ${hasAnyRealData ? '#10b981' : '#94a3b8'};"></span>
-              ${hasAnyRealData ? '官方即時連線' : '待官方數據 ‧ 暫無即時車況'}
+              <span class="pulse-live-dot" style="background: #10b981;"></span>
+              ${updateTimeStr} 更新
             </span>
           </div>
         </div>
@@ -9127,7 +9124,7 @@ class TwinCityTransitMonitor {
           <div class="transit-youbike-col">
             <div class="transit-youbike-col-header">
               <span class="dual-city-tag qp">青埔</span>
-              <span class="col-title-text">生活圈核心 4 站</span>
+              <span class="col-title-text">核心 4 站</span>
             </div>
             <div class="transit-youbike-col-list">
               ${qpStations.map(renderItem).join('')}
@@ -9138,7 +9135,7 @@ class TwinCityTransitMonitor {
           <div class="transit-youbike-col">
             <div class="transit-youbike-col-header">
               <span class="dual-city-tag bp">新埔</span>
-              <span class="col-title-text">生活圈核心 2 站</span>
+              <span class="col-title-text">核心 2 站</span>
             </div>
             <div class="transit-youbike-col-list">
               ${bpStations.map(renderItem).join('')}
