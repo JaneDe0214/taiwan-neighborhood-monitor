@@ -3687,7 +3687,7 @@ a.coord-tag:hover {
     <!-- 左側視訊矩陣區 -->
     <section class="matrix-section">
       <!-- 雙城大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
-      <div id="transitTransitBar" class="transit-corridor-bar"></div>
+      <div id="transitTransitBar" class="transit-corridor-bar is-collapsed-bar"></div>
 
       <!-- 攝影機視訊卡片網格 -->
       <div id="cameraGrid" class="camera-grid grid-6">
@@ -6216,7 +6216,7 @@ class TwinCityTransitMonitor {
     this.direction = 'to_qingpu'; // 'to_qingpu' (新埔->青埔) | 'to_xinpu' (青埔->新埔)
     this.timerId = null;
     this.isScheduleExpanded = false; // 出門時刻表面板是否展開
-    this.isCollapsed = false;        // 整個走廊是否收合成極矮迷你條
+    this.isCollapsed = true;         // 整個走廊是否收合成極矮迷你條 (預設開啟網頁時收合)
     this.lastScheduleKey = null;     // 快取出門時間表關鍵字，避免每秒銷毀重建閃爍
 
     // 台灣高鐵時刻基準 (板橋南下往桃園)
@@ -6951,6 +6951,12 @@ class TwinCityTransitMonitor {
 
     const container = document.getElementById(this.containerId);
     if (!container) return;
+
+    if (this.isCollapsed) {
+      container.classList.add('is-collapsed-bar');
+    } else {
+      container.classList.remove('is-collapsed-bar');
+    }
 
     const modeClass = this.isCollapsed ? 'is-collapsed-mode' : 'is-full-mode';
     let corridorInner = container.querySelector('.transit-corridor-inner');
