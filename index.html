@@ -9505,6 +9505,15 @@ class MonitorApp {
       }
       if (countEl) countEl.innerText = `${this.currentCameras.length} 處即時視訊`;
 
+      // 更新中心導航按鈕高亮狀態
+      document.querySelectorAll('.center-btn').forEach(btn => {
+        if (btn.dataset.center === centerId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
       const sortIndicator = document.querySelector('.sort-indicator span');
       if (sortIndicator) {
         if (centerId === 'dual') {
@@ -9518,6 +9527,41 @@ class MonitorApp {
         } else {
           sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
         }
+      }
+
+      // 依中心需求切換預設宮格：觀光名勝開啟預設全部宮格 (grid-all)
+      if (centerId === 'tourist') {
+        this.currentGridMode = 'grid-all';
+        this.previousGridMode = 'grid-all';
+        this.focusedCamId = null;
+        const gridContainer = document.getElementById('cameraGrid');
+        if (gridContainer) {
+          gridContainer.className = 'camera-grid grid-all';
+        }
+        document.querySelectorAll('.grid-btn').forEach(btn => {
+          if (btn.dataset.grid === 'grid-all') {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
+      } else if (this.currentGridMode === 'grid-all') {
+        // 從觀光名勝切回其他生活圈時，若當前為全部宮格，自動復原為該中心標準預設宮格 (如雙城預設 6 宮格)
+        const defaultMode = (centerId === 'dual') ? 'grid-6' : 'grid-6';
+        this.currentGridMode = defaultMode;
+        this.previousGridMode = defaultMode;
+        this.focusedCamId = null;
+        const gridContainer = document.getElementById('cameraGrid');
+        if (gridContainer) {
+          gridContainer.className = `camera-grid ${defaultMode}`;
+        }
+        document.querySelectorAll('.grid-btn').forEach(btn => {
+          if (btn.dataset.grid === defaultMode) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        });
       }
 
       // 渲染視訊牆
