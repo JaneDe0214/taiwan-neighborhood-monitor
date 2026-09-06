@@ -1955,6 +1955,7 @@ a.coord-tag:hover {
   box-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
 }
 
+.compact-btn.btn-plan-toggle,
 .compact-btn.btn-expand-main {
   background: rgba(0, 240, 255, 0.12);
   border-color: rgba(0, 240, 255, 0.35);
@@ -1962,9 +1963,18 @@ a.coord-tag:hover {
   font-weight: 700;
 }
 
+.compact-btn.btn-plan-toggle:hover,
 .compact-btn.btn-expand-main:hover {
   background: rgba(0, 240, 255, 0.25);
+  border-color: rgba(0, 240, 255, 0.6);
   box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+.compact-btn.btn-plan-toggle.active {
+  background: #00f0ff;
+  color: #06101e;
+  border-color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
 }
 
 /* ==========================================================================
@@ -8795,7 +8805,7 @@ class TwinCityTransitMonitor {
             <span>🔁 切換方向</span>
           </button>
           <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看出門搭車到站時間表">
-            <span>🕒 出門時間表</span>
+            <span>🕒 出門時間表</span> <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
           </button>
           <button class="compact-btn btn-youbike-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看雙埔核心 YouBike 2.0 車位動態與全線路網">
             <span>🚲 YouBike 車況</span> <i class="fa-solid fa-chevron-down"></i>
