@@ -7283,14 +7283,16 @@ class WeatherEnvironmentMonitor {
               item.StationID === st.sno || 
               item.sno === st.sno || 
               (item.StationUID && item.StationUID.includes(st.sno)) ||
-              (item.sna && item.sna.includes(st.name))
+              (item.uid && item.uid.includes(st.sno)) ||
+              (item.sna && item.sna.includes(st.name)) ||
+              (item.name && item.name.includes(st.name))
             );
             if (match) {
-              const bikes = match.AvailableRentBikes != null ? match.AvailableRentBikes : parseInt(match.sbi_quantity != null ? match.sbi_quantity : match.sbi, 10);
-              const spaces = match.AvailableReturnBikes != null ? match.AvailableReturnBikes : parseInt(match.bemp, 10);
-              const ebikes = (match.AvailableRentBikesDetail && match.AvailableRentBikesDetail.ElectricBikes != null)
+              const bikes = match.bikes != null ? match.bikes : (match.AvailableRentBikes != null ? match.AvailableRentBikes : parseInt(match.sbi_quantity != null ? match.sbi_quantity : match.sbi, 10));
+              const spaces = match.empty != null ? match.empty : (match.AvailableReturnBikes != null ? match.AvailableReturnBikes : parseInt(match.bemp, 10));
+              const ebikes = match.eBikes != null ? match.eBikes : ((match.AvailableRentBikesDetail && match.AvailableRentBikesDetail.ElectricBikes != null)
                 ? match.AvailableRentBikesDetail.ElectricBikes
-                : parseInt(match.eyb_quantity || (match.sbi_detail && match.sbi_detail.eyb) || '0', 10);
+                : parseInt(match.eyb_quantity || (match.sbi_detail && match.sbi_detail.eyb) || '0', 10));
               const total = (bikes != null && spaces != null && !isNaN(bikes) && !isNaN(spaces)) ? (bikes + spaces) : parseInt(match.tot_quantity || match.tot, 10);
 
               if (!isNaN(bikes)) st.bikes = bikes;
@@ -7300,7 +7302,7 @@ class WeatherEnvironmentMonitor {
               st.isRealtime = true;
               updatedBpCount++;
 
-              const t = match.SrcUpdateTime || match.UpdateTime || match.mday;
+              const t = match.time || match.SrcUpdateTime || match.UpdateTime || match.mday;
               if (t && t > latestTimeStr) latestTimeStr = t;
             }
           }
@@ -7315,14 +7317,16 @@ class WeatherEnvironmentMonitor {
               item.StationID === st.sno || 
               item.sno === st.sno || 
               (item.StationUID && item.StationUID.includes(st.sno)) ||
-              (item.sna && item.sna.includes(st.name))
+              (item.uid && item.uid.includes(st.sno)) ||
+              (item.sna && item.sna.includes(st.name)) ||
+              (item.name && item.name.includes(st.name))
             );
             if (match) {
-              const bikes = match.AvailableRentBikes != null ? match.AvailableRentBikes : parseInt(match.sbi != null ? match.sbi : match.sbi_quantity, 10);
-              const spaces = match.AvailableReturnBikes != null ? match.AvailableReturnBikes : parseInt(match.bemp, 10);
-              const ebikes = (match.AvailableRentBikesDetail && match.AvailableRentBikesDetail.ElectricBikes != null)
+              const bikes = match.bikes != null ? match.bikes : (match.AvailableRentBikes != null ? match.AvailableRentBikes : parseInt(match.sbi != null ? match.sbi : match.sbi_quantity, 10));
+              const spaces = match.empty != null ? match.empty : (match.AvailableReturnBikes != null ? match.AvailableReturnBikes : parseInt(match.bemp, 10));
+              const ebikes = match.eBikes != null ? match.eBikes : ((match.AvailableRentBikesDetail && match.AvailableRentBikesDetail.ElectricBikes != null)
                 ? match.AvailableRentBikesDetail.ElectricBikes
-                : parseInt((match.sbi_detail && match.sbi_detail.eyb) || match.eyb_quantity || '0', 10);
+                : parseInt((match.sbi_detail && match.sbi_detail.eyb) || match.eyb_quantity || '0', 10));
               const total = (bikes != null && spaces != null && !isNaN(bikes) && !isNaN(spaces)) ? (bikes + spaces) : parseInt(match.tot || match.tot_quantity, 10);
 
               if (!isNaN(bikes)) st.bikes = bikes;
@@ -7332,7 +7336,7 @@ class WeatherEnvironmentMonitor {
               st.isRealtime = true;
               updatedQpCount++;
 
-              const t = match.SrcUpdateTime || match.UpdateTime || match.mday;
+              const t = match.time || match.SrcUpdateTime || match.UpdateTime || match.mday;
               if (t && t > latestTimeStr) latestTimeStr = t;
             }
           }
@@ -8418,13 +8422,20 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 非同步向代理伺服器抓取台北捷運/環狀線新埔站即時到站看板 (每 15 秒更新一次；純靜態或離線環境平滑退回全量時刻表)
+  // 非同步抓取台北捷運/環狀線新埔站即時到站看板 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
   async fetchMetroLiveboard() {
     const nowMs = Date.now();
     if (nowMs - this.metroLastFetchTime < 15000) return;
 
     try {
-      const res = await fetch('/api/metro/liveboard').then(r => r.ok ? r.json() : null);
+      let res = await fetch('/api/metro/liveboard').then(r => r.ok ? r.json() : null).catch(() => null);
+      if (!res) {
+        // GitHub Pages 純靜態環境：讀取同源 data/metro-live.json
+        const staticLive = await fetch('data/metro-live.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        if (staticLive && Array.isArray(staticLive.trains)) {
+          res = { success: true, data: staticLive.trains };
+        }
+      }
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         this.metroLiveData = res.data;
         this.isMetroOnline = true;
@@ -8433,7 +8444,7 @@ class TwinCityTransitMonitor {
         this.isMetroOnline = false;
       }
     } catch (err) {
-      // 離線或 GitHub Pages 純靜態環境平滑退回使用內建之官方全量真實時刻表
+      // 離線或未連線時平滑退回使用內建之官方全量真實時刻表
       this.isMetroOnline = false;
     }
   }
@@ -8638,17 +8649,26 @@ class TwinCityTransitMonitor {
     return true;
   }
 
-  // 非同步向本機代理伺服器抓取最新台灣高鐵官方班表 (每 5 分鐘即時檢查與同步最新改動)
+  // 非同步抓取最新台灣高鐵官方班表 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
   async fetchThsrRealtime() {
     const nowMs = Date.now();
-    // 至少間隔 5 分鐘再向代理伺服器請求一次，即時掌握臨時改班與異常
+    // 至少間隔 5 分鐘再請求一次
     if (nowMs - this.thsrLastFetchTime < 300000) return;
 
     try {
-      const [southRes, northRes] = await Promise.all([
-        fetch('/api/thsr/south').then(r => r.ok ? r.json() : null),
-        fetch('/api/thsr/north').then(r => r.ok ? r.json() : null)
+      let [southRes, northRes] = await Promise.all([
+        fetch('/api/thsr/south').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('/api/thsr/north').then(r => r.ok ? r.json() : null).catch(() => null)
       ]);
+
+      // 若本機代理未開啟 (GitHub Pages 純靜態環境)，讀取同源 data/thsr.json
+      if (!southRes && !northRes) {
+        const thsrJson = await fetch('data/thsr.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        if (thsrJson) {
+          southRes = thsrJson.south;
+          northRes = thsrJson.north;
+        }
+      }
 
       if (southRes && Array.isArray(southRes.trains) && southRes.trains.length > 0) {
         this.thsrSouthTrains = southRes.trains.map(t => ({
@@ -8683,22 +8703,31 @@ class TwinCityTransitMonitor {
       this.isThsrOnline = true;
       this.thsrLastFetchTime = nowMs;
     } catch (err) {
-      // 離線或靜態展示環境平滑退回使用內建之官方基準班表
+      // 離線或未連線時平滑退回使用內建之官方基準班表
       this.isThsrOnline = false;
     }
   }
 
-  // 非同步向本機代理伺服器抓取最新桃園機場捷運官方班表 (每 5 分鐘即時檢查與同步最新改動)
+  // 非同步抓取最新桃園機場捷運官方班表 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
   async fetchTymetroRealtime() {
     const nowMs = Date.now();
-    // 至少間隔 5 分鐘再向代理伺服器請求一次，即時掌握臨時改班與異常
+    // 至少間隔 5 分鐘再請求一次
     if (nowMs - this.tymetroLastFetchTime < 300000) return;
 
     try {
-      const [southRes, northRes] = await Promise.all([
-        fetch('/api/tymetro/south').then(r => r.ok ? r.json() : null),
-        fetch('/api/tymetro/north').then(r => r.ok ? r.json() : null)
+      let [southRes, northRes] = await Promise.all([
+        fetch('/api/tymetro/south').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('/api/tymetro/north').then(r => r.ok ? r.json() : null).catch(() => null)
       ]);
+
+      // 若本機代理未開啟 (GitHub Pages 純靜態環境)，讀取同源 data/tymetro.json
+      if (!southRes && !northRes) {
+        const tymetroJson = await fetch('data/tymetro.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        if (tymetroJson) {
+          southRes = tymetroJson.south;
+          northRes = tymetroJson.north;
+        }
+      }
 
       if (southRes && Array.isArray(southRes.trains) && southRes.trains.length > 0) {
         this.tymetroSouthTrains = southRes.trains.map(t => ({
@@ -8733,7 +8762,6 @@ class TwinCityTransitMonitor {
       this.isTymetroOnline = true;
       this.tymetroLastFetchTime = nowMs;
     } catch (err) {
-      // 離線或靜態展示環境平滑退回使用內建之官方基準班表
       this.isTymetroOnline = false;
     }
   }

@@ -568,4 +568,9 @@ if (require.main === module) {
   });
 }
 
+server.fetchOfficialThsrTimetable = fetchOfficialThsrTimetable;
+server.fetchOfficialTymetroTimetable = fetchOfficialTymetroTimetable;
+server.fetchMetroLiveBoard = fetchMetroLiveBoard;
+server.getTaiwanDateString = getTaiwanDateString;
+
 module.exports = server;
