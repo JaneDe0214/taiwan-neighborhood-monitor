@@ -8692,41 +8692,7 @@ class TwinCityTransitMonitor {
       };
     }
 
-    // 1. 優先檢查 TDX 即時看板數據 (有後端或即時通道時秒級連動)
-    if (this.isMetroOnline && Array.isArray(this.metroLiveData)) {
-      const match = this.metroLiveData.find(item => {
-        if (isToQingpu) {
-          return item.station.includes('新埔') && !item.station.includes('民生') && (item.dest.includes('頂埔') || item.dest.includes('亞東'));
-        } else {
-          return item.dest.includes('南港') || item.station.includes('板橋');
-        }
-      });
-
-      if (match) {
-        const remainSec = match.remainSec;
-        const isArriving = remainSec <= 35 || match.countdownText.includes('進站');
-        const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((180 - Math.min(180, remainSec)) / 180) * 100)));
-        return {
-          lineName: '台北捷運板南線',
-          shortName: '板南線',
-          trainNo: isToQingpu ? '新埔 ➔ 板橋' : '板橋 ➔ 新埔',
-          progressPercent,
-          isRunning: !isArriving,
-          isOutOfService: false,
-          isLive: true,
-          sourceTag: 'TDX即時',
-          runStatusText: isArriving ? '列車進站中' : '即時在途倒數',
-          durationText: '車程 2.5分',
-          remainSec,
-          countdownText: match.countdownText,
-          platformStatus: isArriving ? '列車進站' : `${match.countdownText} 進站`,
-          sourceBadgeHtml: '<span class="feed-live-badge tdx-live"><i class="fa-solid fa-satellite-dish"></i> TDX即時</span>',
-          carWeight: carWeightInfo
-        };
-      }
-    }
-
-    // 2. 官方全量真實時刻表基準 (保底軌道，在純靜態 GitHub Pages 下分秒精確對齊)
+    // 官方全量真實時刻表基準 (秒級精準倒數，保證隨時間每秒即時跳動，永不卡死)
     const schedule = this.getBannanSchedule(now, isToQingpu);
     const mapped = schedule.map(t => ({
       timeStr: t,
@@ -8757,8 +8723,9 @@ class TwinCityTransitMonitor {
     }
 
     const nextTrain = upcoming[0];
-    const diffMin = nextTrain.opMin - curOpMin;
-    const remainSec = Math.max(0, Math.floor(diffMin * 60));
+    const curTotalSec = ((curH < 4 ? curH + 24 : curH) * 3600) + (curM * 60) + curS;
+    const trainTotalSec = nextTrain.opMin * 60;
+    const remainSec = Math.max(0, trainTotalSec - curTotalSec);
     const isArriving = remainSec <= 40;
     const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((180 - Math.min(180, remainSec)) / 180) * 100)));
 
@@ -8811,40 +8778,7 @@ class TwinCityTransitMonitor {
       };
     }
 
-    // 1. 優先檢查 TDX 即時看板數據 (新埔民生站)
-    if (this.isMetroOnline && Array.isArray(this.metroLiveData)) {
-      const match = this.metroLiveData.find(item => {
-        if (isToQingpu) {
-          return item.station.includes('新埔民生') && item.dest.includes('新北產業園區');
-        } else {
-          return item.station.includes('新埔民生') && item.dest.includes('大坪林');
-        }
-      });
-
-      if (match) {
-        const remainSec = match.remainSec;
-        const isArriving = remainSec <= 40 || match.countdownText.includes('進站');
-        const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((420 - Math.min(420, remainSec)) / 420) * 100)));
-        return {
-          lineName: '台北捷運環狀線',
-          shortName: '環狀線',
-          trainNo: isToQingpu ? '新埔民生 ➔ 新北產園' : '新北產園 ➔ 新埔民生',
-          progressPercent,
-          isRunning: !isArriving,
-          isOutOfService: false,
-          isLive: true,
-          sourceTag: 'TDX即時',
-          runStatusText: isArriving ? '列車進站中' : '即時在途倒數',
-          durationText: '車程 7分',
-          remainSec,
-          countdownText: match.countdownText,
-          platformStatus: isArriving ? '列車進站' : `${match.countdownText} 進站`,
-          sourceBadgeHtml: '<span class="feed-live-badge tdx-live"><i class="fa-solid fa-satellite-dish"></i> TDX即時</span>'
-        };
-      }
-    }
-
-    // 2. 平穩班距基準
+    // 平穩班距基準 (秒級動態倒數，每秒即時跳動，永不卡死)
     const totalSec = now.getMinutes() * 60 + now.getSeconds();
     const cycleSec = this.circularIntervalMin * 60;
     const runSec = this.circularDurationMin * 60;
@@ -8856,7 +8790,7 @@ class TwinCityTransitMonitor {
 
     const remainSec = cycleSec - currentInCycle;
     const countdownText = this.formatCountdown(remainSec);
-    const platformStatus = remainSec <= 60 ? '即將進站' : `班距約 7~10分`;
+    const platformStatus = remainSec <= 60 ? '即將進站' : `倒數 ${countdownText}`;
 
     return {
       lineName: '台北捷運環狀線',
@@ -10195,7 +10129,7 @@ class TwinCityTransitMonitor {
           <div class="drawer-metro-live-section">
             <div class="drawer-section-title">
               <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> 
-              捷運全向即時到站看板 (新埔 ‧ 新埔民生 ‧ 板橋)
+              捷運全向即時到站看板 (新埔 ‧ 新埔民生 ‧ 板橋) <span style="font-size:0.58rem;opacity:0.75;font-weight:normal;">(月台即時快照)</span>
             </div>
             <div class="drawer-metro-chips-row">
               ${this.metroLiveData.map(item => `
