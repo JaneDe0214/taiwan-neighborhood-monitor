@@ -5805,24 +5805,24 @@ class WeatherEnvironmentMonitor {
   initYouBikeStations() {
     this.youbikeStations = [
       // 新埔 (8 站) - 官方核定站點與座標 (車位數預設 null，待官方 API 回傳真實數據，禁止模擬假資料)
-      { id: 'bp-1', city: 'bp', cityName: '新埔', name: '民生路二段226巷8弄', sno: '500201001', total: 21, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0242, lon: 121.4695 },
-      { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(3號出口)', sno: '500201002', total: 20, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0229, lon: 121.4678 },
-      { id: 'bp-3', city: 'bp', cityName: '新埔', name: '莊敬公園', sno: '500201003', total: 50, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0270, lon: 121.4720 },
-      { id: 'bp-4', city: 'bp', cityName: '新埔', name: '捷運新埔民生站', sno: '500201004', total: 40, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0261, lon: 121.4668 },
-      { id: 'bp-5', city: 'bp', cityName: '新埔', name: '板橋車站(新站路)', sno: '500201005', total: 28, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0135, lon: 121.4650 },
-      { id: 'bp-6', city: 'bp', cityName: '新埔', name: '板橋車站', sno: '500201006', total: 95, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0142, lon: 121.4632 },
-      { id: 'bp-7', city: 'bp', cityName: '新埔', name: '捷運環狀線板橋站(5號出口)', sno: '500201007', total: 99, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0150, lon: 121.4645 },
-      { id: 'bp-8', city: 'bp', cityName: '新埔', name: '捷運板橋站(3號出口)', sno: '500201008', total: 89, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0128, lon: 121.4628 },
+      { id: 'bp-1', city: 'bp', cityName: '新埔', name: '民生路二段226巷8弄', sno: '500218201', total: 21, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.02151, lon: 121.46996 },
+      { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(3號出口)', sno: '500218216', total: 20, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.02247, lon: 121.46868 },
+      { id: 'bp-3', city: 'bp', cityName: '新埔', name: '莊敬公園', sno: '500218029', total: 50, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.02062, lon: 121.47025 },
+      { id: 'bp-4', city: 'bp', cityName: '新埔', name: '捷運新埔民生站', sno: '500218019', total: 40, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.02598, lon: 121.46657 },
+      { id: 'bp-5', city: 'bp', cityName: '新埔', name: '板橋車站(新站路)', sno: '500218154', total: 28, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01529, lon: 121.46438 },
+      { id: 'bp-6', city: 'bp', cityName: '新埔', name: '板橋車站', sno: '500218096', total: 95, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01552, lon: 121.46374 },
+      { id: 'bp-7', city: 'bp', cityName: '新埔', name: '捷運環狀線板橋站(5號出口)', sno: '500218188', total: 99, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01598, lon: 121.46359 },
+      { id: 'bp-8', city: 'bp', cityName: '新埔', name: '捷運板橋站(3號出口)', sno: '500218045', total: 89, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01452, lon: 121.46179 },
 
       // 青埔 (8 站) - 官方核定站點與座標 (車位數預設 null，待官方 API 回傳真實數據，禁止模擬假資料)
-      { id: 'qp-1', city: 'qp', cityName: '青埔', name: '青峰青昇路口', sno: '500501001', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0178, lon: 121.2185 },
-      { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青溪青雲路口', sno: '500501002', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0195, lon: 121.2130 },
-      { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青昇公園', sno: '500501003', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0165, lon: 121.2220 },
-      { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', sno: '500501004', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0155, lon: 121.2190 },
-      { id: 'qp-5', city: 'qp', cityName: '青埔', name: '高鐵北路一段高鐵站前路口', sno: '500501005', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0142, lon: 121.2160 },
-      { id: 'qp-6', city: 'qp', cityName: '青埔', name: '高鐵桃園站(3號出口)', sno: '500501006', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0125, lon: 121.2145 },
-      { id: 'qp-7', city: 'qp', cityName: '青埔', name: '捷運高鐵桃園站(A18)', sno: '500501007', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0130, lon: 121.2152 },
-      { id: 'qp-8', city: 'qp', cityName: '青埔', name: '捷運高鐵桃園站(A18)2號出口', sno: '500501008', total: null, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.0138, lon: 121.2148 }
+      { id: 'qp-1', city: 'qp', cityName: '青埔', name: '青峰青昇路口', sno: '500304117', total: 56, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01549, lon: 121.21964 },
+      { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青溪青雲路口', sno: '500304140', total: 50, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01284, lon: 121.22281 },
+      { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青昇公園', sno: '500304104', total: 32, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01471, lon: 121.22195 },
+      { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', sno: '500304122', total: 43, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01383, lon: 121.21747 },
+      { id: 'qp-5', city: 'qp', cityName: '青埔', name: '高鐵北路一段高鐵站前路口', sno: '500304148', total: 53, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01443, lon: 121.21714 },
+      { id: 'qp-6', city: 'qp', cityName: '青埔', name: '高鐵桃園站(3號出口)', sno: '500304085', total: 81, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01242, lon: 121.21522 },
+      { id: 'qp-7', city: 'qp', cityName: '青埔', name: '捷運高鐵桃園站(A18)', sno: '500304034', total: 62, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01378, lon: 121.21393 },
+      { id: 'qp-8', city: 'qp', cityName: '青埔', name: '捷運高鐵桃園站(A18)2號出口', sno: '500304115', total: 35, bikes: null, ebikes: null, spaces: null, isRealtime: false, lat: 25.01429, lon: 121.21436 }
     ];
 
     this.youbikeRealtimeFetched = false;
@@ -6010,6 +6010,9 @@ class WeatherEnvironmentMonitor {
   triggerAutoRefresh() {
     this.countdownSec = this.refreshIntervalSec;
     this.updateCountdownDisplay();
+
+    // 週期觸發 YouBike 2.0 即時動態同步 (內建防抖保護)
+    this.fetchRealtimeYouBike();
 
     if (this.activeMode === 'dual' && this.activeDualParams) {
       this.fetchDualEnvironment(this.activeDualParams.qpInfo, this.activeDualParams.bpInfo, true);
@@ -7041,54 +7044,128 @@ class WeatherEnvironmentMonitor {
   }
 
   // 渲染 YouBike 2.0 即時動態看板 (手機高度充足、字體完整無截切)
-  // 嘗試非同步連線抓取官方即時 YouBike 2.0 車況資料 (絕不使用任何模擬假數據)
-  async fetchRealtimeYouBike() {
-    try {
-      // 1. 嘗試抓取新北市官方 YouBike 2.0 開放資料 API
-      const ntpcApiUrl = 'https://data.ntpc.gov.tw/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/json?size=2000';
-      let ntpcData = null;
+  // 嘗試非同步連線抓取官方即時 YouBike 2.0 車況資料 (串接新北市與桃園市官方開放資料，絕不使用任何模擬假數據)
+  async fetchRealtimeYouBike(force = false) {
+    const now = Date.now();
+    // 防抖機制：若非強制更新且距離上次更新不足 10 秒，略過重複請求
+    if (!force && this._lastYouBikeFetchTime && (now - this._lastYouBikeFetchTime < 10000)) {
+      return;
+    }
 
-      try {
-        const directRes = await fetch(ntpcApiUrl, { signal: AbortSignal.timeout(4000) });
-        if (directRes.ok) {
-          ntpcData = await directRes.json();
+    const isHttpEnv = typeof window !== 'undefined' && window.location && typeof window.location.protocol === 'string' && window.location.protocol.startsWith('http');
+
+    // 1. 新北市資料來源 (Swagger 交通局 1130000 / 資料集 010e5b15-3823-4b20-b401-b1cf000550c5)
+    const ntpcEndpoints = [];
+    if (isHttpEnv) ntpcEndpoints.push('/api/youbike/ntpc');
+    ntpcEndpoints.push('https://data.ntpc.gov.tw/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/json?size=2000');
+
+    // 2. 桃園市資料來源 (資料集 5ca2bfc7-9ace-4719-88ae-4034b9a5a55c / 資源 08274d61-edbe-419d-8fcc-7a643831283d)
+    const tycgEndpoints = [];
+    if (isHttpEnv) tycgEndpoints.push('/api/youbike/tycg');
+    tycgEndpoints.push('https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download');
+
+    // 安全取得 JSON 函式
+    const fetchJsonSafe = async (urls) => {
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data) return data;
+          }
+        } catch (e) {
+          // 嘗試下一個候選端點
         }
-      } catch (e) {
-        // 若瀏覽器 CORS 阻擋直接請求，維持 null
       }
+      return null;
+    };
 
+    try {
+      const [ntpcRes, tycgRes] = await Promise.allSettled([
+        fetchJsonSafe(ntpcEndpoints),
+        fetchJsonSafe(tycgEndpoints)
+      ]);
+
+      const ntpcData = ntpcRes.status === 'fulfilled' ? ntpcRes.value : null;
+      const tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
+      const tycgList = Array.isArray(tycgRaw) ? tycgRaw : (tycgRaw && Array.isArray(tycgRaw.retVal) ? tycgRaw.retVal : null);
+
+      let updatedBpCount = 0;
+      let updatedQpCount = 0;
+      let latestTimeStr = '';
+
+      // 解析與更新新北市 (新埔/板橋) 站點
       if (Array.isArray(ntpcData) && ntpcData.length > 0) {
-        let updatedCount = 0;
-        let latestMday = '';
-
         this.youbikeStations.forEach(st => {
           if (st.city === 'bp') {
-            const match = ntpcData.find(item => item.sna && item.sna.includes(st.name));
+            const match = ntpcData.find(item => item.sno === st.sno || (item.sna && item.sna.includes(st.name)));
             if (match) {
-              st.bikes = parseInt(match.sbi_quantity, 10);
-              st.spaces = parseInt(match.bemp, 10);
-              st.ebikes = parseInt(match.eyb_quantity || '0', 10);
-              st.total = parseInt(match.tot_quantity, 10);
+              const bikes = parseInt(match.sbi_quantity != null ? match.sbi_quantity : match.sbi, 10);
+              const spaces = parseInt(match.bemp, 10);
+              const ebikes = parseInt(match.eyb_quantity || (match.sbi_detail && match.sbi_detail.eyb) || '0', 10);
+              const total = parseInt(match.tot_quantity || match.tot, 10);
+
+              if (!isNaN(bikes)) st.bikes = bikes;
+              if (!isNaN(spaces)) st.spaces = spaces;
+              if (!isNaN(ebikes)) st.ebikes = ebikes;
+              if (!isNaN(total)) st.total = total;
               st.isRealtime = true;
-              updatedCount++;
-              if (match.mday && match.mday > latestMday) latestMday = match.mday;
+              updatedBpCount++;
+
+              if (match.mday && match.mday > latestTimeStr) latestTimeStr = match.mday;
             }
           }
         });
+      }
 
-        if (updatedCount > 0) {
-          this.youbikeRealtimeFetched = true;
-          if (latestMday && latestMday.length >= 12) {
-            const h = latestMday.slice(8, 10);
-            const m = latestMday.slice(10, 12);
-            this.youbikeUpdateTime = `${h}:${m} 官方即時`;
-          } else {
-            this.youbikeUpdateTime = '官方即時';
+      // 解析與更新桃園市 (青埔) 站點
+      if (Array.isArray(tycgList) && tycgList.length > 0) {
+        this.youbikeStations.forEach(st => {
+          if (st.city === 'qp') {
+            const match = tycgList.find(item => item.sno === st.sno || (item.sna && item.sna.includes(st.name)));
+            if (match) {
+              const bikes = parseInt(match.sbi != null ? match.sbi : match.sbi_quantity, 10);
+              const spaces = parseInt(match.bemp, 10);
+              const ebikes = parseInt((match.sbi_detail && match.sbi_detail.eyb) || match.eyb_quantity || '0', 10);
+              const total = parseInt(match.tot || match.tot_quantity, 10);
+
+              if (!isNaN(bikes)) st.bikes = bikes;
+              if (!isNaN(spaces)) st.spaces = spaces;
+              if (!isNaN(ebikes)) st.ebikes = ebikes;
+              if (!isNaN(total)) st.total = total;
+              st.isRealtime = true;
+              updatedQpCount++;
+
+              if (match.mday && match.mday > latestTimeStr) latestTimeStr = match.mday;
+            }
+          }
+        });
+      }
+
+      const totalUpdated = updatedBpCount + updatedQpCount;
+      if (totalUpdated > 0) {
+        this.youbikeRealtimeFetched = true;
+        // 格式化最新時間 (YYYYMMDDHHmmss 或 YYYYMMDDTHHmmss)
+        let timeDisplay = '';
+        if (latestTimeStr) {
+          const cleanStr = String(latestTimeStr).replace(/[^0-9]/g, '');
+          if (cleanStr.length >= 12) {
+            const h = cleanStr.slice(8, 10);
+            const m = cleanStr.slice(10, 12);
+            timeDisplay = `${h}:${m} `;
           }
         }
+        if (!timeDisplay) {
+          const d = new Date();
+          const h = String(d.getHours()).padStart(2, '0');
+          const m = String(d.getMinutes()).padStart(2, '0');
+          timeDisplay = `${h}:${m} `;
+        }
+        this.youbikeUpdateTime = `${timeDisplay}官方即時`;
+        this._lastYouBikeFetchTime = Date.now();
       }
     } catch (err) {
-      console.warn('YouBike 即時資料載入狀態：官方連線中或受跨來源限制', err.message);
+      console.warn('YouBike 即時資料連線狀態：', err.message);
     } finally {
       // 依據真實獲取結果刷新介面 (未抓取成功則誠實顯示「暫無資訊」)
       if (typeof document !== 'undefined') {
@@ -8769,10 +8846,10 @@ class TwinCityTransitMonitor {
     }
     if (!stations || stations.length === 0) {
       stations = [
-        { id: 'qp-1', city: 'qp', cityName: '青埔', name: '青峰青昇路口', total: null, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青溪青雲路口', total: null, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青昇公園', total: null, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', total: null, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-1', city: 'qp', cityName: '青埔', name: '青峰青昇路口', total: 56, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青溪青雲路口', total: 50, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青昇公園', total: 32, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', total: 43, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
         { id: 'bp-1', city: 'bp', cityName: '新埔', name: '民生路二段226巷8弄', total: 21, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
         { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(3號出口)', total: 20, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false }
       ];
