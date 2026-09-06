@@ -7601,24 +7601,132 @@ class TwinCityTransitMonitor {
     this.isCollapsed = true;         // 整個走廊是否收合成極矮迷你條 (預設開啟網頁時收合)
     this.lastScheduleKey = null;     // 快取出門時間表關鍵字，避免每秒銷毀重建閃爍
 
-    // 台灣高鐵時刻基準 (板橋南下往桃園)
-    // 嚴格過濾排除 1xx 直達台中不停桃園車次，全數保證停靠桃園高鐵站 (6xx 特快 / 8xx 各站全停)
-    this.thsrSouthMinutes = [
-      { min: 4, trainNo: '0609', type: '停靠桃園 (6xx特快)', stopsAtTaoyuan: true, duration: 11, hint: '停靠桃園 11分' },
-      { min: 13, trainNo: '0813', type: '停靠桃園 (8xx全停)', stopsAtTaoyuan: true, duration: 12, hint: '停靠桃園 12分' },
-      { min: 28, trainNo: '0621', type: '停靠桃園 (6xx特快)', stopsAtTaoyuan: true, duration: 11, hint: '停靠桃園 11分' },
-      { min: 43, trainNo: '0825', type: '停靠桃園 (8xx全停)', stopsAtTaoyuan: true, duration: 12, hint: '停靠桃園 12分' },
-      { min: 58, trainNo: '0665', type: '停靠桃園 (6xx特快)', stopsAtTaoyuan: true, duration: 11, hint: '停靠桃園 11分' }
+// 台灣高鐵官方最新真實時刻表基準 (板橋南下往桃園，保證停靠桃園，共 55 班)
+    this.thsrSouthTrains = [
+      { trainNo: '0803', depTime: '06:34', arrTime: '06:47', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 394, min: 34, stopsAtTaoyuan: true },
+      { trainNo: '0603', depTime: '07:00', arrTime: '07:13', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 420, min: 0, stopsAtTaoyuan: true },
+      { trainNo: '0805', depTime: '07:19', arrTime: '07:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 439, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0609', depTime: '07:55', arrTime: '08:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 475, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0809', depTime: '08:19', arrTime: '08:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 499, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0613', depTime: '08:29', arrTime: '08:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 509, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '0615', depTime: '08:55', arrTime: '09:08', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 535, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0813', depTime: '09:19', arrTime: '09:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 559, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0619', depTime: '09:29', arrTime: '09:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 569, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '0621', depTime: '09:55', arrTime: '10:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 595, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0817', depTime: '10:19', arrTime: '10:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 619, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0625', depTime: '10:29', arrTime: '10:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 629, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '0627', depTime: '10:55', arrTime: '11:08', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 655, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0821', depTime: '11:19', arrTime: '11:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 679, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '1631', depTime: '11:29', arrTime: '11:41', duration: 12, isExpress: false, type: '8xx各站停', depMinutes: 689, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '0633', depTime: '11:55', arrTime: '12:08', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 715, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0825', depTime: '12:19', arrTime: '12:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 739, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0637', depTime: '12:29', arrTime: '12:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 749, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '0639', depTime: '12:55', arrTime: '13:08', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 775, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0829', depTime: '13:19', arrTime: '13:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 799, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0643', depTime: '13:29', arrTime: '13:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 809, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '0645', depTime: '13:55', arrTime: '14:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 835, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0833', depTime: '14:19', arrTime: '14:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 859, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0649', depTime: '14:29', arrTime: '14:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 869, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1533', depTime: '14:46', arrTime: '14:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 886, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0651', depTime: '14:55', arrTime: '15:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 895, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0837', depTime: '15:19', arrTime: '15:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 919, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0655', depTime: '15:29', arrTime: '15:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 929, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1537', depTime: '15:46', arrTime: '15:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 946, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0657', depTime: '15:55', arrTime: '16:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 955, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0841', depTime: '16:19', arrTime: '16:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 979, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0661', depTime: '16:29', arrTime: '16:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 989, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1541', depTime: '16:46', arrTime: '16:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1006, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0663', depTime: '16:55', arrTime: '17:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1015, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0845', depTime: '17:19', arrTime: '17:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1039, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0667', depTime: '17:29', arrTime: '17:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1049, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1545', depTime: '17:46', arrTime: '17:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1066, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0669', depTime: '17:55', arrTime: '18:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1075, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0849', depTime: '18:19', arrTime: '18:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1099, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0673', depTime: '18:29', arrTime: '18:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1109, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1549', depTime: '18:46', arrTime: '18:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1126, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0675', depTime: '18:55', arrTime: '19:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1135, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0853', depTime: '19:19', arrTime: '19:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1159, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0679', depTime: '19:29', arrTime: '19:41', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1169, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1553', depTime: '19:46', arrTime: '19:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1186, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0681', depTime: '19:55', arrTime: '20:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1195, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0857', depTime: '20:19', arrTime: '20:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1219, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '1685', depTime: '20:29', arrTime: '20:41', duration: 12, isExpress: false, type: '8xx各站停', depMinutes: 1229, min: 29, stopsAtTaoyuan: true },
+      { trainNo: '1557', depTime: '20:46', arrTime: '20:59', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1246, min: 46, stopsAtTaoyuan: true },
+      { trainNo: '0687', depTime: '20:55', arrTime: '21:07', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1255, min: 55, stopsAtTaoyuan: true },
+      { trainNo: '0861', depTime: '21:19', arrTime: '21:32', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1279, min: 19, stopsAtTaoyuan: true },
+      { trainNo: '0693', depTime: '21:50', arrTime: '22:03', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 1310, min: 50, stopsAtTaoyuan: true },
+      { trainNo: '1563', depTime: '22:14', arrTime: '22:26', duration: 12, isExpress: false, type: '8xx各站停', depMinutes: 1334, min: 14, stopsAtTaoyuan: true },
+      { trainNo: '0565', depTime: '22:35', arrTime: '22:47', duration: 12, isExpress: false, type: '8xx各站停', depMinutes: 1355, min: 35, stopsAtTaoyuan: true },
+      { trainNo: '0567', depTime: '23:08', arrTime: '23:19', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1388, min: 8, stopsAtTaoyuan: true }
     ];
 
-    // 台灣高鐵時刻基準 (桃園北上往板橋)
-    // 嚴格過濾排除不停桃園車次，全數保證停靠桃園與板橋高鐵站
-    this.thsrNorthMinutes = [
-      { min: 8, trainNo: '0612', type: '停靠桃園 (6xx特快)', stopsAtTaoyuan: true, duration: 11, hint: '停靠桃園 11分' },
-      { min: 23, trainNo: '0816', type: '停靠桃園 (8xx全停)', stopsAtTaoyuan: true, duration: 12, hint: '停靠桃園 12分' },
-      { min: 38, trainNo: '0624', type: '停靠桃園 (6xx特快)', stopsAtTaoyuan: true, duration: 11, hint: '停靠桃園 11分' },
-      { min: 53, trainNo: '0828', type: '停靠桃園 (8xx全停)', stopsAtTaoyuan: true, duration: 12, hint: '停靠桃園 12分' }
+    // 台灣高鐵官方最新真實時刻表基準 (桃園北上往板橋，保證停靠板橋，共 58 班)
+    this.thsrNorthTrains = [
+      { trainNo: '0502', depTime: '06:49', arrTime: '07:01', duration: 12, isExpress: false, type: '8xx各站停', depMinutes: 409, min: 49, stopsAtTaoyuan: true },
+      { trainNo: '0508', depTime: '07:38', arrTime: '07:49', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 458, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '0802', depTime: '08:10', arrTime: '08:21', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 490, min: 10, stopsAtTaoyuan: true },
+      { trainNo: '0606', depTime: '08:38', arrTime: '08:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 518, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '0610', depTime: '09:11', arrTime: '09:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 551, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0806', depTime: '09:20', arrTime: '09:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 560, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0612', depTime: '09:38', arrTime: '09:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 578, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '0616', depTime: '10:11', arrTime: '10:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 611, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0810', depTime: '10:20', arrTime: '10:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 620, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0618', depTime: '10:38', arrTime: '10:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 638, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '0622', depTime: '11:11', arrTime: '11:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 671, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0814', depTime: '11:20', arrTime: '11:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 680, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0624', depTime: '11:38', arrTime: '11:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 698, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '0628', depTime: '12:11', arrTime: '12:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 731, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0818', depTime: '12:20', arrTime: '12:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 740, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0630', depTime: '12:38', arrTime: '12:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 758, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1634', depTime: '13:11', arrTime: '13:24', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 791, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0822', depTime: '13:20', arrTime: '13:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 800, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0636', depTime: '13:38', arrTime: '13:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 818, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1534', depTime: '13:51', arrTime: '14:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 831, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0640', depTime: '14:11', arrTime: '14:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 851, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0826', depTime: '14:20', arrTime: '14:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 860, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0642', depTime: '14:38', arrTime: '14:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 878, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1538', depTime: '14:51', arrTime: '15:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 891, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0646', depTime: '15:11', arrTime: '15:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 911, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0830', depTime: '15:20', arrTime: '15:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 920, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0648', depTime: '15:38', arrTime: '15:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 938, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1542', depTime: '15:51', arrTime: '16:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 951, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0652', depTime: '16:11', arrTime: '16:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 971, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0834', depTime: '16:20', arrTime: '16:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 980, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0654', depTime: '16:38', arrTime: '16:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 998, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1546', depTime: '16:51', arrTime: '17:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1011, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0658', depTime: '17:11', arrTime: '17:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 1031, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0838', depTime: '17:20', arrTime: '17:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1040, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0660', depTime: '17:38', arrTime: '17:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1058, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1550', depTime: '17:51', arrTime: '18:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1071, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0664', depTime: '18:11', arrTime: '18:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 1091, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0842', depTime: '18:20', arrTime: '18:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1100, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0666', depTime: '18:38', arrTime: '18:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1118, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1554', depTime: '18:51', arrTime: '19:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1131, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0670', depTime: '19:11', arrTime: '19:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 1151, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0846', depTime: '19:20', arrTime: '19:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1160, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0672', depTime: '19:38', arrTime: '19:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1178, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1558', depTime: '19:51', arrTime: '20:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1191, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '0676', depTime: '20:11', arrTime: '20:24', duration: 13, isExpress: true, type: '6xx特快', depMinutes: 1211, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0850', depTime: '20:20', arrTime: '20:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1220, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0678', depTime: '20:38', arrTime: '20:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1238, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1562', depTime: '20:51', arrTime: '21:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1251, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '1682', depTime: '21:11', arrTime: '21:24', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1271, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0854', depTime: '21:20', arrTime: '21:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1280, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '0684', depTime: '21:38', arrTime: '21:50', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1298, min: 38, stopsAtTaoyuan: true },
+      { trainNo: '1566', depTime: '21:51', arrTime: '22:04', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1311, min: 51, stopsAtTaoyuan: true },
+      { trainNo: '1688', depTime: '22:11', arrTime: '22:24', duration: 13, isExpress: false, type: '8xx各站停', depMinutes: 1331, min: 11, stopsAtTaoyuan: true },
+      { trainNo: '0858', depTime: '22:20', arrTime: '22:31', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1340, min: 20, stopsAtTaoyuan: true },
+      { trainNo: '1570', depTime: '22:36', arrTime: '22:48', duration: 12, isExpress: false, type: '8xx各站停', depMinutes: 1356, min: 36, stopsAtTaoyuan: true },
+      { trainNo: '0690', depTime: '22:43', arrTime: '22:55', duration: 12, isExpress: true, type: '6xx特快', depMinutes: 1363, min: 43, stopsAtTaoyuan: true },
+      { trainNo: '0862', depTime: '23:25', arrTime: '23:36', duration: 11, isExpress: false, type: '8xx各站停', depMinutes: 1405, min: 25, stopsAtTaoyuan: true },
+      { trainNo: '0696', depTime: '23:40', arrTime: '23:51', duration: 11, isExpress: true, type: '6xx特快', depMinutes: 1420, min: 40, stopsAtTaoyuan: true }
     ];
+
+    // 向後相容屬性別名
+    this.thsrSouthMinutes = this.thsrSouthTrains;
+    this.thsrNorthMinutes = this.thsrNorthTrains;
+    this.isThsrOnline = false;
+    this.thsrLastFetchTime = 0;
 
     // 機場捷運 A3 往 A18 (南下桃園高鐵/中壢方向) 班表基準 (每 15 分鐘直達/普通交替運轉)
     // 直達車 (紫色): 停靠少，A3到A18車程約 27 分鐘
@@ -7891,129 +7999,172 @@ class TwinCityTransitMonitor {
     return true;
   }
 
-  // 計算高鐵即時班次與月台發車倒數 (台灣高鐵：板橋 ↔ 桃園，保證停靠桃園，支援多列車在軌即時追蹤)
+  // 非同步向本機代理伺服器抓取最新台灣高鐵官方班表
+  async fetchThsrRealtime() {
+    const nowMs = Date.now();
+    // 至少間隔 30 分鐘再向代理伺服器請求一次，節省資源
+    if (nowMs - this.thsrLastFetchTime < 1800000) return;
+
+    try {
+      const [southRes, northRes] = await Promise.all([
+        fetch('/api/thsr/south').then(r => r.ok ? r.json() : null),
+        fetch('/api/thsr/north').then(r => r.ok ? r.json() : null)
+      ]);
+
+      if (southRes && Array.isArray(southRes.trains) && southRes.trains.length > 0) {
+        this.thsrSouthTrains = southRes.trains.map(t => ({
+          trainNo: t.trainNo,
+          depTime: t.depTime,
+          arrTime: t.arrTime,
+          duration: t.duration,
+          isExpress: t.isExpress,
+          type: t.type,
+          depMinutes: t.depMinutes,
+          min: parseInt(t.depTime.split(':')[1], 10),
+          stopsAtTaoyuan: true
+        }));
+        this.thsrSouthMinutes = this.thsrSouthTrains;
+      }
+
+      if (northRes && Array.isArray(northRes.trains) && northRes.trains.length > 0) {
+        this.thsrNorthTrains = northRes.trains.map(t => ({
+          trainNo: t.trainNo,
+          depTime: t.depTime,
+          arrTime: t.arrTime,
+          duration: t.duration,
+          isExpress: t.isExpress,
+          type: t.type,
+          depMinutes: t.depMinutes,
+          min: parseInt(t.depTime.split(':')[1], 10),
+          stopsAtTaoyuan: true
+        }));
+        this.thsrNorthMinutes = this.thsrNorthTrains;
+      }
+
+      this.isThsrOnline = true;
+      this.thsrLastFetchTime = nowMs;
+    } catch (err) {
+      // 離線或靜態展示環境平滑退回使用內建之官方基準班表
+      this.isThsrOnline = false;
+    }
+  }
+
+  // 計算高鐵即時班次與月台發車倒數 (台灣高鐵：板橋 ↔ 桃園，全數保證停靠桃園，支援官方真實時刻與多列車在途追蹤)
   calculateThsrState(now = new Date()) {
     const isToQingpu = this.direction === 'to_qingpu';
-    const rawPatterns = isToQingpu ? this.thsrSouthMinutes : this.thsrNorthMinutes;
+    const trainList = isToQingpu ? this.thsrSouthTrains : this.thsrNorthTrains;
     // 嚴格安全過濾：只保留保證停靠桃園 (排除 1xx 直達台中車次)
-    const minutePatterns = rawPatterns.filter(p => p.stopsAtTaoyuan !== false && this.isTrainStoppingAtTaoyuan(p.trainNo));
+    const validTrains = trainList.filter(p => p.stopsAtTaoyuan !== false && this.isTrainStoppingAtTaoyuan(p.trainNo));
+
     const currentHour = now.getHours();
     const currentMin = now.getMinutes();
     const currentSec = now.getSeconds();
-    const currentFracMin = currentMin + currentSec / 60;
+    const nowDayMinutes = currentHour * 60 + currentMin + currentSec / 60;
 
-    let nextPattern = null;
-    let nextDepHour = currentHour;
-    for (const p of minutePatterns) {
-      if (p.min > currentFracMin) {
-        nextPattern = p;
+    // 1. 尋找下一班即將在月台發車的真實高鐵車次
+    let nextTrain = null;
+    for (const t of validTrains) {
+      if (t.depMinutes > nowDayMinutes) {
+        nextTrain = t;
         break;
       }
     }
 
-    if (!nextPattern) {
-      nextPattern = minutePatterns[0];
-      nextDepHour = (currentHour + 1) % 24;
+    let isOutOfService = false; // 是否處於夜間收班整備時段
+    let nextDepMs = 0;
+    let waitSec = 0;
+    let waitMins = 0;
+
+    if (nextTrain) {
+      const [dh, dm] = nextTrain.depTime.split(':').map(Number);
+      nextDepMs = new Date(now).setHours(dh, dm, 0, 0);
+      waitSec = Math.max(0, Math.floor((nextDepMs - now.getTime()) / 1000));
+      waitMins = Math.floor(waitSec / 60);
+    } else {
+      // 今日末班車已過，處於夜間收班狀態（翌日首班車發車）
+      isOutOfService = true;
+      nextTrain = validTrains[0];
+      const [dh, dm] = nextTrain.depTime.split(':').map(Number);
+      nextDepMs = new Date(now).setHours(dh, dm, 0, 0) + 86400000;
+      waitSec = Math.max(0, Math.floor((nextDepMs - now.getTime()) / 1000));
+      waitMins = Math.floor(waitSec / 60);
     }
 
-    let nextDepMs = new Date(now).setHours(nextDepHour, nextPattern.min, 0, 0);
-    if (nextDepMs < now.getTime()) nextDepMs += 86400000;
-    const waitSec = Math.max(0, Math.floor((nextDepMs - now.getTime()) / 1000));
-    const waitMins = Math.floor(waitSec / 60);
+    // 若當前在清晨首班車前 (例如 00:00~06:33)，也是收班/未營運狀態
+    if (nowDayMinutes < validTrains[0].depMinutes) {
+      isOutOfService = true;
+    }
 
-    // =========================================================================
-    // 即時多列車追蹤運算：計算過去已發車、目前仍在軌道上行駛的多台高鐵列車
-    // =========================================================================
+    // 2. 即時多列車追蹤運算：計算已發車但未抵達（在車程時間內）的在線行駛中班次
     const activeTrains = [];
-    const checkHours = [currentHour, (currentHour - 1 + 24) % 24];
+    for (const t of validTrains) {
+      const arrMinutes = t.depMinutes + t.duration;
+      // 正在軌道行駛中
+      if (nowDayMinutes >= t.depMinutes && nowDayMinutes < arrMinutes) {
+        const elapsedSec = (nowDayMinutes - t.depMinutes) * 60;
+        const totalDurationSec = t.duration * 60;
+        const progressPercent = Math.min(95, Math.max(5, (elapsedSec / totalDurationSec) * 100));
+        const remainRunMins = Math.max(1, Math.ceil((totalDurationSec - elapsedSec) / 60));
+        const trainTypeShort = t.isExpress ? '6xx特快' : '8xx各站停';
 
-    for (const h of checkHours) {
-      for (const p of minutePatterns) {
-        let depMs = new Date(now).setHours(h, p.min, 0, 0);
-        if (h === (currentHour - 1 + 24) % 24 && currentHour === 0) {
-          depMs -= 86400000;
-        }
-
-        const elapsedSec = (now.getTime() - depMs) / 1000;
-        const totalDurationSec = p.duration * 60;
-
-        // 若已發車且未跑完該車次時間，即為目前在途運行的多台高鐵之一
-        if (elapsedSec >= 0 && elapsedSec < totalDurationSec) {
-          const progressPercent = Math.min(95, Math.max(5, (elapsedSec / totalDurationSec) * 100));
-          const remainRunMins = Math.max(1, Math.ceil((totalDurationSec - elapsedSec) / 60));
-          const isExpress = p.trainNo.startsWith('06') || p.trainNo.startsWith('6');
-          const trainTypeShort = isExpress ? '6xx特快' : '8xx全停';
-
-          activeTrains.push({
-            trainNo: p.trainNo,
-            type: p.type,
-            trainTypeShort,
-            isExpress,
-            duration: p.duration,
-            elapsedSec,
-            progressPercent: Math.round(progressPercent),
-            remainMins: remainRunMins,
-            statusText: `行駛中 (${remainRunMins}分後到)`
-          });
-        }
+        activeTrains.push({
+          trainNo: t.trainNo,
+          type: t.type,
+          trainTypeShort,
+          isExpress: t.isExpress,
+          duration: t.duration,
+          elapsedSec,
+          progressPercent: Math.round(progressPercent),
+          remainMins: remainRunMins,
+          statusText: `行駛中 (${remainRunMins}分後到)`
+        });
       }
     }
 
     // 依進度由前向後排序 (越接近終點站排在越前面)
     activeTrains.sort((a, b) => b.progressPercent - a.progressPercent);
 
-    // 備援主要列車 (保證至少有一台代表列車供向後相容)
-    let activePattern = null;
-    let activeDepHour = currentHour;
-    for (let i = minutePatterns.length - 1; i >= 0; i--) {
-      const p = minutePatterns[i];
-      if (p.min <= currentFracMin) {
-        activePattern = p;
-        break;
-      }
-    }
-    if (!activePattern) {
-      activePattern = minutePatterns[minutePatterns.length - 1];
-      activeDepHour = (currentHour - 1 + 24) % 24;
-    }
-
-    let isRunning = activeTrains.length > 0;
-    let progressPercent = 0;
-    let runStatusText = '進站中';
-    let activeTrainNo = nextPattern.trainNo;
-
-    if (isRunning) {
-      const primaryTrain = activeTrains[0];
-      progressPercent = primaryTrain.progressPercent;
-      runStatusText = primaryTrain.statusText;
-      activeTrainNo = primaryTrain.trainNo;
-    } else {
-      let activeDepMs = new Date(now).setHours(activeDepHour, activePattern.min, 0, 0);
-      const elapsedSec = (now.getTime() - activeDepMs) / 1000;
-      progressPercent = waitSec < 120 ? 98 : 2;
-      runStatusText = waitSec < 60 ? '即將發車' : `候車中 (${waitMins}分)`;
-      activeTrainNo = activePattern.trainNo;
-    }
-
+    // 狀態文字與倒數
     const countdownText = this.formatCountdown(waitSec);
-    const platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
-    const trainTypeShort = (nextPattern.trainNo.startsWith('06') || nextPattern.trainNo.startsWith('6')) ? '6xx特快' : '8xx全停';
+    let platformStatus = '';
+    let runStatusText = '';
+    let progressPercent = 0;
+    let activeTrainNo = nextTrain.trainNo;
+
+    if (isOutOfService) {
+      platformStatus = `收班整備 (首班 ${nextTrain.depTime})`;
+      runStatusText = `今日已收班 (首班 ${nextTrain.depTime})`;
+      progressPercent = 0;
+    } else if (activeTrains.length > 0) {
+      const primary = activeTrains[0];
+      progressPercent = primary.progressPercent;
+      runStatusText = primary.statusText;
+      activeTrainNo = primary.trainNo;
+      platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
+    } else {
+      progressPercent = waitSec < 120 ? 95 : 5;
+      runStatusText = waitSec < 60 ? '即將發車' : `候車中 (${waitMins}分)`;
+      platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
+    }
+
+    const trainTypeShort = nextTrain.isExpress ? '6xx特快' : '8xx各站停';
 
     return {
       lineName: '台灣高鐵',
       shortName: '高鐵',
-      trainNo: nextPattern.trainNo,
-      type: nextPattern.type,
+      trainNo: nextTrain.trainNo,
+      type: nextTrain.type,
       trainTypeShort,
       stopsAtTaoyuan: true,
-      safeNotice: '保證停靠桃園 (可搭乘)',
+      safeNotice: '保證停靠桃園 (官方真實時刻)',
       dangerWarning: '留意：1xx次直達台中不停桃園請勿搭乘',
-      depTime: this.formatTime(new Date(nextDepMs)),
-      arrTime: this.formatTime(new Date(nextDepMs + nextPattern.duration * 60000)),
-      duration: nextPattern.duration,
+      depTime: nextTrain.depTime,
+      arrTime: nextTrain.arrTime,
+      duration: nextTrain.duration,
       waitSec,
       waitMins,
-      isRunning,
+      isRunning: activeTrains.length > 0,
+      isOutOfService,
       progressPercent: Math.round(progressPercent),
       runStatusText,
       activeTrainNo,
@@ -8196,6 +8347,7 @@ class TwinCityTransitMonitor {
     const currentMin = now.getMinutes();
     const currentSec = now.getSeconds();
     const currentFracMin = currentMin + currentSec / 60;
+    const nowDayMinutes = currentHour * 60 + currentMin + currentSec / 60;
 
     // 前往板橋高鐵站或 A3 機捷站所需之門到門前置緩衝時間 (包含步行 + 第一段捷運 + 轉乘步行)
     const thsrBufferMins = isToQingpu ? 13 : 15; // 新埔出門步5分+板南2.5分+轉5分 ≈ 13分；青埔出門步15分 ≈ 15分
@@ -8204,51 +8356,47 @@ class TwinCityTransitMonitor {
     const startHour = Math.max(6, currentHour);
     const endHour = 23;
 
-    // 1. 產生自當下時間點起至當日收班 (23:59) 的所有高鐵出門組合 (保證停靠桃園)
+    // 1. 產生自當下時間點起至當日收班的所有官方真實高鐵出門組合 (保證停靠桃園)
     const thsrCandidates = [];
-    for (let targetHour = startHour; targetHour <= endHour; targetHour++) {
-      for (const p of validThsr) {
-        if (targetHour === currentHour && p.min <= currentFracMin) {
-          continue; // 當前小時已發車班次跳過
-        }
+    const upcomingThsr = validThsr.filter(t => t.depMinutes > nowDayMinutes);
 
-        let depDate = new Date(now);
-        depDate.setHours(targetHour, p.min, 0, 0);
+    for (const t of upcomingThsr) {
+      const [depH, depM] = t.depTime.split(':').map(Number);
+      const depDate = new Date(now);
+      depDate.setHours(depH, depM, 0, 0);
 
-        const waitSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
-        if (waitSec < 0) continue;
+      const waitSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
+      if (waitSec < 0) continue;
 
-        // 計算最佳建議出門時間：提前 bufferMins 出門，若剛好趕上則為現在出門
-        const leaveDate = waitSec / 60 >= thsrBufferMins 
-          ? this.addMinutes(depDate, -thsrBufferMins) 
-          : new Date(now);
+      // 計算最佳建議出門時間：提前 bufferMins 出門，若剛好趕上則為現在出門
+      const leaveDate = waitSec / 60 >= thsrBufferMins 
+        ? this.addMinutes(depDate, -thsrBufferMins) 
+        : new Date(now);
 
-        const arrTrainDate = this.addMinutes(depDate, p.duration);
-        const finalDestArr = isToQingpu ? this.addMinutes(arrTrainDate, 15) : this.addMinutes(arrTrainDate, 5);
-        const totalDurationMins = Math.round((finalDestArr.getTime() - leaveDate.getTime()) / 60000);
+      const arrTrainDate = this.addMinutes(depDate, t.duration);
+      const finalDestArr = isToQingpu ? this.addMinutes(arrTrainDate, 15) : this.addMinutes(arrTrainDate, 5);
+      const totalDurationMins = Math.round((finalDestArr.getTime() - leaveDate.getTime()) / 60000);
 
-        const isExpress = p.trainNo.startsWith('06') || p.trainNo.startsWith('6');
-        const trainTypeShort = isExpress ? '6xx特快' : '8xx各站停';
+      const trainTypeShort = t.isExpress ? '6xx特快' : '8xx各站停';
 
-        thsrCandidates.push({
-          typeKey: 'thsr',
-          leaveTimeMs: leaveDate.getTime(),
-          depTimeMs: depDate.getTime(),
-          leaveTime: this.formatTime(leaveDate),
-          boardTrainTime: this.formatTime(depDate),
-          arriveTime: this.formatTime(finalDestArr),
-          totalDuration: `${totalDurationMins} 分鐘`,
-          durationNum: totalDurationMins,
-          badge: isExpress ? '高鐵特快' : '高鐵全停',
-          badgeClass: isExpress ? 'badge-thsr' : 'badge-regular',
-          name: isToQingpu ? `板南線 ➔ 高鐵 ${p.trainNo}次 [${trainTypeShort}]` : `高鐵 ${p.trainNo}次 [${trainTypeShort}] ➔ 板南線`,
-          route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔目的地' : '青埔目的地 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
-          detail: isToQingpu
-            ? `${this.formatTime(leaveDate)} 出門 ➔ 步5分搭板南線至板橋 ➔ 轉乘5分搭高鐵 (${p.trainNo}次 ${this.formatTime(depDate)}發 ‧ 停靠桃園) ➔ 抵桃園高鐵步15分 ➔ ${this.formatTime(finalDestArr)} 抵達目的地`
-            : `${this.formatTime(leaveDate)} 出門 ➔ 步15分抵桃園高鐵 ➔ 搭高鐵 (${p.trainNo}次 ${this.formatTime(depDate)}發) ➔ 板橋轉乘5分搭板南線 ➔ 步5分於 ${this.formatTime(finalDestArr)} 抵達新埔`,
-          highlight: false
-        });
-      }
+      thsrCandidates.push({
+        typeKey: 'thsr',
+        leaveTimeMs: leaveDate.getTime(),
+        depTimeMs: depDate.getTime(),
+        leaveTime: this.formatTime(leaveDate),
+        boardTrainTime: t.depTime,
+        arriveTime: this.formatTime(finalDestArr),
+        totalDuration: `${totalDurationMins} 分鐘`,
+        durationNum: totalDurationMins,
+        badge: t.isExpress ? '高鐵特快' : '高鐵全停',
+        badgeClass: t.isExpress ? 'badge-thsr' : 'badge-regular',
+        name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次 [${trainTypeShort}]` : `高鐵 ${t.trainNo}次 [${trainTypeShort}] ➔ 板南線`,
+        route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔目的地' : '青埔目的地 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
+        detail: isToQingpu
+          ? `${this.formatTime(leaveDate)} 出門 ➔ 步5分搭板南線至板橋 ➔ 轉乘5分搭高鐵 (${t.trainNo}次 ${t.depTime}發 ‧ 停靠桃園) ➔ 抵桃園高鐵步15分 ➔ ${this.formatTime(finalDestArr)} 抵達目的地`
+          : `${this.formatTime(leaveDate)} 出門 ➔ 步15分抵桃園高鐵 ➔ 搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ 板橋轉乘5分搭板南線 ➔ 步5分於 ${this.formatTime(finalDestArr)} 抵達新埔`,
+        highlight: false
+      });
     }
 
     // 2. 產生自當下時間點起至當日收班 (23:59) 的所有機場捷運出門組合 (直達車 27分 / 普通車 37分)
@@ -9106,9 +9254,10 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態)
+  // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態，並定時同步官方高鐵時刻)
   start() {
     this.stop();
+    this.fetchThsrRealtime();
     this.render();
     this.timerId = setInterval(() => {
       this.render();

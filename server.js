@@ -14,11 +14,14 @@ const PUBLIC_DIR = __dirname;
 // 官方 YouBike API 端點
 const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/json?size=2000';
 const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download';
+const THSR_SEARCH_URL = 'https://www.thsrc.com.tw/TimeTable/Search';
 
-// 記憶體快取 (有效時間 30 秒，減少官方伺服器負擔)
+// 記憶體快取 (YouBike 快取 30 秒；高鐵時刻表快取 1 小時)
 const cache = {
   ntpc: { data: null, expireAt: 0 },
-  tycg: { data: null, expireAt: 0 }
+  tycg: { data: null, expireAt: 0 },
+  thsrSouth: { data: null, expireAt: 0 },
+  thsrNorth: { data: null, expireAt: 0 }
 };
 
 // 內部抓取遠端 JSON 函式
@@ -48,6 +51,139 @@ function fetchRemoteJson(url) {
       reject(new Error('連線逾時 (Timeout)'));
     });
   });
+}
+
+// 取得台灣時間日期字串 (YYYY/MM/DD)
+function getTaiwanDateString() {
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  const twDate = new Date(utc + (3600000 * 8));
+  const yyyy = twDate.getFullYear();
+  const mm = String(twDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(twDate.getDate()).padStart(2, '0');
+  return `${yyyy}/${mm}/${dd}`;
+}
+
+// 抓取台灣高鐵官方時刻表函式 (原生 HTTPS POST)
+function fetchOfficialThsrTimetable(startStation, endStation) {
+  return new Promise((resolve, reject) => {
+    const dateStr = getTaiwanDateString();
+    const postData = new URLSearchParams({
+      SearchType: 'S',
+      Lang: 'TW',
+      StartStation: startStation,
+      EndStation: endStation,
+      OutWardSearchDate: dateStr,
+      OutWardSearchTime: '05:00',
+      ReturnSearchDate: '',
+      ReturnSearchTime: '',
+      DiscountType: ''
+    }).toString();
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Content-Length': Buffer.byteLength(postData),
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.thsrc.com.tw/ArticleContent/a3b630bb-1066-4352-a1ef-58c7b4e8ef7c',
+        'Origin': 'https://www.thsrc.com.tw'
+      }
+    };
+
+    const req = https.request(THSR_SEARCH_URL, options, (res) => {
+      let rawData = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => { rawData += chunk; });
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(rawData);
+          const rawItems = (json.data && json.data.DepartureTable && json.data.DepartureTable.TrainItem) || [];
+          
+          const cleanTrains = rawItems.map(t => {
+            const depParts = t.DepartureTime.split(':').map(Number);
+            const arrParts = t.DestinationTime.split(':').map(Number);
+            let duration = (arrParts[0] * 60 + arrParts[1]) - (depParts[0] * 60 + depParts[1]);
+            if (duration < 0) duration += 1440;
+            const isExpress = t.TrainNumber.startsWith('06') || t.TrainNumber.startsWith('6');
+            return {
+              trainNo: t.TrainNumber,
+              depTime: t.DepartureTime,
+              arrTime: t.DestinationTime,
+              duration: duration || 12,
+              isExpress: isExpress,
+              type: isExpress ? '6xx特快' : '8xx全停',
+              stopsAtTaoyuan: true,
+              depMinutes: depParts[0] * 60 + depParts[1]
+            };
+          });
+
+          resolve(cleanTrains);
+        } catch (e) {
+          reject(new Error(`解析高鐵官方資料失敗: ${e.message}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error('高鐵官方連線逾時'));
+    });
+
+    req.write(postData);
+    req.end();
+  });
+}
+
+// 處理高鐵代理請求 (南下: 板橋➔桃園 / 北上: 桃園➔板橋)
+async function handleThsrProxy(req, res, direction) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const cacheKey = direction === 'south' ? 'thsrSouth' : 'thsrNorth';
+  const startStation = direction === 'south' ? 'BanQiao' : 'TaoYuan';
+  const endStation = direction === 'south' ? 'TaoYuan' : 'BanQiao';
+  const now = Date.now();
+
+  if (cache[cacheKey].data && now < cache[cacheKey].expireAt) {
+    res.writeHead(200);
+    res.end(cache[cacheKey].data);
+    return;
+  }
+
+  try {
+    const trains = await fetchOfficialThsrTimetable(startStation, endStation);
+    const serialized = JSON.stringify({
+      success: true,
+      direction,
+      date: getTaiwanDateString(),
+      count: trains.length,
+      trains
+    });
+    cache[cacheKey] = {
+      data: serialized,
+      expireAt: now + (3600 * 1000) // 快取 1 小時
+    };
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cache[cacheKey].data) {
+      // 官方網路短暫異常時，使用既有快取
+      res.writeHead(200);
+      res.end(cache[cacheKey].data);
+    } else {
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法自台灣高鐵取得即時時刻表', detail: err.message }));
+    }
+  }
 }
 
 // 處理 YouBike 代理請求
@@ -103,6 +239,14 @@ const server = http.createServer((req, res) => {
     handleYouBikeProxy(req, res, 'tycg', TYCG_URL);
     return;
   }
+  if (pathname === '/api/thsr/south') {
+    handleThsrProxy(req, res, 'south');
+    return;
+  }
+  if (pathname === '/api/thsr/north') {
+    handleThsrProxy(req, res, 'north');
+    return;
+  }
 
   // 2. 靜態檔案路由
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
@@ -147,6 +291,8 @@ if (require.main === module) {
     console.log(`[雙埔監控系統] 本機伺服器已啟動: http://localhost:${PORT}`);
     console.log(`[API 代理] 新北市 YouBike 2.0: http://localhost:${PORT}/api/youbike/ntpc`);
     console.log(`[API 代理] 桃園市 YouBike 2.0: http://localhost:${PORT}/api/youbike/tycg`);
+    console.log(`[API 代理] 台灣高鐵 (板橋➔桃園): http://localhost:${PORT}/api/thsr/south`);
+    console.log(`[API 代理] 台灣高鐵 (桃園➔板橋): http://localhost:${PORT}/api/thsr/north`);
   });
 }
 
