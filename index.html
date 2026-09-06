@@ -7390,6 +7390,10 @@ class WeatherEnvironmentMonitor {
       return;
     }
 
+    // 判斷是否為本機開發環境 (localhost / 127.0.0.1 / file:)
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+
     // 1. 同源整合資料端點 (適用於 GitHub Pages 純靜態環境，同源零 CORS 且秒開)
     const staticDataUrls = [
       'data/youbike.json',
@@ -7397,24 +7401,35 @@ class WeatherEnvironmentMonitor {
       '../data/youbike.json'
     ];
 
-    // 2. 本機代理端點 (適用於有執行 node server.js 時之秒級即時更新)
-    const ntpcEndpoints = [
+    // 2. 本機代理端點 (僅本機環境啟用，線上環境跳過以避免 Mixed Content 警告)
+    const ntpcEndpoints = isLocal ? [
       '/api/youbike/ntpc',
       'http://127.0.0.1:3000/api/youbike/ntpc',
       'http://localhost:3000/api/youbike/ntpc'
-    ];
+    ] : [];
 
-    const tycgEndpoints = [
+    const tycgEndpoints = isLocal ? [
       '/api/youbike/tycg',
       'http://127.0.0.1:3000/api/youbike/tycg',
       'http://localhost:3000/api/youbike/tycg'
-    ];
+    ] : [];
 
-    // 安全取得 JSON 函式
+    // 安全取得 JSON 函式 (針對同源靜態檔案加入 Cache-Busting 時間戳與 no-store，確保常駐網頁無需手動重開即可即時捕捉 GitHub Actions 最新更新)
     const fetchJsonSafe = async (urls) => {
-      for (const url of urls) {
+      const ts = Date.now();
+      for (const rawUrl of urls) {
         try {
-          const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+          const isStatic = !rawUrl.startsWith('http') && !rawUrl.startsWith('/api');
+          const sep = rawUrl.includes('?') ? '&' : '?';
+          const fetchUrl = isStatic ? `${rawUrl}${sep}_t=${ts}` : rawUrl;
+          const fetchOptions = isStatic ? {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+            signal: AbortSignal.timeout(4000)
+          } : {
+            signal: AbortSignal.timeout(4000)
+          };
+          const res = await fetch(fetchUrl, fetchOptions);
           if (res.ok) {
             const data = await res.json();
             if (data) return data;
@@ -7427,17 +7442,21 @@ class WeatherEnvironmentMonitor {
     };
 
     try {
-      // 步驟 A: 先嘗試讀取本機即時代理
-      let [ntpcRes, tycgRes] = await Promise.allSettled([
-        fetchJsonSafe(ntpcEndpoints),
-        fetchJsonSafe(tycgEndpoints)
-      ]);
-
-      let ntpcData = ntpcRes.status === 'fulfilled' ? ntpcRes.value : null;
-      let tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
-
-      // 步驟 B: 若本機代理未啟動 (GitHub Pages 純靜態環境)，立即切換讀取同源 data/youbike.json
+      let ntpcData = null;
+      let tycgRaw = null;
       let staticUpdateTime = '';
+
+      // 步驟 A: 若為本機環境，優先嘗試讀取本機即時代理 (node server.js)
+      if (isLocal && ntpcEndpoints.length > 0) {
+        let [ntpcRes, tycgRes] = await Promise.allSettled([
+          fetchJsonSafe(ntpcEndpoints),
+          fetchJsonSafe(tycgEndpoints)
+        ]);
+        ntpcData = ntpcRes.status === 'fulfilled' ? ntpcRes.value : null;
+        tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
+      }
+
+      // 步驟 B: 若非本機環境 (GitHub Pages 純靜態環境) 或本機代理未啟動，立即讀取同源 data/youbike.json
       if (!ntpcData && !tycgRaw) {
         const staticJson = await fetchJsonSafe(staticDataUrls);
         if (staticJson) {
@@ -8607,16 +8626,33 @@ class TwinCityTransitMonitor {
     const nowMs = Date.now();
     if (nowMs - this.metroLastFetchTime < 15000) return;
 
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+
     try {
-      let res = await fetch('/api/metro/liveboard').then(r => r.ok ? r.json() : null).catch(() => null);
-      let weightRes = await fetch('/api/metro/carweight').then(r => r.ok ? r.json() : null).catch(() => null);
+      let res = null;
+      let weightRes = null;
+
+      if (isLocal) {
+        res = await fetch('/api/metro/liveboard', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
+        weightRes = await fetch('/api/metro/carweight', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
+      }
 
       if (!res) {
-        // GitHub Pages 純靜態環境：讀取同源 data/metro-live.json
-        const staticLive = await fetch('data/metro-live.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        // GitHub Pages 純靜態環境：帶時間戳讀取同源 data/metro-live.json，穿透 CDN/瀏覽器快取
+        const staticLive = await fetch(`data/metro-live.json?_t=${nowMs}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+          signal: AbortSignal.timeout(4000)
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
         if (staticLive) {
           if (Array.isArray(staticLive.trains)) {
-            res = { success: true, data: staticLive.trains };
+            res = { 
+              success: true, 
+              data: staticLive.trains,
+              updatedAt: staticLive.updatedAt || null 
+            };
           }
           if (staticLive.carWeight) {
             weightRes = { success: true, data: staticLive.carWeight };
@@ -8626,6 +8662,7 @@ class TwinCityTransitMonitor {
 
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         this.metroLiveData = res.data;
+        this.metroLiveUpdatedAt = res.updatedAt ? new Date(res.updatedAt) : new Date(nowMs);
         this.isMetroOnline = true;
         this.metroLastFetchTime = nowMs;
       } else {
@@ -8645,11 +8682,23 @@ class TwinCityTransitMonitor {
     const nowMs = Date.now();
     if (this.parkingLastFetchTime && nowMs - this.parkingLastFetchTime < 30000) return;
 
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
+
     try {
-      let res = await fetch('/api/parking/thsr').then(r => r.ok ? r.json() : null).catch(() => null);
+      let res = null;
+      if (isLocal) {
+        res = await fetch('/api/parking/thsr', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
+      }
+
       if (!res || !res.lots) {
-        // GitHub Pages 純靜態環境：讀取同源 data/parking.json
-        const staticParking = await fetch('data/parking.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        // GitHub Pages 純靜態環境：帶時間戳讀取同源 data/parking.json，穿透 CDN/瀏覽器快取
+        const staticParking = await fetch(`data/parking.json?_t=${nowMs}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+          signal: AbortSignal.timeout(4000)
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
         if (staticParking && Array.isArray(staticParking.lots)) {
           res = { success: true, lots: staticParking.lots };
         }
@@ -8725,7 +8774,39 @@ class TwinCityTransitMonitor {
     const nextTrain = upcoming[0];
     const curTotalSec = ((curH < 4 ? curH + 24 : curH) * 3600) + (curM * 60) + curS;
     const trainTotalSec = nextTrain.opMin * 60;
-    const remainSec = Math.max(0, trainTotalSec - curTotalSec);
+    const schedRemainSec = Math.max(0, trainTotalSec - curTotalSec);
+
+    // 雙軌互補融合：自每 5 分鐘 Action 快照進行秒級航位推測 (Dead Reckoning Fusion)
+    let remainSec = schedRemainSec;
+    let isLiveCalibrated = false;
+    let liveDest = '';
+
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveUpdatedAt) {
+      const elapsedSec = Math.floor((now.getTime() - this.metroLiveUpdatedAt.getTime()) / 1000);
+      // 快照產出 8 分鐘內 (480秒) 進行精準動態推演
+      if (elapsedSec >= 0 && elapsedSec < 480) {
+        const targetStation = isToQingpu ? '新埔' : '板橋';
+        const match = this.metroLiveData.find(item => {
+          if (!item.station || !item.station.includes(targetStation)) return false;
+          if (isToQingpu) {
+            return item.dest && (item.dest.includes('頂埔') || item.dest.includes('亞東') || item.dest.includes('板橋'));
+          } else {
+            return item.dest && (item.dest.includes('南港') || item.dest.includes('昆陽') || item.dest.includes('新埔'));
+          }
+        });
+
+        if (match && match.remainSec != null && !isNaN(match.remainSec)) {
+          const calibratedSec = match.remainSec - elapsedSec;
+          // 若推算之列車尚未過站 (容許列車進站停靠 25 秒)
+          if (calibratedSec >= -25) {
+            remainSec = Math.max(0, calibratedSec);
+            isLiveCalibrated = true;
+            liveDest = match.dest;
+          }
+        }
+      }
+    }
+
     const isArriving = remainSec <= 40;
     const progressPercent = isArriving ? 98 : Math.max(5, Math.min(95, Math.round(((180 - Math.min(180, remainSec)) / 180) * 100)));
 
@@ -8740,15 +8821,19 @@ class TwinCityTransitMonitor {
       progressPercent,
       isRunning: !isArriving,
       isOutOfService: false,
-      isLive: false,
-      sourceTag: '官方時刻表',
+      isLive: isLiveCalibrated,
+      sourceTag: isLiveCalibrated ? '即時雷達校正' : '官方時刻表',
       nextDepTime: nextTrain.timeStr,
-      runStatusText: isArriving ? '列車進站中' : '行駛中',
+      runStatusText: isArriving ? (isLiveCalibrated ? `列車進站中 (${liveDest || '板南線'})` : '列車進站中') : '行駛中',
       durationText: '車程 2.5分',
       remainSec,
       countdownText,
-      platformStatus: isArriving ? '即將進站' : `${nextTrain.timeStr} 發車 (${countdownText})`,
-      sourceBadgeHtml: '<span class="feed-live-badge sched-badge"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>',
+      platformStatus: isArriving 
+        ? (isLiveCalibrated ? `列車進站中 (${liveDest || '板南線'})` : '即將進站')
+        : (isLiveCalibrated ? `即時推算 (${countdownText} 後進站)` : `${nextTrain.timeStr} 發車 (${countdownText})`),
+      sourceBadgeHtml: isLiveCalibrated 
+        ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測與真實車廂載重"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
+        : '<span class="feed-live-badge sched-badge" title="台北捷運官方全量真實時刻表基準"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>',
       carWeight: carWeightInfo
     };
   }
@@ -8784,13 +8869,38 @@ class TwinCityTransitMonitor {
     const runSec = this.circularDurationMin * 60;
     const currentInCycle = totalSec % cycleSec;
 
-    const isRunning = currentInCycle < runSec;
-    const progressPercent = isRunning ? Math.round((currentInCycle / runSec) * 100) : 98;
-    const runStatusText = isRunning ? '行駛中' : '進站停靠中';
+    let isRunning = currentInCycle < runSec;
+    let progressPercent = isRunning ? Math.round((currentInCycle / runSec) * 100) : 98;
+    let runStatusText = isRunning ? '行駛中' : '進站停靠中';
+    let remainSec = cycleSec - currentInCycle;
+    let isLiveCalibrated = false;
 
-    const remainSec = cycleSec - currentInCycle;
+    // 雙軌互補融合：自每 5 分鐘 Action 快照尋找新埔民生站或板橋站即時看板
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveUpdatedAt) {
+      const elapsedSec = Math.floor((now.getTime() - this.metroLiveUpdatedAt.getTime()) / 1000);
+      if (elapsedSec >= 0 && elapsedSec < 480) {
+        const targetStation = isToQingpu ? '新埔民生' : '板橋';
+        const match = this.metroLiveData.find(item => {
+          if (!item.station || !item.station.includes(targetStation)) return false;
+          if (item.line && !item.line.includes('環狀')) return false;
+          return true;
+        });
+
+        if (match && match.remainSec != null && !isNaN(match.remainSec) && match.remainSec > 0) {
+          const calibratedSec = match.remainSec - elapsedSec;
+          if (calibratedSec >= -25) {
+            remainSec = Math.max(0, calibratedSec);
+            isLiveCalibrated = true;
+            isRunning = remainSec > 35;
+            progressPercent = isRunning ? Math.max(5, Math.min(95, Math.round(((420 - Math.min(420, remainSec)) / 420) * 100))) : 98;
+            runStatusText = isRunning ? '行駛中' : '即將進站';
+          }
+        }
+      }
+    }
+
     const countdownText = this.formatCountdown(remainSec);
-    const platformStatus = remainSec <= 60 ? '即將進站' : `倒數 ${countdownText}`;
+    const platformStatus = remainSec <= 40 ? '即將進站' : (isLiveCalibrated ? `即時推算 (${countdownText})` : `倒數 ${countdownText}`);
 
     return {
       lineName: '台北捷運環狀線',
@@ -8799,14 +8909,16 @@ class TwinCityTransitMonitor {
       progressPercent: Math.max(2, Math.min(98, progressPercent)),
       isRunning,
       isOutOfService: false,
-      isLive: false,
-      sourceTag: '常態班距',
+      isLive: isLiveCalibrated,
+      sourceTag: isLiveCalibrated ? '即時雷達校正' : '常態班距',
       runStatusText,
       durationText: '車程 7分',
       remainSec,
       countdownText,
       platformStatus,
-      sourceBadgeHtml: '<span class="feed-live-badge sched-badge"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>'
+      sourceBadgeHtml: isLiveCalibrated 
+        ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
+        : '<span class="feed-live-badge sched-badge"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>'
     };
   }
 
@@ -8827,15 +8939,28 @@ class TwinCityTransitMonitor {
     // 至少間隔 5 分鐘再請求一次
     if (nowMs - this.thsrLastFetchTime < 300000) return;
 
-    try {
-      let [southRes, northRes] = await Promise.all([
-        fetch('/api/thsr/south').then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch('/api/thsr/north').then(r => r.ok ? r.json() : null).catch(() => null)
-      ]);
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
 
-      // 若本機代理未開啟 (GitHub Pages 純靜態環境)，讀取同源 data/thsr.json
+    try {
+      let southRes = null;
+      let northRes = null;
+
+      if (isLocal) {
+        [southRes, northRes] = await Promise.all([
+          fetch('/api/thsr/south', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/thsr/north', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null)
+        ]);
+      }
+
+      // 若非本機環境 (GitHub Pages 純靜態環境) 或本機代理未開啟，讀取同源 data/thsr.json (帶時間戳穿透快取)
       if (!southRes && !northRes) {
-        const thsrJson = await fetch('data/thsr.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        const thsrJson = await fetch(`data/thsr.json?_t=${nowMs}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+          signal: AbortSignal.timeout(4000)
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
         if (thsrJson) {
           southRes = thsrJson.south;
           northRes = thsrJson.north;
@@ -8886,15 +9011,28 @@ class TwinCityTransitMonitor {
     // 至少間隔 5 分鐘再請求一次
     if (nowMs - this.tymetroLastFetchTime < 300000) return;
 
-    try {
-      let [southRes, northRes] = await Promise.all([
-        fetch('/api/tymetro/south').then(r => r.ok ? r.json() : null).catch(() => null),
-        fetch('/api/tymetro/north').then(r => r.ok ? r.json() : null).catch(() => null)
-      ]);
+    const isLocal = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
 
-      // 若本機代理未開啟 (GitHub Pages 純靜態環境)，讀取同源 data/tymetro.json
+    try {
+      let southRes = null;
+      let northRes = null;
+
+      if (isLocal) {
+        [southRes, northRes] = await Promise.all([
+          fetch('/api/tymetro/south', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/tymetro/north', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null)
+        ]);
+      }
+
+      // 若非本機環境 (GitHub Pages 純靜態環境) 或本機代理未開啟，讀取同源 data/tymetro.json (帶時間戳穿透快取)
       if (!southRes && !northRes) {
-        const tymetroJson = await fetch('data/tymetro.json').then(r => r.ok ? r.json() : null).catch(() => null);
+        const tymetroJson = await fetch(`data/tymetro.json?_t=${nowMs}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
+          signal: AbortSignal.timeout(4000)
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
         if (tymetroJson) {
           southRes = tymetroJson.south;
           northRes = tymetroJson.north;
