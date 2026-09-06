@@ -3593,8 +3593,15 @@ a.coord-tag:hover {
   line-height: 1;
 }
 
+/* 新北市串流連線重整與自癒覆蓋層 */
+.ntpc-retry-overlay {
+  transition: opacity 0.3s ease;
+}
 
-
+.ntpc-manual-retry-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
 
 </style>
 </head>
@@ -3914,6 +3921,8 @@ class CameraPlayerEngine {
     this.staggerTimers = [];      // 錯開排隊計時器
     this.watchdogs = new Map();   // 逾時卡頓看門狗
     this.retryCounts = new Map(); // 重試與切換次數計數
+    this.recoveryDebounce = new Map(); // 防抖時間戳 (防止 flvjs 多重 error 與看門狗短時間重複連發)
+    this.autoReloadTimers = new Map(); // 局部自動重整定時器 (模擬 F5 重整機制)
     this.liveClockTimers = new Map(); // 即時日期時間時鐘計時器
     this.isPaused = false;
   }
@@ -3934,6 +3943,10 @@ class CameraPlayerEngine {
       clearInterval(t);
       this.watchdogs.delete(camId);
     }
+    if (this.autoReloadTimers && this.autoReloadTimers.has(camId)) {
+      clearTimeout(this.autoReloadTimers.get(camId));
+      this.autoReloadTimers.delete(camId);
+    }
     const syncKey = `sync-${camId}`;
     if (this.watchdogs.has(syncKey)) {
       clearInterval(this.watchdogs.get(syncKey));
@@ -3953,6 +3966,10 @@ class CameraPlayerEngine {
       clearInterval(timer);
     });
     this.watchdogs.clear();
+    if (this.autoReloadTimers) {
+      this.autoReloadTimers.forEach(timer => clearTimeout(timer));
+      this.autoReloadTimers.clear();
+    }
   }
 
   // 格式化日期時間為標準繁體台灣格式 (例: 2026/09/06 15:20:35)
@@ -4044,6 +4061,37 @@ class CameraPlayerEngine {
       return url.replace(`cctvatis${currentHostNum}.ntpc.gov.tw`, `cctvatis${nextHostNum}.ntpc.gov.tw`);
     }
     return url;
+  }
+
+  // 單格 FLV 鏡頭軟重整 (模擬手動按 F5 重新連線機制，保持 DOM 完好無損)
+  reloadFlvCamera(cam) {
+    if (!cam) return;
+    this.clearWatchdog(cam.id);
+    this.retryCounts.delete(cam.id);
+    if (this.recoveryDebounce) this.recoveryDebounce.delete(cam.id);
+
+    const videoEl = document.getElementById(`video-${cam.id}`);
+    if (videoEl && videoEl.parentElement) {
+      const overlay = videoEl.parentElement.querySelector('.ntpc-retry-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    // 銷毀舊實例
+    if (this.flvPlayers.has(cam.id)) {
+      try {
+        const oldP = this.flvPlayers.get(cam.id);
+        oldP.pause();
+        oldP.unload();
+        oldP.detachMediaElement();
+        oldP.destroy();
+      } catch(e){}
+      this.flvPlayers.delete(cam.id);
+    }
+
+    // 輪換至下一個候選備援線路重新起播
+    const nextUrl = this.getNextFailoverUrl(cam.streamUrl);
+    console.log(`[自癒重整] 鏡頭 ${cam.id} 啟動局部自動重整，連線至: ${nextUrl}`);
+    this.initFlvPlayer(cam, nextUrl);
   }
 
   setRefreshInterval(ms) {
@@ -4555,8 +4603,14 @@ class CameraPlayerEngine {
           wm.title = '串流載入中...';
         }
 
-        // 看門狗重連函式：當偵測到長時間轉圈卡住或錯誤時自動容錯自癒
+        // 看門狗重連函式：當偵測到長時間轉圈卡住或錯誤時自動容錯自癒 (智能重整機制)
         const triggerRecovery = (reason) => {
+          // 防抖保護：同鏡頭 800ms 內不重複觸發，避免 flvjs 多重 error 與看門狗短時間疊加爆表
+          const now = Date.now();
+          const lastTrigger = this.recoveryDebounce.get(cam.id) || 0;
+          if (now - lastTrigger < 800) return;
+          this.recoveryDebounce.set(cam.id, now);
+
           this.clearWatchdog(cam.id);
           const currentRetries = (this.retryCounts.get(cam.id) || 0) + 1;
           this.retryCounts.set(cam.id, currentRetries);
@@ -4565,38 +4619,68 @@ class CameraPlayerEngine {
           const nextUrl = this.getNextFailoverUrl(streamUrl);
           console.warn(`[串流自癒] 鏡頭 ${cam.id} (${reason})，自動切換至備援線路: ${nextUrl} (第 ${currentRetries} 次自癒)`);
 
-          // 若已輪詢所有伺服器 (>=4 次) 仍因靜態跨域 CORS 阻擋，優雅降級為官方另開卡片，杜絕永久假轉圈
+          // 若已輪詢所有伺服器 (>=4 次) 仍因靜態跨域 CORS 或主機忙碌阻擋，
+          // 絕不銷毀 video 標籤！改以非破壞性覆蓋層提示，並排程 5 秒後自動執行單格軟重整 (模擬 F5 重整畫面機制)
           if (currentRetries >= 4) {
             const wrapper = videoEl.parentElement;
-            if (wrapper && !wrapper.querySelector('.ntpc-cors-card')) {
-              wrapper.innerHTML = `
-                <div class="ntpc-cors-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:10px;text-align:center;color:#94a3b8;gap:8px;background:#050914;">
-                  <i class="fa-solid fa-video" style="font-size:1.6rem;color:#38bdf8;"></i>
+            if (wrapper) {
+              let overlay = wrapper.querySelector('.ntpc-retry-overlay');
+              if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'ntpc-retry-overlay ntpc-cors-card';
+                overlay.style.cssText = 'position:absolute;inset:0;background:rgba(5,9,20,0.85);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;text-align:center;color:#94a3b8;gap:6px;z-index:5;';
+                overlay.innerHTML = `
+                  <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size:1.5rem;color:#38bdf8;"></i>
                   <span style="font-size:0.8rem;font-weight:700;color:#f1f5f9;">新北市交通監視器</span>
-                  <span style="font-size:0.7rem;color:#64748b;">(靜態網站跨域限制，可點擊另開官方即時視訊)</span>
-                  <a href="${cam.sourceUrl}" target="_blank" rel="noopener noreferrer" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;padding:4px 12px;border-radius:6px;text-decoration:none;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:5px;margin-top:2px;">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> 開啟新北官方畫面
-                  </a>
-                </div>
-              `;
+                  <span class="ntpc-countdown-text" style="font-size:0.7rem;color:#64748b;">(連線調適中，將於 5 秒後自動重整)</span>
+                  <div style="display:flex;gap:6px;margin-top:2px;">
+                    <button class="ntpc-manual-retry-btn" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border:none;padding:4px 10px;border-radius:4px;font-size:0.72rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                      <i class="fa-solid fa-rotate-right"></i> 立即重整
+                    </button>
+                    <a href="${cam.sourceUrl}" target="_blank" rel="noopener noreferrer" style="background:#334155;color:#e2e8f0;padding:4px 10px;border-radius:4px;font-size:0.72rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i> 另開官方
+                    </a>
+                  </div>
+                `;
+                wrapper.appendChild(overlay);
+
+                // 綁定「立即重整」按鈕
+                const retryBtn = overlay.querySelector('.ntpc-manual-retry-btn');
+                if (retryBtn) {
+                  retryBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    this.reloadFlvCamera(cam);
+                  };
+                }
+              }
             }
+
             if (wm) {
               wm.style.background = '#64748b';
-              wm.title = '請點擊另開官方畫面';
+              wm.title = '連線調適中 (5秒後自動重新連線)';
             }
+
+            // 排程 5 秒後自動執行單格軟重整 (模擬手動按 F5 刷新頁面機制)
+            const autoTimer = setTimeout(() => {
+              if (document.getElementById(`video-${cam.id}`)) {
+                this.reloadFlvCamera(cam);
+              }
+            }, 5000);
+            this.autoReloadTimers.set(cam.id, autoTimer);
             return;
           }
 
           if (wm) {
             wm.style.background = '#f59e0b';
-            wm.title = '線路自癒切換中...';
+            wm.title = `線路輪換中 (cctvatis${(this.retryCounts.get(cam.id) % 4) + 1})...`;
           }
 
+          // 保持 1000ms 階梯式重試間隔，防止短時間並發請求碰撞
           setTimeout(() => {
             if (document.getElementById(`video-${cam.id}`)) {
               this.initFlvPlayer(cam, nextUrl);
             }
-          }, 500);
+          }, 1000);
         };
 
         // 啟動 4.5 秒起播看門狗 (若超過 4.5 秒 video 仍未有時間進度，表示連線被卡住或排隊，自動輪換伺服器)
@@ -4607,9 +4691,15 @@ class CameraPlayerEngine {
         }, 4500);
         this.watchdogs.set(cam.id, watchdogTimer);
 
-        // 監聽播放事件，確認成功串流後取消看門狗
+        // 監聽播放事件，確認成功串流後取消看門狗與清除重整提示層
         const onPlaying = () => {
           this.clearWatchdog(cam.id);
+          this.retryCounts.delete(cam.id);
+          const wrapper = videoEl.parentElement;
+          if (wrapper) {
+            const overlay = wrapper.querySelector('.ntpc-retry-overlay');
+            if (overlay) overlay.remove();
+          }
           this.detectVideoResolution(cam, videoEl);
           this.startLiveClock(cam.id);
           if (wm) {
@@ -4624,6 +4714,12 @@ class CameraPlayerEngine {
         videoEl.addEventListener('timeupdate', () => {
           if (videoEl.currentTime > 0) {
             this.clearWatchdog(cam.id);
+            this.retryCounts.delete(cam.id);
+            const wrapper = videoEl.parentElement;
+            if (wrapper) {
+              const overlay = wrapper.querySelector('.ntpc-retry-overlay');
+              if (overlay) overlay.remove();
+            }
             this.detectVideoResolution(cam, videoEl);
             this.startLiveClock(cam.id);
             if (wm && wm.title.includes('載入')) {
@@ -4760,27 +4856,11 @@ class CameraPlayerEngine {
 
     // 若為 FLV
     if (this.flvPlayers.has(camId) || document.getElementById(`video-${camId}`)) {
-      if (this.flvPlayers.has(camId)) {
-        const oldPlayer = this.flvPlayers.get(camId);
-        try {
-          oldPlayer.pause();
-          oldPlayer.unload();
-          oldPlayer.detachMediaElement();
-          oldPlayer.destroy();
-        } catch(e) {}
-        this.flvPlayers.delete(camId);
+      const cam = (window.monitorApp && window.monitorApp.currentCameras) ? window.monitorApp.currentCameras.find(c => c.id === camId) : null;
+      if (cam) {
+        this.reloadFlvCamera(cam);
+        return;
       }
-
-      const videoEl = document.getElementById(`video-${camId}`);
-      if (videoEl) {
-        const cam = window.monitorApp.currentCameras.find(c => c.id === camId);
-        if (cam) {
-          // 手動刷新時輪換至下一個備援主機，確保取得最即時推流
-          const nextUrl = this.getNextFailoverUrl(cam.streamUrl);
-          this.initFlvPlayer(cam, nextUrl);
-        }
-      }
-      return;
     }
 
     // 若為 YouTube 官方直播串流
