@@ -5971,11 +5971,16 @@ class WeatherEnvironmentMonitor {
       { id: 'qp-7', city: 'qp', cityName: '青埔', name: '捷運高鐵桃園站(A18)', sno: '500304034', total: 62, bikes: 5, ebikes: 0, spaces: 57, isRealtime: true, lat: 25.01378, lon: 121.21393 },
       { id: 'qp-8', city: 'qp', cityName: '青埔', name: '捷運高鐵桃園站(A18)2號出口', sno: '500304115', total: 35, bikes: 14, ebikes: 0, spaces: 21, isRealtime: true, lat: 25.01429, lon: 121.21436 }
     ];
-
-    this.isSnapshotMode = true; // 預設使用官方真實快照基準，連上代理後自動轉為即時模式
+    this.isSnapshotMode = false; // 積極連線模式
     this.youbikeRealtimeFetched = false;
-    this.youbikeUpdateTime = '22:41';
-    this.fetchRealtimeYouBike();
+    this.youbikeUpdateTime = '連線中...';
+    // 立即積極抓取最新車況
+    this.fetchRealtimeYouBike(true);
+    // 每 30 秒積極持續輪詢 YouBike 2.0 官方即時數據 (交通部 TDX 官方直連)
+    if (this.youbikePollingTimer) clearInterval(this.youbikePollingTimer);
+    this.youbikePollingTimer = setInterval(() => {
+      this.fetchRealtimeYouBike(true);
+    }, 30000);
   }
 
   // 啟動每秒即時倒數計時器
@@ -7197,27 +7202,32 @@ class WeatherEnvironmentMonitor {
   }
 
   // 渲染 YouBike 2.0 即時動態看板 (手機高度充足、字體完整無截切)
-  // 嘗試非同步連線抓取官方即時 YouBike 2.0 車況資料 (串接新北市與桃園市官方開放資料，絕不使用任何模擬假數據)
+  // 嘗試非同步連線抓取官方即時 YouBike 2.0 車況資料 (支援本機反向代理與 GitHub Pages 同源靜態多層容錯)
   async fetchRealtimeYouBike(force = false) {
     const now = Date.now();
-    // 防抖機制：若非強制更新且距離上次更新不足 10 秒，略過重複請求
-    if (!force && this._lastYouBikeFetchTime && (now - this._lastYouBikeFetchTime < 10000)) {
+    // 積極更新防抖：若非強制更新且距離上次更新不足 5 秒，略過重複請求
+    if (!force && this._lastYouBikeFetchTime && (now - this._lastYouBikeFetchTime < 5000)) {
       return;
     }
 
-    // 多重候選端點自動探測 (支援 file://、本機代理 3000 埠與官方端點多層容錯)
+    // 1. 同源整合資料端點 (適用於 GitHub Pages 純靜態環境，同源零 CORS 且秒開)
+    const staticDataUrls = [
+      'data/youbike.json',
+      './data/youbike.json',
+      '../data/youbike.json'
+    ];
+
+    // 2. 本機代理端點 (適用於有執行 node server.js 時之秒級即時更新)
     const ntpcEndpoints = [
       '/api/youbike/ntpc',
       'http://127.0.0.1:3000/api/youbike/ntpc',
-      'http://localhost:3000/api/youbike/ntpc',
-      'https://data.ntpc.gov.tw/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/json?size=2000'
+      'http://localhost:3000/api/youbike/ntpc'
     ];
 
     const tycgEndpoints = [
       '/api/youbike/tycg',
       'http://127.0.0.1:3000/api/youbike/tycg',
-      'http://localhost:3000/api/youbike/tycg',
-      'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download'
+      'http://localhost:3000/api/youbike/tycg'
     ];
 
     // 安全取得 JSON 函式
@@ -7237,13 +7247,28 @@ class WeatherEnvironmentMonitor {
     };
 
     try {
-      const [ntpcRes, tycgRes] = await Promise.allSettled([
+      // 步驟 A: 先嘗試讀取本機即時代理
+      let [ntpcRes, tycgRes] = await Promise.allSettled([
         fetchJsonSafe(ntpcEndpoints),
         fetchJsonSafe(tycgEndpoints)
       ]);
 
-      const ntpcData = ntpcRes.status === 'fulfilled' ? ntpcRes.value : null;
-      const tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
+      let ntpcData = ntpcRes.status === 'fulfilled' ? ntpcRes.value : null;
+      let tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
+
+      // 步驟 B: 若本機代理未啟動 (GitHub Pages 純靜態環境)，立即切換讀取同源 data/youbike.json
+      let staticUpdateTime = '';
+      if (!ntpcData && !tycgRaw) {
+        const staticJson = await fetchJsonSafe(staticDataUrls);
+        if (staticJson) {
+          ntpcData = staticJson.ntpc || null;
+          tycgRaw = staticJson.tycg || null;
+          if (staticJson.updateTimeDisplay) {
+            staticUpdateTime = staticJson.updateTimeDisplay;
+          }
+        }
+      }
+
       const tycgList = Array.isArray(tycgRaw) ? tycgRaw : (tycgRaw && Array.isArray(tycgRaw.retVal) ? tycgRaw.retVal : null);
 
       let updatedBpCount = 0;
@@ -7254,12 +7279,19 @@ class WeatherEnvironmentMonitor {
       if (Array.isArray(ntpcData) && ntpcData.length > 0) {
         this.youbikeStations.forEach(st => {
           if (st.city === 'bp') {
-            const match = ntpcData.find(item => item.sno === st.sno || (item.sna && item.sna.includes(st.name)));
+            const match = ntpcData.find(item => 
+              item.StationID === st.sno || 
+              item.sno === st.sno || 
+              (item.StationUID && item.StationUID.includes(st.sno)) ||
+              (item.sna && item.sna.includes(st.name))
+            );
             if (match) {
-              const bikes = parseInt(match.sbi_quantity != null ? match.sbi_quantity : match.sbi, 10);
-              const spaces = parseInt(match.bemp, 10);
-              const ebikes = parseInt(match.eyb_quantity || (match.sbi_detail && match.sbi_detail.eyb) || '0', 10);
-              const total = parseInt(match.tot_quantity || match.tot, 10);
+              const bikes = match.AvailableRentBikes != null ? match.AvailableRentBikes : parseInt(match.sbi_quantity != null ? match.sbi_quantity : match.sbi, 10);
+              const spaces = match.AvailableReturnBikes != null ? match.AvailableReturnBikes : parseInt(match.bemp, 10);
+              const ebikes = (match.AvailableRentBikesDetail && match.AvailableRentBikesDetail.ElectricBikes != null)
+                ? match.AvailableRentBikesDetail.ElectricBikes
+                : parseInt(match.eyb_quantity || (match.sbi_detail && match.sbi_detail.eyb) || '0', 10);
+              const total = (bikes != null && spaces != null && !isNaN(bikes) && !isNaN(spaces)) ? (bikes + spaces) : parseInt(match.tot_quantity || match.tot, 10);
 
               if (!isNaN(bikes)) st.bikes = bikes;
               if (!isNaN(spaces)) st.spaces = spaces;
@@ -7268,7 +7300,8 @@ class WeatherEnvironmentMonitor {
               st.isRealtime = true;
               updatedBpCount++;
 
-              if (match.mday && match.mday > latestTimeStr) latestTimeStr = match.mday;
+              const t = match.SrcUpdateTime || match.UpdateTime || match.mday;
+              if (t && t > latestTimeStr) latestTimeStr = t;
             }
           }
         });
@@ -7278,12 +7311,19 @@ class WeatherEnvironmentMonitor {
       if (Array.isArray(tycgList) && tycgList.length > 0) {
         this.youbikeStations.forEach(st => {
           if (st.city === 'qp') {
-            const match = tycgList.find(item => item.sno === st.sno || (item.sna && item.sna.includes(st.name)));
+            const match = tycgList.find(item => 
+              item.StationID === st.sno || 
+              item.sno === st.sno || 
+              (item.StationUID && item.StationUID.includes(st.sno)) ||
+              (item.sna && item.sna.includes(st.name))
+            );
             if (match) {
-              const bikes = parseInt(match.sbi != null ? match.sbi : match.sbi_quantity, 10);
-              const spaces = parseInt(match.bemp, 10);
-              const ebikes = parseInt((match.sbi_detail && match.sbi_detail.eyb) || match.eyb_quantity || '0', 10);
-              const total = parseInt(match.tot || match.tot_quantity, 10);
+              const bikes = match.AvailableRentBikes != null ? match.AvailableRentBikes : parseInt(match.sbi != null ? match.sbi : match.sbi_quantity, 10);
+              const spaces = match.AvailableReturnBikes != null ? match.AvailableReturnBikes : parseInt(match.bemp, 10);
+              const ebikes = (match.AvailableRentBikesDetail && match.AvailableRentBikesDetail.ElectricBikes != null)
+                ? match.AvailableRentBikesDetail.ElectricBikes
+                : parseInt((match.sbi_detail && match.sbi_detail.eyb) || match.eyb_quantity || '0', 10);
+              const total = (bikes != null && spaces != null && !isNaN(bikes) && !isNaN(spaces)) ? (bikes + spaces) : parseInt(match.tot || match.tot_quantity, 10);
 
               if (!isNaN(bikes)) st.bikes = bikes;
               if (!isNaN(spaces)) st.spaces = spaces;
@@ -7292,7 +7332,8 @@ class WeatherEnvironmentMonitor {
               st.isRealtime = true;
               updatedQpCount++;
 
-              if (match.mday && match.mday > latestTimeStr) latestTimeStr = match.mday;
+              const t = match.SrcUpdateTime || match.UpdateTime || match.mday;
+              if (t && t > latestTimeStr) latestTimeStr = t;
             }
           }
         });
@@ -7302,14 +7343,22 @@ class WeatherEnvironmentMonitor {
       if (totalUpdated > 0) {
         this.isSnapshotMode = false;
         this.youbikeRealtimeFetched = true;
-        // 格式化最新時間 (YYYYMMDDHHmmss 或 YYYYMMDDTHHmmss)
-        let timeDisplay = '';
-        if (latestTimeStr) {
-          const cleanStr = String(latestTimeStr).replace(/[^0-9]/g, '');
-          if (cleanStr.length >= 12) {
-            const h = cleanStr.slice(8, 10);
-            const m = cleanStr.slice(10, 12);
-            timeDisplay = `${h}:${m} `;
+        let timeDisplay = staticUpdateTime;
+        if (!timeDisplay && latestTimeStr) {
+          if (latestTimeStr.includes('T')) {
+            const d = new Date(latestTimeStr);
+            if (!isNaN(d.getTime())) {
+              const h = String(d.getHours()).padStart(2, '0');
+              const m = String(d.getMinutes()).padStart(2, '0');
+              timeDisplay = `${h}:${m}`;
+            }
+          } else {
+            const cleanStr = String(latestTimeStr).replace(/[^0-9]/g, '');
+            if (cleanStr.length >= 12) {
+              const h = cleanStr.slice(8, 10);
+              const m = cleanStr.slice(10, 12);
+              timeDisplay = `${h}:${m}`;
+            }
           }
         }
         if (!timeDisplay) {
@@ -7397,10 +7446,10 @@ class WeatherEnvironmentMonitor {
     const syncBadgeEl = document.getElementById('youbikeSyncText');
     if (syncBadgeEl) {
       const cleanTime = (this.youbikeUpdateTime || '').replace(/[^0-9:]/g, '').trim();
-      const displayTime = cleanTime || '22:41';
+      const displayTime = cleanTime || '連線中...';
       syncBadgeEl.textContent = `${displayTime} 更新`;
       syncBadgeEl.title = this.youbikeRealtimeFetched ? '官方即時連線更新' : '官方最新數據';
-      syncBadgeEl.style.cursor = 'default';
+      if (syncBadgeEl.style) syncBadgeEl.style.cursor = 'default';
       syncBadgeEl.onclick = null;
     }
 

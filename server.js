@@ -11,8 +11,8 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = __dirname;
 
-// 官方 YouBike API 端點
-const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010e5b15-3823-4b20-b401-b1cf000550c5/json?size=2000';
+// 官方 YouBike 2.0 API 端點 (新北市官方全量即時 CSV、桃園市官方即時 JSON)
+const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010E5B15-3823-4B20-B401-B1CF000550C5/csv/file';
 const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download';
 const THSR_SEARCH_URL = 'https://www.thsrc.com.tw/TimeTable/Search';
 
@@ -313,6 +313,42 @@ async function handleTymetroProxy(req, res, direction) {
   }
 }
 
+// 解析 CSV 字串為 JSON 物件陣列
+function parseCsvToJson(csvStr) {
+  const lines = csvStr.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headerLine = lines[0].replace(/^\uFEFF/, '');
+  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const list = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const values = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let c = 0; c < line.length; c++) {
+      const ch = line[c];
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+      } else if (ch === ',' && !inQuotes) {
+        values.push(cur.trim().replace(/^"|"$/g, ''));
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    values.push(cur.trim().replace(/^"|"$/g, ''));
+
+    const obj = {};
+    for (let h = 0; h < headers.length; h++) {
+      obj[headers[h]] = values[h] != null ? values[h] : '';
+    }
+    list.push(obj);
+  }
+  return list;
+}
+
 // 處理 YouBike 代理請求
 async function handleYouBikeProxy(req, res, cityKey, sourceUrl) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -334,12 +370,17 @@ async function handleYouBikeProxy(req, res, cityKey, sourceUrl) {
 
   try {
     const rawData = await fetchRemoteJson(sourceUrl);
+    let jsonDataStr = rawData;
+    if (cityKey === 'ntpc' || rawData.trim().startsWith('scity') || rawData.trim().startsWith('\uFEFFscity')) {
+      const parsed = parseCsvToJson(rawData);
+      jsonDataStr = JSON.stringify(parsed);
+    }
     cache[cityKey] = {
-      data: rawData,
+      data: jsonDataStr,
       expireAt: now + 30000 // 快取 30 秒
     };
     res.writeHead(200);
-    res.end(rawData);
+    res.end(jsonDataStr);
   } catch (err) {
     if (cache[cityKey].data) {
       // 官方連線失敗時回傳既有舊快取
