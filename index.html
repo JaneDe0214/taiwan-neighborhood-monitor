@@ -4049,52 +4049,79 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
-   中央氣象署全台特報與強震警戒即時廣播 (Disaster Alert Banner)
+   雙埔全域環境安全極簡即時膠囊 (整合至頂部「雙埔生活資訊」旁空位，不浪費空間)
    ========================================================================== */
-.disaster-alert-banner {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.85));
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  border-radius: 8px;
-  padding: 7px 12px;
-  display: flex;
+.disaster-compact-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.74rem;
+  gap: 7px;
+  padding: 4px 11px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  color: #a7f3d0;
+  white-space: nowrap;
   transition: all 0.3s ease;
+  user-select: none;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+  cursor: default;
+  margin-left: 6px;
 }
 
-.disaster-alert-banner.has-warning {
-  background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+.disaster-compact-pill:hover {
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.disaster-compact-pill .pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  display: inline-block;
+  animation: safe-dot-pulse 2.2s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes safe-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.disaster-compact-pill.has-warning,
+.disaster-compact-pill.active {
+  background: rgba(239, 68, 68, 0.18);
   border-color: rgba(239, 68, 68, 0.6);
-  animation: pulse-border-red 2s infinite ease-in-out;
+  color: #fecaca;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+  animation: compact-pill-glow 1.5s infinite ease-in-out;
 }
 
-@keyframes pulse-border-red {
-  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.25); }
-  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.55); }
-}
-
-.disaster-alert-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #f1f5f9;
-}
-
-.disaster-alert-left i {
-  color: #10b981;
-}
-
-.disaster-alert-banner.has-warning .disaster-alert-left i {
-  color: #ef4444;
+.disaster-compact-pill.has-warning .pill-dot,
+.disaster-compact-pill.active .pill-dot {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
   animation: icon-wobble 1s infinite ease-in-out;
 }
 
-@keyframes icon-wobble {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+@keyframes compact-pill-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.25); }
+  50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.55); }
+}
+
+.disaster-pill-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+/* 向後相容既有類別定義 */
+.disaster-alert-banner {
+  display: none !important;
 }
 
 /* ==========================================================================
@@ -4156,7 +4183,18 @@ body {
   .brand-section {
     width: 100%;
     justify-content: flex-start;
-    gap: 10px;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .disaster-compact-pill {
+    font-size: 0.65rem !important;
+    padding: 2px 8px !important;
+    margin-left: 0 !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .brand-badge {
@@ -4432,6 +4470,11 @@ body {
       <div>
         <h1 class="brand-title">雙埔生活資訊</h1>
       </div>
+      <!-- 極簡即時環境安全與特報監測膠囊 (整合原側邊欄卡牌，節省空間) -->
+      <div id="disasterAlertBanner" class="disaster-compact-pill" title="雙埔生活圈全域環境安全 ‧ 氣象署特報與地震即時監測中">
+        <span class="pill-dot"></span>
+        <span id="disasterAlertText" class="disaster-pill-text"><i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全 ‧ 氣象地震監測中</span>
+      </div>
     </div>
 
     <!-- 監控中心切換 (首頁預設雙埔 vs 青埔 vs 新埔 vs 觀光) -->
@@ -4512,18 +4555,6 @@ body {
 
     <!-- 右側即時環境與生活安全面板 -->
     <aside class="sidebar-section">
-
-      <!-- 頂部：中央氣象署全台災害特報與強震監控廣播橫條 -->
-      <div id="disasterAlertBanner" class="disaster-alert-banner">
-        <div class="disaster-alert-left">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span id="disasterAlertText">全域環境安全 ‧ 氣象署特報與地震即時監測中</span>
-        </div>
-        <div class="live-sync-badge">
-          <span class="pulse-live-dot"></span>
-          <span>即時連動</span>
-        </div>
-      </div>
 
       <!-- 區域 2：雙埔即時氣象面板 -->
       <div class="widget-card" id="weatherWidgetCard">
@@ -6998,7 +7029,7 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 檢測並更新全台災害特報與強陣風/豪雨警戒橫條
+  // 檢測並更新全台災害特報與強陣風/豪雨警戒即時狀態 (極簡膠囊呈現於導航列標題旁)
   renderDisasterAlert(curWeather, curAqi) {
     if (typeof document === 'undefined') return;
     const banner = document.getElementById('disasterAlertBanner');
@@ -7016,20 +7047,25 @@ class WeatherEnvironmentMonitor {
     const isBadAqi = aqi >= 120;
 
     if (isThunder) {
-      banner.classList.add('active');
-      textEl.innerHTML = `<i class="fa-solid fa-bolt" style="color:#eab308; margin-right:4px;"></i> <strong>【雷雨特報】</strong>雙埔生活圈偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！`;
+      banner.classList.add('has-warning', 'active');
+      textEl.innerHTML = `<i class="fa-solid fa-bolt" style="color:#eab308; margin-right:2px;"></i> 雷雨特報 ‧ 慎防驟雨`;
+      banner.title = '【雷雨特報】雙埔生活圈偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！';
     } else if (isHeavyRain) {
-      banner.classList.add('active');
-      textEl.innerHTML = `<i class="fa-solid fa-cloud-showers-water" style="color:#38bdf8; margin-right:4px;"></i> <strong>【強降雨警示】</strong>目前時雨量顯著，路面濕滑易有積水，車輛請減速慢行！`;
+      banner.classList.add('has-warning', 'active');
+      textEl.innerHTML = `<i class="fa-solid fa-cloud-showers-water" style="color:#38bdf8; margin-right:2px;"></i> 強降雨警示 ‧ 路面濕滑`;
+      banner.title = '【強降雨警示】目前時雨量顯著，路面濕滑易有積水，車輛請減速慢行！';
     } else if (isStrongWind) {
-      banner.classList.add('active');
-      textEl.innerHTML = `<i class="fa-solid fa-wind" style="color:#f59e0b; margin-right:4px;"></i> <strong>【強風警示】</strong>瞬間最大陣風達 ${Math.round(gust)} 公里/時 (7級風)，機車與高架行駛請注意側風！`;
+      banner.classList.add('has-warning', 'active');
+      textEl.innerHTML = `<i class="fa-solid fa-wind" style="color:#f59e0b; margin-right:2px;"></i> 強風警示 ‧ 陣風 ${Math.round(gust)}km/h`;
+      banner.title = `【強風警示】瞬間最大陣風達 ${Math.round(gust)} 公里/時 (7級風)，機車與高架行駛請注意側風！`;
     } else if (isBadAqi) {
-      banner.classList.add('active');
-      textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f97316; margin-right:4px;"></i> <strong>【空品提醒】</strong>周邊空氣品質指標達 ${aqi}，敏感族群建議佩戴口罩並緊閉門窗。`;
+      banner.classList.add('has-warning', 'active');
+      textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f97316; margin-right:2px;"></i> 空品提醒 ‧ AQI ${aqi}`;
+      banner.title = `【空品提醒】周邊空氣品質指標達 ${aqi}，敏感族群建議佩戴口罩並緊閉門窗。`;
     } else {
-      banner.classList.remove('active');
-      textEl.innerHTML = `雙埔生活圈全域環境安全 ‧ 氣象署特報與地震即時監測中`;
+      banner.classList.remove('has-warning', 'active');
+      textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全 ‧ 氣象地震監測中`;
+      banner.title = '雙埔生活圈全域環境安全 ‧ 氣象署特報與地震即時監測中';
     }
   }
 
