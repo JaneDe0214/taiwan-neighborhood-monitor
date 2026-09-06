@@ -4347,8 +4347,25 @@ body {
         </div>
       </div>
 
-      <!-- 區域 1：即時氣象面板 -->
-      <div class="widget-card">
+      <!-- 區域 1：雙埔公共自行車 YouBike 2.0 即時動態看板 (首要核心) -->
+      <div id="youbikeWidgetCard" class="widget-card">
+        <div class="widget-title-row">
+          <div class="widget-title">
+            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike 2.0 即時車況</span>
+          </div>
+          <div class="live-sync-badge">
+            <span class="pulse-live-dot"></span>
+            <span id="youbikeSyncText">即時連線中</span>
+          </div>
+        </div>
+        <div id="youbikeStationList" class="youbike-station-list">
+          <!-- 由 JS 動態注入 YouBike 站點與車況 -->
+        </div>
+      </div>
+
+
+      <!-- 區域 2：雙埔即時氣象面板 -->
+      <div class="widget-card" id="weatherWidgetCard">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-cloud-sun"></i> 即時氣象
@@ -4420,8 +4437,8 @@ body {
         </div>
       </div>
 
-      <!-- 區域 2：空氣品質指標 (AQI) -->
-      <div class="widget-card">
+      <!-- 區域 3：空氣品質指標 (AQI) -->
+      <div class="widget-card" id="aqiWidgetCard">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-mask-face"></i> 空氣品質
@@ -4513,22 +4530,6 @@ body {
           <div class="radar-overlay-badge">
             <span class="pulse-dot"></span> 點擊檢視高解析大圖
           </div>
-        </div>
-      </div>
-
-      <!-- 區域 6：雙埔公共自行車 YouBike 2.0 即時動態看板 -->
-      <div id="youbikeWidgetCard" class="widget-card">
-        <div class="widget-title-row">
-          <div class="widget-title">
-            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike 2.0 即時車況</span>
-          </div>
-          <div class="live-sync-badge">
-            <span class="pulse-live-dot"></span>
-            <span id="youbikeSyncText">即時連線中</span>
-          </div>
-        </div>
-        <div id="youbikeStationList" class="youbike-station-list">
-          <!-- 由 JS 動態注入 YouBike 站點與車況 -->
         </div>
       </div>
 
@@ -6096,7 +6097,7 @@ class WeatherEnvironmentMonitor {
   // 渲染雙埔氣象對照卡片 (保留即時秒數倒數器與脈衝呼吸燈)
   renderDualWeather(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)') || document.querySelector('.sidebar-section .widget-card');
+    const card = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
     if (!card) return;
 
     const qpCur = qpData.weather?.current;
@@ -6233,7 +6234,7 @@ class WeatherEnvironmentMonitor {
   // 渲染雙埔空氣品質對照卡片
   renderDualAqi(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(3)') || document.querySelectorAll('.sidebar-section .widget-card')[1];
+    const card = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
     if (!card) return;
 
     const qpAqi = qpData.airQuality?.current;
@@ -6435,7 +6436,7 @@ class WeatherEnvironmentMonitor {
   // 單一中心視圖：氣象渲染 (保留秒數倒數器與即時脈衝燈)
   renderSingleWeather(data, locationName) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)') || document.querySelector('.sidebar-section .widget-card');
+    const card = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
     if (!card) return;
 
     const cur = data.weather?.current;
@@ -6534,7 +6535,7 @@ class WeatherEnvironmentMonitor {
   // 單一中心視圖：AQI 渲染
   renderSingleAqi(data) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(3)') || document.querySelectorAll('.sidebar-section .widget-card')[1];
+    const card = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
     if (!card) return;
 
     const curAqi = data.airQuality?.current;
