@@ -1851,68 +1851,187 @@ a.coord-tag:hover {
   font-size: 0.72rem;
 }
 
-.compact-badge-dir {
-  background: rgba(0, 240, 255, 0.15);
-  border: 1px solid rgba(0, 240, 255, 0.35);
+.compact-badge-dir-btn {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0, 150, 255, 0.08));
+  border: 1px solid rgba(0, 240, 255, 0.4);
   color: #00f0ff;
   font-weight: 700;
-  padding: 1px 7px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 5px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   white-space: nowrap;
+  cursor: pointer;
+  font-size: 0.72rem;
+  transition: all 0.2s ease;
+}
+
+.compact-badge-dir-btn:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+}
+
+.compact-badge-dir-btn .dir-swap-icon {
+  font-size: 0.65rem;
+  opacity: 0.8;
+  transition: transform 0.25s ease;
+}
+
+.compact-badge-dir-btn:hover .dir-swap-icon {
+  transform: rotate(180deg);
+  opacity: 1;
 }
 
 .compact-route-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(15, 23, 42, 0.8);
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1px 7px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 5px;
   white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.compact-route-pill:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(15, 23, 42, 0.95);
 }
 
 .compact-route-pill.thsr-pill {
-  border-left: 2.5px solid #ff7700;
+  border-left: 3px solid #ff7700;
+}
+
+.compact-route-pill.thsr-pill:hover {
+  box-shadow: 0 0 10px rgba(255, 119, 0, 0.2);
 }
 
 .compact-route-pill.tymetro-pill {
-  border-left: 2.5px solid #a855f7;
+  border-left: 3px solid #a855f7;
 }
 
-.compact-route-pill .pill-tag {
+.compact-route-pill.tymetro-pill:hover {
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+}
+
+.compact-route-pill.youbike-pill {
+  border-left: 3px solid #facc15;
+}
+
+.compact-route-pill.youbike-pill:hover {
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+}
+
+.compact-route-pill .pill-badge {
   font-weight: 700;
   display: inline-flex;
   align-items: center;
   gap: 3px;
 }
 
-.compact-route-pill.thsr-pill .pill-tag {
+.compact-route-pill.thsr-pill .pill-badge {
   color: #ff9900;
 }
 
-.compact-route-pill.tymetro-pill .pill-tag {
+.compact-route-pill.tymetro-pill .pill-badge {
   color: #c084fc;
 }
 
-.compact-route-pill .pill-seg {
-  color: #e2e8f0;
-}
-
-.compact-route-pill .seg-bannan {
-  color: #38bdf8;
-}
-
-.compact-route-pill .seg-circular {
+.compact-route-pill.youbike-pill .pill-badge {
   color: #facc15;
 }
 
-.compact-route-pill .pill-arrow {
-  color: var(--text-dim);
+.compact-route-pill .pill-train-code {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.compact-route-pill .pill-train-type {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.compact-route-pill .pill-train-type.express {
+  color: #c084fc;
+  font-weight: 700;
+}
+
+.compact-route-pill .pill-dep-time {
+  color: #38bdf8;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.compact-route-pill .pill-status-chip {
   font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.compact-route-pill .pill-status-chip.chip-active {
+  background: rgba(0, 240, 255, 0.12);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.compact-route-pill .pill-status-chip.chip-urgent {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  animation: pulseSlow 1.5s infinite ease-in-out;
+}
+
+.compact-route-pill .pill-status-chip.chip-muted {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.compact-route-pill .pill-transit-feed {
+  color: #94a3b8;
+  font-size: 0.66rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  padding-left: 6px;
+  margin-left: 1px;
+}
+
+.compact-route-pill .feed-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.compact-route-pill .feed-dot.bannan-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 4px #38bdf8;
+}
+
+.compact-route-pill .feed-dot.circular-dot {
+  background: #facc15;
+  box-shadow: 0 0 4px #facc15;
+}
+
+.compact-route-pill .pill-ubike-data {
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.compact-route-pill .pill-ubike-data .ub-num {
+  color: #facc15;
+  font-weight: 700;
+  font-size: 0.72rem;
 }
 
 .compact-actions-group {
@@ -1940,19 +2059,6 @@ a.coord-tag:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.25);
-}
-
-.compact-btn.btn-youbike-main {
-  background: rgba(250, 204, 21, 0.12);
-  border-color: rgba(250, 204, 21, 0.35);
-  color: #facc15;
-  font-weight: 700;
-}
-
-.compact-btn.btn-youbike-main:hover {
-  background: rgba(250, 204, 21, 0.22);
-  border-color: rgba(250, 204, 21, 0.5);
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
 }
 
 .compact-btn.btn-plan-toggle,
@@ -8740,46 +8846,81 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 渲染超矮迷你收合橫條 HTML (依來回方向動態調整路段順序)
+  // 渲染超矮迷你收合橫條 HTML (依來回方向動態調整，提煉高鐵、機捷、YouBike 全功能微型儀表板)
   renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular) {
     const isToQingpu = this.direction === 'to_qingpu';
 
-    // 高鐵線迷你路段資訊 (依照通勤方向排序)
-    const thsrPillHtml = isToQingpu
-      ? `
-        <span class="pill-tag"><i class="fa-solid fa-bolt"></i> 高鐵線</span>
-        <span class="pill-seg seg-bannan">板南 ${bannan.platformStatus}</span>
-        <span class="pill-arrow">➔ 轉5分 ➔</span>
-        <span class="pill-seg seg-thsr">高鐵 ${thsr.trainNo}次 <span class="thsr-stop-badge">停靠桃園</span> (${thsr.depTime}發 / ${thsr.platformStatus})</span>
-      `
-      : `
-        <span class="pill-tag"><i class="fa-solid fa-bolt"></i> 高鐵線</span>
-        <span class="pill-seg seg-thsr">高鐵 ${thsr.trainNo}次 <span class="thsr-stop-badge">停靠桃園</span> (${thsr.depTime}發 / ${thsr.platformStatus})</span>
-        <span class="pill-arrow">➔ 轉5分 ➔</span>
-        <span class="pill-seg seg-bannan">板南 ${bannan.platformStatus}</span>
-      `;
-
-    // 機捷線迷你路段資訊 (依照通勤方向排序)
-    const tymetroPillHtml = isToQingpu
-      ? `
-        <span class="pill-tag"><i class="fa-solid fa-route"></i> 機捷線</span>
-        <span class="pill-seg seg-circular">環狀 ${circular.platformStatus}</span>
-        <span class="pill-arrow">➔ 轉5分 ➔</span>
-        <span class="pill-seg seg-tymetro ${tymetro.isExpress ? 'tymetro-express-text' : 'tymetro-commuter-text'}">機捷${tymetro.rawType} (${tymetro.activeTrains.length}車在線 ‧ ${tymetro.duration}分 ‧ ${tymetro.depTime}發 / ${tymetro.platformStatus})</span>
-      `
-      : `
-        <span class="pill-tag"><i class="fa-solid fa-route"></i> 機捷線</span>
-        <span class="pill-seg seg-tymetro ${tymetro.isExpress ? 'tymetro-express-text' : 'tymetro-commuter-text'}">機捷${tymetro.rawType} (${tymetro.activeTrains.length}車在線 ‧ ${tymetro.duration}分 ‧ ${tymetro.depTime}發 / ${tymetro.platformStatus})</span>
-        <span class="pill-arrow">➔ 轉5分 ➔</span>
-        <span class="pill-seg seg-circular">環狀 ${circular.platformStatus}</span>
-      `;
+    // 取得雙埔 YouBike 即時可借車輛數摘要
+    let qpBikes = null;
+    let bpBikes = null;
+    let updateTimeStr = '';
+    if (typeof window !== 'undefined' && window.weatherMonitor) {
+      if (typeof window.weatherMonitor.getDualCoreStations === 'function') {
+        const stations = window.weatherMonitor.getDualCoreStations();
+        if (Array.isArray(stations) && stations.length > 0) {
+          const qpList = stations.filter(s => s.city === 'qp' && typeof s.currentBikes === 'number');
+          const bpList = stations.filter(s => s.city === 'bp' && typeof s.currentBikes === 'number');
+          if (qpList.length > 0) {
+            qpBikes = qpList.reduce((sum, s) => sum + s.currentBikes, 0);
+          }
+          if (bpList.length > 0) {
+            bpBikes = bpList.reduce((sum, s) => sum + s.currentBikes, 0);
+          }
+        }
+      }
+      if (window.weatherMonitor.youbikeUpdateTime) {
+        updateTimeStr = String(window.weatherMonitor.youbikeUpdateTime).replace(/[^0-9:]/g, '').trim();
+      }
+    }
 
     const activeAlert = this.alerts.find(a => a.active !== false);
+
+    // 高鐵狀態晶片樣式
+    const thsrChipClass = thsr.isOutOfService ? 'chip-muted' : (thsr.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
+    // 機捷狀態晶片樣式
+    const tymetroChipClass = tymetro.isOutOfService ? 'chip-muted' : (tymetro.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
+
+    // 高鐵線微型膠囊
+    const thsrPillHtml = `
+      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵快線：${isToQingpu ? '新埔搭板南線至板橋 ➔ 轉乘高鐵抵桃園 (保證停靠桃園)' : '桃園搭高鐵至板橋 ➔ 轉乘板南線抵新埔'} (點擊展開軌道)">
+        <span class="pill-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
+        <span class="pill-train-code">${thsr.trainNo}次</span>
+        <span class="pill-dep-time">${thsr.depTime}發</span>
+        <span class="pill-status-chip ${thsrChipClass}">${thsr.platformStatus}</span>
+        <span class="pill-transit-feed" title="板南線月台狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '')}</span>
+      </div>
+    `;
+
+    // 機捷線微型膠囊
+    const tymetroPillHtml = `
+      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷路線：${isToQingpu ? '新埔搭環狀線至新北產業園區 ➔ 轉乘機捷抵青埔' : '青埔搭機捷至新北產業園區 ➔ 轉乘環狀線抵新埔'} (${tymetro.activeTrains.length}車在線 ‧ 點擊展開軌道)">
+        <span class="pill-badge"><i class="fa-solid fa-route"></i> 機捷</span>
+        <span class="pill-train-type ${tymetro.isExpress ? 'express' : ''}">${tymetro.rawType}</span>
+        <span class="pill-dep-time">${tymetro.depTime}發</span>
+        <span class="pill-status-chip ${tymetroChipClass}">${tymetro.platformStatus}</span>
+        <span class="pill-transit-feed" title="環狀線月台狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '')}</span>
+      </div>
+    `;
+
+    // YouBike 雙埔動態微型膠囊
+    const youbikePillHtml = `
+      <div class="compact-route-pill youbike-pill" onclick="window.transitMonitor.toggleCollapse()" title="雙埔核心 YouBike 2.0 即時可借車輛動態 (點擊展開查看完整車況)">
+        <span class="pill-badge"><i class="fa-solid fa-bicycle"></i> YouBike</span>
+        ${(qpBikes !== null && bpBikes !== null) ? `
+          <span class="pill-ubike-data">可借 青埔 <b class="ub-num">${qpBikes}</b> ‧ 新埔 <b class="ub-num">${bpBikes}</b></span>
+        ` : `
+          <span class="pill-ubike-data">${updateTimeStr ? `${updateTimeStr} 同步` : '即時車況'}</span>
+        `}
+      </div>
+    `;
 
     return `
       <div class="transit-compact-bar">
         <div class="compact-left-group">
-          <span class="compact-badge-dir">${directionLabel}</span>
+          <button class="compact-badge-dir-btn" onclick="window.transitMonitor.toggleDirection()" title="點擊切換通勤方向 (目前：${directionLabel})">
+            <span>${directionLabel}</span>
+            <i class="fa-solid fa-arrows-rotate dir-swap-icon"></i>
+          </button>
           
           ${activeAlert ? `
             <span class="incident-badge pulse-red" style="cursor:pointer;" onclick="window.transitMonitor.toggleCollapse()" title="${activeAlert.lineName}${activeAlert.title}：${activeAlert.desc}">
@@ -8787,28 +8928,19 @@ class TwinCityTransitMonitor {
             </span>
           ` : ''}
 
-          <!-- 高鐵線多段月台車況 (依通勤順序排列) -->
-          <div class="compact-route-pill thsr-pill" title="高鐵路線：${isToQingpu ? '板南線倒數 + 轉乘5分 + 高鐵發車倒數' : '高鐵發車倒數 + 轉乘5分 + 板南線倒數'} (已排除1xx直達台中車次，保證停靠桃園)">
-            ${thsrPillHtml}
-          </div>
+          <!-- 高鐵快線微型指標卡 -->
+          ${thsrPillHtml}
 
-          <!-- 機捷線多段月台車況 (依通勤順序排列) -->
-          <div class="compact-route-pill tymetro-pill" title="環狀機捷：${isToQingpu ? '環狀線倒數 + 轉乘5分 + 機捷發車倒數' : '機捷發車倒數 + 轉乘5分 + 環狀線倒數'} (${tymetro.activeTrains.length} 班在線運行)">
-            ${tymetroPillHtml}
-          </div>
-        
+          <!-- 機捷路線微型指標卡 -->
+          ${tymetroPillHtml}
 
+          <!-- 雙埔 YouBike 即時動態指標卡 -->
+          ${youbikePillHtml}
         </div>
 
         <div class="compact-actions-group">
-          <button class="compact-btn" onclick="window.transitMonitor.toggleDirection()" title="切換來回方向">
-            <span>🔁 切換方向</span>
-          </button>
           <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看出門搭車到站時間表">
             <span>🕒 出門時間表</span> <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
-          </button>
-          <button class="compact-btn btn-youbike-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看雙埔核心 YouBike 2.0 車位動態與全線路網">
-            <span>🚲 YouBike 車況</span> <i class="fa-solid fa-chevron-down"></i>
           </button>
           <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看全線即時列車行駛動態與全寬軌道">
             <span>🚄 列車行駛動態</span> <i class="fa-solid fa-chevron-down"></i>
@@ -9101,7 +9233,7 @@ class TwinCityTransitMonitor {
             <i class="fa-solid fa-train-subway"></i>
           </div>
           <div class="transit-main-title">
-            <span>🚆 雙埔大眾運輸 ‧ 即時路網</span>
+            <span>雙埔路網</span>
           </div>
         </div>
 
