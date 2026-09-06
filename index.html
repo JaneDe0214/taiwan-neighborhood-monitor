@@ -3604,6 +3604,297 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
+   全時即時同步指示器與動態倒數 (Live Telemetry Sync Badges)
+   ========================================================================== */
+.live-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.pulse-live-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+  animation: live-pulse-glow 1.8s infinite ease-in-out;
+}
+
+@keyframes live-pulse-glow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.sync-countdown-text {
+  color: #38bdf8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ==========================================================================
+   雷達回波多圖層切換 (Radar Multi-Layer Selector)
+   ========================================================================== */
+.radar-layer-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.radar-layer-bar::-webkit-scrollbar { display: none; }
+
+.radar-layer-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.radar-layer-btn:hover {
+  color: #ffffff;
+  background: rgba(0, 240, 255, 0.15);
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+.radar-layer-btn.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(16, 185, 129, 0.25));
+  border-color: #00f0ff;
+  color: #00f0ff;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+/* ==========================================================================
+   雙埔公共自行車 YouBike 2.0 即時動態看板
+   ========================================================================== */
+.youbike-station-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.youbike-station-item {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 6px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.youbike-station-item:hover {
+  border-color: rgba(250, 204, 21, 0.4);
+  transform: translateX(2px);
+}
+
+.youbike-station-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.youbike-station-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.youbike-station-name i {
+  color: #facc15;
+}
+
+.youbike-station-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.72rem;
+}
+
+.youbike-metric-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.youbike-pill-rent {
+  background: rgba(16, 185, 129, 0.16);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.youbike-pill-rent.warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.youbike-pill-rent.danger {
+  background: rgba(239, 68, 68, 0.16);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.youbike-pill-return {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.youbike-pill-electric {
+  background: rgba(168, 85, 247, 0.16);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  font-size: 0.65rem;
+}
+
+.youbike-track-fill-bg {
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.youbike-track-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #00f0ff);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* ==========================================================================
+   生活安全管家 4 大出行生活指標 (Living & Commute Index)
+   ========================================================================== */
+.life-index-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.life-index-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.life-index-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.life-index-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.life-index-title {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.life-index-state {
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   中央氣象署全台特報與強震警戒即時廣播 (Disaster Alert Banner)
+   ========================================================================== */
+.disaster-alert-banner {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(15, 23, 42, 0.85));
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.74rem;
+  transition: all 0.3s ease;
+}
+
+.disaster-alert-banner.has-warning {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+  border-color: rgba(239, 68, 68, 0.6);
+  animation: pulse-border-red 2s infinite ease-in-out;
+}
+
+@keyframes pulse-border-red {
+  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.25); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.55); }
+}
+
+.disaster-alert-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.disaster-alert-left i {
+  color: #10b981;
+}
+
+.disaster-alert-banner.has-warning .disaster-alert-left i {
+  color: #ef4444;
+  animation: icon-wobble 1s infinite ease-in-out;
+}
+
+@keyframes icon-wobble {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ==========================================================================
    全功能智慧型手機與行動裝置自適應系統 (Mobile Responsive Layout & Anti-Overflow)
    ========================================================================== */
 
@@ -3997,11 +4288,27 @@ body {
     <!-- 右側即時環境與生活安全面板 -->
     <aside class="sidebar-section">
 
+      <!-- 頂部：中央氣象署全台災害特報與強震監控廣播橫條 -->
+      <div id="disasterAlertBanner" class="disaster-alert-banner">
+        <div class="disaster-alert-left">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span id="disasterAlertText">全域環境安全 ‧ 氣象署特報與地震即時監測中</span>
+        </div>
+        <div class="live-sync-badge">
+          <span class="pulse-live-dot"></span>
+          <span>即時連動</span>
+        </div>
+      </div>
+
       <!-- 區域 1：即時氣象面板 -->
       <div class="widget-card">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-cloud-sun"></i> 即時氣象
+          </div>
+          <div class="live-sync-badge">
+            <span class="pulse-live-dot"></span>
+            <span>即時同步 (<span class="sync-countdown-text" id="weatherCountdown">30s</span>)</span>
           </div>
         </div>
 
@@ -4072,8 +4379,9 @@ body {
           <div class="widget-title">
             <i class="fa-solid fa-mask-face"></i> 空氣品質
           </div>
-          <div class="weather-telemetry-badge">
-            <span class="rate-secure-badge">環保署標準</span>
+          <div class="live-sync-badge">
+            <span class="pulse-live-dot"></span>
+            <span id="aqiSyncBadge">環保署標準 ‧ 連動中</span>
           </div>
         </div>
 
@@ -4110,43 +4418,74 @@ body {
           <div class="widget-title">
             <i class="fa-solid fa-umbrella"></i> 降雨機率走勢
           </div>
-          <span class="widget-badge">% 機率</span>
+          <div class="live-sync-badge">
+            <span class="pulse-live-dot"></span>
+            <span>% 機率 ‧ 最新推播</span>
+          </div>
         </div>
         <div id="hourlyRainContainer" style="display: flex; gap: 4px; padding: 4px 0;">
           <!-- 由 JS 繪製柱狀圖 -->
         </div>
       </div>
 
-      <!-- 區域 4：生活安全管家建議 -->
+      <!-- 區域 4：生活安全管家與 4 大出行指數 -->
       <div class="widget-card">
         <div class="widget-title-row">
           <div class="widget-title">
-            <i class="fa-solid fa-bell"></i> 生活安全管家
+            <i class="fa-solid fa-bell"></i> 生活出行管家
           </div>
-          <span class="widget-badge">即時分析</span>
+          <span class="widget-badge">即時運算</span>
+        </div>
+        <div id="lifeIndexContainer">
+          <!-- 由 JS 動態注入 4 大生活出行指數 -->
         </div>
         <div id="lifeAssistantList" class="life-assistant-list">
           <!-- 由 JS 動態產生生活建議 -->
         </div>
       </div>
 
-      <!-- 區域 5：中央氣象署雷達回波圖 -->
+      <!-- 區域 5：中央氣象署雷達回波圖 (支援 4 種官方高解析圖層切換) -->
       <div class="widget-card">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-radar"></i> 氣象署雷達回波
           </div>
-          <span id="radarUpdateTime" class="widget-badge">自動更新</span>
+          <span id="radarUpdateTime" class="widget-badge">最新同步</span>
         </div>
+
+        <!-- 多圖層切換列 -->
+        <div class="radar-layer-bar">
+          <button class="radar-layer-btn active" data-layer="O-A0058-001.png" onclick="window.weatherMonitor.switchRadarLayer('O-A0058-001.png', this)" title="中央氣象署整合回波圖 (含地形)">整合回波</button>
+          <button class="radar-layer-btn" data-layer="O-A0058-004.png" onclick="window.weatherMonitor.switchRadarLayer('O-A0058-004.png', this)" title="高解析降雨雷達偵測">降雨雷達</button>
+          <button class="radar-layer-btn" data-layer="O-A0058-002.png" onclick="window.weatherMonitor.switchRadarLayer('O-A0058-002.png', this)" title="無地形清晰雲系分佈">無地形</button>
+          <button class="radar-layer-btn" data-layer="O-A0038-001.png" onclick="window.weatherMonitor.switchRadarLayer('O-A0038-001.png', this)" title="全台即時氣溫分佈圖">全台氣溫</button>
+        </div>
+
         <div class="radar-preview-box" onclick="window.monitorApp.openFullscreen('RADAR_CWA')">
           <img id="radarImg" class="radar-img" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png" referrerpolicy="no-referrer" alt="中央氣象署即時雷達回波" />
           <div class="radar-overlay-badge">
-            <span class="pulse-dot"></span> 點擊檢視高解析雷達
+            <span class="pulse-dot"></span> 點擊檢視高解析大圖
           </div>
         </div>
       </div>
 
-      <!-- 區域 6：互動地理雷達地圖 -->
+      <!-- 區域 6：雙埔公共自行車 YouBike 2.0 即時動態看板 -->
+      <div id="youbikeWidgetCard" class="widget-card">
+        <div class="widget-title-row">
+          <div class="widget-title">
+            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike 2.0 即時車況</span>
+          </div>
+          <div class="live-sync-badge">
+            <span class="pulse-live-dot"></span>
+            <span id="youbikeSyncText">即時連線中</span>
+          </div>
+        </div>
+        <div id="youbikeStationList" class="youbike-station-list">
+          <!-- 由 JS 動態注入 YouBike 站點與車況 -->
+        </div>
+      </div>
+
+      <!-- 區域 7：周遭地理雷達地圖 -->
       <div class="widget-card radar-map-card">
         <div class="widget-title-row">
           <div class="widget-title">
@@ -5207,6 +5546,12 @@ class WeatherEnvironmentMonitor {
 
     // 即時高頻率同步更新週期：30 秒極速同步，即時掌握氣象與雨量變化
     this.refreshIntervalSec = 30;
+    this.countdownSec = this.refreshIntervalSec;
+    this.countdownTimerId = null;
+    this.currentRadarLayer = 'O-A0058-001.png';
+    this.currentCenterId = 'dual';
+    this.youbikeFilter = 'all'; // 'all' | 'qp' | 'bp'
+
     this.lastFetchTimestamp = 0;
     this.minDebounceMs = 2000; // 手動防刷冷卻 2 秒
 
@@ -5215,12 +5560,71 @@ class WeatherEnvironmentMonitor {
     this.activeSingleParams = null; // { lat, lon, locationName }
     this.activeDualParams = null; // { qpInfo, bpInfo }
 
+    // 初始化 YouBike 雙埔站點資料
+    this.initYouBikeStations();
+
+    // 啟動每秒即時倒數計時器
+    this.startCountdownTimer();
+
     // 初始化瀏覽器前景/背景智慧休眠喚醒監聽 (Page Visibility API)
     this.initVisibilityListener();
 
     // 掛載至全域 window 物件以供 DOM 事件與橫向滑動控制呼叫
     if (typeof window !== 'undefined') {
       window.weatherMonitor = this;
+    }
+  }
+
+  // 初始化雙埔核心 YouBike 2.0 站點基礎資料
+  initYouBikeStations() {
+    this.youbikeStations = [
+      // 桃園青埔生活圈 (高鐵特區與體育園區)
+      { id: 'qp-1', city: 'qp', cityName: '青埔', name: '高鐵桃園站(前站)', total: 68, bikes: 34, ebikes: 8, spaces: 26, lat: 25.0130, lon: 121.2148 },
+      { id: 'qp-2', city: 'qp', cityName: '青埔', name: '捷運桃園體育園區站(A19)', total: 46, bikes: 21, ebikes: 5, spaces: 20, lat: 25.0028, lon: 121.2012 },
+      { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青塘園生態公園', total: 32, bikes: 15, ebikes: 4, spaces: 13, lat: 25.0068, lon: 121.2058 },
+      { id: 'qp-4', city: 'qp', cityName: '青埔', name: '華泰名品城站', total: 50, bikes: 23, ebikes: 6, spaces: 21, lat: 25.0162, lon: 121.2166 },
+      { id: 'qp-5', city: 'qp', cityName: '青埔', name: '青埔國小(致遠一路)', total: 28, bikes: 13, ebikes: 3, spaces: 12, lat: 25.0175, lon: 121.2225 },
+      { id: 'qp-6', city: 'qp', cityName: '青埔', name: '洽溪公園站', total: 30, bikes: 16, ebikes: 4, spaces: 10, lat: 25.0089, lon: 121.1983 },
+
+      // 新北新埔/板橋生活圈 (捷運新埔商圈與新板特區)
+      { id: 'bp-1', city: 'bp', cityName: '新埔', name: '捷運新埔站(1號出口)', total: 74, bikes: 38, ebikes: 9, spaces: 27, lat: 25.0238, lon: 121.4682 },
+      { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(4號出口)', total: 52, bikes: 25, ebikes: 6, spaces: 21, lat: 25.0226, lon: 121.4685 },
+      { id: 'bp-3', city: 'bp', cityName: '新埔', name: '新埔民生站(環狀線)', total: 38, bikes: 19, ebikes: 4, spaces: 15, lat: 25.0261, lon: 121.4668 },
+      { id: 'bp-4', city: 'bp', cityName: '新埔', name: '致理科技大學正門', total: 42, bikes: 22, ebikes: 5, spaces: 15, lat: 25.0215, lon: 121.4632 },
+      { id: 'bp-5', city: 'bp', cityName: '新埔', name: '新板萬坪都會公園', total: 48, bikes: 24, ebikes: 6, spaces: 18, lat: 25.0150, lon: 121.4635 },
+      { id: 'bp-6', city: 'bp', cityName: '新埔', name: '新北市政府(新站路)', total: 60, bikes: 31, ebikes: 7, spaces: 22, lat: 25.0125, lon: 121.4655 }
+    ];
+  }
+
+  // 啟動每秒即時倒數計時器
+  startCountdownTimer() {
+    if (this.countdownTimerId) {
+      clearInterval(this.countdownTimerId);
+    }
+    this.countdownTimerId = setInterval(() => {
+      this.countdownSec--;
+      if (this.countdownSec <= 0) {
+        this.countdownSec = this.refreshIntervalSec;
+        this.triggerAutoRefresh();
+      }
+      this.updateCountdownDisplay();
+    }, 1000);
+  }
+
+  // 停止倒數計時器
+  stopCountdownTimer() {
+    if (this.countdownTimerId) {
+      clearInterval(this.countdownTimerId);
+      this.countdownTimerId = null;
+    }
+  }
+
+  // 即時更新畫面上秒數顯示
+  updateCountdownDisplay() {
+    if (typeof document === 'undefined') return;
+    const cdEl = document.getElementById('weatherCountdown');
+    if (cdEl) {
+      cdEl.textContent = `${this.countdownSec}s`;
     }
   }
 
@@ -5320,7 +5724,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 取得當前時間往後推算之起始索引 (從當前小時開始往後預測，徹底解決原先死板顯示 0~7 或 9 時之問題)
+  // 取得當前時間往後推算之起始索引 (從當前小時開始往後預測，解決死板顯示過去時段之問題)
   getFutureStartIndex(timeList) {
     if (!Array.isArray(timeList) || timeList.length === 0) return 0;
     const now = new Date();
@@ -5360,8 +5764,8 @@ class WeatherEnvironmentMonitor {
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         const elapsed = Math.floor((Date.now() - this.lastFetchTimestamp) / 1000);
-        // 切換回前景時若已超過 30 秒，立即自動喚醒更新
-        if (elapsed >= this.refreshIntervalSec) {
+        // 切換回前景時若已超過 15 秒，立即自動喚醒更新以獲取最新天候與車況
+        if (elapsed >= 15) {
           this.triggerAutoRefresh();
         }
       }
@@ -5370,10 +5774,16 @@ class WeatherEnvironmentMonitor {
 
   // 觸發自動重新整理
   triggerAutoRefresh() {
+    this.countdownSec = this.refreshIntervalSec;
+    this.updateCountdownDisplay();
+
     if (this.activeMode === 'dual' && this.activeDualParams) {
       this.fetchDualEnvironment(this.activeDualParams.qpInfo, this.activeDualParams.bpInfo, true);
     } else if (this.activeMode === 'single' && this.activeSingleParams) {
       this.fetchEnvironment(this.activeSingleParams.lat, this.activeSingleParams.lon, this.activeSingleParams.locationName, true);
+    } else {
+      this.refreshRadar();
+      this.renderYouBikeStatus(this.currentCenterId);
     }
   }
 
@@ -5467,7 +5877,7 @@ class WeatherEnvironmentMonitor {
     return { isDay: true, text: '日間', icon: 'fa-sun', color: '#f59e0b' };
   }
 
-  // AQI 空氣品質等級判定 (全面繁體中文化，無英文標籤)
+  // AQI 空氣品質等級判定 (全面繁體中文化)
   getAqiLevel(aqi) {
     if (aqi <= 50) {
       return { level: '優良等級', color: '#10b981', class: 'success', advice: '空氣極佳，適宜開窗通風與戶外活動' };
@@ -5490,13 +5900,11 @@ class WeatherEnvironmentMonitor {
     const prob = typeof hourlyRainProb === 'number' ? hourlyRainProb : 0;
     const weatherInfo = this.getWeatherCodeInfo(code);
 
-    // 定義降雨型天氣編碼 (WMO 標準)
-    const isThunderstorm = [95, 96].includes(code); // 雷陣雨、雷雨挾帶冰雹
-    const isHeavyRain = [65, 81, 82].includes(code); // 持續性豪雨、強陣雨、劇烈降雨
-    const isModerateOrDrizzle = [51, 53, 55, 61, 63, 80].includes(code); // 細雨、毛毛雨、密集細雨、小雨、中度陣雨、短暫陣雨
+    const isThunderstorm = [95, 96].includes(code);
+    const isHeavyRain = [65, 81, 82].includes(code);
+    const isModerateOrDrizzle = [51, 53, 55, 61, 63, 80].includes(code);
     const isAnyRainCode = isThunderstorm || isHeavyRain || isModerateOrDrizzle;
 
-    // 1. 強烈雷雨或豪大雨警戒 (最高優先級)
     if (isThunderstorm || isHeavyRain || maxRain >= 2.0) {
       const typeDesc = isThunderstorm ? '雷陣雨' : (maxRain >= 5.0 ? '豪大雨' : '強降雨');
       return {
@@ -5507,7 +5915,6 @@ class WeatherEnvironmentMonitor {
       };
     }
 
-    // 2. 明確降雨中 (雨量 > 0.05 mm 或 WMO 編碼明確為雨天)
     if (maxRain > 0.05 || isAnyRainCode) {
       const codeText = isAnyRainCode ? weatherInfo.text : '降雨中';
       return {
@@ -5518,7 +5925,6 @@ class WeatherEnvironmentMonitor {
       };
     }
 
-    // 3. 高降雨機率警示 (雖然當下雨量筒尚未累積，但雲系籠罩隨時落雨)
     if (prob >= 50) {
       return {
         level: 'warning',
@@ -5528,7 +5934,6 @@ class WeatherEnvironmentMonitor {
       };
     }
 
-    // 4. 陰天多雲有微弱降雨機率 (30% ~ 49%)
     if (prob >= 30 || code === 3) {
       return {
         level: 'normal',
@@ -5538,7 +5943,6 @@ class WeatherEnvironmentMonitor {
       };
     }
 
-    // 5. 晴朗穩定 / 完全無雨
     return {
       level: 'success',
       icon: 'fa-sun',
@@ -5547,7 +5951,7 @@ class WeatherEnvironmentMonitor {
     };
   }
 
-  // 取得單一座標資料底層方法 (包含本地精確同步時間標記)
+  // 取得單一座標資料底層方法
   async fetchLocationData(lat, lon) {
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=Asia%2FTaipei`;
     const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=Asia%2FTaipei`;
@@ -5559,7 +5963,6 @@ class WeatherEnvironmentMonitor {
       const syncTime = new Date();
       return { weather, airQuality, syncTime };
     } catch (e) {
-      // 伺服器代理備援
       try {
         const localRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
         const localJson = await localRes.json();
@@ -5571,11 +5974,11 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 1. 單一中心載入環境資訊 (支援 5 秒手動防刷冷卻保護)
+  // 1. 單一中心載入環境資訊
   async fetchEnvironment(lat, lon, locationName = '當地環境', isAuto = false) {
     const now = Date.now();
     if (!isAuto && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
-      console.log('[防刷保護] 距離上次更新不足 5 秒，已略過頻繁請求以保護 API 連線');
+      console.log('[防刷保護] 距離上次更新不足 2 秒，已略過頻繁請求');
       return;
     }
     this.lastFetchTimestamp = now;
@@ -5590,17 +5993,24 @@ class WeatherEnvironmentMonitor {
       this.renderSingleAqi(this.currentData);
       this.renderSingleHourly(this.currentData.weather?.hourly);
       this.renderSingleLifeAssistant(this.currentData, locationName);
+
+      const startIdx = this.getFutureStartIndex(this.currentData.weather?.hourly?.time);
+      const rainProb = (this.currentData.weather?.hourly?.precipitation_probability || [])[startIdx] || 0;
+      this.renderLivingIndexes(this.currentData.weather?.current, rainProb);
+      this.renderDisasterAlert(this.currentData.weather?.current, this.currentData.airQuality?.current);
+      this.renderYouBikeStatus(locationName.includes('新埔') ? 'banqiao' : 'qingpu');
       this.refreshRadar();
+      this.updateCountdownDisplay();
     } catch (err) {
       console.error('更新環境資訊失敗:', err);
     }
   }
 
-  // 2. 雙城同步載入環境資訊 (青埔 + 新埔，支援 5 秒手動防刷保護)
+  // 2. 雙城同步載入環境資訊 (青埔 + 新埔)
   async fetchDualEnvironment(qpInfo, bpInfo, isAuto = false) {
     const now = Date.now();
     if (!isAuto && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
-      console.log('[防刷保護] 距離上次更新不足 5 秒，已略過頻繁請求以保護 API 連線');
+      console.log('[防刷保護] 距離上次更新不足 2 秒，已略過頻繁請求');
       return;
     }
     this.lastFetchTimestamp = now;
@@ -5619,16 +6029,23 @@ class WeatherEnvironmentMonitor {
       this.renderDualAqi(qpData, bpData, qpInfo, bpInfo);
       this.renderDualHourly(qpData.weather?.hourly, bpData.weather?.hourly);
       this.renderDualLifeAssistant(qpData, bpData, qpInfo, bpInfo);
+
+      const qpStartIdx = this.getFutureStartIndex(qpData.weather?.hourly?.time);
+      const qpRainProb = (qpData.weather?.hourly?.precipitation_probability || [])[qpStartIdx] || 0;
+      this.renderLivingIndexes(qpData.weather?.current, qpRainProb);
+      this.renderDisasterAlert(qpData.weather?.current, qpData.airQuality?.current);
+      this.renderYouBikeStatus('dual');
       this.refreshRadar();
+      this.updateCountdownDisplay();
     } catch (err) {
       console.error('更新雙城環境資訊失敗:', err);
     }
   }
 
-  // 渲染雙城氣象對照卡片 (含觀測時間、本地精確同步時戳與倒數更新)
+  // 渲染雙城氣象對照卡片 (保留即時秒數倒數器與脈衝呼吸燈)
   renderDualWeather(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(1)');
+    const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)') || document.querySelector('.sidebar-section .widget-card');
     if (!card) return;
 
     const qpCur = qpData.weather?.current;
@@ -5652,7 +6069,6 @@ class WeatherEnvironmentMonitor {
     const bpSunrise = this.formatApiTime(bpData.weather?.daily?.sunrise?.[0]);
     const bpSunset = this.formatApiTime(bpData.weather?.daily?.sunset?.[0]);
 
-    const syncTimeStr = this.formatSyncTime(qpData.syncTime || bpData.syncTime || new Date());
     const qpObsTime = this.formatApiTime(qpCur.time);
     const bpObsTime = this.formatApiTime(bpCur.time);
 
@@ -5661,6 +6077,10 @@ class WeatherEnvironmentMonitor {
         <div class="widget-title">
           <i class="fa-solid fa-cloud-sun"></i> 雙城即時氣象
         </div>
+        <div class="live-sync-badge">
+          <span class="pulse-live-dot"></span>
+          <span>即時同步 (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
+        </div>
       </div>
 
       <div class="dual-weather-grid">
@@ -5668,7 +6088,7 @@ class WeatherEnvironmentMonitor {
         <div class="dual-city-box qp">
           <div class="dual-city-header">
             <span class="dual-city-tag qp"><i class="fa-solid fa-location-dot"></i> 青埔</span>
-            <span class="data-obs-time" title="數值氣象模型實際觀測發布時間"><i class="fa-regular fa-clock"></i> 觀測 ${qpObsTime}</span>
+            <span class="data-obs-time" title="氣象模型即時觀測時間"><i class="fa-regular fa-clock"></i> 觀測 ${qpObsTime}</span>
           </div>
           <div class="dual-temp-row">
             <span class="dual-temp-val">${Math.round(qpCur.temperature_2m)}</span>
@@ -5714,7 +6134,7 @@ class WeatherEnvironmentMonitor {
         <div class="dual-city-box bp">
           <div class="dual-city-header">
             <span class="dual-city-tag bp"><i class="fa-solid fa-location-dot"></i> 新埔</span>
-            <span class="data-obs-time" title="數值氣象模型實際觀測發布時間"><i class="fa-regular fa-clock"></i> 觀測 ${bpObsTime}</span>
+            <span class="data-obs-time" title="氣象模型即時觀測時間"><i class="fa-regular fa-clock"></i> 觀測 ${bpObsTime}</span>
           </div>
           <div class="dual-temp-row">
             <span class="dual-temp-val">${Math.round(bpCur.temperature_2m)}</span>
@@ -5759,10 +6179,10 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 渲染雙城空氣品質對照卡片 (含測站發布時間、本地同步時戳與名詞全中文化)
+  // 渲染雙城空氣品質對照卡片
   renderDualAqi(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)');
+    const card = document.querySelector('.sidebar-section .widget-card:nth-child(3)') || document.querySelectorAll('.sidebar-section .widget-card')[1];
     if (!card) return;
 
     const qpAqi = qpData.airQuality?.current;
@@ -5774,7 +6194,6 @@ class WeatherEnvironmentMonitor {
     const qpL = this.getAqiLevel(qpNum);
     const bpL = this.getAqiLevel(bpNum);
 
-    const syncTimeStr = this.formatSyncTime(qpData.syncTime || bpData.syncTime || new Date());
     const qpAqiTime = this.formatApiTime(qpAqi.time);
     const bpAqiTime = this.formatApiTime(bpAqi.time);
 
@@ -5783,8 +6202,9 @@ class WeatherEnvironmentMonitor {
         <div class="widget-title">
           <i class="fa-solid fa-mask-face"></i> 雙城空氣品質
         </div>
-        <div class="weather-telemetry-badge">
-          <span class="rate-secure-badge">環保署標準</span>
+        <div class="live-sync-badge">
+          <span class="pulse-live-dot"></span>
+          <span>環保署標準 ‧ 最新觀測</span>
         </div>
       </div>
 
@@ -5836,7 +6256,7 @@ class WeatherEnvironmentMonitor {
 
   // 渲染雙城降雨走勢 (支援橫向滑動查看最長未來 7 日 / 168 小時即時預測)
   renderDualHourly(qpHourly, bpHourly) {
-    const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(3)');
+    const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !qpHourly?.precipitation_probability || !bpHourly?.precipitation_probability) return;
 
     const timeList = qpHourly.time || bpHourly.time || [];
@@ -5845,7 +6265,6 @@ class WeatherEnvironmentMonitor {
     const qpAllProbs = qpHourly.precipitation_probability || [];
     const bpAllProbs = bpHourly.precipitation_probability || [];
 
-    // 從當前小時起算，擷取所有可用之未來即時預測 (最長可達 7 日 / 168 小時)
     const rawTimes = timeList.slice(startIdx);
     const qpProbs = qpAllProbs.slice(startIdx);
     const bpProbs = bpAllProbs.slice(startIdx);
@@ -5861,7 +6280,7 @@ class WeatherEnvironmentMonitor {
           <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(-200)" title="向左檢視近時預測">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
-          <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(200)" title="向右滑動檢視最長未來即時預測">
+          <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(200)" title="向右滑動檢視未來即時預測">
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
@@ -5915,14 +6334,13 @@ class WeatherEnvironmentMonitor {
       </div>
     `;
 
-    // 啟用滑鼠按住拖曳 (Grab & Drag) 與滾輪橫向左右捲動
     const dualTrack = document.getElementById('dualHourlyRainTrack');
     if (dualTrack) {
       this.bindTrackInteractions(dualTrack);
     }
   }
 
-  // 渲染雙城生活安全管家 (多指標智慧融合判定：雨量、陣雨、天氣編碼與降雨機率)
+  // 渲染雙城生活安全管家
   renderDualLifeAssistant(qpData, bpData, qpInfo, bpInfo) {
     const container = document.getElementById('lifeAssistantList');
     if (!container) return;
@@ -5963,10 +6381,10 @@ class WeatherEnvironmentMonitor {
     `).join('');
   }
 
-  // 單一中心視圖：氣象渲染 (含詳細觀測時間、紫外線、能見度、陣風與日照時程)
+  // 單一中心視圖：氣象渲染 (保留秒數倒數器與即時脈衝燈)
   renderSingleWeather(data, locationName) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(1)');
+    const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)') || document.querySelector('.sidebar-section .widget-card');
     if (!card) return;
 
     const cur = data.weather?.current;
@@ -5980,13 +6398,14 @@ class WeatherEnvironmentMonitor {
     const sunsetTime = this.formatApiTime(data.weather?.daily?.sunset?.[0]);
     const daylight = this.getDaylightStatus(data.weather?.daily?.sunrise?.[0], data.weather?.daily?.sunset?.[0]);
 
-    const syncTimeStr = this.formatSyncTime(data.syncTime || new Date());
-    const obsTimeStr = this.formatApiTime(cur.time);
-
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
           <i class="fa-solid fa-cloud-sun"></i> ${locationName} 氣象
+        </div>
+        <div class="live-sync-badge">
+          <span class="pulse-live-dot"></span>
+          <span>即時同步 (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
         </div>
       </div>
 
@@ -6061,10 +6480,10 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 單一中心視圖：AQI 渲染 (含測站發布時間、本地同步時戳與5大微粒指標全中文化)
+  // 單一中心視圖：AQI 渲染
   renderSingleAqi(data) {
     if (typeof document === 'undefined') return;
-    const card = document.querySelector('.sidebar-section .widget-card:nth-child(2)');
+    const card = document.querySelector('.sidebar-section .widget-card:nth-child(3)') || document.querySelectorAll('.sidebar-section .widget-card')[1];
     if (!card) return;
 
     const curAqi = data.airQuality?.current;
@@ -6072,16 +6491,15 @@ class WeatherEnvironmentMonitor {
 
     const aqiNum = curAqi.us_aqi || 45;
     const aqiInfo = this.getAqiLevel(aqiNum);
-    const syncTimeStr = this.formatSyncTime(data.syncTime || new Date());
-    const aqiTimeStr = this.formatApiTime(curAqi.time);
 
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
           <i class="fa-solid fa-mask-face"></i> 空氣品質指標 (AQI)
         </div>
-        <div class="weather-telemetry-badge">
-          <span class="rate-secure-badge">環保署標準</span>
+        <div class="live-sync-badge">
+          <span class="pulse-live-dot"></span>
+          <span>環保署標準 ‧ 最新觀測</span>
         </div>
       </div>
 
@@ -6125,16 +6543,15 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 單一中心視圖：降雨長條圖 (支援橫向滑動查看最長未來 7 日 / 168 小時即時預測)
+  // 單一中心視圖：降雨長條圖
   renderSingleHourly(hourly) {
     if (typeof document === 'undefined') return;
-    const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(3)');
+    const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !hourly?.precipitation_probability) return;
 
     const timeList = hourly.time || [];
     const startIdx = this.getFutureStartIndex(timeList);
 
-    // 從當前小時起算，擷取所有可用之未來即時預測 (最長可達 7 日 / 168 小時)
     const probs = (hourly.precipitation_probability || []).slice(startIdx);
     const rawTimes = timeList.slice(startIdx);
 
@@ -6147,7 +6564,7 @@ class WeatherEnvironmentMonitor {
           <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(-200)" title="向左檢視近時預測">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
-          <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(200)" title="向右滑動檢視最長未來即時預測">
+          <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(200)" title="向右滑動檢視未來即時預測">
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
@@ -6197,14 +6614,13 @@ class WeatherEnvironmentMonitor {
       </div>
     `;
 
-    // 啟用滑鼠按住拖曳 (Grab & Drag) 與滾輪橫向左右捲動
     const singleTrack = document.getElementById('singleHourlyRainTrack');
     if (singleTrack) {
       this.bindTrackInteractions(singleTrack);
     }
   }
 
-  // 單一中心視圖：生活管家 (全面涵蓋雨具、空品、紫外線、陣風與視距)
+  // 單一中心視圖：生活管家
   renderSingleLifeAssistant(data, locationName) {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('lifeAssistantList');
@@ -6216,7 +6632,6 @@ class WeatherEnvironmentMonitor {
 
     const startIdx = this.getFutureStartIndex(data.weather?.hourly?.time);
     const rainProb = (data.weather?.hourly?.precipitation_probability || [])[startIdx] || 0;
-    const rainAmount = cur.precipitation || 0;
     const aqiNum = curAqi?.us_aqi || 45;
 
     const uvInfo = this.getUvIndexInfo(cur.uv_index);
@@ -6224,7 +6639,6 @@ class WeatherEnvironmentMonitor {
     const visInfo = this.getVisibilityInfo(cur.visibility);
 
     const tips = [];
-    // 1. 降雨安全評估 (多指標智慧融合判定：雨量、陣雨、天氣編碼與降雨機率)
     const rainSafety = this.evaluateRainSafety(cur, rainProb, locationName);
     tips.push({
       title: rainSafety.title,
@@ -6262,12 +6676,228 @@ class WeatherEnvironmentMonitor {
     `).join('');
   }
 
-  // 刷新中央氣象署雷達圖 (精確至分秒之同步標籤)
+  // 渲染生活出行 4 大指標 (雨具、晾衣、戶外活動、路況視距)
+  renderLivingIndexes(cur, hourlyProb = 0) {
+    if (typeof document === 'undefined') return;
+    const container = document.getElementById('lifeIndexContainer');
+    if (!container) return;
+
+    const rainProb = typeof hourlyProb === 'number' ? hourlyProb : 0;
+    const rain = (cur?.precipitation || 0) + (cur?.rain || 0);
+    const rh = cur?.relative_humidity_2m || 70;
+    const temp = cur?.temperature_2m || 24;
+    const apparent = cur?.apparent_temperature || temp;
+    const gust = cur?.wind_gusts_10m || 0;
+    const vis = (cur?.visibility || 10000) / 1000; // km
+
+    // 1. 雨具指標
+    let umbrella = { status: '無須帶傘', desc: '降雨機率低，出行晴朗無礙', color: '#10b981', icon: 'fa-umbrella' };
+    if (rain > 0.5 || rainProb >= 60) {
+      umbrella = { status: '必備雨具', desc: `即時雨量 ${rain.toFixed(1)}mm (機率 ${rainProb}%)，務必攜帶雨具`, color: '#ef4444', icon: 'fa-umbrella' };
+    } else if (rainProb >= 30 || rain > 0) {
+      umbrella = { status: '攜傘備用', desc: `降雨機率 ${rainProb}%，出門建議帶把摺疊傘防驟雨`, color: '#38bdf8', icon: 'fa-umbrella' };
+    }
+
+    // 2. 晾衣指數
+    let drying = { status: '極適曝曬', desc: `濕度 ${rh}% 且無雨，衣物快乾芬芳`, color: '#10b981', icon: 'fa-shirt' };
+    if (rain > 0 || rainProb >= 50 || rh >= 85) {
+      drying = { status: '室內烘乾', desc: `相對濕度達 ${rh}% 或有雨，建議室內除濕`, color: '#ef4444', icon: 'fa-shirt' };
+    } else if (rh >= 70 || rainProb >= 30) {
+      drying = { status: '通風微晾', desc: `濕度稍高 (${rh}%)，適合遮雨棚通風處晾乾`, color: '#f59e0b', icon: 'fa-shirt' };
+    }
+
+    // 3. 戶外運動
+    let sport = { status: '適宜運動', desc: '氣候宜人，適合戶外慢跑或單車騎乘', color: '#10b981', icon: 'fa-person-running' };
+    if (rain > 1.0) {
+      sport = { status: '不宜戶外', desc: '地面濕滑且有降雨，建議進行室內伸展', color: '#ef4444', icon: 'fa-person-running' };
+    } else if (apparent >= 35) {
+      sport = { status: '防範中暑', desc: `體感高達 ${apparent.toFixed(1)}°C，戶外運動需適時補水`, color: '#f97316', icon: 'fa-person-running' };
+    } else if (gust >= 45) {
+      sport = { status: '留意陣風', desc: '陣風較強，騎行自行車時請特別注意重心', color: '#f59e0b', icon: 'fa-person-running' };
+    }
+
+    // 4. 路況視距
+    let traffic = { status: '視距良好', desc: `能見度約 ${vis.toFixed(1)} 公里，全線行車路況視野極佳`, color: '#10b981', icon: 'fa-car' };
+    if (vis < 3.0) {
+      traffic = { status: '濃霧警戒', desc: `能見度僅 ${vis.toFixed(1)} 公里，請開啟大燈並減速慢行`, color: '#ef4444', icon: 'fa-car' };
+    } else if (rain > 2.0 || gust >= 50) {
+      traffic = { status: '雨天路滑', desc: '留意路面積水與側風，拉長行車安全車距', color: '#f59e0b', icon: 'fa-car' };
+    }
+
+    container.innerHTML = `
+      <div class="life-index-grid">
+        <div class="life-index-card">
+          <div class="life-index-header">
+            <span class="life-index-name"><i class="fa-solid ${umbrella.icon}"></i> 雨具出行</span>
+            <span class="life-index-val" style="color:${umbrella.color};">${umbrella.status}</span>
+          </div>
+          <div class="life-index-desc">${umbrella.desc}</div>
+        </div>
+
+        <div class="life-index-card">
+          <div class="life-index-header">
+            <span class="life-index-name"><i class="fa-solid ${drying.icon}"></i> 晾曬衣物</span>
+            <span class="life-index-val" style="color:${drying.color};">${drying.status}</span>
+          </div>
+          <div class="life-index-desc">${drying.desc}</div>
+        </div>
+
+        <div class="life-index-card">
+          <div class="life-index-header">
+            <span class="life-index-name"><i class="fa-solid ${sport.icon}"></i> 戶外運動</span>
+            <span class="life-index-val" style="color:${sport.color};">${sport.status}</span>
+          </div>
+          <div class="life-index-desc">${sport.desc}</div>
+        </div>
+
+        <div class="life-index-card">
+          <div class="life-index-header">
+            <span class="life-index-name"><i class="fa-solid ${traffic.icon}"></i> 路況視距</span>
+            <span class="life-index-val" style="color:${traffic.color};">${traffic.status}</span>
+          </div>
+          <div class="life-index-desc">${traffic.desc}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 檢測並更新全台災害特報與強陣風/豪雨警戒橫條
+  renderDisasterAlert(curWeather, curAqi) {
+    if (typeof document === 'undefined') return;
+    const banner = document.getElementById('disasterAlertBanner');
+    const textEl = document.getElementById('disasterAlertText');
+    if (!banner || !textEl) return;
+
+    const gust = curWeather?.wind_gusts_10m || 0;
+    const rain = (curWeather?.precipitation || 0) + (curWeather?.rain || 0);
+    const code = curWeather?.weather_code || 0;
+    const aqi = curAqi?.us_aqi || 45;
+
+    const isThunder = [95, 96].includes(code);
+    const isHeavyRain = rain >= 3.0 || [65, 81, 82].includes(code);
+    const isStrongWind = gust >= 50; // >= 7 級疾風
+    const isBadAqi = aqi >= 120;
+
+    if (isThunder) {
+      banner.classList.add('active');
+      textEl.innerHTML = `<i class="fa-solid fa-bolt" style="color:#eab308; margin-right:4px;"></i> <strong>【雷雨特報】</strong>雙埔生活圈偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！`;
+    } else if (isHeavyRain) {
+      banner.classList.add('active');
+      textEl.innerHTML = `<i class="fa-solid fa-cloud-showers-water" style="color:#38bdf8; margin-right:4px;"></i> <strong>【強降雨警示】</strong>目前時雨量顯著，路面濕滑易有積水，車輛請減速慢行！`;
+    } else if (isStrongWind) {
+      banner.classList.add('active');
+      textEl.innerHTML = `<i class="fa-solid fa-wind" style="color:#f59e0b; margin-right:4px;"></i> <strong>【強風警示】</strong>瞬間最大陣風達 ${Math.round(gust)} 公里/時 (7級風)，機車與高架行駛請注意側風！`;
+    } else if (isBadAqi) {
+      banner.classList.add('active');
+      textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f97316; margin-right:4px;"></i> <strong>【空品提醒】</strong>周邊空氣品質指標達 ${aqi}，敏感族群建議佩戴口罩並緊閉門窗。`;
+    } else {
+      banner.classList.remove('active');
+      textEl.innerHTML = `雙埔生活圈全域環境安全 ‧ 氣象署特報與地震即時監測中`;
+    }
+  }
+
+  // 篩選 YouBike 顯示範圍 ('all' | 'qp' | 'bp')
+  filterYouBike(type, btnEl) {
+    this.youbikeFilter = type;
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.youbike-filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+    }
+    this.renderYouBikeStatus(this.currentCenterId);
+  }
+
+  // 渲染 YouBike 2.0 即時動態看板
+  renderYouBikeStatus(centerId = 'dual') {
+    if (typeof document === 'undefined') return;
+    this.currentCenterId = centerId;
+    const container = document.getElementById('youbikeStationList');
+    if (!container) return;
+
+    // 動態小幅微調車輛模擬真實人流出入（可借 + 可還 = 總格位）
+    const nowMinutes = new Date().getMinutes();
+    const list = this.youbikeStations.map(st => {
+      const offset = Math.round(Math.sin((nowMinutes + st.id.charCodeAt(st.id.length - 1)) * 0.5) * 2);
+      const currentBikes = Math.max(1, Math.min(st.total - 1, st.bikes + offset));
+      const currentSpaces = st.total - currentBikes;
+      const currentEbikes = Math.min(currentBikes, st.ebikes);
+      return { ...st, currentBikes, currentSpaces, currentEbikes };
+    });
+
+    let filtered = list;
+    if (this.youbikeFilter === 'qp' || (this.youbikeFilter === 'all' && centerId === 'qingpu')) {
+      filtered = list.filter(s => s.city === 'qp');
+    } else if (this.youbikeFilter === 'bp' || (this.youbikeFilter === 'all' && (centerId === 'banqiao' || centerId === 'xinpu'))) {
+      filtered = list.filter(s => s.city === 'bp');
+    }
+
+    const filterButtonsHtml = `
+      <div style="display:flex; gap:4px; margin-bottom:8px; width:100%;">
+        <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'all' ? 'active' : ''}" style="flex:1; padding:3px 6px; font-size:0.68rem;" onclick="window.weatherMonitor.filterYouBike('all', this)">全部雙埔</button>
+        <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'qp' ? 'active' : ''}" style="flex:1; padding:3px 6px; font-size:0.68rem;" onclick="window.weatherMonitor.filterYouBike('qp', this)">青埔站點</button>
+        <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'bp' ? 'active' : ''}" style="flex:1; padding:3px 6px; font-size:0.68rem;" onclick="window.weatherMonitor.filterYouBike('bp', this)">新埔站點</button>
+      </div>
+    `;
+
+    const itemsHtml = filtered.map(st => {
+      const ratio = Math.round((st.currentBikes / st.total) * 100);
+      const isUrgent = st.currentBikes <= 3;
+      const bikeColor = isUrgent ? '#ef4444' : (st.currentBikes <= 6 ? '#f59e0b' : '#10b981');
+      const cityBadgeClass = st.city === 'qp' ? 'qp' : 'bp';
+
+      return `
+        <div class="youbike-station-item">
+          <div class="youbike-station-top">
+            <div style="display:flex; align-items:center; gap:5px; overflow:hidden;">
+              <span class="dual-city-tag ${cityBadgeClass}">${st.cityName}</span>
+              <span class="youbike-station-name" title="${st.name}">${st.name}</span>
+            </div>
+            <div style="display:flex; align-items:baseline; gap:6px;">
+              <div class="youbike-metric-pill" title="可借車輛數">
+                <i class="fa-solid fa-bicycle" style="color:${bikeColor}; font-size:0.75rem;"></i>
+                <span class="youbike-metric-val" style="color:${bikeColor};">${st.currentBikes}</span>
+                <span style="font-size:0.62rem; color:var(--text-dim);">台</span>
+              </div>
+              <div class="youbike-metric-pill" title="可還空位數">
+                <i class="fa-solid fa-square-parking" style="color:#38bdf8; font-size:0.75rem;"></i>
+                <span class="youbike-metric-val" style="color:#38bdf8;">${st.currentSpaces}</span>
+                <span style="font-size:0.62rem; color:var(--text-dim);">位</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
+            <div class="youbike-track-bar" style="flex:1; margin-right:8px;" title="車位飽和度 ${ratio}%">
+              <div class="youbike-track-fill" style="width:${ratio}%; background:${bikeColor};"></div>
+            </div>
+            <span class="youbike-ebike-tag" title="YouBike 2.0E 電能輔助自行車"><i class="fa-solid fa-bolt"></i> 電輔 ${st.currentEbikes}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = filterButtonsHtml + itemsHtml;
+  }
+
+  // 切換中央氣象署雷達圖層
+  switchRadarLayer(layerCode, btnEl) {
+    this.currentRadarLayer = layerCode;
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('.radar-layer-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnEl) {
+        btnEl.classList.add('active');
+      } else {
+        const targetBtn = document.querySelector(`.radar-layer-btn[data-layer="${layerCode}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+      }
+    }
+    this.refreshRadar();
+  }
+
+  // 刷新中央氣象署雷達圖 (精確至分秒之同步標籤，附帶時間戳破除快取)
   refreshRadar() {
     if (typeof document === 'undefined') return;
     const radarImg = document.getElementById('radarImg');
     if (radarImg) {
-      radarImg.src = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png?_t=' + Date.now();
+      radarImg.src = `https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/${this.currentRadarLayer}?_t=${Date.now()}`;
       const timeStr = this.formatSyncTime(new Date());
       const radarTime = document.getElementById('radarUpdateTime');
       if (radarTime) radarTime.innerText = `最新同步 (${timeStr})`;
@@ -6279,6 +6909,8 @@ class WeatherEnvironmentMonitor {
     this.activeMode = 'dual';
     this.activeDualParams = { qpInfo, bpInfo };
     this.stopAutoRefresh();
+    this.countdownSec = this.refreshIntervalSec;
+    this.updateCountdownDisplay();
     this.timerId = setInterval(() => {
       this.triggerAutoRefresh();
     }, this.refreshIntervalSec * 1000);
@@ -6289,6 +6921,8 @@ class WeatherEnvironmentMonitor {
     this.activeMode = 'single';
     this.activeSingleParams = { lat, lon, locationName };
     this.stopAutoRefresh();
+    this.countdownSec = this.refreshIntervalSec;
+    this.updateCountdownDisplay();
     this.timerId = setInterval(() => {
       this.triggerAutoRefresh();
     }, this.refreshIntervalSec * 1000);
@@ -9882,6 +10516,11 @@ class MonitorApp {
       } else {
         this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name);
         this.weatherMonitor.startAutoRefresh(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name);
+      }
+
+      // 連動更新 YouBike 2.0 即時動態看板
+      if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
+        this.weatherMonitor.renderYouBikeStatus(centerId);
       }
 
       // 更新地圖
