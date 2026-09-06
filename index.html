@@ -302,6 +302,35 @@ body {
   100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), inset 0 0 8px rgba(0, 240, 255, 0.2); }
 }
 
+/* 頂部導航列整合操作控制列 (模式切換 + 快捷圖示按鈕) */
+.nav-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-toggles-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-icon-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-tool-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
 /* 當地資訊按鈕內的圖示旋轉與脈衝 */
 #btnToggleSidebar i {
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
@@ -4529,19 +4558,24 @@ body {
     gap: 5px !important;
   }
 
-  /* 網格切換與控制動作列整齊自適應 */
+  /* 網格切換與控制動作列整齊自適應 (分層流動、單行滿版零空格) */
   .nav-actions {
     width: 100% !important;
-    justify-content: space-between !important;
-    flex-wrap: wrap !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
     gap: 6px !important;
   }
 
   .grid-selector {
+    width: 100% !important;
+    max-width: 100% !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    max-width: calc(100% - 136px) !important;
+    white-space: nowrap !important;
     scrollbar-width: none;
+    box-sizing: border-box !important;
+    padding: 3px !important;
   }
   .grid-selector::-webkit-scrollbar {
     display: none;
@@ -4553,9 +4587,44 @@ body {
     flex-shrink: 0 !important;
   }
 
+  /* 模式按鈕 + 刷新/全螢幕按鈕滿版橫排，零空隙跑版 */
+  .nav-control-group {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .mode-toggles-wrapper {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
   .mode-toggle-btn {
-    padding: 5px 8px !important;
-    font-size: 0.74rem !important;
+    flex: 1 !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 6px 10px !important;
+    font-size: 0.76rem !important;
+    white-space: nowrap !important;
+  }
+
+  .nav-icon-tools {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .nav-tool-btn {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 0.9rem !important;
+    border-radius: 8px !important;
     flex-shrink: 0 !important;
   }
 
@@ -4734,12 +4803,32 @@ body {
   }
 
   .nav-actions {
+    width: 100% !important;
     flex-direction: column !important;
     align-items: stretch !important;
+    gap: 5px !important;
   }
 
   .grid-selector {
+    width: 100% !important;
     max-width: 100% !important;
+  }
+
+  .nav-control-group {
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
+  .mode-toggle-btn {
+    padding: 5px 6px !important;
+    font-size: 0.72rem !important;
+    gap: 4px !important;
+  }
+
+  .nav-tool-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.82rem !important;
   }
 
   .center-btn {
@@ -4751,6 +4840,72 @@ body {
     font-size: 0.68rem !important;
     padding: 3px 4px !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Android APK 原生手機模式專屬加固 (native-mobile-mode)
+   -------------------------------------------------------------------------- */
+body.native-mobile-mode .top-nav {
+  padding: 8px 10px !important;
+  gap: 6px !important;
+}
+
+body.native-mobile-mode .nav-actions {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+}
+
+body.native-mobile-mode .grid-selector {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  white-space: nowrap !important;
+  scrollbar-width: none;
+  box-sizing: border-box !important;
+}
+
+body.native-mobile-mode .nav-control-group {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
+}
+
+body.native-mobile-mode .mode-toggles-wrapper {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+body.native-mobile-mode .mode-toggle-btn {
+  flex: 1 !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 6px 8px !important;
+  font-size: 0.74rem !important;
+  white-space: nowrap !important;
+}
+
+body.native-mobile-mode .nav-icon-tools {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+body.native-mobile-mode .nav-tool-btn {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 0.9rem !important;
+  border-radius: 8px !important;
+  flex-shrink: 0 !important;
 }
 
 </style>
@@ -4807,25 +4962,28 @@ body {
         <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
       </div>
 
-      <!-- 畫面版型與在地生活資訊切換 -->
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <button id="btnToggleAdaptive" class="mode-toggle-btn" title="切換顯示模式：自由捲動最大化 (預設) / 一屏呈現 (免捲動)">
-          <i class="fa-solid fa-expand"></i> <span>一屏呈現</span>
-        </button>
-        <button id="btnToggleSidebar" class="mode-toggle-btn active" title="顯示/收合右側氣象、空氣品質與周遭地圖等在地生活資訊">
-          <i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>
-        </button>
+      <!-- 控制工具操作列 (整合成同一組，完美對齊，手機版單行滿版無縫填滿) -->
+      <div class="nav-control-group">
+        <!-- 畫面版型與在地生活資訊切換 -->
+        <div class="mode-toggles-wrapper">
+          <button id="btnToggleAdaptive" class="mode-toggle-btn" title="切換顯示模式：自由捲動最大化 (預設) / 一屏呈現 (免捲動)">
+            <i class="fa-solid fa-expand"></i> <span>一屏呈現</span>
+          </button>
+          <button id="btnToggleSidebar" class="mode-toggle-btn active" title="顯示/收合右側氣象、空氣品質與周遭地圖等在地生活資訊">
+            <i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>
+          </button>
+        </div>
+
+        <!-- 功能圖示按鈕組 (刷新、全螢幕) -->
+        <div class="nav-icon-tools">
+          <button id="btnRefreshAll" class="tool-icon-btn nav-tool-btn" title="立即刷新全部視訊與資訊">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+          <button id="btnFullscreen" class="tool-icon-btn nav-tool-btn" title="切換全螢幕模式">
+            <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+          </button>
+        </div>
       </div>
-
-      <!-- 全局立即刷新 -->
-      <button id="btnRefreshAll" class="tool-icon-btn" style="width: 32px; height: 32px;" title="立即刷新全部視訊與資訊">
-        <i class="fa-solid fa-arrows-rotate"></i>
-      </button>
-
-      <!-- 全螢幕切換 -->
-      <button id="btnFullscreen" class="tool-icon-btn" style="width: 32px; height: 32px;" title="切換全螢幕模式">
-        <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-      </button>
 
       <!-- 數位時鐘 -->
       <div class="clock-widget">
