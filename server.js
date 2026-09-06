@@ -676,7 +676,7 @@ async function handleParkingThsrProxy(req, res) {
     });
     cache.parkingThsr = {
       data: serialized,
-      expireAt: now + 60000 // 快取 60 秒
+      expireAt: now + 20000 // 快取 20 秒極速刷新
     };
     res.writeHead(200);
     res.end(serialized);

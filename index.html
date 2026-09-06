@@ -6347,6 +6347,11 @@ class WeatherEnvironmentMonitor {
     // 週期觸發 YouBike 2.0 即時動態同步 (內建防抖保護)
     this.fetchRealtimeYouBike();
 
+    // 聯動觸發大眾運輸 (捷運看板/擁擠度、高鐵、機捷、高鐵停車位) 全面最高頻率同步更新
+    if (typeof window !== 'undefined' && window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
+      window.transitMonitor.forceRefreshAll();
+    }
+
     if (this.activeMode === 'dual' && this.activeDualParams) {
       this.fetchDualEnvironment(this.activeDualParams.qpInfo, this.activeDualParams.bpInfo, true);
     } else if (this.activeMode === 'single' && this.activeSingleParams) {
@@ -8622,9 +8627,9 @@ class TwinCityTransitMonitor {
   }
 
   // 非同步抓取台北捷運/環狀線即時到站看板與車廂擁擠度 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
-  async fetchMetroLiveboard() {
+  async fetchMetroLiveboard(force = false) {
     const nowMs = Date.now();
-    if (nowMs - this.metroLastFetchTime < 15000) return;
+    if (!force && nowMs - this.metroLastFetchTime < 15000) return;
 
     const isLocal = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
@@ -8678,9 +8683,9 @@ class TwinCityTransitMonitor {
   }
 
   // 非同步抓取高鐵桃園站即時剩餘停車位 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
-  async fetchParkingData() {
+  async fetchParkingData(force = false) {
     const nowMs = Date.now();
-    if (this.parkingLastFetchTime && nowMs - this.parkingLastFetchTime < 30000) return;
+    if (!force && this.parkingLastFetchTime && nowMs - this.parkingLastFetchTime < 30000) return;
 
     const isLocal = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
@@ -8934,10 +8939,10 @@ class TwinCityTransitMonitor {
   }
 
   // 非同步抓取最新台灣高鐵官方班表 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
-  async fetchThsrRealtime() {
+  async fetchThsrRealtime(force = false) {
     const nowMs = Date.now();
-    // 至少間隔 5 分鐘再請求一次
-    if (nowMs - this.thsrLastFetchTime < 300000) return;
+    // 至少間隔 5 分鐘再請求一次 (若指定 force 則強制穿透)
+    if (!force && nowMs - this.thsrLastFetchTime < 300000) return;
 
     const isLocal = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
@@ -9006,10 +9011,10 @@ class TwinCityTransitMonitor {
   }
 
   // 非同步抓取最新桃園機場捷運官方班表 (本機代理 + GitHub Pages 同源資料庫雙軌容錯)
-  async fetchTymetroRealtime() {
+  async fetchTymetroRealtime(force = false) {
     const nowMs = Date.now();
-    // 至少間隔 5 分鐘再請求一次
-    if (nowMs - this.tymetroLastFetchTime < 300000) return;
+    // 至少間隔 5 分鐘再請求一次 (若指定 force 則強制穿透)
+    if (!force && nowMs - this.tymetroLastFetchTime < 300000) return;
 
     const isLocal = typeof window !== 'undefined' && 
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:');
@@ -10363,12 +10368,36 @@ class TwinCityTransitMonitor {
     }
   }
 
+  // 強制全面刷新所有大眾運輸數據 (繞過所有快取節流，用於視窗喚醒與手動重整)
+  async forceRefreshAll() {
+    await Promise.allSettled([
+      this.fetchMetroLiveboard(true),
+      this.fetchParkingData(true),
+      this.fetchThsrRealtime(true),
+      this.fetchTymetroRealtime(true)
+    ]);
+    this.render();
+  }
+
+  // 初始化視窗智慧可見性監聽 (Page Visibility API，切換回前景立即極速補抓最新車況)
+  initVisibilityListener() {
+    if (typeof document === 'undefined' || !document.addEventListener || this._visibilityBound) return;
+    this._visibilityBound = true;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this.forceRefreshAll();
+      }
+    });
+  }
+
   // 啟動即時更新 (每 1 秒更新月台倒數時間與列車動態，並每 5 分鐘自動同步官方高鐵與機捷最新時刻，每 15 秒同步捷運看板)
   start() {
     this.stop();
+    this.initVisibilityListener();
     this.fetchThsrRealtime();
     this.fetchTymetroRealtime();
     this.fetchMetroLiveboard();
+    this.fetchParkingData();
     this.render();
     this.timerId = setInterval(() => {
       this.render();
