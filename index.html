@@ -9068,7 +9068,7 @@ class TwinCityTransitMonitor {
       const finalDestArr = isToQingpu ? this.addMinutes(arrTrainDate, 15) : this.addMinutes(arrTrainDate, 5);
       const totalDurationMins = Math.round((finalDestArr.getTime() - leaveDate.getTime()) / 60000);
 
-      const trainTypeShort = t.isExpress ? '6xx特快' : '8xx各站停';
+      const trainTypeShort = t.isExpress ? '特快' : '各站停';
 
       thsrCandidates.push({
         typeKey: 'thsr',
@@ -9079,13 +9079,13 @@ class TwinCityTransitMonitor {
         arriveTime: this.formatTime(finalDestArr),
         totalDuration: `${totalDurationMins} 分鐘`,
         durationNum: totalDurationMins,
-        badge: t.isExpress ? '高鐵特快' : '高鐵全停',
+        badge: t.isExpress ? '高鐵特快' : '高鐵各站',
         badgeClass: t.isExpress ? 'badge-thsr' : 'badge-regular',
-        name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次 [${trainTypeShort}]` : `高鐵 ${t.trainNo}次 [${trainTypeShort}] ➔ 板南線`,
-        route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔目的地' : '青埔目的地 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
+        name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次 (${trainTypeShort})` : `高鐵 ${t.trainNo}次 (${trainTypeShort}) ➔ 板南線`,
+        route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔' : '青埔 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
         detail: isToQingpu
-          ? `${this.formatTime(leaveDate)} 出門 ➔ 步5分搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往板橋'}) ➔ 抵板橋轉乘5分搭高鐵 (${t.trainNo}次 ${t.depTime}發 ‧ 停靠桃園) ➔ 抵桃園高鐵步15分 ➔ ${this.formatTime(finalDestArr)} 抵達目的地`
-          : `${this.formatTime(leaveDate)} 出門 ➔ 步15分抵桃園高鐵 ➔ 搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ ${this.formatTime(arrTrainDate)}抵板橋 ➔ 轉乘搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往新埔'}) ➔ 步5分於 ${this.formatTime(finalDestArr)} 抵達新埔`,
+          ? `${this.formatTime(leaveDate)} 出門 ➔ 步行5分搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往板橋'}) ➔ 板橋轉乘5分搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ 抵桃園步行15分 ➔ ${this.formatTime(finalDestArr)} 抵達`
+          : `${this.formatTime(leaveDate)} 出門 ➔ 步行15分至桃園高鐵 ➔ 搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ 抵板橋轉乘搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往新埔'}) ➔ 步行5分 ➔ ${this.formatTime(finalDestArr)} 抵達新埔`,
         highlight: false
       });
     }
@@ -9119,13 +9119,13 @@ class TwinCityTransitMonitor {
         arriveTime: this.formatTime(finalDestArr),
         totalDuration: `${totalDurationMins} 分鐘`,
         durationNum: totalDurationMins,
-        badge: p.isExpress ? '尖峰直達' : '機捷普通',
+        badge: p.isExpress ? '機捷直達' : '機捷普通',
         badgeClass: p.isExpress ? 'badge-tymetro' : 'badge-regular',
         name: isToQingpu ? `環狀線 ➔ 機捷 (${p.type})` : `機捷 (${p.type}) ➔ 環狀線`,
-        route: isToQingpu ? '新埔民生 ➔ 新北產園 ➔ 機捷A18 ➔ 青埔目的地' : '青埔目的地 ➔ 機捷A18 ➔ 新北產園 ➔ 新埔民生',
+        route: isToQingpu ? '新埔民生 ➔ 新北產園 ➔ 機捷A18 ➔ 青埔' : '青埔 ➔ 機捷A18 ➔ 新北產園 ➔ 新埔民生',
         detail: isToQingpu
-          ? `${this.formatTime(leaveDate)} 出門 ➔ 步10分搭環狀線至新北產園 ➔ 轉乘5分搭機捷 (${p.type} ${p.depTime}發) ➔ 抵A18步15分 ➔ ${this.formatTime(finalDestArr)} 抵達目的地`
-          : `${this.formatTime(leaveDate)} 出門 ➔ 步15分至A18搭機捷 (${p.type} ${p.depTime}發) ➔ 抵A3轉乘5分搭環狀線 ➔ 步10分於 ${this.formatTime(finalDestArr)} 抵達新埔`,
+          ? `${this.formatTime(leaveDate)} 出門 ➔ 步行10分搭環狀線 ➔ 新北產園轉乘5分搭機捷 (${p.type} ${p.depTime}發) ➔ 抵A18步行15分 ➔ ${this.formatTime(finalDestArr)} 抵達`
+          : `${this.formatTime(leaveDate)} 出門 ➔ 步行15分至A18搭機捷 (${p.type} ${p.depTime}發) ➔ 抵新北產園轉乘5分搭環狀線 ➔ 步行10分 ➔ ${this.formatTime(finalDestArr)} 抵達新埔`,
         highlight: false
       });
     }
@@ -9137,11 +9137,11 @@ class TwinCityTransitMonitor {
     // 保留當下時間點起算至當日收班的所有組合 (不限筆數，完整呈現當日所有出門方案)
     const finalPlans = allCandidates;
 
-    // 將最快的第一班高鐵加上「最速首選」醒目標記
+    // 將最快的第一班高鐵加上「最快首選」醒目標記
     if (finalPlans.length > 0) {
       finalPlans[0].highlight = true;
       if (finalPlans[0].badge.includes('高鐵')) {
-        finalPlans[0].badge = '最速首選';
+        finalPlans[0].badge = '最快首選';
       }
     }
 
@@ -9264,32 +9264,32 @@ class TwinCityTransitMonitor {
 
     // 高鐵線微型膠囊
     const thsrPillHtml = `
-      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵快線：${isToQingpu ? '新埔搭板南線至板橋 ➔ 轉乘高鐵抵桃園 (保證停靠桃園)' : '桃園搭高鐵至板橋 ➔ 轉乘板南線抵新埔'} (點擊展開軌道)">
+      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵快線：搭板南線轉高鐵 (點擊展開)">
         <span class="pill-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
         <span class="pill-train-code">${thsr.trainNo}次</span>
-        <span class="pill-dep-time">${thsr.depTime}發</span>
+        <span class="pill-dep-time">${thsr.depTime}</span>
         <span class="pill-status-chip ${thsrChipClass}">${thsr.platformStatus}</span>
-        <span class="pill-transit-feed" title="板南線月台狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '')}</span>
+        <span class="pill-transit-feed" title="板南線月台狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
       </div>
     `;
 
     // 機捷線微型膠囊
     const tymetroPillHtml = `
-      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷路線：${isToQingpu ? '新埔搭環狀線至新北產業園區 ➔ 轉乘機捷抵青埔' : '青埔搭機捷至新北產業園區 ➔ 轉乘環狀線抵新埔'} (${tymetro.activeTrains.length}車在線 ‧ 點擊展開軌道)">
+      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷路線：搭環狀線轉機捷 (點擊展開)">
         <span class="pill-badge"><i class="fa-solid fa-route"></i> 機捷</span>
         <span class="pill-train-type ${tymetro.isExpress ? 'express' : ''}">${tymetro.rawType}</span>
-        <span class="pill-dep-time">${tymetro.depTime}發</span>
+        <span class="pill-dep-time">${tymetro.depTime}</span>
         <span class="pill-status-chip ${tymetroChipClass}">${tymetro.platformStatus}</span>
-        <span class="pill-transit-feed" title="環狀線月台狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '')}</span>
+        <span class="pill-transit-feed" title="環狀線月台狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
       </div>
     `;
 
     // YouBike 雙埔動態微型膠囊
     const youbikePillHtml = `
-      <div class="compact-route-pill youbike-pill" onclick="window.transitMonitor.toggleCollapse()" title="雙埔核心 YouBike 2.0 即時可借車輛動態 (點擊展開查看完整車況)">
+      <div class="compact-route-pill youbike-pill" onclick="window.transitMonitor.toggleCollapse()" title="YouBike 2.0 即時車況 (點擊展開)">
         <span class="pill-badge"><i class="fa-solid fa-bicycle"></i> YouBike</span>
         ${(qpBikes !== null && bpBikes !== null) ? `
-          <span class="pill-ubike-data">可借 青埔 <b class="ub-num">${qpBikes}</b> ‧ 新埔 <b class="ub-num">${bpBikes}</b></span>
+          <span class="pill-ubike-data">可借 青埔 <b class="ub-num">${qpBikes}</b>車 ‧ 新埔 <b class="ub-num">${bpBikes}</b>車</span>
         ` : `
           <span class="pill-ubike-data">${updateTimeStr ? `${updateTimeStr} 同步` : '即時車況'}</span>
         `}
@@ -9321,11 +9321,11 @@ class TwinCityTransitMonitor {
         </div>
 
         <div class="compact-actions-group">
-          <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看出門搭車到站時間表">
-            <span>🕒 出門時間表</span> <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+          <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看搭車時間表">
+            <span>🕒 時間表</span> <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
           </button>
-          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看全線即時列車行駛動態與全寬軌道">
-            <span>🚄 列車行駛動態</span> <i class="fa-solid fa-chevron-down"></i>
+          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看全線即時行駛動態">
+            <span>🚄 即時動態</span> <i class="fa-solid fa-chevron-down"></i>
           </button>
         </div>
       </div>
@@ -9339,10 +9339,10 @@ class TwinCityTransitMonitor {
         <div class="segment-legend">
           <div class="pids-title-group">
             <span class="leg-dot bannan-dot"></span>
-            <span class="leg-title">捷運板南線</span>
-            ${bannan.sourceBadgeHtml ? bannan.sourceBadgeHtml : '<span class="pids-train-pill">高頻班距 2~4分</span>'}
+            <span class="leg-title">板南線</span>
+            ${bannan.sourceBadgeHtml ? bannan.sourceBadgeHtml : '<span class="pids-train-pill">約 2~4分一班</span>'}
           </div>
-          <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> 月台 ${bannan.platformStatus}</span>
+          <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> ${bannan.platformStatus}</span>
           <span class="leg-info">車程 2.5分</span>
         </div>
         <div class="track-rail-line bannan-line">
@@ -9354,8 +9354,8 @@ class TwinCityTransitMonitor {
           </div>
         </div>
         <div class="segment-stations-row">
-          <span class="station-label">${isToQingpu ? '捷運板南線新埔站 (BL08)' : '捷運板南線板橋站 (BL07)'}</span>
-          <span class="station-label">${isToQingpu ? '捷運板南線板橋站 (BL07)' : '捷運板南線新埔站 (BL08)'}</span>
+          <span class="station-label">${isToQingpu ? '新埔站 (BL08)' : '板橋站 (BL07)'}</span>
+          <span class="station-label">${isToQingpu ? '板橋站 (BL07)' : '新埔站 (BL08)'}</span>
         </div>
       </div>
     `;
@@ -9372,17 +9372,17 @@ class TwinCityTransitMonitor {
         <div class="segment-legend">
           <div class="pids-title-group">
             <span class="leg-dot thsr-dot"></span>
-            <span class="leg-title">台灣高鐵</span>
-            <span class="pids-train-pill thsr-train-pill"><i class="fa-solid fa-circle-check"></i> ${thsr.trainNo}次 停靠桃園</span>
+            <span class="leg-title">高鐵</span>
+            <span class="pids-train-pill thsr-train-pill"><i class="fa-solid fa-circle-check"></i> ${thsr.trainNo}次 (停靠桃園)</span>
           </div>
-          <span class="pids-mini-pill thsr-pill-pids"><i class="fa-solid fa-clock"></i> 月台發車 ${thsr.platformStatus}</span>
+          <span class="pids-mini-pill thsr-pill-pids"><i class="fa-solid fa-clock"></i> ${thsr.platformStatus}</span>
           ${thsrAlert ? 
             `<span class="pids-alert-tag pulse-warn" title="${thsrAlert.title}: ${thsrAlert.desc}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${thsrAlert.title})</span>` : ''}
           ${isMultiTrains ? 
-            `<span class="pids-ontrack-pill thsr-ontrack-multi" title="全線多列車在途即時追蹤"><i class="fa-solid fa-bolt"></i> 在線 ${thsr.activeTrains.length} 班高鐵即時行駛中</span>` : 
-            (thsr.isRunning ? `<span class="pids-ontrack-pill" title="軌道在途行駛中班次"><i class="fa-solid fa-bolt"></i> 在途 ${thsr.activeTrainNo}次 (停靠桃園) 行駛中</span>` : '')
+            `<span class="pids-ontrack-pill thsr-ontrack-multi" title="全線列車追蹤"><i class="fa-solid fa-bolt"></i> ${thsr.activeTrains.length} 班行駛中</span>` : 
+            (thsr.isRunning ? `<span class="pids-ontrack-pill" title="軌道在途班次"><i class="fa-solid fa-bolt"></i> ${thsr.activeTrainNo}次 行駛中</span>` : '')
           }
-          <span class="leg-info">車程 11~13分</span>
+          <span class="leg-info">車程 12分</span>
         </div>
         <div class="track-rail-line thsr-line">
           <div class="track-progress-glow thsr-glow" style="width: ${thsr.progressPercent}%;"></div>
@@ -9390,16 +9390,16 @@ class TwinCityTransitMonitor {
             thsr.activeTrains.map(tr => `
               <div class="track-train-beacon thsr-beacon is-moving ${tr.isExpress ? 'beacon-thsr-express' : 'beacon-thsr-regular'}" 
                    style="left: ${tr.progressPercent}%;" 
-                   title="台灣高鐵 ${tr.trainNo}次 (${tr.statusText})">
+                   title="高鐵 ${tr.trainNo}次 (${tr.statusText})">
                 <div class="train-icon-bubble bubble-thsr">
                   <i class="fa-solid fa-bolt-lightning"></i>
                 </div>
                 <div class="beacon-train-tag tag-thsr ${tr.isExpress ? 'tag-thsr-express' : 'tag-thsr-regular'}">
-                  ${tr.trainNo} ${tr.isExpress ? '特快' : '全停'}
+                  ${tr.trainNo} ${tr.isExpress ? '特快' : '各站'}
                 </div>
               </div>
             `).join('') :
-            `<div class="track-train-beacon thsr-beacon ${thsr.isRunning ? 'is-moving' : 'is-docked'}" style="left: ${thsr.progressPercent}%;" title="台灣高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})">
+            `<div class="track-train-beacon thsr-beacon ${thsr.isRunning ? 'is-moving' : 'is-docked'}" style="left: ${thsr.progressPercent}%;" title="高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})">
               <div class="train-icon-bubble bubble-thsr">
                 <i class="fa-solid fa-bolt-lightning"></i>
               </div>
@@ -9410,8 +9410,8 @@ class TwinCityTransitMonitor {
           }
         </div>
         <div class="segment-stations-row">
-          <span class="station-label">${isToQingpu ? '高鐵板橋站 (發 ' + thsr.depTime + ')' : '高鐵桃園站 (發 ' + thsr.depTime + ')'}</span>
-          <span class="station-label">${isToQingpu ? '高鐵桃園站 (到 ' + thsr.arrTime + ')' : '高鐵板橋站 (到 ' + thsr.arrTime + ')'}</span>
+          <span class="station-label">${isToQingpu ? '板橋站 (' + thsr.depTime + '發)' : '桃園站 (' + thsr.depTime + '發)'}</span>
+          <span class="station-label">${isToQingpu ? '桃園站 (' + thsr.arrTime + '到)' : '板橋站 (' + thsr.arrTime + '到)'}</span>
         </div>
       </div>
     `;
@@ -9424,10 +9424,10 @@ class TwinCityTransitMonitor {
         <div class="segment-legend">
           <div class="pids-title-group">
             <span class="leg-dot circular-dot"></span>
-            <span class="leg-title">捷運環狀線</span>
-            ${circular.sourceBadgeHtml ? circular.sourceBadgeHtml : '<span class="pids-train-pill circular-train-pill">平均班距 7~10分</span>'}
+            <span class="leg-title">環狀線</span>
+            ${circular.sourceBadgeHtml ? circular.sourceBadgeHtml : '<span class="pids-train-pill circular-train-pill">約 7~10分一班</span>'}
           </div>
-          <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> 月台 ${circular.platformStatus}</span>
+          <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> ${circular.platformStatus}</span>
           <span class="leg-info">車程 7分</span>
         </div>
         <div class="track-rail-line circular-line">
@@ -9439,8 +9439,8 @@ class TwinCityTransitMonitor {
           </div>
         </div>
         <div class="segment-stations-row">
-          <span class="station-label">${isToQingpu ? '捷運新埔民生站 (Y17)' : '捷運新北產業園區站 (Y20)'}</span>
-          <span class="station-label">${isToQingpu ? '捷運新北產業園區站 (Y20)' : '捷運新埔民生站 (Y17)'}</span>
+          <span class="station-label">${isToQingpu ? '新埔民生站 (Y17)' : '新北產業園區站 (Y20)'}</span>
+          <span class="station-label">${isToQingpu ? '新北產業園區站 (Y20)' : '新埔民生站 (Y17)'}</span>
         </div>
       </div>
     `;
@@ -9455,18 +9455,18 @@ class TwinCityTransitMonitor {
         <div class="segment-legend">
           <div class="pids-title-group">
             <span class="leg-dot tymetro-dot ${tymetro.isExpress ? 'dot-express' : 'dot-commuter'}"></span>
-            <span class="leg-title">桃園機場捷運</span>
+            <span class="leg-title">機場捷運</span>
             <span class="pids-train-pill ${tymetro.isExpress ? 'tymetro-train-pill-express' : 'tymetro-train-pill-commuter'}">
-              ${tymetro.isExpress ? '<i class="fa-solid fa-bolt"></i> 直達車 27分' : '<i class="fa-solid fa-train"></i> 普通車 37分'}
+              ${tymetro.isExpress ? '<i class="fa-solid fa-bolt"></i> 直達 28分' : '<i class="fa-solid fa-train"></i> 普通 38分'}
             </span>
-            <span class="pids-train-no-tag">下班 ${tymetro.depTime}發 (${tymetro.type})</span>
+            <span class="pids-train-no-tag">下班 ${tymetro.depTime} (${tymetro.type})</span>
           </div>
           <span class="pids-mini-pill ${tymetro.isExpress ? 'tymetro-pill-pids' : 'tymetro-pill-commuter'}">
-            <i class="fa-solid fa-clock"></i> 月台發車 ${tymetro.platformStatus}
+            <i class="fa-solid fa-clock"></i> ${tymetro.platformStatus}
           </span>
           ${tymetroAlert ? 
             `<span class="pids-alert-tag pulse-warn" title="${tymetroAlert.title}: ${tymetroAlert.desc}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${tymetroAlert.title})</span>` : ''}
-          ${tymetro.activeTrains.length > 0 ? `<span class="pids-ontrack-pill ${tymetro.activeTrains[0].isExpress ? 'tymetro-ontrack-express' : 'tymetro-ontrack-commuter'}" title="全線多列車在途即時追蹤"><i class="fa-solid fa-plane"></i> 在線 ${tymetro.activeTrains.length} 班列車即時行駛中</span>` : ''}
+          ${tymetro.activeTrains.length > 0 ? `<span class="pids-ontrack-pill ${tymetro.activeTrains[0].isExpress ? 'tymetro-ontrack-express' : 'tymetro-ontrack-commuter'}" title="全線列車追蹤"><i class="fa-solid fa-plane"></i> ${tymetro.activeTrains.length} 班行駛中</span>` : ''}
           <span class="leg-info">${tymetro.durationText}</span>
         </div>
 
@@ -9505,7 +9505,7 @@ class TwinCityTransitMonitor {
                   <div class="tip-header">
                     <span class="tip-code">${st.code}</span>
                     <strong class="tip-name">${st.name}</strong>
-                    ${isMajor ? '<span class="tip-major-badge">大站雙停</span>' : '<span class="tip-regular-badge">普通停靠</span>'}
+                    ${isMajor ? '<span class="tip-major-badge">直達+普通</span>' : '<span class="tip-regular-badge">僅普通車</span>'}
                   </div>
                   <div class="tip-desc">${st.hint}</div>
                 </div>
@@ -9515,8 +9515,8 @@ class TwinCityTransitMonitor {
         </div>
 
         <div class="segment-stations-row tymetro-endpoints-row">
-          <span class="station-label">${isToQingpu ? 'A3新北產業園區站 (發 ' + tymetro.depTime + ')' : 'A18高鐵桃園站 (發 ' + tymetro.depTime + ')'}</span>
-          <span class="station-label">${isToQingpu ? 'A18高鐵桃園站 (到 ' + tymetro.arrTime + ')' : 'A3新北產業園區站 (到 ' + tymetro.arrTime + ')'}</span>
+          <span class="station-label">${isToQingpu ? 'A3 新北產園 (' + tymetro.depTime + '發)' : 'A18 桃園高鐵 (' + tymetro.depTime + '發)'}</span>
+          <span class="station-label">${isToQingpu ? 'A18 桃園高鐵 (' + tymetro.arrTime + '到)' : 'A3 新北產園 (' + tymetro.arrTime + '到)'}</span>
         </div>
       </div>
     `;
@@ -9529,7 +9529,7 @@ class TwinCityTransitMonitor {
 
     // 站內轉乘步道 (5分)
     const transferWalkHtml = `
-      <div class="transfer-walk-connector" title="站內轉乘步程約 5 分鐘">
+      <div class="transfer-walk-connector" title="站內轉乘約 5 分鐘">
         <div class="connector-line"></div>
         <div class="connector-badge">
           <i class="fa-solid fa-person-walking-luggage"></i> 轉乘 5分
@@ -9539,13 +9539,13 @@ class TwinCityTransitMonitor {
     `;
 
     // 步行端點標籤
-    const walkXinpu5mHtml = `<div class="walk-endpoint-tag"><i class="fa-solid fa-person-walking"></i> 新埔步程 5分</div>`;
-    const walkXinpu10mHtml = `<div class="walk-endpoint-tag"><i class="fa-solid fa-person-walking"></i> 新埔步程 10分</div>`;
-    const walkQingpu15mHtml = `<div class="walk-endpoint-tag"><i class="fa-solid fa-person-walking"></i> 青埔步程 15分</div>`;
+    const walkXinpu5mHtml = `<div class="walk-endpoint-tag"><i class="fa-solid fa-person-walking"></i> 步行 5分</div>`;
+    const walkXinpu10mHtml = `<div class="walk-endpoint-tag"><i class="fa-solid fa-person-walking"></i> 步行 10分</div>`;
+    const walkQingpu15mHtml = `<div class="walk-endpoint-tag"><i class="fa-solid fa-person-walking"></i> 步行 15分</div>`;
 
     // 依照實際行駛順序動態排列軌道：
-    // 新埔 ➔ 青埔 (to_qingpu): [新埔步程] ➔ [台北捷運] ➔ [轉乘5分] ➔ [高鐵/機捷] ➔ [青埔步程]
-    // 青埔 ➔ 新埔 (to_xinpu):  [青埔步程] ➔ [高鐵/機捷] ➔ [轉乘5分] ➔ [台北捷運] ➔ [新埔步程]
+    // 新埔 ➔ 青埔 (to_qingpu): [步行] ➔ [台北捷運] ➔ [轉乘5分] ➔ [高鐵/機捷] ➔ [步行]
+    // 青埔 ➔ 新埔 (to_xinpu):  [步行] ➔ [高鐵/機捷] ➔ [轉乘5分] ➔ [台北捷運] ➔ [步行]
     const thsrRouteRailHtml = isToQingpu
       ? `
         ${walkXinpu5mHtml}
@@ -9583,7 +9583,7 @@ class TwinCityTransitMonitor {
       <div class="transit-status-health-bar has-incident">
         <div class="incident-alert-banner">
           <div class="incident-left-group">
-            <span class="incident-badge">🚨 營運異常通報</span>
+            <span class="incident-badge">🚨 營運異常</span>
             <span class="incident-line-tag line-${activeAlert.line}">${activeAlert.lineName}</span>
             <span class="incident-msg">${activeAlert.title}：${activeAlert.desc}</span>
           </div>
@@ -9600,8 +9600,7 @@ class TwinCityTransitMonitor {
         <div class="normal-status-banner">
           <div class="normal-status-left">
             <span class="status-indicator-dot"></span>
-            <span class="status-normal-text">全線路網正常營運 (高鐵 ‧ 機捷 ‧ 板南 ‧ 環狀)</span>
-            <span class="status-sync-tag"><i class="fa-solid fa-bolt" style="color:#00f0ff;"></i> 即時更新中</span>
+            <span class="status-normal-text">全線營運正常 (即時同步中)</span>
           </div>
         </div>
       </div>
@@ -9633,19 +9632,19 @@ class TwinCityTransitMonitor {
             </button>
           </div>
 
-          <button class="transit-plan-toggle-btn ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看幾點出門搭車可以到的時間表">
-            <span>🕒 出門時間表</span>
+          <button class="transit-plan-toggle-btn ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看搭車時間表">
+            <span>🕒 時間表</span>
             <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
           </button>
 
-          <button class="transit-collapse-btn" onclick="window.transitMonitor.toggleCollapse()" title="收合大眾運輸面板為迷你橫條">
+          <button class="transit-collapse-btn" onclick="window.transitMonitor.toggleCollapse()" title="收合大眾運輸面板">
             <span>收合動態</span>
             <i class="fa-solid fa-chevron-up"></i>
           </button>
         </div>
       </div>
 
-      <!-- 大眾運輸營運狀態與緊急通報告警橫幅 -->
+      <!-- 大眾運輸營運狀態橫幅 -->
       ${alertHealthBarHtml}
 
       <!-- 兩條全寬最長路徑軌道走廊 (Full Width Stacked ‧ 依通勤方向精確排定軌道順序) -->
@@ -9657,15 +9656,15 @@ class TwinCityTransitMonitor {
         <div class="transit-track-card track-thsr full-width-card">
           <div class="track-header">
             <div class="track-badge-group">
-              <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵路線</span>
-              <span class="thsr-safe-pill" title="此路廊所有班表皆經過防呆篩選，保證停靠桃園高鐵站"><i class="fa-solid fa-circle-check"></i> 停靠桃園</span>
-              <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 轉乘5分 ➔ 台灣高鐵' : '台灣高鐵 ➔ 轉乘5分 ➔ 板南線'}</span>
+              <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵快線</span>
+              <span class="thsr-safe-pill" title="此路廊保證停靠桃園高鐵站"><i class="fa-solid fa-circle-check"></i> 停靠桃園</span>
+              <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 轉乘 ➔ 高鐵' : '高鐵 ➔ 轉乘 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
               <span class="pids-countdown-badge thsr-pids">
-                <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ${thsr.platformStatus} (${thsr.depTime}發)
+                <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ‧ ${thsr.platformStatus} (${thsr.depTime}發)
               </span>
-              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 門到門約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
           </div>
 
@@ -9676,19 +9675,19 @@ class TwinCityTransitMonitor {
         </div>
 
         <!-- ======================================================= -->
-        <!-- 路線二：環狀機捷線 (全寬長條 100% 貫穿) -->
+        <!-- 路線二：機捷路線 (全寬長條 100% 貫穿) -->
         <!-- ======================================================= -->
         <div class="transit-track-card track-tymetro full-width-card">
           <div class="track-header">
             <div class="track-badge-group">
-              <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 環狀機捷線</span>
-              <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 轉乘5分 ➔ 機場捷運' : '機場捷運 ➔ 轉乘5分 ➔ 環狀線'}</span>
+              <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷路線</span>
+              <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 轉乘 ➔ 機捷' : '機捷 ➔ 轉乘 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">
               <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}">
-                <i class="fa-solid fa-plane"></i> ${tymetro.type} (${tymetro.duration}分) ${tymetro.platformStatus} (${tymetro.depTime}發)
+                <i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
               </span>
-              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 門到門約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
           </div>
 
@@ -9778,11 +9777,11 @@ class TwinCityTransitMonitor {
     if (typeof window !== 'undefined' && window.weatherMonitor && window.weatherMonitor.youbikeUpdateTime) {
       updateTimeStr = String(window.weatherMonitor.youbikeUpdateTime).replace(/[^0-9:]/g, '').trim();
     }
-    if (!updateTimeStr) updateTimeStr = '22:41';
+    if (!updateTimeStr) updateTimeStr = '23:57';
 
     return `
       <!-- ======================================================= -->
-      <!-- 路線三：雙埔微移動最後一哩 ‧ YouBike 核心轉乘站動態 -->
+      <!-- 路線三：雙埔 YouBike 核心轉乘站動態 -->
       <!-- ======================================================= -->
       <div class="transit-track-card track-youbike full-width-card">
         <div class="track-header">
@@ -9802,7 +9801,7 @@ class TwinCityTransitMonitor {
           <div class="transit-youbike-col">
             <div class="transit-youbike-col-header">
               <span class="dual-city-tag qp">青埔</span>
-              <span class="col-title-text">核心 4 站</span>
+              <span class="col-title-text">熱門 4 站</span>
             </div>
             <div class="transit-youbike-col-list">
               ${qpStations.map(renderItem).join('')}
@@ -9813,7 +9812,7 @@ class TwinCityTransitMonitor {
           <div class="transit-youbike-col">
             <div class="transit-youbike-col-header">
               <span class="dual-city-tag bp">新埔</span>
-              <span class="col-title-text">核心 2 站</span>
+              <span class="col-title-text">熱門 2 站</span>
             </div>
             <div class="transit-youbike-col-list">
               ${bpStations.map(renderItem).join('')}
@@ -9831,21 +9830,21 @@ class TwinCityTransitMonitor {
         <div class="schedule-drawer-header">
           <div class="schedule-drawer-title">
             <i class="fa-solid fa-calendar-days" style="color:#00f0ff;"></i> 
-            <strong>當日後續出門搭車到站時間表</strong> 
-            <span class="schedule-dir-note">(${directionLabel} ‧ 門到門精準推算 ‧ ${hasPlans ? `當日剩餘 ${plans.length} 組可搭組合` : '今日班次已收班'})</span>
+            <strong>出門搭車時間表</strong> 
+            <span class="schedule-dir-note">(${directionLabel} ‧ ${hasPlans ? `今日剩餘 ${plans.length} 班` : '今日已收班'})</span>
           </div>
           <div class="drawer-header-actions">
             ${hasPlans ? `
-              <button class="drawer-scroll-btn" onclick="window.transitMonitor.scrollPlans(-350)" title="向左滑動檢視前列班次">
+              <button class="drawer-scroll-btn" onclick="window.transitMonitor.scrollPlans(-350)" title="檢視上一班">
                 <i class="fa-solid fa-chevron-left"></i>
               </button>
-              <button class="drawer-scroll-btn" onclick="window.transitMonitor.scrollPlans(350)" title="向右滑動檢視後續班次">
+              <button class="drawer-scroll-btn" onclick="window.transitMonitor.scrollPlans(350)" title="檢視下一班">
                 <i class="fa-solid fa-chevron-right"></i>
               </button>
             ` : ''}
-            <button class="drawer-close-btn" onclick="window.transitMonitor.toggleSchedule()" title="收合出門搭車時間表以復原畫面">
+            <button class="drawer-close-btn" onclick="window.transitMonitor.toggleSchedule()" title="收合時間表">
               <i class="fa-solid fa-xmark"></i>
-              <span>收合時間表</span>
+              <span>收合</span>
             </button>
           </div>
         </div>
@@ -9864,7 +9863,7 @@ class TwinCityTransitMonitor {
                   <span class="plan-badge ${p.badgeClass}">${p.badge}</span>
                   <span class="plan-idx-tag">#${idx + 1}</span>
                   ${planAlert ? `<span class="plan-alert-badge" title="${planAlert.title}: ${planAlert.desc}">⚠️ 延誤注意</span>` : ''}
-                  <span class="plan-total"><i class="fa-regular fa-clock"></i> 門到門 <strong>${p.totalDuration}</strong></span>
+                  <span class="plan-total"><i class="fa-regular fa-clock"></i> 全程 <strong>${p.totalDuration}</strong></span>
                 </div>
                 <div class="plan-route-name">${p.name}</div>
                 <div class="plan-timeline">
@@ -9874,12 +9873,12 @@ class TwinCityTransitMonitor {
                   </div>
                   <div class="plan-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                   <div class="plan-step">
-                    <div class="step-label">班次發車</div>
+                    <div class="step-label">搭乘發車</div>
                     <div class="step-time">${p.boardTrainTime}</div>
                   </div>
                   <div class="plan-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                   <div class="plan-step">
-                    <div class="step-label">目的地抵達</div>
+                    <div class="step-label">預計抵達</div>
                     <div class="step-time step-arrive">${p.arriveTime}</div>
                   </div>
                 </div>
