@@ -28,7 +28,7 @@
 
   <!-- 科技監控儀表板主樣式 -->
   <style>
-/* 雙埔環境即時資訊監控系統 - 現代暗黑科技指揮中心樣式 */
+/* 雙埔生活資訊監控系統 - 現代暗黑科技指揮中心樣式 */
 
 :root {
   --bg-main: #0a0e17;
@@ -1263,7 +1263,7 @@ a.coord-tag:hover {
   border-left-color: var(--color-primary);
 }
 
-/* 雙埔環境資訊卡片專用樣式 */
+/* 雙埔生活資訊卡片專用樣式 */
 .dual-weather-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4204,8 +4204,7 @@ body {
         <i class="fa-solid fa-satellite-dish"></i>
       </div>
       <div>
-        <h1 class="brand-title">雙埔環境</h1>
-        <div class="brand-subtitle">即時資訊</div>
+        <h1 class="brand-title">雙埔生活資訊</h1>
       </div>
     </div>
 
@@ -6038,7 +6037,7 @@ class WeatherEnvironmentMonitor {
       this.refreshRadar();
       this.updateCountdownDisplay();
     } catch (err) {
-      console.error('更新雙埔環境資訊失敗:', err);
+      console.error('更新雙埔生活資訊失敗:', err);
     }
   }
 
@@ -10187,7 +10186,7 @@ class MonitorApp {
     // 視窗自適應計算
     this.applyAdaptiveViewportFit();
 
-    console.log('雙埔環境即時資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊)');
+    console.log('雙埔生活資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊)');
   }
 
   // 數位時鐘
@@ -10431,7 +10430,7 @@ class MonitorApp {
         cameras = data.cameras || [];
       }
 
-      this.currentCenterData = centerData || { name: '雙埔環境', id: centerId };
+      this.currentCenterData = centerData || { name: '雙埔生活資訊', id: centerId };
       this.currentCameras = cameras || [];
 
       // 更新介面標籤
