@@ -5570,6 +5570,7 @@ class CameraPlayerEngine {
     this.recoveryDebounce = new Map(); // 防抖時間戳 (防止 flvjs 多重 error 與看門狗短時間重複連發)
     this.autoReloadTimers = new Map(); // 局部自動重整定時器 (模擬 F5 重整機制)
     this.liveClockTimers = new Map(); // 即時日期時間時鐘計時器
+    this.fpsTrackers = new Map();     // 真實來源即時動態 FPS 採樣追蹤器 (絕不寫死，由視訊解碼管線即時量測)
     this.isPaused = false;
   }
 
@@ -5581,7 +5582,7 @@ class CameraPlayerEngine {
     }
   }
 
-  // 清理單一攝影機的看門狗與追幀計時器
+  // 清理單一攝影機的看門狗與追幀計時器 (不清理正在採樣的 FPS 探測器)
   clearWatchdog(camId) {
     if (this.watchdogs.has(camId)) {
       const t = this.watchdogs.get(camId);
@@ -5605,8 +5606,9 @@ class CameraPlayerEngine {
     }
   }
 
-  // 清理所有看門狗與追幀計時器
+  // 清理所有看門狗、FPS 探測器與追幀計時器
   clearAllWatchdogs() {
+    this.clearAllFpsTrackers();
     this.watchdogs.forEach(timer => {
       clearTimeout(timer);
       clearInterval(timer);
@@ -5634,19 +5636,119 @@ class CameraPlayerEngine {
     }
   }
 
-  // 取得攝影機預設解析度與 FPS 文字 (省略 HLS/FLV/720P/1080P/HD 等名稱，依真實 cam.fps 顯示解析度數字與 FPS)
+  // 取得攝影機預設狀態文字 (起播前顯示連線狀態，起播後由動態探測器即時回報真實寬高與FPS，絕不預先寫死)
   getInitialFormatText(cam) {
     const type = (cam.type || 'flv').toLowerCase();
-    const fps = cam.fps || (type === 'youtube' ? 60 : (type === 'flv' ? 15 : (type === 'mjpeg' ? 10 : 30)));
-    if (type === 'youtube') return `3840×2160 ‧ ${fps} FPS`;
-    if (type === 'iframe') return `1920×1080 ‧ ${fps} FPS`;
-    if (type === 'hls') return `1280×720 ‧ ${fps} FPS`;
-    if (type === 'flv') return `1920×1080 ‧ ${fps} FPS`;
-    if (type === 'mjpeg') return `704×480 ‧ ${fps} FPS`;
-    return `1280×720 ‧ ${fps} FPS`;
+    if (type === 'youtube') return 'YouTube 直播';
+    if (type === 'iframe') return '即時串流';
+    if (type === 'mjpeg') return 'MJPEG 串流';
+    return '串流連線中...';
   }
 
-  // 檢測並更新攝影機實際影像解析度與真實 FPS (自解碼器讀取真實寬高與影格率，依據 cam.fps 精準標註)
+  // 啟動真實串流來源即時動態 FPS 探測追蹤器 (由視訊解碼渲染管線直接採樣回報，來源是多少就顯示多少，絕不寫死！)
+  startRealtimeFpsTracker(cam, videoEl) {
+    if (typeof document === 'undefined' || !videoEl || !cam) return;
+    this.stopRealtimeFpsTracker(cam.id);
+
+    const resEl = document.getElementById(`res-${cam.id}`);
+    if (!resEl) return;
+
+    const trackerState = {
+      active: true,
+      videoEl: videoEl,
+      lastTime: performance.now(),
+      frames: 0,
+      lastTotalFrames: 0,
+      measuredFps: null,
+      rvfcId: null,
+      intervalId: null
+    };
+
+    const updateDisplay = (fps) => {
+      const width = videoEl.videoWidth || 0;
+      const height = videoEl.videoHeight || 0;
+      if (width > 0 && height > 0) {
+        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${width}×${height} ‧ ${fps} FPS`;
+      } else {
+        resEl.innerHTML = `<i class="fa-solid fa-video"></i> 串流中 ‧ ${fps} FPS`;
+      }
+    };
+
+    // 策略 1 (首選): 原生 requestVideoFrameCallback (精準捕獲每一次 GPU 畫面繪製)
+    if (typeof videoEl.requestVideoFrameCallback === 'function') {
+      const onVideoFrame = (now, metadata) => {
+        if (!trackerState.active) return;
+        trackerState.frames++;
+        const elapsed = now - trackerState.lastTime;
+        if (elapsed >= 1000) {
+          const calculated = Math.round((trackerState.frames / elapsed) * 1000);
+          if (calculated > 0 && calculated <= 120) {
+            trackerState.measuredFps = calculated;
+            updateDisplay(calculated);
+          }
+          trackerState.frames = 0;
+          trackerState.lastTime = now;
+        }
+        if (!videoEl.paused && !videoEl.ended) {
+          trackerState.rvfcId = videoEl.requestVideoFrameCallback(onVideoFrame);
+        }
+      };
+      trackerState.rvfcId = videoEl.requestVideoFrameCallback(onVideoFrame);
+    } 
+    // 策略 2 (標準備援): getVideoPlaybackQuality (標準 HTML5 解碼統計)
+    else if (typeof videoEl.getVideoPlaybackQuality === 'function') {
+      const initialQuality = videoEl.getVideoPlaybackQuality();
+      trackerState.lastTotalFrames = initialQuality ? initialQuality.totalVideoFrames : 0;
+      trackerState.lastTime = performance.now();
+
+      trackerState.intervalId = setInterval(() => {
+        if (!trackerState.active) return;
+        const now = performance.now();
+        const quality = videoEl.getVideoPlaybackQuality();
+        if (quality) {
+          const currentTotal = quality.totalVideoFrames;
+          const diff = currentTotal - trackerState.lastTotalFrames;
+          const elapsed = (now - trackerState.lastTime) / 1000;
+          if (elapsed > 0 && diff >= 0) {
+            const calculated = Math.round(diff / elapsed);
+            if (calculated > 0 && calculated <= 120) {
+              trackerState.measuredFps = calculated;
+              updateDisplay(calculated);
+            }
+          }
+          trackerState.lastTotalFrames = currentTotal;
+          trackerState.lastTime = now;
+        }
+      }, 1000);
+    }
+
+    this.fpsTrackers.set(cam.id, trackerState);
+  }
+
+  // 停止單一攝影機 FPS 探測追蹤器
+  stopRealtimeFpsTracker(camId) {
+    if (this.fpsTrackers && this.fpsTrackers.has(camId)) {
+      const t = this.fpsTrackers.get(camId);
+      t.active = false;
+      if (t.rvfcId && t.videoEl && typeof t.videoEl.cancelVideoFrameCallback === 'function') {
+        try { t.videoEl.cancelVideoFrameCallback(t.rvfcId); } catch(e) {}
+      }
+      if (t.intervalId) {
+        clearInterval(t.intervalId);
+      }
+      this.fpsTrackers.delete(camId);
+    }
+  }
+
+  // 清理所有攝影機 FPS 探測追蹤器
+  clearAllFpsTrackers() {
+    if (this.fpsTrackers) {
+      this.fpsTrackers.forEach((_, id) => this.stopRealtimeFpsTracker(id));
+      this.fpsTrackers.clear();
+    }
+  }
+
+  // 檢測並更新攝影機實際影像解析度與動態實測 FPS
   detectVideoResolution(cam, videoEl) {
     if (typeof document === 'undefined') return;
     const resEl = document.getElementById(`res-${cam.id}`);
@@ -5655,17 +5757,24 @@ class CameraPlayerEngine {
     const width = videoEl ? videoEl.videoWidth : 0;
     const height = videoEl ? videoEl.videoHeight : 0;
 
-    // 依據攝影機自身真實規格讀取 FPS (新北交控 FLV 為 15 FPS，桃園 HLS/觀光為 30 FPS)
-    const fps = cam.fps || (cam.type === 'flv' ? 15 : (cam.type === 'mjpeg' ? 10 : (cam.type === 'snapshot' ? 1 : 30)));
+    // 檢查目前是否已有即時實測 FPS
+    const tracker = this.fpsTrackers ? this.fpsTrackers.get(cam.id) : null;
+    const currentMeasuredFps = tracker && tracker.measuredFps ? tracker.measuredFps : null;
 
-    let displayText = '';
     if (width > 0 && height > 0) {
-      displayText = `${width}×${height} ‧ ${fps} FPS`;
+      if (currentMeasuredFps) {
+        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${width}×${height} ‧ ${currentMeasuredFps} FPS`;
+      } else {
+        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${width}×${height} ‧ 偵測中...`;
+      }
     } else {
-      displayText = this.getInitialFormatText(cam);
+      resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${this.getInitialFormatText(cam)}`;
     }
 
-    resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${displayText}`;
+    // 只要視訊處於播放狀態且尚未掛載 FPS 追蹤器，立即啟動硬體影格率動態採樣
+    if (videoEl && !videoEl.paused && (!tracker || !tracker.active)) {
+      this.startRealtimeFpsTracker(cam, videoEl);
+    }
   }
 
   // 啟動攝影機即時日期時間秒級動態時鐘
@@ -5983,7 +6092,8 @@ class CameraPlayerEngine {
       streamUrl = 'http://localhost:3088' + streamUrl;
     }
 
-    // 清理既有 HLS 播放器與看門狗，避免重複堆疊
+    // 清理既有 HLS 播放器與看門狗、FPS 探測器，避免重複堆疊
+    this.stopRealtimeFpsTracker(cam.id);
     if (this.hlsPlayers.has(cam.id)) {
       try {
         const oldHls = this.hlsPlayers.get(cam.id);
@@ -6198,7 +6308,8 @@ class CameraPlayerEngine {
 
     const streamUrl = overrideUrl || cam.streamUrl;
 
-    // 清理舊的播放實例
+    // 清理舊的播放實例與 FPS 採樣器
+    this.stopRealtimeFpsTracker(cam.id);
     if (this.flvPlayers.has(cam.id)) {
       try {
         const oldP = this.flvPlayers.get(cam.id);
@@ -6257,6 +6368,7 @@ class CameraPlayerEngine {
           if (now - lastTrigger < 800) return;
           this.recoveryDebounce.set(cam.id, now);
 
+          this.stopRealtimeFpsTracker(cam.id);
           this.clearWatchdog(cam.id);
           const currentRetries = (this.retryCounts.get(cam.id) || 0) + 1;
           this.retryCounts.set(cam.id, currentRetries);
@@ -6337,8 +6449,11 @@ class CameraPlayerEngine {
         }, 4500);
         this.watchdogs.set(cam.id, watchdogTimer);
 
-        // 監聽播放事件，確認成功串流後取消看門狗與清除重整提示層
-        const onPlaying = () => {
+        // 監聽播放與時間更新事件，成功串流後取消逾時看門狗並啟動 FPS 測量 (加入防重複保護)
+        let streamStarted = false;
+        const onStreamStarted = () => {
+          if (streamStarted) return;
+          streamStarted = true;
           this.clearWatchdog(cam.id);
           this.retryCounts.delete(cam.id);
           const wrapper = videoEl.parentElement;
@@ -6353,24 +6468,23 @@ class CameraPlayerEngine {
             wm.title = '正常串流中';
           }
         };
-        videoEl.addEventListener('playing', onPlaying, { once: true });
+
+        videoEl.addEventListener('playing', onStreamStarted);
         videoEl.addEventListener('loadedmetadata', () => {
           this.detectVideoResolution(cam, videoEl);
         });
         videoEl.addEventListener('timeupdate', () => {
           if (videoEl.currentTime > 0) {
-            this.clearWatchdog(cam.id);
-            this.retryCounts.delete(cam.id);
-            const wrapper = videoEl.parentElement;
-            if (wrapper) {
-              const overlay = wrapper.querySelector('.ntpc-retry-overlay');
-              if (overlay) overlay.remove();
-            }
-            this.detectVideoResolution(cam, videoEl);
-            this.startLiveClock(cam.id);
-            if (wm && wm.title.includes('載入')) {
-              wm.style.background = '#10b981';
-              wm.title = '正常串流中';
+            onStreamStarted();
+          }
+        });
+
+        // 監聽 FLV 元數據抵達事件
+        player.on(flvjs.Events.METADATA_ARRIVED, (metadata) => {
+          if (metadata && (metadata.width || metadata.height)) {
+            const resEl = document.getElementById(`res-${cam.id}`);
+            if (resEl && (!videoEl.videoWidth || !videoEl.videoHeight)) {
+              resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${metadata.width || 0}×${metadata.height || 0} ‧ 偵測中...`;
             }
           }
         });
@@ -6429,7 +6543,7 @@ class CameraPlayerEngine {
     img.onload = () => {
       const resEl = document.getElementById(`res-${cam.id}`);
       if (resEl && img.naturalWidth > 0 && img.naturalHeight > 0) {
-        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${img.naturalWidth}×${img.naturalHeight} ‧ 10 FPS`;
+        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${img.naturalWidth}×${img.naturalHeight} ‧ MJPEG`;
       }
     };
 
@@ -6469,7 +6583,7 @@ class CameraPlayerEngine {
           if (tempImg.naturalWidth && tempImg.naturalHeight) {
             const resEl = document.getElementById(`res-${camId}`);
             if (resEl) {
-              resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${tempImg.naturalWidth}×${tempImg.naturalHeight} ‧ 1 FPS`;
+              resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${tempImg.naturalWidth}×${tempImg.naturalHeight} ‧ 定時快照`;
             }
           }
         };
