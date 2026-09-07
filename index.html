@@ -8653,6 +8653,8 @@ class TwinCityTransitMonitor {
     this.isMetroOnline = false;
     this.isDirectMetroApi = false;
     this.isDirectParkingApi = false;
+    this.isDirectThsrApi = false;
+    this.isDirectTymetroApi = false;
     this.metroLiveData = null;
     this.metroLastFetchTime = 0;
 
@@ -9235,15 +9237,23 @@ class TwinCityTransitMonitor {
       let southRes = null;
       let northRes = null;
 
-      // 途徑 1：Android 原生直取
-      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+      // 途徑 1：Android 原生專屬高速直打高鐵官網 API 優先
+      if (typeof window !== 'undefined' && window.AndroidBridge) {
         try {
-          const raw = window.AndroidBridge.getLatestCloudData('thsr');
+          let raw = '';
+          if (typeof window.AndroidBridge.getRealtimeThsr === 'function') {
+            raw = window.AndroidBridge.getRealtimeThsr();
+          } else if (typeof window.AndroidBridge.getLatestCloudData === 'function') {
+            raw = window.AndroidBridge.getLatestCloudData('thsr');
+          }
           if (raw && raw.trim().startsWith('{')) {
             const parsed = JSON.parse(raw);
             if (parsed) {
               southRes = parsed.south;
               northRes = parsed.north;
+              if (parsed.isDirectApi) {
+                this.isDirectThsrApi = true;
+              }
             }
           }
         } catch (e) {}
@@ -9332,15 +9342,23 @@ class TwinCityTransitMonitor {
       let southRes = null;
       let northRes = null;
 
-      // 途徑 1：Android 原生直取
-      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+      // 途徑 1：Android 原生專屬高速直打桃捷官網 API 優先
+      if (typeof window !== 'undefined' && window.AndroidBridge) {
         try {
-          const raw = window.AndroidBridge.getLatestCloudData('tymetro');
+          let raw = '';
+          if (typeof window.AndroidBridge.getRealtimeTymetro === 'function') {
+            raw = window.AndroidBridge.getRealtimeTymetro();
+          } else if (typeof window.AndroidBridge.getLatestCloudData === 'function') {
+            raw = window.AndroidBridge.getLatestCloudData('tymetro');
+          }
           if (raw && raw.trim().startsWith('{')) {
             const parsed = JSON.parse(raw);
             if (parsed) {
               southRes = parsed.south;
               northRes = parsed.north;
+              if (parsed.isDirectApi) {
+                this.isDirectTymetroApi = true;
+              }
             }
           }
         } catch (e) {}
@@ -10362,6 +10380,7 @@ class TwinCityTransitMonitor {
             <div class="track-badge-group">
               <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵快線</span>
               <span class="thsr-safe-pill" title="此路廊保證停靠桃園高鐵站"><i class="fa-solid fa-circle-check"></i> 停靠桃園</span>
+              ${this.isDirectThsrApi ? '<span class="feed-live-badge live-pulse-badge" style="margin-left:4px;" title="原生直連台灣高鐵官網秒級即時更新"><i class="fa-solid fa-bolt"></i> 官方直連</span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 轉乘 ➔ 高鐵' : '高鐵 ➔ 轉乘 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
@@ -10385,6 +10404,7 @@ class TwinCityTransitMonitor {
           <div class="track-header">
             <div class="track-badge-group">
               <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷路線</span>
+              ${this.isDirectTymetroApi ? '<span class="feed-live-badge live-pulse-badge" style="margin-left:4px;" title="原生直連桃園捷運官網秒級即時更新"><i class="fa-solid fa-bolt"></i> 官方直連</span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 轉乘 ➔ 機捷' : '機捷 ➔ 轉乘 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">

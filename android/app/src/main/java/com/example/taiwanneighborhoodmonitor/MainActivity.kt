@@ -638,9 +638,270 @@ class AndroidNativeBridge(
     }
 
     /**
+     * 原生 POST 請求實作 (支援高鐵官網班表查詢)
+     */
+    private fun postHttp(urlString: String, postData: String, timeoutMs: Int): String {
+        return try {
+            val url = URL(urlString)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = if (timeoutMs > 0) timeoutMs else 6000
+                readTimeout = if (timeoutMs > 0) timeoutMs else 6000
+                requestMethod = "POST"
+                doOutput = true
+                useCaches = false
+                defaultUseCaches = false
+                setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TaiwanNeighborhoodMonitor/1.0")
+                setRequestProperty("Referer", "https://www.thsrc.com.tw/ArticleContent/a3b630bb-1066-4352-a1ef-58c7b4e8ef7c")
+                setRequestProperty("Origin", "https://www.thsrc.com.tw")
+            }
+            conn.outputStream.use { os ->
+                os.write(postData.toByteArray(Charsets.UTF_8))
+            }
+            conn.connect()
+            if (conn.responseCode in 200..299) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else {
+                ""
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    /**
+     * 解析台灣高鐵官網回傳 JSON 資料
+     */
+    private fun parseOfficialThsr(jsonStr: String): JSONArray {
+        val trainsArray = JSONArray()
+        try {
+            val root = JSONObject(jsonStr)
+            val data = root.optJSONObject("data") ?: return trainsArray
+            val depTable = data.optJSONObject("DepartureTable") ?: return trainsArray
+            val trainItem = depTable.optJSONArray("TrainItem") ?: return trainsArray
+
+            for (i in 0 until trainItem.length()) {
+                val t = trainItem.getJSONObject(i)
+                val trainNo = t.optString("TrainNumber", "")
+                val depTime = t.optString("DepartureTime", "")
+                val arrTime = t.optString("DestinationTime", "")
+                if (depTime.isNotBlank() && arrTime.isNotBlank()) {
+                    val depParts = depTime.split(":").mapNotNull { it.toIntOrNull() }
+                    val arrParts = arrTime.split(":").mapNotNull { it.toIntOrNull() }
+                    if (depParts.size >= 2 && arrParts.size >= 2) {
+                        var duration = (arrParts[0] * 60 + arrParts[1]) - (depParts[0] * 60 + depParts[1])
+                        if (duration < 0) duration += 1440
+                        val isExpress = trainNo.startsWith("06") || trainNo.startsWith("6")
+                        val item = JSONObject().apply {
+                            put("trainNo", trainNo)
+                            put("depTime", depTime)
+                            put("arrTime", arrTime)
+                            put("duration", if (duration > 0) duration else 12)
+                            put("isExpress", isExpress)
+                            put("type", if (isExpress) "6xx特快" else "8xx全停")
+                            put("stopsAtTaoyuan", true)
+                            put("depMinutes", depParts[0] * 60 + depParts[1])
+                        }
+                        trainsArray.put(item)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        return trainsArray
+    }
+
+    /**
+     * 原生秒級即時台灣高鐵官方班表直取 (直打台灣高鐵官網查詢端點，南下/北上並行抓取，免除 5 分鐘 Actions 延遲)
+     */
+    @JavascriptInterface
+    fun getRealtimeThsr(): String {
+        try {
+            val now = Date()
+            val dateStr = SimpleDateFormat("yyyy/MM/dd", Locale.TAIWAN).format(now)
+            val result = runBlocking(Dispatchers.IO) {
+                val southPost = "SearchType=S&Lang=TW&StartStation=BanQiao&EndStation=TaoYuan&OutWardSearchDate=" +
+                    java.net.URLEncoder.encode(dateStr, "UTF-8") + "&OutWardSearchTime=05%3A00&ReturnSearchDate=&ReturnSearchTime=&DiscountType="
+                val northPost = "SearchType=S&Lang=TW&StartStation=TaoYuan&EndStation=BanQiao&OutWardSearchDate=" +
+                    java.net.URLEncoder.encode(dateStr, "UTF-8") + "&OutWardSearchTime=05%3A00&ReturnSearchDate=&ReturnSearchTime=&DiscountType="
+
+                val southDeferred = async { postHttp("https://www.thsrc.com.tw/TimeTable/Search", southPost, 6000) }
+                val northDeferred = async { postHttp("https://www.thsrc.com.tw/TimeTable/Search", northPost, 6000) }
+
+                val southRaw = southDeferred.await()
+                val northRaw = northDeferred.await()
+
+                val southTrains = parseOfficialThsr(southRaw)
+                val northTrains = parseOfficialThsr(northRaw)
+
+                if (southTrains.length() > 0 || northTrains.length() > 0) {
+                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.format(now)
+
+                    JSONObject().apply {
+                        put("date", dateStr)
+                        put("updatedAt", isoStr)
+                        put("isDirectApi", true)
+                        put("south", JSONObject().apply {
+                            put("count", southTrains.length())
+                            put("trains", southTrains)
+                        })
+                        put("north", JSONObject().apply {
+                            put("count", northTrains.length())
+                            put("trains", northTrains)
+                        })
+                    }.toString()
+                } else {
+                    null
+                }
+            }
+            if (!result.isNullOrBlank()) {
+                return result
+            }
+        } catch (_: Exception) {}
+
+        // 備援 1：GitHub 雲端 Actions 資料庫
+        val cloudUrls = listOf(
+            "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json",
+            "https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json"
+        )
+        for (url in cloudUrls) {
+            val res = fetchHttp(url, 3500)
+            if (res.isNotBlank() && res.trim().startsWith("{")) {
+                return res
+            }
+        }
+
+        // 備援 2：本地 Assets 快照
+        return fetchAsset("data/thsr.json")
+    }
+
+    /**
+     * 解析桃園機場捷運官網 HTML 時刻表
+     */
+    private fun parseOfficialTymetro(html: String, isSouth: Boolean): JSONArray {
+        val trainsArray = JSONArray()
+        try {
+            val tableRegex = Regex("""<table[\s\S]*?</table>""", RegexOption.IGNORE_CASE)
+            val tables = tableRegex.findAll(html).map { it.value }.toList()
+            val targetTableIndex = if (isSouth) 1 else 0
+            val tbl = if (tables.size > targetTableIndex) tables[targetTableIndex] else return trainsArray
+
+            val rowRegex = Regex("""<tr>([\s\S]*?)</tr>""", RegexOption.IGNORE_CASE)
+            val thRegex = Regex("""<th[^>]*scope="row"[^>]*>(\d{1,2})</th>""", RegexOption.IGNORE_CASE)
+            val tdRegex = Regex("""<td[\s\S]*?</td>""", RegexOption.IGNORE_CASE)
+            val minRegex = Regex("""<i>(\d{1,2})</i>""", RegexOption.IGNORE_CASE)
+
+            for (rm in rowRegex.findAll(tbl)) {
+                val row = rm.groupValues[1]
+                val hm = thRegex.find(row) ?: continue
+                val h = hm.groupValues[1].padStart(2, '0')
+                val hInt = h.toIntOrNull() ?: continue
+
+                for (tdm in tdRegex.findAll(row)) {
+                    val td = tdm.value
+                    val mm = minRegex.find(td) ?: continue
+                    val m = mm.groupValues[1].padStart(2, '0')
+                    val mInt = m.toIntOrNull() ?: continue
+
+                    val isExp = td.contains("直達車")
+                    val isPeakA18 = td.contains("停靠A18") || td.contains("尖峰增停直達車")
+                    val stopsAtA18 = !isExp || isPeakA18
+
+                    if (!stopsAtA18) continue // 嚴格只保留停靠 A18 的班次
+
+                    val depTime = "$h:$m"
+                    val depMinutes = hInt * 60 + mInt
+                    val duration = if (isExp) 28 else 38
+                    val arrMinutes = depMinutes + duration
+                    val arrH = String.format(Locale.TAIWAN, "%02d", (arrMinutes / 60) % 24)
+                    val arrM = String.format(Locale.TAIWAN, "%02d", arrMinutes % 60)
+                    val trainNoPrefix = if (isSouth) "A3➔A18" else "A18➔A3"
+
+                    val item = JSONObject().apply {
+                        put("trainNo", "$trainNoPrefix-$depTime")
+                        put("depTime", depTime)
+                        put("arrTime", "$arrH:$arrM")
+                        put("duration", duration)
+                        put("isExpress", isExp)
+                        put("type", if (isExp) "尖峰直達" else "普通車")
+                        put("depMinutes", depMinutes)
+                        put("min", mInt)
+                        put("stopsAtA18", true)
+                    }
+                    trainsArray.put(item)
+                }
+            }
+        } catch (_: Exception) {}
+        return trainsArray
+    }
+
+    /**
+     * 原生秒級即時桃園機場捷運官方班表直取 (直打桃園捷運官網 A3 與 A18 時刻表，南下/北上並行抓取，免除 5 分鐘 Actions 延遲)
+     */
+    @JavascriptInterface
+    fun getRealtimeTymetro(): String {
+        try {
+            val now = Date()
+            val result = runBlocking(Dispatchers.IO) {
+                val southDeferred = async { fetchHttp("https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable.php?station=A3", 6000) }
+                val northDeferred = async { fetchHttp("https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable.php?station=A18", 6000) }
+
+                val southHtml = southDeferred.await()
+                val northHtml = northDeferred.await()
+
+                val southTrains = parseOfficialTymetro(southHtml, true)
+                val northTrains = parseOfficialTymetro(northHtml, false)
+
+                if (southTrains.length() > 0 || northTrains.length() > 0) {
+                    val dateStr = SimpleDateFormat("yyyy/MM/dd", Locale.TAIWAN).format(now)
+                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.format(now)
+
+                    JSONObject().apply {
+                        put("date", dateStr)
+                        put("updatedAt", isoStr)
+                        put("isDirectApi", true)
+                        put("south", JSONObject().apply {
+                            put("count", southTrains.length())
+                            put("trains", southTrains)
+                        })
+                        put("north", JSONObject().apply {
+                            put("count", northTrains.length())
+                            put("trains", northTrains)
+                        })
+                    }.toString()
+                } else {
+                    null
+                }
+            }
+            if (!result.isNullOrBlank()) {
+                return result
+            }
+        } catch (_: Exception) {}
+
+        // 備援 1：GitHub 雲端 Actions 資料庫
+        val cloudUrls = listOf(
+            "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json",
+            "https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json"
+        )
+        for (url in cloudUrls) {
+            val res = fetchHttp(url, 3500)
+            if (res.isNotBlank() && res.trim().startsWith("{")) {
+                return res
+            }
+        }
+
+        // 備援 2：本地 Assets 快照
+        return fetchAsset("data/tymetro.json")
+    }
+
+    /**
      * 原生整合獲取最新資料庫 (youbike, metro-live, parking, thsr, tymetro)
-     * 策略：youbike、metro-live、parking 全數走原生秒級直打開放資料 API 優先；時刻表優先嘗試 GitHub 雲端 -> 若網路離線秒降級 Assets 本地快照
-     * 100% 獨立自主，完全不依賴任何電腦端本機伺服器！
+     * 策略：所有資料來源 (youbike、metro-live、parking、thsr、tymetro) 100% 全數走原生秒級直打開放資料與官方 API 優先！
+     * 真正發揮 Android 原生不受同源 CORS 限制之最高頻極致新鮮度！
+     * 若網路異常才平滑降級至 GitHub 雲端資料庫 -> 本地 Assets 快照，保證高可用性與零白屏！
      */
     @JavascriptInterface
     fun getLatestCloudData(dataType: String): String {
@@ -653,19 +914,18 @@ class AndroidNativeBridge(
         if (dataType == "parking") {
             return getRealtimeParking()
         }
-
-        val cloudUrls = when (dataType) {
-            "thsr" -> listOf(
-                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json",
-                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json"
-            )
-            "tymetro" -> listOf(
-                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json",
-                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json"
-            )
-            else -> emptyList()
+        if (dataType == "thsr") {
+            return getRealtimeThsr()
+        }
+        if (dataType == "tymetro") {
+            return getRealtimeTymetro()
         }
 
+        // 備援：其他類型嘗試 GitHub 雲端
+        val cloudUrls = listOf(
+            "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/$dataType.json",
+            "https://janede0214.github.io/taiwan-neighborhood-monitor/data/$dataType.json"
+        )
         for (url in cloudUrls) {
             val res = fetchHttp(url, 3500)
             if (res.isNotBlank() && res.trim().startsWith("{")) {
@@ -674,8 +934,7 @@ class AndroidNativeBridge(
         }
 
         // 若雲端暫時逾時或處於離線狀態，秒級回傳 Assets 本地快照
-        val assetFile = "data/$dataType.json"
-        return fetchAsset(assetFile)
+        return fetchAsset("data/$dataType.json")
     }
 
     @JavascriptInterface
