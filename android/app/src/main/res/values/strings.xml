@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">雙埔生活圈 ‧ 即時監控</string>
-    <string name="app_desc">新埔 ‧ 青埔 雙城生活圈大眾運輸與路況即時監控系統</string>
+    <string name="app_name">雙埔生活</string>
+    <string name="app_desc">新埔 ‧ 青埔 雙城大眾運輸與路況即時監控系統</string>
     <string name="tv_mode">電視交控牆模式</string>
     <string name="mobile_mode">手機通勤模式</string>
 </resources>

@@ -34,7 +34,7 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * 雙埔生活圈 (新埔 ‧ 青埔) 原生 Android 應用程式
+ * 雙埔生活 (新埔 ‧ 青埔) 原生 Android 應用程式
  * 雙平台深度最佳化支援：
  * 1. Google TV / Android TV 電視版：16:9 大螢幕交控電視牆、D-Pad 遙控器焦點導航、長亮防休眠
  * 2. Android 手機版：單手通勤快速瀏覽、雙埔微移動走廊、下拉強制更新

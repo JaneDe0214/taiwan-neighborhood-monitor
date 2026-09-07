@@ -1,4 +1,4 @@
-# 雙埔生活圈即時環境與大眾運輸監控系統 (Taiwan Neighborhood Monitor)
+# 雙埔生活即時環境與大眾運輸監控系統 (Taiwan Neighborhood Monitor)
 
 提供新北（新埔／板橋）與桃園（青埔）雙核心生活圈之即時天氣、空氣品質、雷達回波、即時交通路網監控，以及雙埔核心 YouBike 2.0 官方即時車況動態看板。
 

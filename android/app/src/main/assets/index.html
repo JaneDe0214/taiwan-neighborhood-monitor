@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>雙埔生活圈</title>
+  <title>雙埔生活</title>
   
   <!-- FontAwesome 6 圖示庫 -->
     <!-- 官方交控與串流伺服器 DNS 預解析與連線預熱 (最少等待 ‧ 極速秒開) -->
@@ -5217,9 +5217,9 @@ body.native-mobile-mode .parking-lot-chip {
         <h1 class="brand-title">雙埔生活</h1>
       </div>
       <!-- 極簡即時環境安全與特報監測膠囊 (整合原側邊欄卡牌，節省空間) -->
-      <div id="disasterAlertBanner" class="disaster-compact-pill" title="雙埔生活圈全域環境安全 ‧ 氣象署特報與地震即時監測中">
+      <div id="disasterAlertBanner" class="disaster-compact-pill" title="雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中">
         <span class="pill-dot"></span>
-        <span id="disasterAlertText" class="disaster-pill-text"><i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全 ‧ 氣象地震監測中</span>
+        <span id="disasterAlertText" class="disaster-pill-text"><i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全</span>
       </div>
     </div>
 
@@ -5229,11 +5229,11 @@ body.native-mobile-mode .parking-lot-chip {
         <i class="fa-solid fa-layer-group"></i>
         <span>雙埔</span>
       </button>
-      <button class="center-btn" data-center="qingpu" title="青埔生活圈">
+      <button class="center-btn" data-center="qingpu" title="青埔">
         <i class="fa-solid fa-building-user"></i>
         <span>青埔</span>
       </button>
-      <button class="center-btn" data-center="banqiao" title="新埔生活圈">
+      <button class="center-btn" data-center="banqiao" title="新埔">
         <i class="fa-solid fa-house-signal"></i>
         <span>新埔</span>
       </button>
@@ -7814,7 +7814,7 @@ class WeatherEnvironmentMonitor {
     if (isThunder) {
       banner.classList.add('has-warning', 'active');
       textEl.innerHTML = `<i class="fa-solid fa-bolt" style="color:#eab308; margin-right:2px;"></i> 雷雨特報 ‧ 慎防驟雨`;
-      banner.title = '【雷雨特報】雙埔生活圈偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！';
+      banner.title = '【雷雨特報】雙埔生活偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！';
     } else if (isHeavyRain) {
       banner.classList.add('has-warning', 'active');
       textEl.innerHTML = `<i class="fa-solid fa-cloud-showers-water" style="color:#38bdf8; margin-right:2px;"></i> 強降雨警示 ‧ 路面濕滑`;
@@ -7829,8 +7829,8 @@ class WeatherEnvironmentMonitor {
       banner.title = `【空品提醒】周邊空氣品質指標達 ${aqi}，敏感族群建議佩戴口罩並緊閉門窗。`;
     } else {
       banner.classList.remove('has-warning', 'active');
-      textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全 ‧ 氣象地震監測中`;
-      banner.title = '雙埔生活圈全域環境安全 ‧ 氣象署特報與地震即時監測中';
+      textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全`;
+      banner.title = '雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中';
     }
   }
 
@@ -8126,7 +8126,7 @@ class WeatherEnvironmentMonitor {
       currentEbikes: (st.isRealtime && typeof st.ebikes === 'number') ? st.ebikes : null
     }));
 
-    // 雙埔生活圈 6 大核心指定站點
+    // 雙埔生活 6 大核心指定站點
     const DUAL_CORE_NAMES = [
       '青峰青昇路口',
       '青溪青雲路口',
@@ -8162,7 +8162,7 @@ class WeatherEnvironmentMonitor {
 
     const filterButtonsHtml = `
       <div style="display:flex; gap:4px; margin-bottom:8px; width:100%; flex-shrink:0;">
-        <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'all' ? 'active' : ''}" style="flex:1; padding:4px 6px; font-size:0.72rem; line-height:1.3;" onclick="window.weatherMonitor.filterYouBike('all', this)">全部雙埔 (${dualCount})</button>
+        <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'all' ? 'active' : ''}" style="flex:1; padding:4px 6px; font-size:0.72rem; line-height:1.3;" onclick="window.weatherMonitor.filterYouBike('all', this)">雙埔 (${dualCount})</button>
         <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'qp' ? 'active' : ''}" style="flex:1; padding:4px 6px; font-size:0.72rem; line-height:1.3;" onclick="window.weatherMonitor.filterYouBike('qp', this)">青埔 (${qpCount})</button>
         <button class="radar-layer-btn youbike-filter-btn ${this.youbikeFilter === 'bp' ? 'active' : ''}" style="flex:1; padding:4px 6px; font-size:0.72rem; line-height:1.3;" onclick="window.weatherMonitor.filterYouBike('bp', this)">新埔 (${bpCount})</button>
       </div>
@@ -10405,7 +10405,7 @@ class TwinCityTransitMonitor {
             <span>🕒 時間表</span> <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
           </button>
           <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看全線即時行駛動態">
-            <span>🚄 即時動態</span> <i class="fa-solid fa-chevron-down"></i>
+            <span>🚄 動態</span> <i class="fa-solid fa-chevron-down"></i>
           </button>
         </div>
       </div>
@@ -10439,7 +10439,7 @@ class TwinCityTransitMonitor {
         </div>
         ${bannan.carWeight && Array.isArray(bannan.carWeight.cars) && bannan.carWeight.cars.length > 0 ? `
           <div class="bannan-car-crowd-row" title="${bannan.carWeight.station}站即時車廂擁擠度 (1~6車)">
-            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station} 車廂擁擠度</span>
+            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station}車廂擁擠度</span>
             <div class="crowd-cars-strip">
               ${bannan.carWeight.cars.map(c => `
                 <div class="crowd-car-box level-${c.level}" title="${c.carNum}：${c.status}">
@@ -10509,7 +10509,7 @@ class TwinCityTransitMonitor {
         </div>
         ${Array.isArray(thsr.parkingLots) && thsr.parkingLots.length > 0 ? `
           <div class="thsr-parking-status-bar" title="高鐵桃園站即時剩餘車位 (P1/P2/P3)">
-            <span class="parking-title-tag"><i class="fa-solid fa-square-parking"></i> 桃園站停車場</span>
+            <span class="parking-title-tag"><i class="fa-solid fa-square-parking"></i> 桃園站停車</span>
             <div class="parking-lots-strip">
               ${thsr.parkingLots.map(lot => `
                 <span class="parking-lot-chip ${lot.available < 8 ? 'lot-tight' : 'lot-available'}" title="${lot.name}：剩餘 ${lot.spaceText}">
@@ -10707,7 +10707,7 @@ class TwinCityTransitMonitor {
         <div class="normal-status-banner">
           <div class="normal-status-left">
             <span class="status-indicator-dot"></span>
-            <span class="status-normal-text">全線營運正常 (即時同步中)</span>
+            <span class="status-normal-text">全線營運正常</span>
           </div>
         </div>
       </div>
@@ -10745,7 +10745,7 @@ class TwinCityTransitMonitor {
           </button>
 
           <button class="transit-collapse-btn" onclick="window.transitMonitor.toggleCollapse()" title="收合大眾運輸面板">
-            <span>收合動態</span>
+            <span>收合</span>
             <i class="fa-solid fa-chevron-up"></i>
           </button>
         </div>
@@ -10766,13 +10766,13 @@ class TwinCityTransitMonitor {
               <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵快線</span>
               <span class="thsr-safe-pill" title="此路廊保證停靠桃園高鐵站"><i class="fa-solid fa-circle-check"></i> 停靠桃園</span>
               ${this.isDirectThsrApi ? '<span class="live-chip-badge live-thsr" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
-              <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 轉乘 ➔ 高鐵' : '高鐵 ➔ 轉乘 ➔ 板南線'}</span>
+              <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 高鐵' : '高鐵 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
               <span class="pids-countdown-badge thsr-pids">
                 <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ‧ ${thsr.platformStatus} (${thsr.depTime}發)
               </span>
-              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
           </div>
 
@@ -10790,13 +10790,13 @@ class TwinCityTransitMonitor {
             <div class="track-badge-group">
               <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷路線</span>
               ${this.isDirectTymetroApi ? '<span class="live-chip-badge live-tymetro" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
-              <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 轉乘 ➔ 機捷' : '機捷 ➔ 轉乘 ➔ 環狀線'}</span>
+              <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 機捷' : '機捷 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">
               <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}">
                 <i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
               </span>
-              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
           </div>
 
@@ -13089,7 +13089,7 @@ class MonitorApp {
           }
         });
       } else if (centerId === 'dual') {
-        // 從單一生活圈切回雙埔生活圈時，自動套用雙埔標準預設宮格 (雙埔預設 6 宮格：青埔 3 + 新埔 3 各半均分)
+        // 從單一生活圈切回雙埔生活時，自動套用雙埔標準預設宮格 (雙埔預設 6 宮格：青埔 3 + 新埔 3 各半均分)
         const defaultMode = 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
