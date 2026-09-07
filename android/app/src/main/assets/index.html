@@ -1819,20 +1819,22 @@ a.coord-tag:hover {
    ========================================================================== */
 
 .transit-corridor-bar {
-  background: linear-gradient(135deg, rgba(8, 16, 30, 0.94), rgba(12, 24, 44, 0.94));
+  background: linear-gradient(135deg, rgba(8, 16, 30, 0.96), rgba(12, 24, 44, 0.96));
   border: 1px solid rgba(0, 240, 255, 0.22);
   border-radius: 8px;
   padding: 6px 12px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
   margin-bottom: 4px;
-  transition: all 0.25s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: paint layout;
 }
 
 .transit-corridor-bar.is-collapsed-bar {
@@ -10137,94 +10139,120 @@ class TwinCityTransitMonitor {
     return finalPlans;
   }
 
-  // 智慧無損 DOM 虛擬差異比對修補器 (Morphing Patch)
-  // 原地同步屬性、樣式與文字，保留所有既有元素，徹底杜絕每秒全量 innerHTML 重設所造成的瘋狂閃爍！
-  morphDom(existingNode, newNode) {
-    if (!existingNode || !newNode) return;
+  // 原地定向局部快速修補器 (Fast In-Place DOM Patcher)
+  // 僅針對每秒變化的倒數文字、月台狀態與列車信標做精確局部賦值，完全不銷毀或重建 DOM 樹，徹底杜絕閃爍！
+  fastUpdateElements(mainSlot, isCollapsed, bannan, circular, thsr, tymetro, plans) {
+    if (!mainSlot) return false;
 
-    // 1. 若節點類型不同或標籤名稱不同，直接替換
-    if (existingNode.nodeType !== newNode.nodeType || existingNode.nodeName !== newNode.nodeName) {
-      if (existingNode.parentNode) {
-        existingNode.parentNode.replaceChild(newNode.cloneNode(true), existingNode);
-      }
-      return;
-    }
+    if (isCollapsed) {
+      const thsrStatus = mainSlot.querySelector('[data-c-thsr-status]');
+      const tymetroStatus = mainSlot.querySelector('[data-c-tymetro-status]');
+      if (!thsrStatus || !tymetroStatus) return false;
 
-    // 2. 文字節點 (TEXT_NODE): 僅當文字改變時更新 nodeValue
-    if (existingNode.nodeType === 3) {
-      if (existingNode.nodeValue !== newNode.nodeValue) {
-        existingNode.nodeValue = newNode.nodeValue;
-      }
-      return;
-    }
+      const thsrChipClass = thsr.isOutOfService ? 'chip-muted' : (thsr.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
+      thsrStatus.className = `pill-status-chip ${thsrChipClass}`;
+      thsrStatus.textContent = thsr.platformStatus;
 
-    // 3. 元素節點 (ELEMENT_NODE): 原地同步屬性與樣式
-    if (existingNode.nodeType === 1) {
-      const existingAttrs = existingNode.attributes;
-      const newAttrs = newNode.attributes;
-
-      // 同步或新增屬性 (如 style="left: xx%", class 等)
-      for (let i = 0; i < newAttrs.length; i++) {
-        const attr = newAttrs[i];
-        if (existingNode.getAttribute(attr.name) !== attr.value) {
-          existingNode.setAttribute(attr.name, attr.value);
-        }
+      const thsrFeed = mainSlot.querySelector('[data-c-thsr-feed]');
+      if (thsrFeed) {
+        thsrFeed.innerHTML = `<span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}`;
       }
 
-      // 移除多餘屬性
-      for (let i = existingAttrs.length - 1; i >= 0; i--) {
-        const attr = existingAttrs[i];
-        if (!newNode.hasAttribute(attr.name)) {
-          existingNode.removeAttribute(attr.name);
-        }
+      const tymetroChipClass = tymetro.isOutOfService ? 'chip-muted' : (tymetro.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
+      tymetroStatus.className = `pill-status-chip ${tymetroChipClass}`;
+      tymetroStatus.textContent = tymetro.platformStatus;
+
+      const tymetroFeed = mainSlot.querySelector('[data-c-tymetro-feed]');
+      if (tymetroFeed) {
+        tymetroFeed.innerHTML = `<span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}`;
       }
 
-      // 4. 遞迴比對子節點
-      const oldChildren = Array.from(existingNode.childNodes);
-      const newChildren = Array.from(newNode.childNodes);
-      const maxLen = Math.max(oldChildren.length, newChildren.length);
+      return true;
+    } else {
+      // 展開模式定向局部修補
+      const thsrPids = mainSlot.querySelector('[data-f-thsr-pids]');
+      const tymetroPids = mainSlot.querySelector('[data-f-tymetro-pids]');
+      if (!thsrPids || !tymetroPids) return false;
 
-      for (let i = 0; i < maxLen; i++) {
-        const oldChild = oldChildren[i];
-        const newChild = newChildren[i];
+      // 1. 高鐵 Header 與軌道
+      thsrPids.innerHTML = `<i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ‧ ${thsr.platformStatus} (${thsr.depTime}發)`;
 
-        if (!oldChild && newChild) {
-          existingNode.appendChild(newChild.cloneNode(true));
-        } else if (oldChild && !newChild) {
-          existingNode.removeChild(oldChild);
-        } else if (oldChild && newChild) {
-          this.morphDom(oldChild, newChild);
-        }
+      const thsrTotal = mainSlot.querySelector('[data-f-thsr-total]');
+      if (thsrTotal) {
+        const firstThsrPlan = plans.find(p => p.typeKey === 'thsr');
+        thsrTotal.innerHTML = `<i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : (plans[0] ? plans[0].totalDuration : '41分鐘')}</strong>`;
       }
-    }
-  }
 
-  // 容器無損增量更新補丁
-  patchContainer(container, newHtml) {
-    if (!container) return;
-    if (!container.firstElementChild) {
-      container.innerHTML = newHtml;
-      return;
-    }
-
-    const temp = document.createElement('div');
-    temp.innerHTML = newHtml;
-
-    const oldChildren = Array.from(container.children);
-    const newChildren = Array.from(temp.children);
-    const maxLen = Math.max(oldChildren.length, newChildren.length);
-
-    for (let i = 0; i < maxLen; i++) {
-      const oldChild = oldChildren[i];
-      const newChild = newChildren[i];
-
-      if (!oldChild && newChild) {
-        container.appendChild(newChild.cloneNode(true));
-      } else if (oldChild && !newChild) {
-        container.removeChild(oldChild);
-      } else if (oldChild && newChild) {
-        this.morphDom(oldChild, newChild);
+      const thsrStatus = mainSlot.querySelector('[data-f-thsr-status]');
+      if (thsrStatus) {
+        thsrStatus.innerHTML = `<i class="fa-solid fa-clock"></i> ${thsr.platformStatus}`;
       }
+
+      const thsrGlow = mainSlot.querySelector('[data-f-thsr-glow]');
+      if (thsrGlow) {
+        thsrGlow.style.width = `${thsr.progressPercent}%`;
+      }
+
+      const thsrBeacon = mainSlot.querySelector('[data-f-thsr-beacon]');
+      if (thsrBeacon) {
+        thsrBeacon.style.left = `${thsr.progressPercent}%`;
+        thsrBeacon.title = `高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})`;
+      }
+
+      // 2. 板南線軌道
+      const bannanStatus = mainSlot.querySelector('[data-f-bannan-status]');
+      if (bannanStatus) {
+        bannanStatus.innerHTML = `<i class="fa-regular fa-clock"></i> ${bannan.platformStatus}`;
+      }
+
+      const bannanGlow = mainSlot.querySelector('[data-f-bannan-glow]');
+      if (bannanGlow) {
+        bannanGlow.style.width = `${bannan.progressPercent}%`;
+      }
+
+      const bannanBeacon = mainSlot.querySelector('[data-f-bannan-beacon]');
+      if (bannanBeacon) {
+        bannanBeacon.style.left = `${bannan.progressPercent}%`;
+        bannanBeacon.title = `${bannan.lineName} (${bannan.trainNo} ${bannan.runStatusText})`;
+      }
+
+      // 3. 機捷 Header 與軌道
+      tymetroPids.innerHTML = `<i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)`;
+
+      const tymetroTotal = mainSlot.querySelector('[data-f-tymetro-total]');
+      if (tymetroTotal) {
+        const firstTymetroPlan = plans.find(p => p.typeKey === 'tymetro');
+        tymetroTotal.innerHTML = `<i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : (plans[0] ? plans[0].totalDuration : '67分鐘')}</strong>`;
+      }
+
+      const tymetroStatus = mainSlot.querySelector('[data-f-tymetro-status]');
+      if (tymetroStatus) {
+        tymetroStatus.innerHTML = `<i class="fa-solid fa-clock"></i> ${tymetro.platformStatus}`;
+      }
+
+      const tymetroGlow = mainSlot.querySelector('[data-f-tymetro-glow]');
+      if (tymetroGlow) {
+        tymetroGlow.style.width = `${tymetro.progressPercent}%`;
+      }
+
+      // 4. 環狀線軌道
+      const circularStatus = mainSlot.querySelector('[data-f-circular-status]');
+      if (circularStatus) {
+        circularStatus.innerHTML = `<i class="fa-regular fa-clock"></i> ${circular.platformStatus}`;
+      }
+
+      const circularGlow = mainSlot.querySelector('[data-f-circular-glow]');
+      if (circularGlow) {
+        circularGlow.style.width = `${circular.progressPercent}%`;
+      }
+
+      const circularBeacon = mainSlot.querySelector('[data-f-circular-beacon]');
+      if (circularBeacon) {
+        circularBeacon.style.left = `${circular.progressPercent}%`;
+        circularBeacon.title = `${circular.lineName} (${circular.trainNo} ${circular.runStatusText})`;
+      }
+
+      return true;
     }
   }
 
@@ -10275,17 +10303,55 @@ class TwinCityTransitMonitor {
       `;
       corridorInner = container.querySelector('.transit-corridor-inner');
       this.lastScheduleKey = null;
+      this.lastStructureSignature = null;
     }
 
     const mainSlot = corridorInner.querySelector('.transit-main-content-slot');
     const drawerSlot = corridorInner.querySelector('.transit-schedule-drawer-slot');
 
-    // 1. 軌道或收合條主區域 (智慧 Morphing 原地無損修補，徹底杜絕每秒全量 innerHTML 重設所引發的瘋狂閃爍)
-    if (mainSlot) {
+    // 計算結構指紋（檢查方向、收合、車次代號、擁擠度數據、停車場數據、警報狀態是否有變）
+    const activeAlert = this.alerts.find(a => a.active !== false);
+    const structureSignature = [
+      modeClass,
+      this.direction,
+      activeAlert ? activeAlert.id : 'no_alert',
+      thsr.trainNo,
+      thsr.depTime,
+      thsr.isOutOfService,
+      tymetro.trainNo,
+      tymetro.depTime,
+      tymetro.isExpress,
+      tymetro.isOutOfService,
+      bannan.carWeight && Array.isArray(bannan.carWeight.cars) ? bannan.carWeight.cars.map(c => c.status).join(',') : 'no_weight',
+      Array.isArray(thsr.parkingLots) && thsr.parkingLots.length > 0 ? thsr.parkingLots.map(l => l.available).join('-') : 'no_parking'
+    ].join('::');
+
+    const nowMs = now.getTime();
+    const needsFullRender = (
+      !mainSlot.firstElementChild ||
+      this.lastStructureSignature !== structureSignature ||
+      (!this.lastFullRenderTime || (nowMs - this.lastFullRenderTime > 25000))
+    );
+
+    if (needsFullRender) {
       const newHtml = this.isCollapsed 
         ? this.renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular)
         : this.renderFullCorridorHtml(directionLabel, isToQingpu, bannan, circular, thsr, tymetro, displayStations, plans);
-      this.patchContainer(mainSlot, newHtml);
+      mainSlot.innerHTML = newHtml;
+      this.lastStructureSignature = structureSignature;
+      this.lastFullRenderTime = nowMs;
+    } else {
+      // 每秒快速原地定向更新文字與進度條，0 毫秒負擔，絕不重組 DOM，保證零閃爍、零殘缺
+      const success = this.fastUpdateElements(mainSlot, this.isCollapsed, bannan, circular, thsr, tymetro, plans);
+      if (!success) {
+        // 自我修復防護機制
+        const newHtml = this.isCollapsed 
+          ? this.renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular)
+          : this.renderFullCorridorHtml(directionLabel, isToQingpu, bannan, circular, thsr, tymetro, displayStations, plans);
+        mainSlot.innerHTML = newHtml;
+        this.lastStructureSignature = structureSignature;
+        this.lastFullRenderTime = nowMs;
+      }
     }
 
     // 2. 出門搭車時間表抽屜 (智慧分鐘級快取：同分鐘內 DOM 完全靜止不重繪，跨分鐘即時推進，徹底杜絕每秒閃爍！)
@@ -10348,8 +10414,8 @@ class TwinCityTransitMonitor {
         <span class="pill-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
         <span class="pill-train-code">${thsr.trainNo}次</span>
         <span class="pill-dep-time">${thsr.depTime}</span>
-        <span class="pill-status-chip ${thsrChipClass}">${thsr.platformStatus}</span>
-        <span class="pill-transit-feed" title="板南線月台狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
+        <span class="pill-status-chip ${thsrChipClass}" data-c-thsr-status>${thsr.platformStatus}</span>
+        <span class="pill-transit-feed" data-c-thsr-feed title="板南線月台狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
       </div>
     `;
 
@@ -10359,8 +10425,8 @@ class TwinCityTransitMonitor {
         <span class="pill-badge"><i class="fa-solid fa-route"></i> 機捷</span>
         <span class="pill-train-type ${tymetro.isExpress ? 'express' : ''}">${tymetro.rawType}</span>
         <span class="pill-dep-time">${tymetro.depTime}</span>
-        <span class="pill-status-chip ${tymetroChipClass}">${tymetro.platformStatus}</span>
-        <span class="pill-transit-feed" title="環狀線月台狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
+        <span class="pill-status-chip ${tymetroChipClass}" data-c-tymetro-status>${tymetro.platformStatus}</span>
+        <span class="pill-transit-feed" data-c-tymetro-feed title="環狀線月台狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
       </div>
     `;
 
@@ -10422,12 +10488,12 @@ class TwinCityTransitMonitor {
             <span class="leg-title">板南線</span>
             ${bannan.sourceBadgeHtml ? bannan.sourceBadgeHtml : '<span class="pids-train-pill">約 2~4分一班</span>'}
           </div>
-          <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> ${bannan.platformStatus}</span>
+          <span class="pids-mini-pill" data-f-bannan-status><i class="fa-regular fa-clock"></i> ${bannan.platformStatus}</span>
           <span class="leg-info">車程 2.5分</span>
         </div>
         <div class="track-rail-line bannan-line">
-          <div class="track-progress-glow bannan-glow" style="width: ${bannan.progressPercent}%;"></div>
-          <div class="track-train-beacon bannan-beacon ${bannan.isRunning ? 'is-moving' : 'is-docked'} ${bannan.progressPercent <= 12 ? 'beacon-near-start' : (bannan.progressPercent >= 88 ? 'beacon-near-end' : '')}" style="left: ${bannan.progressPercent}%;" title="${bannan.lineName} (${bannan.trainNo} ${bannan.runStatusText})">
+          <div class="track-progress-glow bannan-glow" data-f-bannan-glow style="width: ${bannan.progressPercent}%;"></div>
+          <div class="track-train-beacon bannan-beacon ${bannan.isRunning ? 'is-moving' : 'is-docked'} ${bannan.progressPercent <= 12 ? 'beacon-near-start' : (bannan.progressPercent >= 88 ? 'beacon-near-end' : '')}" data-f-bannan-beacon style="left: ${bannan.progressPercent}%;" title="${bannan.lineName} (${bannan.trainNo} ${bannan.runStatusText})">
             <div class="train-icon-bubble bubble-bannan">
               <i class="fa-solid fa-train-subway"></i>
             </div>
@@ -10469,7 +10535,7 @@ class TwinCityTransitMonitor {
             <span class="leg-title">高鐵</span>
             <span class="pids-train-pill thsr-train-pill"><i class="fa-solid fa-circle-check"></i> ${thsr.trainNo}次 (停靠桃園)</span>
           </div>
-          <span class="pids-mini-pill thsr-pill-pids"><i class="fa-solid fa-clock"></i> ${thsr.platformStatus}</span>
+          <span class="pids-mini-pill thsr-pill-pids" data-f-thsr-status><i class="fa-solid fa-clock"></i> ${thsr.platformStatus}</span>
           ${thsrAlert ? 
             `<span class="pids-alert-tag pulse-warn" title="${thsrAlert.title}: ${thsrAlert.desc}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${thsrAlert.title})</span>` : ''}
           ${isMultiTrains ? 
@@ -10479,7 +10545,7 @@ class TwinCityTransitMonitor {
           <span class="leg-info">車程 12分</span>
         </div>
         <div class="track-rail-line thsr-line">
-          <div class="track-progress-glow thsr-glow" style="width: ${thsr.progressPercent}%;"></div>
+          <div class="track-progress-glow thsr-glow" data-f-thsr-glow style="width: ${thsr.progressPercent}%;"></div>
           ${hasActiveTrains ? 
             thsr.activeTrains.map(tr => `
               <div class="track-train-beacon thsr-beacon is-moving ${tr.isExpress ? 'beacon-thsr-express' : 'beacon-thsr-regular'} ${tr.progressPercent <= 12 ? 'beacon-near-start' : (tr.progressPercent >= 88 ? 'beacon-near-end' : '')}" 
@@ -10493,7 +10559,7 @@ class TwinCityTransitMonitor {
                 </div>
               </div>
             `).join('') :
-            `<div class="track-train-beacon thsr-beacon ${thsr.isRunning ? 'is-moving' : 'is-docked'} ${thsr.progressPercent <= 12 ? 'beacon-near-start' : (thsr.progressPercent >= 88 ? 'beacon-near-end' : '')}" style="left: ${thsr.progressPercent}%;" title="高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})">
+            `<div class="track-train-beacon thsr-beacon ${thsr.isRunning ? 'is-moving' : 'is-docked'} ${thsr.progressPercent <= 12 ? 'beacon-near-start' : (thsr.progressPercent >= 88 ? 'beacon-near-end' : '')}" data-f-thsr-beacon style="left: ${thsr.progressPercent}%;" title="高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})">
               <div class="train-icon-bubble bubble-thsr">
                 <i class="fa-solid fa-bolt-lightning"></i>
               </div>
@@ -10534,12 +10600,12 @@ class TwinCityTransitMonitor {
             <span class="leg-title">環狀線</span>
             ${circular.sourceBadgeHtml ? circular.sourceBadgeHtml : '<span class="pids-train-pill circular-train-pill">約 7~10分一班</span>'}
           </div>
-          <span class="pids-mini-pill"><i class="fa-regular fa-clock"></i> ${circular.platformStatus}</span>
+          <span class="pids-mini-pill" data-f-circular-status><i class="fa-regular fa-clock"></i> ${circular.platformStatus}</span>
           <span class="leg-info">車程 7分</span>
         </div>
         <div class="track-rail-line circular-line">
-          <div class="track-progress-glow circular-glow" style="width: ${circular.progressPercent}%;"></div>
-          <div class="track-train-beacon circular-beacon ${circular.isRunning ? 'is-moving' : 'is-docked'} ${circular.progressPercent <= 12 ? 'beacon-near-start' : (circular.progressPercent >= 88 ? 'beacon-near-end' : '')}" style="left: ${circular.progressPercent}%;" title="${circular.lineName} (${circular.trainNo} ${circular.runStatusText})">
+          <div class="track-progress-glow circular-glow" data-f-circular-glow style="width: ${circular.progressPercent}%;"></div>
+          <div class="track-train-beacon circular-beacon ${circular.isRunning ? 'is-moving' : 'is-docked'} ${circular.progressPercent <= 12 ? 'beacon-near-start' : (circular.progressPercent >= 88 ? 'beacon-near-end' : '')}" data-f-circular-beacon style="left: ${circular.progressPercent}%;" title="${circular.lineName} (${circular.trainNo} ${circular.runStatusText})">
             <div class="train-icon-bubble bubble-circular">
               <i class="fa-solid fa-train-subway"></i>
             </div>
@@ -10568,7 +10634,7 @@ class TwinCityTransitMonitor {
             </span>
             <span class="pids-train-no-tag">下班 ${tymetro.depTime} (${tymetro.type})</span>
           </div>
-          <span class="pids-mini-pill ${tymetro.isExpress ? 'tymetro-pill-pids' : 'tymetro-pill-commuter'}">
+          <span class="pids-mini-pill ${tymetro.isExpress ? 'tymetro-pill-pids' : 'tymetro-pill-commuter'}" data-f-tymetro-status>
             <i class="fa-solid fa-clock"></i> ${tymetro.platformStatus}
           </span>
           ${tymetroAlert ? 
@@ -10579,7 +10645,7 @@ class TwinCityTransitMonitor {
 
         <!-- 軌道線：包含所有在線行駛列車光標 (多列車並存) -->
         <div class="track-rail-line tymetro-line ${tymetro.isExpress ? 'line-express' : 'line-commuter'}">
-          <div class="track-progress-glow ${tymetro.isExpress ? 'tymetro-glow' : 'tymetro-commuter-glow'}" style="width: ${tymetro.progressPercent}%;"></div>
+          <div class="track-progress-glow ${tymetro.isExpress ? 'tymetro-glow' : 'tymetro-commuter-glow'}" data-f-tymetro-glow style="width: ${tymetro.progressPercent}%;"></div>
           ${tymetro.activeTrains.map(tr => `
             <div class="track-train-beacon tymetro-beacon is-moving ${tr.isExpress ? 'beacon-express' : 'beacon-commuter'} ${tr.progressPercent <= 12 ? 'beacon-near-start' : (tr.progressPercent >= 88 ? 'beacon-near-end' : '')}" 
                  style="left: ${tr.progressPercent}%;" 
@@ -10769,10 +10835,10 @@ class TwinCityTransitMonitor {
               <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 高鐵' : '高鐵 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
-              <span class="pids-countdown-badge thsr-pids">
+              <span class="pids-countdown-badge thsr-pids" data-f-thsr-pids>
                 <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ‧ ${thsr.platformStatus} (${thsr.depTime}發)
               </span>
-              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time" data-f-thsr-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
           </div>
 
@@ -10793,10 +10859,10 @@ class TwinCityTransitMonitor {
               <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 機捷' : '機捷 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">
-              <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}">
+              <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}" data-f-tymetro-pids>
                 <i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
               </span>
-              <span class="track-total-time"><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time" data-f-tymetro-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
           </div>
 
