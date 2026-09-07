@@ -128,6 +128,12 @@ class MainActivity : ComponentActivity() {
                         if ($isTvDevice) {
                             // 電視版：調大字體與電視牆卡片比重，最佳化 3 公尺客廳視距
                             document.documentElement.style.setProperty('--tv-zoom', '1.15');
+                        } else {
+                            // 手機版：優先展開交通即時走廊，讓通勤者掌握出門搭車與騎車班況
+                            if (window.transitMonitor && window.transitMonitor.isCollapsed) {
+                                window.transitMonitor.isCollapsed = false;
+                                window.transitMonitor.render();
+                            }
                         }
                     })();
                 """.trimIndent()

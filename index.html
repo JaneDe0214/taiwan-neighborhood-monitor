@@ -2440,6 +2440,234 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
+   現在出門搭車 ‧ 騎車智慧指南卡片 (Ready-to-Go Hub)
+   ========================================================================== */
+.ready-to-go-hub-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(20, 30, 55, 0.85));
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 5px;
+  box-sizing: border-box;
+}
+
+.hub-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hub-title-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #00f0ff;
+  letter-spacing: 0.5px;
+}
+
+.hub-dest-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hub-dest-indicator .dest-highlight {
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.hub-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .hub-options-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.hub-plan-item {
+  background: rgba(10, 16, 28, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hub-plan-item:hover {
+  background: rgba(15, 25, 45, 0.85);
+  transform: translateY(-1px);
+}
+
+.hub-plan-item.plan-thsr-fastest {
+  border-color: rgba(255, 119, 0, 0.35);
+}
+
+.hub-plan-item.plan-thsr-fastest:hover {
+  border-color: rgba(255, 119, 0, 0.65);
+  box-shadow: 0 2px 10px rgba(255, 119, 0, 0.2);
+}
+
+.hub-plan-item.plan-tymetro-alt {
+  border-color: rgba(168, 85, 247, 0.35);
+}
+
+.hub-plan-item.plan-tymetro-alt:hover {
+  border-color: rgba(168, 85, 247, 0.65);
+  box-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
+}
+
+.plan-item-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.plan-item-badge .badge-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.plan-thsr-fastest .badge-label {
+  background: rgba(255, 119, 0, 0.2);
+  color: #ff9900;
+  border: 1px solid rgba(255, 119, 0, 0.45);
+}
+
+.plan-tymetro-alt .badge-label {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+}
+
+.plan-item-badge .badge-save-time,
+.plan-item-badge .badge-total-time {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.plan-train-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.plan-train-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.plan-dep-countdown {
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-family: monospace;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.plan-thsr-fastest .plan-dep-countdown {
+  background: rgba(255, 119, 0, 0.15);
+  color: #ff9900;
+  border: 1px solid rgba(255, 119, 0, 0.3);
+}
+
+.plan-tymetro-alt .plan-dep-countdown {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.plan-timeline-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  color: #94a3b8;
+}
+
+.plan-timeline-hint .dest-time strong {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+/* YouBike 接駁車況速報橫條 */
+.hub-youbike-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.64rem;
+}
+
+.youbike-hub-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #f59e0b;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.youbike-hub-metrics {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #cbd5e1;
+}
+
+.youbike-metric-item .bike-num {
+  color: #10b981;
+  font-weight: 800;
+}
+
+.youbike-metric-item .park-num {
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.metric-divider {
+  color: #475569;
+}
+
+/* ==========================================================================
    全寬最長路徑堆疊佈局 (Full Width Stacked)
    ========================================================================== */
 .transit-tracks-container.full-length-corridor {
@@ -8731,7 +8959,13 @@ class TwinCityTransitMonitor {
     this.direction = 'to_qingpu'; // 'to_qingpu' (新埔->青埔) | 'to_xinpu' (青埔->新埔)
     this.timerId = null;
     this.isScheduleExpanded = false; // 出門時刻表面板是否展開
-    this.isCollapsed = true;         // 整個走廊是否收合成極矮迷你條 (預設開啟網頁時收合)
+    // 手機版或原生 APP 模式預設展開交通走廊，出門即時掌握搭車/騎車班況；TV 或桌機大螢幕預設收合以不遮蔽主監控影像
+    const isMobileViewport = typeof window !== 'undefined' && (
+      window.innerWidth <= 900 || 
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '') ||
+      (typeof document !== 'undefined' && document.body && document.body.classList.contains('native-mobile-mode'))
+    );
+    this.isCollapsed = !isMobileViewport; // 手機/APP 預設展開，桌面/TV 預設收合
     this.lastScheduleKey = null;     // 快取出門時間表關鍵字，避免每秒銷毀重建閃爍
 
 // 台灣高鐵官方最新真實時刻表基準 (板橋南下往桃園，保證停靠桃園，共 55 班)
@@ -10480,6 +10714,39 @@ class TwinCityTransitMonitor {
         circularBeacon.title = `${circular.lineName} (${circular.trainNo} ${circular.runStatusText})`;
       }
 
+      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新
+      const hubThsrCountdown = mainSlot.querySelector('[data-f-hub-thsr-countdown]');
+      if (hubThsrCountdown) {
+        hubThsrCountdown.textContent = thsr.platformStatus;
+      }
+      const hubTymetroCountdown = mainSlot.querySelector('[data-f-hub-tymetro-countdown]');
+      if (hubTymetroCountdown) {
+        hubTymetroCountdown.textContent = tymetro.platformStatus;
+      }
+
+      // 即時 YouBike 接駁車況原地更新
+      if (typeof window !== 'undefined' && window.weatherMonitor && typeof window.weatherMonitor.getDualCoreStations === 'function') {
+        const stations = window.weatherMonitor.getDualCoreStations();
+        if (stations && stations.length > 0) {
+          const isToQingpu = this.direction === 'to_qingpu';
+          const originStation = isToQingpu 
+            ? (stations.find(s => s.name.includes('新埔站') || s.city === 'bp') || stations[0])
+            : (stations.find(s => s.name.includes('青昇') || s.name.includes('IKEA') || s.city === 'qp') || stations[0]);
+          const destStation = isToQingpu
+            ? (stations.find(s => s.name.includes('IKEA') || s.name.includes('青昇') || s.city === 'qp') || stations[stations.length - 1])
+            : (stations.find(s => s.name.includes('新埔站') || s.city === 'bp') || stations[stations.length - 1]);
+
+          const hubBikeOrigin = mainSlot.querySelector('[data-f-hub-bike-origin]');
+          if (hubBikeOrigin && originStation && typeof originStation.currentBikes === 'number') {
+            hubBikeOrigin.innerHTML = `${originStation.name} 剩 <strong class="bike-num">${originStation.currentBikes}</strong> 台車可借${originStation.currentBikes >= 5 ? ' (車輛充足)' : ' (車輛吃緊)'}`;
+          }
+          const hubBikeDest = mainSlot.querySelector('[data-f-hub-bike-dest]');
+          if (hubBikeDest && destStation && typeof destStation.currentSpaces === 'number') {
+            hubBikeDest.innerHTML = `${destStation.name} 剩 <strong class="park-num">${destStation.currentSpaces}</strong> 空位可還`;
+          }
+        }
+      }
+
       return true;
     }
   }
@@ -10851,6 +11118,8 @@ class TwinCityTransitMonitor {
   renderTymetroSegmentHtml(tymetro, displayStations, isToQingpu) {
     const tymetroAlert = this.getLineAlert('tymetro');
 
+    const tymetroActiveTrains = Array.isArray(tymetro.activeTrains) ? tymetro.activeTrains : [];
+
     return `
       <div class="rail-segment-box segment-tymetro segment-major-stretch ${tymetro.isExpress ? 'box-tymetro-express' : 'box-tymetro-commuter'} ${tymetroAlert ? 'rail-alert-border' : ''}">
         <div class="segment-legend">
@@ -10867,14 +11136,14 @@ class TwinCityTransitMonitor {
           </span>
           ${tymetroAlert ? 
             `<span class="pids-alert-tag pulse-warn" title="${tymetroAlert.title}: ${tymetroAlert.desc}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${tymetroAlert.title})</span>` : ''}
-          ${tymetro.activeTrains.length > 0 ? `<span class="pids-ontrack-pill ${tymetro.activeTrains[0].isExpress ? 'tymetro-ontrack-express' : 'tymetro-ontrack-commuter'}" title="全線列車追蹤"><i class="fa-solid fa-plane"></i> ${tymetro.activeTrains.length} 班行駛中</span>` : ''}
+          ${tymetroActiveTrains.length > 0 ? `<span class="pids-ontrack-pill ${tymetroActiveTrains[0].isExpress ? 'tymetro-ontrack-express' : 'tymetro-ontrack-commuter'}" title="全線列車追蹤"><i class="fa-solid fa-plane"></i> ${tymetroActiveTrains.length} 班行駛中</span>` : ''}
           <span class="leg-info">${tymetro.durationText}</span>
         </div>
 
         <!-- 軌道線：包含所有在線行駛列車光標 (多列車並存) -->
         <div class="track-rail-line tymetro-line ${tymetro.isExpress ? 'line-express' : 'line-commuter'}">
           <div class="track-progress-glow ${tymetro.isExpress ? 'tymetro-glow' : 'tymetro-commuter-glow'}" data-f-tymetro-glow style="width: ${tymetro.progressPercent}%;"></div>
-          ${tymetro.activeTrains.map(tr => `
+          ${tymetroActiveTrains.map(tr => `
             <div class="track-train-beacon tymetro-beacon is-moving ${tr.isExpress ? 'beacon-express' : 'beacon-commuter'} ${tr.progressPercent <= 12 ? 'beacon-near-start' : (tr.progressPercent >= 88 ? 'beacon-near-end' : '')}" 
                  style="left: ${tr.progressPercent}%;" 
                  title="${tr.type} ${tr.trainNo}次 (${tr.statusText})">
@@ -10918,6 +11187,140 @@ class TwinCityTransitMonitor {
         <div class="segment-stations-row tymetro-endpoints-row">
           <span class="station-label">${isToQingpu ? 'A3 新北產園 (' + tymetro.depTime + '發)' : 'A18 桃園高鐵 (' + tymetro.depTime + '發)'}</span>
           <span class="station-label">${isToQingpu ? 'A18 桃園高鐵 (' + tymetro.arrTime + '到)' : 'A3 新北產園 (' + tymetro.arrTime + '到)'}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // 平滑滾動至指定運具之全寬軌道卡片並高亮
+  scrollToCard(type) {
+    const selector = type === 'thsr' ? '.track-thsr' : '.track-tymetro';
+    const el = document.querySelector(selector);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
+      el.style.boxShadow = '0 0 20px rgba(0, 240, 255, 0.7)';
+      el.style.transform = 'scale(1.01)';
+      setTimeout(() => {
+        el.style.boxShadow = '';
+        el.style.transform = '';
+      }, 1500);
+    }
+  }
+
+  // 渲染現在出門搭車 ‧ 騎車指南智慧卡片 HTML (Ready-to-Go Hub)
+  renderReadyToGoHubHtml(isToQingpu, firstThsrPlan, firstTymetroPlan, thsr, tymetro) {
+    const originCity = isToQingpu ? '新埔' : '青埔';
+    const destCity = isToQingpu ? '青埔' : '新埔';
+
+    let stations = [];
+    if (typeof window !== 'undefined' && window.weatherMonitor && typeof window.weatherMonitor.getDualCoreStations === 'function') {
+      stations = window.weatherMonitor.getDualCoreStations();
+    }
+    if (!stations || stations.length === 0) {
+      stations = [
+        { id: 'qp-1', city: 'qp', cityName: '青埔', name: '青峰青昇路口', total: 56, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青溪青雲路口', total: 50, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青昇公園', total: 32, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', total: 43, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'bp-1', city: 'bp', cityName: '新埔', name: '民生路二段226巷8弄', total: 21, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
+        { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(3號出口)', total: 20, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false }
+      ];
+    }
+
+    // 找尋出發端最具指標性之 YouBike 站點
+    const originBikeStation = isToQingpu 
+      ? (stations.find(s => s.name.includes('新埔站') || s.city === 'bp') || stations[0])
+      : (stations.find(s => s.name.includes('青昇') || s.name.includes('IKEA') || s.city === 'qp') || stations[0]);
+
+    // 找尋目的地最適合還車之 YouBike 站點
+    const destBikeStation = isToQingpu
+      ? (stations.find(s => s.name.includes('IKEA') || s.name.includes('青昇') || s.city === 'qp') || stations[stations.length - 1])
+      : (stations.find(s => s.name.includes('新埔站') || s.city === 'bp') || stations[stations.length - 1]);
+
+    const hasBikeData = originBikeStation && typeof originBikeStation.currentBikes === 'number';
+    const bikeText = hasBikeData 
+      ? `${originBikeStation.name} 剩 <strong class="bike-num">${originBikeStation.currentBikes}</strong> 台車可借${originBikeStation.currentBikes >= 5 ? ' (車輛充足)' : ' (車輛吃緊)'}`
+      : '即時查詢中...';
+
+    const hasParkData = destBikeStation && typeof destBikeStation.currentSpaces === 'number';
+    const parkText = hasParkData
+      ? `${destBikeStation.name} 剩 <strong class="park-num">${destBikeStation.currentSpaces}</strong> 空位可還`
+      : '即時查詢中...';
+
+    return `
+      <div class="ready-to-go-hub-card">
+        <div class="hub-header-row">
+          <div class="hub-title-tag">
+            <i class="fa-solid fa-person-walking-arrow-right"></i>
+            <span>現在出門搭車 ‧ 騎車指南</span>
+          </div>
+          <div class="hub-dest-indicator">
+            <span>${originCity} 出發</span>
+            <i class="fa-solid fa-angles-right"></i>
+            <strong class="dest-highlight">${destCity}</strong>
+          </div>
+        </div>
+
+        <div class="hub-options-grid">
+          <!-- 方案一：高鐵快線 (最速首選) -->
+          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.scrollToCard('thsr')" title="點擊檢視高鐵完整多段軌道">
+            <div class="plan-item-badge">
+              <span class="badge-icon"><i class="fa-solid fa-bolt"></i></span>
+              <span class="badge-label">最速首選</span>
+              <span class="badge-save-time"><i class="fa-solid fa-stopwatch"></i> 約 ${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</span>
+            </div>
+            <div class="plan-train-detail">
+              <span class="plan-train-name">高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}]</span>
+              <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${thsr.platformStatus}</span>
+            </div>
+            <div class="plan-timeline-hint">
+              <span class="timeline-step">出門 ${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</span>
+              <i class="fa-solid fa-arrow-right-long"></i>
+              <span class="timeline-step">發車 ${firstThsrPlan ? firstThsrPlan.boardTrainTime : '--:--'}</span>
+              <i class="fa-solid fa-arrow-right-long"></i>
+              <span class="timeline-step dest-time">抵達 <strong>${firstThsrPlan ? firstThsrPlan.arriveTime : '--:--'}</strong></span>
+            </div>
+          </div>
+
+          <!-- 方案二：機捷直通 (捷運替代) -->
+          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.scrollToCard('tymetro')" title="點擊檢視機捷完整多段軌道">
+            <div class="plan-item-badge">
+              <span class="badge-icon"><i class="fa-solid fa-plane"></i></span>
+              <span class="badge-label">直達替代</span>
+              <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 約 ${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</span>
+            </div>
+            <div class="plan-train-detail">
+              <span class="plan-train-name">機捷 ${tymetro.type}</span>
+              <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${tymetro.platformStatus}</span>
+            </div>
+            <div class="plan-timeline-hint">
+              <span class="timeline-step">出門 ${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</span>
+              <i class="fa-solid fa-arrow-right-long"></i>
+              <span class="timeline-step">發車 ${firstTymetroPlan ? firstTymetroPlan.boardTrainTime : '--:--'}</span>
+              <i class="fa-solid fa-arrow-right-long"></i>
+              <span class="timeline-step dest-time">抵達 <strong>${firstTymetroPlan ? firstTymetroPlan.arriveTime : '--:--'}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 出門 YouBike 微移動即時速報條 -->
+        <div class="hub-youbike-strip">
+          <div class="youbike-hub-label">
+            <i class="fa-solid fa-bicycle"></i>
+            <span>YouBike 接駁車況</span>
+          </div>
+          <div class="youbike-hub-metrics">
+            <div class="youbike-metric-item" title="出發端即時可借車況">
+              <span class="metric-prefix">出發：</span>
+              <span class="metric-val" data-f-hub-bike-origin>${bikeText}</span>
+            </div>
+            <span class="metric-divider">|</span>
+            <div class="youbike-metric-item" title="目的地即時可還車位">
+              <span class="metric-prefix">到達：</span>
+              <span class="metric-val" data-f-hub-bike-dest>${parkText}</span>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -11051,6 +11454,9 @@ class TwinCityTransitMonitor {
       <!-- 兩條全寬最長路徑軌道走廊 (Full Width Stacked ‧ 依通勤方向精確排定軌道順序) -->
       <div class="transit-tracks-container full-length-corridor">
         
+        <!-- 現在出門搭車 ‧ 騎車智慧指南卡片 (Ready-to-Go Hub) -->
+        ${this.renderReadyToGoHubHtml(isToQingpu, firstThsrPlan, firstTymetroPlan, thsr, tymetro)}
+
         <!-- ======================================================= -->
         <!-- 路線一：高鐵路線 (全寬長條 100% 貫穿) -->
         <!-- ======================================================= -->
