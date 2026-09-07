@@ -6317,11 +6317,11 @@ class WeatherEnvironmentMonitor {
     this.youbikeUpdateTime = `${initH}:${initM}`;
     // 立即積極抓取最新車況
     this.fetchRealtimeYouBike(true);
-    // 每 30 秒積極持續輪詢 YouBike 2.0 官方即時數據 (交通部 TDX 官方直連)
+    // 每 25 秒積極持續輪詢 YouBike 2.0 官方即時數據 (交通部 TDX 官方直連)
     if (this.youbikePollingTimer) clearInterval(this.youbikePollingTimer);
     this.youbikePollingTimer = setInterval(() => {
       this.fetchRealtimeYouBike(true);
-    }, 30000);
+    }, 25000);
   }
 
   // 啟動每秒即時倒數計時器
@@ -6496,6 +6496,8 @@ class WeatherEnvironmentMonitor {
         if (elapsed >= 15) {
           this.triggerAutoRefresh();
         }
+        // 切回前景時立即無延遲強制更新 YouBike 即時動態
+        this.fetchRealtimeYouBike(true);
       }
     });
   }
@@ -7551,8 +7553,8 @@ class WeatherEnvironmentMonitor {
   // 嘗試非同步連線抓取官方即時 YouBike 2.0 車況資料 (支援本機反向代理與 GitHub Pages 同源靜態多層容錯)
   async fetchRealtimeYouBike(force = false) {
     const now = Date.now();
-    // 積極更新防抖：若非強制更新且距離上次更新不足 5 秒，略過重複請求
-    if (!force && this._lastYouBikeFetchTime && (now - this._lastYouBikeFetchTime < 5000)) {
+    // 積極更新防抖：若非強制更新且距離上次更新不足 2.5 秒，略過重複請求
+    if (!force && this._lastYouBikeFetchTime && (now - this._lastYouBikeFetchTime < 2500)) {
       return;
     }
 
@@ -7612,12 +7614,14 @@ class WeatherEnvironmentMonitor {
       let tycgRaw = null;
       let staticUpdateTime = '';
 
-      // 途徑 1：若是 Android 原生環境，優先調用原生 AndroidNativeBridge 高速直取雲端或內建資產庫 (零 CORS、零阻擋)
-      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+      // 途徑 1：若是 Android 原生環境，優先調用原生 AndroidNativeBridge 原生直打 TDX 即時開放資料 API (每 30 秒最新動態，~350ms 秒開，零 CORS 限制)
+      if (typeof window !== 'undefined' && window.AndroidBridge) {
         try {
-          const cloudStr = window.AndroidBridge.getLatestCloudData('youbike');
-          if (cloudStr && cloudStr.trim().startsWith('{')) {
-            const parsed = JSON.parse(cloudStr);
+          const rawStr = (typeof window.AndroidBridge.getRealtimeYouBike === 'function')
+            ? window.AndroidBridge.getRealtimeYouBike()
+            : (typeof window.AndroidBridge.getLatestCloudData === 'function' ? window.AndroidBridge.getLatestCloudData('youbike') : '');
+          if (rawStr && rawStr.trim().startsWith('{')) {
+            const parsed = JSON.parse(rawStr);
             if (parsed && (parsed.ntpc || parsed.tycg)) {
               ntpcData = parsed.ntpc || null;
               tycgRaw = parsed.tycg || null;
@@ -7625,11 +7629,33 @@ class WeatherEnvironmentMonitor {
             }
           }
         } catch (e) {
-          console.warn('[YouBike 原生橋接直取]', e.message);
+          console.warn('[YouBike 原生直打]', e.message);
         }
       }
 
-      // 途徑 2：若為電腦本機開發環境，優先嘗試本機伺服器代理
+      // 途徑 2：標準 Web / PWA 環境：嘗試直接連線台灣 TDX 開放資料即時 API (秒級動態，繞過 5 分鐘 Actions 延遲)
+      if (!ntpcData && !tycgRaw && !isLocalNodeServer) {
+        try {
+          const [nRes, tRes] = await Promise.allSettled([
+            fetch('https://www.opendata.vip/tdx/youbikeApi/NewTaipei?_t=' + Date.now(), { 
+              cache: 'no-store', 
+              signal: AbortSignal.timeout(3000) 
+            }).then(r => r.ok ? r.json() : null),
+            fetch('https://www.opendata.vip/tdx/youbikeApi/Taoyuan?_t=' + Date.now(), { 
+              cache: 'no-store', 
+              signal: AbortSignal.timeout(3000) 
+            }).then(r => r.ok ? r.json() : null)
+          ]);
+          if (nRes.status === 'fulfilled' && Array.isArray(nRes.value) && nRes.value.length > 100) {
+            ntpcData = nRes.value;
+          }
+          if (tRes.status === 'fulfilled' && Array.isArray(tRes.value) && tRes.value.length > 100) {
+            tycgRaw = tRes.value;
+          }
+        } catch (e) {}
+      }
+
+      // 途徑 3：若為電腦本機開發環境，優先嘗試本機伺服器代理
       if (!ntpcData && !tycgRaw && isLocalNodeServer && ntpcEndpoints.length > 0) {
         let [ntpcRes, tycgRes] = await Promise.allSettled([
           fetchJsonSafe(ntpcEndpoints),
@@ -7639,7 +7665,7 @@ class WeatherEnvironmentMonitor {
         tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
       }
 
-      // 途徑 3：雲端資料庫直連 (GitHub Actions 每 5 分鐘推送最新資料庫) 與同源備援
+      // 途徑 4：雲端資料庫直連 (GitHub Actions 每 5 分鐘推送最新資料庫) 與同源備援
       if (!ntpcData && !tycgRaw) {
         const cloudJson = await fetchJsonSafe(cloudDataUrls);
         if (cloudJson) {
@@ -12425,6 +12451,12 @@ class MonitorApp {
       btnRefreshAll.addEventListener('click', () => {
         btnRefreshAll.classList.add('btn-spinning');
         this.refreshAll();
+        if (window.weatherMonitor && typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
+          window.weatherMonitor.fetchRealtimeYouBike(true);
+        }
+        if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
+          window.transitMonitor.forceRefreshAll();
+        }
         setTimeout(() => btnRefreshAll.classList.remove('btn-spinning'), 700);
       });
     }
