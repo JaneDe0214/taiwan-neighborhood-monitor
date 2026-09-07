@@ -5634,18 +5634,19 @@ class CameraPlayerEngine {
     }
   }
 
-  // 取得攝影機預設解析度與 FPS 文字 (省略 HLS/FLV/720P/1080P/HD 等名稱，只顯示解析度數字與 FPS)
+  // 取得攝影機預設解析度與 FPS 文字 (省略 HLS/FLV/720P/1080P/HD 等名稱，依真實 cam.fps 顯示解析度數字與 FPS)
   getInitialFormatText(cam) {
     const type = (cam.type || 'flv').toLowerCase();
-    if (type === 'youtube') return '3840×2160 ‧ 60 FPS';
-    if (type === 'iframe') return '1920×1080 ‧ 30 FPS';
-    if (type === 'hls') return '1280×720 ‧ 30 FPS';
-    if (type === 'flv') return '1920×1080 ‧ 30 FPS';
-    if (type === 'mjpeg') return '704×480 ‧ 10 FPS';
-    return '1280×720 ‧ 1 FPS';
+    const fps = cam.fps || (type === 'youtube' ? 60 : (type === 'flv' ? 15 : (type === 'mjpeg' ? 10 : 30)));
+    if (type === 'youtube') return `3840×2160 ‧ ${fps} FPS`;
+    if (type === 'iframe') return `1920×1080 ‧ ${fps} FPS`;
+    if (type === 'hls') return `1280×720 ‧ ${fps} FPS`;
+    if (type === 'flv') return `1920×1080 ‧ ${fps} FPS`;
+    if (type === 'mjpeg') return `704×480 ‧ ${fps} FPS`;
+    return `1280×720 ‧ ${fps} FPS`;
   }
 
-  // 檢測並更新攝影機實際影像解析度與真實 FPS (自解碼器讀取真實寬高與影格率，省略協定與畫質名稱)
+  // 檢測並更新攝影機實際影像解析度與真實 FPS (自解碼器讀取真實寬高與影格率，依據 cam.fps 精準標註)
   detectVideoResolution(cam, videoEl) {
     if (typeof document === 'undefined') return;
     const resEl = document.getElementById(`res-${cam.id}`);
@@ -5654,9 +5655,8 @@ class CameraPlayerEngine {
     const width = videoEl ? videoEl.videoWidth : 0;
     const height = videoEl ? videoEl.videoHeight : 0;
 
-    let fps = 30;
-    if (cam.type === 'mjpeg') fps = 10;
-    else if (cam.type === 'snapshot') fps = 1;
+    // 依據攝影機自身真實規格讀取 FPS (新北交控 FLV 為 15 FPS，桃園 HLS/觀光為 30 FPS)
+    const fps = cam.fps || (cam.type === 'flv' ? 15 : (cam.type === 'mjpeg' ? 10 : (cam.type === 'snapshot' ? 1 : 30)));
 
     let displayText = '';
     if (width > 0 && height > 0) {
