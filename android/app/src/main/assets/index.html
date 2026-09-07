@@ -3614,14 +3614,23 @@ a.coord-tag:hover {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
-  padding-bottom: 4px;
+  padding-bottom: 5px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
   gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+}
+
+.schedule-drawer-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
 }
 
 .schedule-drawer-title {
@@ -3896,6 +3905,245 @@ a.coord-tag:hover {
   font-size: 0.64rem;
   color: var(--text-muted);
   line-height: 1.3;
+}
+
+/* ==========================================================================
+   即時班車時間表雙 TAB 頁籤與車站候車模式專屬樣式
+   ========================================================================== */
+.schedule-tabs-container {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 3px;
+}
+
+.schedule-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.schedule-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.schedule-tab-btn.tab-thsr.active {
+  background: linear-gradient(135deg, rgba(255, 119, 0, 0.28), rgba(255, 119, 0, 0.14));
+  border-color: rgba(255, 119, 0, 0.65);
+  color: #ff9900;
+  box-shadow: 0 0 10px rgba(255, 119, 0, 0.25);
+}
+
+.schedule-tab-btn.tab-tymetro.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(168, 85, 247, 0.14));
+  border-color: rgba(168, 85, 247, 0.65);
+  color: #d8b4fe;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+
+.tab-active-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* 現在出門搭車指南頂部快捷 TAB 鈕 */
+.hub-quick-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.hub-quick-tab-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hub-quick-tab-btn:hover {
+  transform: translateY(-1px);
+}
+
+.hub-quick-tab-btn.hub-btn-thsr:hover {
+  background: rgba(255, 119, 0, 0.22);
+  border-color: rgba(255, 119, 0, 0.55);
+  color: #ff9900;
+}
+
+.hub-quick-tab-btn.hub-btn-tymetro:hover {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: rgba(168, 85, 247, 0.55);
+  color: #c084fc;
+}
+
+/* 車站候車模式班次卡片 */
+.schedule-train-card {
+  flex: 0 0 255px;
+  min-width: 255px;
+  max-width: 280px;
+}
+
+.card-thsr-theme.plan-highlight {
+  border-color: rgba(255, 119, 0, 0.6);
+  background: linear-gradient(135deg, rgba(255, 119, 0, 0.16), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 3px 14px rgba(255, 119, 0, 0.22);
+}
+
+.card-tymetro-theme.plan-highlight {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 3px 14px rgba(168, 85, 247, 0.22);
+}
+
+.plan-wait-chip {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.plan-wait-chip.chip-urgent {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.6);
+}
+
+.plan-wait-chip.chip-soon {
+  background: rgba(245, 158, 11, 0.25);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.plan-wait-chip.chip-normal {
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+}
+
+.schedule-station-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  margin-top: 1px;
+}
+
+.schedule-origin-station, .schedule-dest-station {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-origin-station .st-label, .schedule-dest-station .st-label {
+  font-size: 0.55rem;
+  color: #64748b;
+}
+
+.schedule-origin-station .st-name, .schedule-dest-station .st-name {
+  font-size: 0.76rem;
+  color: #f1f5f9;
+  font-weight: 700;
+}
+
+.schedule-arrow-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  color: #64748b;
+  font-size: 0.65rem;
+}
+
+.st-type-tag {
+  font-size: 0.55rem;
+  padding: 0 4px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.st-type-tag.express {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.st-type-tag.regular {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.station-focus-timeline {
+  margin: 3px 0;
+  padding: 5px 8px;
+}
+
+.step-time-large {
+  font-size: 0.92rem !important;
+  letter-spacing: 0.5px;
+}
+
+.schedule-context-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 2px;
+}
+
+.context-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.64rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.context-pill.pill-home-ready {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.context-pill.pill-station-ready {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.pill-best-tag {
+  margin-left: auto;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #fbbf24;
 }
 
 /* ==========================================================================
@@ -8973,6 +9221,7 @@ class TwinCityTransitMonitor {
     );
     this.isCollapsed = !isMobileViewport; // 手機/APP 預設展開，桌面/TV 預設收合
     this.lastScheduleKey = null;     // 快取出門時間表關鍵字，避免每秒銷毀重建閃爍
+    this.scheduleTab = 'thsr';       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
 
 // 台灣高鐵官方最新真實時刻表基準 (板橋南下往桃園，保證停靠桃園，共 55 班)
     this.thsrSouthTrains = [
@@ -9542,6 +9791,31 @@ class TwinCityTransitMonitor {
     this.lastScheduleKey = null;
     this.render();
     this.triggerViewportResize();
+  }
+
+  // 切換班車時間表 TAB 頁籤 (高鐵 'thsr' 或 機捷 'tymetro')
+  switchScheduleTab(tabKey) {
+    if (tabKey !== 'thsr' && tabKey !== 'tymetro') return;
+    this.scheduleTab = tabKey;
+    this.lastScheduleKey = null; // 清除快取，強制即時重繪抽屜
+    this.render();
+  }
+
+  // 展開班車時間表並直接切換至指定 TAB (直覺連動車站/月台候車查詢)
+  openScheduleTab(tabKey = 'thsr') {
+    if (tabKey === 'thsr' || tabKey === 'tymetro') {
+      this.scheduleTab = tabKey;
+    }
+    this.isScheduleExpanded = true;
+    this.lastScheduleKey = null;
+    this.render();
+    this.triggerViewportResize();
+    if (typeof document !== 'undefined') {
+      const drawer = document.querySelector('.transit-schedule-drawer');
+      if (drawer) {
+        drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
   }
 
   // 切換整個走廊收合/展開 (超矮迷你條 ↔ 全寬詳細軌道)
@@ -10446,6 +10720,88 @@ class TwinCityTransitMonitor {
     };
   }
 
+  // 取得高鐵或機捷當下與未來所有可搭乘班次表 (專門針對在車站或出門的旅客即時呈現)
+  getTimetableList(typeKey, now = new Date()) {
+    const isToQingpu = this.direction === 'to_qingpu';
+    const isThsr = typeKey === 'thsr';
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const currentSec = now.getSeconds();
+    const nowDayMinutes = currentHour * 60 + currentMin + currentSec / 60;
+
+    const bufferMins = isThsr ? (isToQingpu ? 13 : 15) : (isToQingpu ? 22 : 15);
+
+    let rawList = [];
+    if (isThsr) {
+      const list = isToQingpu ? this.thsrSouthMinutes : this.thsrNorthMinutes;
+      rawList = list.filter(t => t.stopsAtTaoyuan !== false && this.isTrainStoppingAtTaoyuan(t.trainNo));
+    } else {
+      rawList = isToQingpu ? this.tymetroSouthMinutes : this.tymetroNorthMinutes;
+    }
+
+    // 篩選當前與未來的班次 (發車時間 >= 當前時間 - 0.5 分鐘，確保剛走或即將發車的班次都能看見)
+    const upcoming = rawList.filter(t => t.depMinutes >= nowDayMinutes - 0.5);
+
+    let foundBestCatch = false;
+
+    return upcoming.map((t, idx) => {
+      const [dH, dM] = t.depTime.split(':').map(Number);
+      const depDate = new Date(now);
+      depDate.setHours(dH, dM, 0, 0);
+
+      const waitSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
+      const waitMin = Math.ceil(waitSec / 60);
+
+      let statusBadge = '';
+      if (waitSec <= 60) {
+        statusBadge = '即將發車';
+      } else if (waitSec <= 180) {
+        statusBadge = '月台候車';
+      } else {
+        statusBadge = `${waitMin}分後發車`;
+      }
+
+      const duration = t.duration || (isThsr ? 12 : (t.isExpress ? 28 : 38));
+      const arrDate = new Date(depDate.getTime() + duration * 60000);
+      const arrTime = `${String(arrDate.getHours()).padStart(2, '0')}:${String(arrDate.getMinutes()).padStart(2, '0')}`;
+
+      const canCatchFromHome = t.depMinutes >= nowDayMinutes + bufferMins;
+      let isBestCatch = false;
+      if (canCatchFromHome && !foundBestCatch) {
+        isBestCatch = true;
+        foundBestCatch = true;
+      }
+
+      let leaveTimeStr = '';
+      if (canCatchFromHome) {
+        const leaveDate = new Date(depDate.getTime() - bufferMins * 60000);
+        leaveTimeStr = `${String(leaveDate.getHours()).padStart(2, '0')}:${String(leaveDate.getMinutes()).padStart(2, '0')}`;
+      }
+
+      const originStation = isToQingpu ? (isThsr ? '板橋站' : '新北產園(A3)') : (isThsr ? '桃園高鐵' : '高鐵桃園(A18)');
+      const destStation = isToQingpu ? (isThsr ? '桃園高鐵' : '高鐵桃園(A18)') : (isThsr ? '板橋站' : '新北產園(A3)');
+      const typeText = isThsr ? (t.isExpress ? '12分特快' : '13分直達') : (t.isExpress ? '28分直達' : '38分普通');
+
+      return {
+        idx: idx + 1,
+        trainNo: t.trainNo || (t.isExpress ? '直達車' : '普通車'),
+        isExpress: t.isExpress,
+        depTime: t.depTime,
+        arrTime,
+        duration,
+        originStation,
+        destStation,
+        typeText,
+        waitSec,
+        waitMin,
+        statusBadge,
+        canCatchFromHome,
+        isBestCatch,
+        leaveTimeStr
+      };
+    });
+  }
+
   // 生成即時出門通勤推薦時程表 (嚴格考量門到門步行與轉乘緩衝，絕不推薦趕不上的班次)
   generateDeparturePlans(now = new Date()) {
     const isToQingpu = this.direction === 'to_qingpu';
@@ -10888,9 +11244,9 @@ class TwinCityTransitMonitor {
           this.lastScheduleKey = null;
         }
       } else {
-        const scheduleKey = `${this.direction}_${this.formatTime(now)}_${plans.map(p => `${p.leaveTime}-${p.boardTrainTime}-${p.arriveTime}`).join('|')}`;
+        const scheduleKey = `${this.direction}_${this.scheduleTab || 'thsr'}_${this.formatTime(now)}_${plans.map(p => `${p.leaveTime}-${p.boardTrainTime}-${p.arriveTime}`).join('|')}`;
         if (this.lastScheduleKey !== scheduleKey || drawerSlot.innerHTML === '') {
-          drawerSlot.innerHTML = this.renderScheduleDrawerHtml(plans, directionLabel);
+          drawerSlot.innerHTML = this.renderScheduleDrawerHtml(plans, directionLabel, now);
           drawerSlot.style.display = 'block';
           this.lastScheduleKey = scheduleKey;
           this.bindTrackWheel();
@@ -11285,6 +11641,14 @@ class TwinCityTransitMonitor {
             <i class="fa-solid fa-person-walking-arrow-right"></i>
             <span>現在出門搭車 ‧ 騎車指南</span>
           </div>
+          <div class="hub-quick-tabs">
+            <button class="hub-quick-tab-btn hub-btn-thsr" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="快速列出當下與未來所有高鐵班次表 (適合車站/月台候車者)">
+              <i class="fa-solid fa-bolt"></i> <span>🚄 高鐵班表</span>
+            </button>
+            <button class="hub-quick-tab-btn hub-btn-tymetro" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="快速列出當下與未來所有機捷班次表 (適合車站/月台候車者)">
+              <i class="fa-solid fa-plane"></i> <span>🚇 機捷班表</span>
+            </button>
+          </div>
           <div class="hub-dest-indicator">
             <span>${originCity} 出發</span>
             <i class="fa-solid fa-angles-right"></i>
@@ -11293,8 +11657,8 @@ class TwinCityTransitMonitor {
         </div>
 
         <div class="hub-options-grid">
-          <!-- 方案一：高鐵快線 (最速首選) -->
-          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.scrollToCard('thsr')" title="點擊檢視高鐵完整多段軌道">
+          <!-- 方案一：高鐵快線 (最速首選，直連高鐵即時班次表) -->
+          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="點擊開啟高鐵班次表 (當下與未來所有班次)">
             <div class="plan-item-badge">
               <span class="badge-icon"><i class="fa-solid fa-bolt"></i></span>
               <span class="badge-label">最速首選</span>
@@ -11313,8 +11677,8 @@ class TwinCityTransitMonitor {
             </div>
           </div>
 
-          <!-- 方案二：機捷直通 (捷運替代) -->
-          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.scrollToCard('tymetro')" title="點擊檢視機捷完整多段軌道">
+          <!-- 方案二：機捷直通 (捷運替代，直連機捷即時班次表) -->
+          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="點擊開啟機捷班次表 (當下與未來所有班次)">
             <div class="plan-item-badge">
               <span class="badge-icon"><i class="fa-solid fa-plane"></i></span>
               <span class="badge-label">直達替代</span>
@@ -11662,26 +12026,49 @@ class TwinCityTransitMonitor {
     `;
   }
 
-  renderScheduleDrawerHtml(plans, directionLabel) {
-    const hasPlans = Array.isArray(plans) && plans.length > 0;
+  renderScheduleDrawerHtml(plans, directionLabel, now = new Date()) {
+    const currentTab = this.scheduleTab || 'thsr';
+    const isThsrTab = currentTab === 'thsr';
+    const isToQingpu = this.direction === 'to_qingpu';
+
+    // 取得當前 TAB 專屬之完整未來時刻表清單 (非常適合當下在車站的人即時查閱)
+    const timetableList = this.getTimetableList(currentTab, now);
+    const hasTrains = Array.isArray(timetableList) && timetableList.length > 0;
+    const routeText = isToQingpu 
+      ? (isThsrTab ? '板橋 ➔ 桃園高鐵' : '新北產園(A3) ➔ 桃園高鐵(A18)')
+      : (isThsrTab ? '桃園高鐵 ➔ 板橋' : '桃園高鐵(A18) ➔ 新北產園(A3)');
+
     return `
       <div class="transit-schedule-drawer is-open" style="display: block;">
         <div class="schedule-drawer-header">
-          <div class="schedule-drawer-title">
-            <i class="fa-solid fa-calendar-days" style="color:#00f0ff;"></i> 
-            <strong>出門搭車時間表</strong> 
-            <span class="schedule-dir-note">(${directionLabel} ‧ ${hasPlans ? `今日剩餘 ${plans.length} 班` : '今日已收班'})</span>
+          <div class="schedule-drawer-title-group">
+            <div class="schedule-drawer-title">
+              <i class="fa-solid fa-calendar-days" style="color:#00f0ff;"></i> 
+              <strong>即時班車時間表</strong> 
+              <span class="schedule-dir-note">(${routeText} ‧ ${hasTrains ? `今日剩餘 ${timetableList.length} 班` : '今日已收班'})</span>
+            </div>
+
+            <!-- 雙 TAB 頁籤切換器 (高鐵 / 機捷，預設顯示高鐵) -->
+            <div class="schedule-tabs-container">
+              <button class="schedule-tab-btn tab-thsr ${isThsrTab ? 'active' : ''}" onclick="window.transitMonitor && window.transitMonitor.switchScheduleTab('thsr')" title="檢視高鐵板橋與桃園當下及未來所有班次">
+                <i class="fa-solid fa-bolt"></i> 🚄 高鐵班次表 ${isThsrTab ? '<span class="tab-active-dot"></span>' : ''}
+              </button>
+              <button class="schedule-tab-btn tab-tymetro ${!isThsrTab ? 'active' : ''}" onclick="window.transitMonitor && window.transitMonitor.switchScheduleTab('tymetro')" title="檢視機場捷運當下及未來所有直達與普通班次">
+                <i class="fa-solid fa-plane"></i> 🚇 機捷班次表 ${!isThsrTab ? '<span class="tab-active-dot"></span>' : ''}
+              </button>
+            </div>
           </div>
+
           <div class="drawer-header-actions">
-            ${hasPlans ? `
-              <button class="drawer-scroll-btn" onclick="window.transitMonitor.scrollPlans(-350)" title="檢視上一班">
+            ${hasTrains ? `
+              <button class="drawer-scroll-btn" onclick="window.transitMonitor && window.transitMonitor.scrollPlans(-350)" title="檢視上一班">
                 <i class="fa-solid fa-chevron-left"></i>
               </button>
-              <button class="drawer-scroll-btn" onclick="window.transitMonitor.scrollPlans(350)" title="檢視下一班">
+              <button class="drawer-scroll-btn" onclick="window.transitMonitor && window.transitMonitor.scrollPlans(350)" title="檢視下一班">
                 <i class="fa-solid fa-chevron-right"></i>
               </button>
             ` : ''}
-            <button class="drawer-close-btn" onclick="window.transitMonitor.toggleSchedule()" title="收合時間表">
+            <button class="drawer-close-btn" onclick="window.transitMonitor && window.transitMonitor.toggleSchedule()" title="收合時間表">
               <i class="fa-solid fa-xmark"></i>
               <span>收合</span>
             </button>
@@ -11691,43 +12078,72 @@ class TwinCityTransitMonitor {
         <!-- 橫向滑動卡片軌道 (支援滑鼠按住拖曳、滑鼠滾輪與按鈕導航) -->
         <div class="departure-plans-scroll-wrapper">
           <div class="departure-plans-track" title="按住滑鼠左鍵可左右拖曳，亦可滾動滑鼠滾輪橫向翻看所有班次">
-            ${hasPlans ? plans.map((p, idx) => {
-              const isThsrPlan = p.name && p.name.includes('高鐵');
-              const isTymetroPlan = p.name && (p.name.includes('機捷') || p.name.includes('捷運'));
-              const planAlert = isThsrPlan ? this.getLineAlert('thsr') : (isTymetroPlan ? this.getLineAlert('tymetro') : null);
+            ${hasTrains ? timetableList.map((item, idx) => {
+              const isUrgent = item.waitSec <= 90;
+              const isSoon = item.waitSec <= 300 && !isUrgent;
+              const alertInfo = isThsrTab ? this.getLineAlert('thsr') : this.getLineAlert('tymetro');
 
               return `
-              <div class="plan-card ${p.highlight ? 'plan-highlight' : ''} ${planAlert ? 'plan-card-alert' : ''}">
+              <div class="plan-card schedule-train-card ${item.isBestCatch ? 'plan-highlight' : ''} ${isThsrTab ? 'card-thsr-theme' : 'card-tymetro-theme'} ${alertInfo ? 'plan-card-alert' : ''}">
                 <div class="plan-card-header">
-                  <span class="plan-badge ${p.badgeClass}">${p.badge}</span>
+                  <span class="plan-badge ${isThsrTab ? 'badge-thsr' : (item.isExpress ? 'badge-tymetro' : 'badge-regular')}">
+                    ${isThsrTab ? `高鐵 ${item.trainNo}次` : `機捷 ${item.trainNo}`}
+                  </span>
                   <span class="plan-idx-tag">#${idx + 1}</span>
-                  ${planAlert ? `<span class="plan-alert-badge" title="${planAlert.title}: ${planAlert.desc}">⚠️ 延誤注意</span>` : ''}
-                  <span class="plan-total"><i class="fa-regular fa-clock"></i> 全程 <strong>${p.totalDuration}</strong></span>
+                  <span class="plan-wait-chip ${isUrgent ? 'chip-urgent pulse-warn' : (isSoon ? 'chip-soon' : 'chip-normal')}">
+                    ${item.statusBadge}
+                  </span>
+                  <span class="plan-total"><i class="fa-regular fa-clock"></i> 車程 <strong>${item.duration}分</strong></span>
                 </div>
-                <div class="plan-route-name">${p.name}</div>
-                <div class="plan-timeline">
-                  <div class="plan-step">
-                    <div class="step-label">建議出門</div>
-                    <div class="step-time">${p.leaveTime}</div>
+
+                <div class="schedule-station-info-row">
+                  <div class="schedule-origin-station">
+                    <span class="st-label">發車站</span>
+                    <strong class="st-name">${item.originStation}</strong>
+                  </div>
+                  <div class="schedule-arrow-connector">
+                    <span class="st-type-tag ${item.isExpress ? 'express' : 'regular'}">${item.typeText}</span>
+                    <i class="fa-solid fa-arrow-right-long"></i>
+                  </div>
+                  <div class="schedule-dest-station">
+                    <span class="st-label">目的地</span>
+                    <strong class="st-name">${item.destStation}</strong>
+                  </div>
+                </div>
+
+                <div class="plan-timeline station-focus-timeline">
+                  <div class="plan-step step-dep-focus">
+                    <div class="step-label"><i class="fa-solid fa-train-subway"></i> 月台發車</div>
+                    <div class="step-time step-time-large">${item.depTime}</div>
                   </div>
                   <div class="plan-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                  <div class="plan-step">
-                    <div class="step-label">搭乘發車</div>
-                    <div class="step-time">${p.boardTrainTime}</div>
-                  </div>
-                  <div class="plan-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                  <div class="plan-step">
-                    <div class="step-label">預計抵達</div>
-                    <div class="step-time step-arrive">${p.arriveTime}</div>
+                  <div class="plan-step step-arr-focus">
+                    <div class="step-label"><i class="fa-solid fa-location-dot"></i> 預計抵達</div>
+                    <div class="step-time step-arrive step-time-large">${item.arrTime}</div>
                   </div>
                 </div>
-                <div class="plan-detail-text">${p.detail}</div>
+
+                <!-- 智慧雙情境標籤：區分「當前在車站的人」與「正要出門的人」 -->
+                <div class="schedule-context-indicator">
+                  ${item.canCatchFromHome ? `
+                    <div class="context-pill pill-home-ready">
+                      <i class="fa-solid fa-person-walking"></i> 
+                      <span>建議 <strong>${item.leaveTimeStr}</strong> 前出門</span>
+                      ${item.isBestCatch ? '<span class="pill-best-tag">🌟 最快推薦</span>' : ''}
+                    </div>
+                  ` : `
+                    <div class="context-pill pill-station-ready" title="若從家裡出發已來不及搭此班，但非常適合目前已在車站內/月台上的旅客！">
+                      <i class="fa-solid fa-building"></i> 
+                      <span>適合站內候車者 <strong>(現正發車)</strong></span>
+                    </div>
+                  `}
+                </div>
               </div>
             `;
             }).join('') : `
               <div class="schedule-empty-state" style="padding: 24px; text-align: center; color: #94a3b8; width: 100%;">
                 <i class="fa-solid fa-moon" style="font-size: 1.8rem; color: #f59e0b; margin-bottom: 8px;"></i>
-                <div style="font-size: 0.9rem; font-weight: bold; color: #f1f5f9;">今日班次已全數收班</div>
+                <div style="font-size: 0.9rem; font-weight: bold; color: #f1f5f9;">今日 ${isThsrTab ? '高鐵' : '機捷'} 班次已全數收班</div>
                 <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">明日清晨 06:00 起恢復發車服務</div>
               </div>
             `}
