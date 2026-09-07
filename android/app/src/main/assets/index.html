@@ -2467,6 +2467,10 @@ a.coord-tag:hover {
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
   box-sizing: border-box;
   overflow: hidden;
+  contain: layout paint;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .transit-track-card.full-width-card:hover {
@@ -2745,6 +2749,10 @@ a.coord-tag:hover {
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
+  contain: layout paint;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* 青埔 ➔ 新埔：首段為高鐵/機捷長區間 (2.5fr)，次段為台北捷運短區間 (1fr) */
@@ -2793,6 +2801,10 @@ a.coord-tag:hover {
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
+  contain: layout paint;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .segment-legend {
@@ -2972,6 +2984,10 @@ a.coord-tag:hover {
   margin: 15px 8px 6px 8px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
+  contain: layout paint;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .track-rail-line.bannan-line {
@@ -3807,6 +3823,9 @@ a.coord-tag:hover {
   height: 24px;
   margin-top: 6px;
   margin-bottom: 2px;
+  contain: layout paint;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .station-dot-node {
@@ -3883,16 +3902,15 @@ a.coord-tag:hover {
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
 }
 
-/* 站名滑過懸浮氣泡 (Hover Tooltip) */
+/* 站名滑過懸浮氣泡 (Hover Tooltip) - 採用實色背景杜絕 Android WebView GPU 濾鏡崩潰 */
 .station-hover-tooltip {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%) translateY(4px);
-  background: rgba(10, 16, 28, 0.96);
+  background: #0d1527;
   border: 1px solid rgba(168, 85, 247, 0.55);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), 0 0 12px rgba(168, 85, 247, 0.35);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65), 0 0 8px rgba(168, 85, 247, 0.3);
   border-radius: 6px;
   padding: 6px 10px;
   white-space: nowrap;
@@ -3900,6 +3918,7 @@ a.coord-tag:hover {
   opacity: 0;
   transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 100;
+  contain: layout paint;
 }
 
 .station-hover-tooltip::after {
@@ -3910,7 +3929,7 @@ a.coord-tag:hover {
   transform: translateX(-50%);
   border-width: 5px;
   border-style: solid;
-  border-color: rgba(10, 16, 28, 0.96) transparent transparent transparent;
+  border-color: #0d1527 transparent transparent transparent;
 }
 
 .station-dot-node:hover .station-hover-tooltip {
@@ -4858,6 +4877,28 @@ body {
     font-size: 0.68rem !important;
   }
 
+  /* 手機端徹底釋放 16 站 Hover 氣泡，根除 GPU 瓦片 RenderLayer 超載與黑塊撕裂 */
+  .station-hover-tooltip {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* 手機端 GPU 動畫減負：縮短過渡、去除持續傾斜呼吸動畫，確保展開瞬間 100% 流暢零卡頓 */
+  .track-progress-glow {
+    transition: width 0.3s ease !important;
+    box-shadow: 0 0 3px currentColor !important;
+  }
+  .track-train-beacon {
+    transition: left 0.3s ease !important;
+  }
+  .track-train-beacon.is-moving .train-icon-bubble {
+    animation: none !important;
+  }
+  .live-pulse-dot {
+    animation: none !important;
+  }
+
   /* 軌道車站文字與版面極限防擠壓、防溢出加固 */
   .transit-tracks-container.full-length-corridor,
   .transit-track-card.full-width-card,
@@ -4868,6 +4909,7 @@ body {
     min-width: 0 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
+    contain: layout paint !important;
   }
 
   .segment-stations-row {
@@ -5114,7 +5156,27 @@ body.native-mobile-mode .nav-tool-btn {
   flex-shrink: 0 !important;
 }
 
-/* 原生手機模式下高鐵線與軌道防溢出、防遮擋極限加固 */
+/* 原生手機模式下高鐵線與軌道防溢出、防遮擋、防破圖極限加固 */
+body.native-mobile-mode .station-hover-tooltip {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.native-mobile-mode .track-progress-glow {
+  transition: width 0.3s ease !important;
+  box-shadow: 0 0 3px currentColor !important;
+}
+body.native-mobile-mode .track-train-beacon {
+  transition: left 0.3s ease !important;
+}
+body.native-mobile-mode .track-train-beacon.is-moving .train-icon-bubble {
+  animation: none !important;
+}
+body.native-mobile-mode .live-pulse-dot {
+  animation: none !important;
+}
+
 body.native-mobile-mode .transit-tracks-container.full-length-corridor,
 body.native-mobile-mode .transit-track-card.full-width-card,
 body.native-mobile-mode .multi-rail-corridor.full-span-rail,
@@ -5124,6 +5186,7 @@ body.native-mobile-mode .rail-segment-box {
   min-width: 0 !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
+  contain: layout paint !important;
 }
 
 body.native-mobile-mode .segment-stations-row {
@@ -9241,12 +9304,22 @@ class TwinCityTransitMonitor {
         }
       }
     }
-    this.render();
-    this.triggerViewportResize();
+    if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+      window.requestAnimationFrame(() => {
+        this.render();
+        this.triggerViewportResize();
+      });
+    } else {
+      this.render();
+      this.triggerViewportResize();
+    }
   }
 
-  // 通知主程式視窗自適應高度
+  // 通知主程式視窗自適應高度 (窄螢幕/手機端直接跳過，消除多餘重排與卡頓)
   triggerViewportResize() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return;
+    }
     if (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.applyAdaptiveViewportFit === 'function') {
       setTimeout(() => {
         window.monitorApp.applyAdaptiveViewportFit();

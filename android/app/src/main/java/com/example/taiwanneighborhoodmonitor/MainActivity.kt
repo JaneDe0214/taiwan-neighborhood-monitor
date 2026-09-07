@@ -58,9 +58,10 @@ class MainActivity : ComponentActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
-        // 3. 建立並配置全硬體加速的原生 WebView 視圖
+        // 3. 建立並配置全硬體加速的原生 WebView 視圖 (使用 LAYER_TYPE_NONE 交由 Chromium 內建管線加速，避免雙重離屏緩衝破圖黑塊)
         webView = WebView(this).apply {
-            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            setLayerType(View.LAYER_TYPE_NONE, null)
+            setBackgroundColor(android.graphics.Color.parseColor("#0a0e17"))
             isFocusable = true
             isFocusableInTouchMode = true
         }
