@@ -2445,10 +2445,15 @@ a.coord-tag:hover {
   flex-direction: column;
   gap: 5px;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .transit-track-card.full-width-card {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: rgba(14, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
@@ -2459,6 +2464,7 @@ a.coord-tag:hover {
   position: relative;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .transit-track-card.full-width-card:hover {
@@ -2733,7 +2739,10 @@ a.coord-tag:hover {
   border-radius: 5px;
   padding: 4px 6px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* 青埔 ➔ 新埔：首段為高鐵/機捷長區間 (2.5fr)，次段為台北捷運短區間 (1fr) */
@@ -2746,6 +2755,11 @@ a.coord-tag:hover {
   .multi-rail-corridor.full-span-rail.dir-to-xinpu {
     grid-template-columns: 1fr;
     gap: 6px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 }
 
@@ -2759,6 +2773,8 @@ a.coord-tag:hover {
   border-radius: 4px;
   white-space: nowrap;
   text-align: center;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .rail-segment-box {
@@ -2770,6 +2786,11 @@ a.coord-tag:hover {
   border-radius: 4px;
   padding: 3px 5px;
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .segment-legend {
@@ -2895,8 +2916,9 @@ a.coord-tag:hover {
   height: 4px;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 2px;
-  margin: 11px 8px 5px 8px;
+  margin: 15px 8px 6px 8px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
 }
 
 .track-rail-line.bannan-line {
@@ -3009,12 +3031,20 @@ a.coord-tag:hover {
 .segment-stations-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.6rem;
   color: var(--text-muted);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 0 2px;
 }
 
 .station-label {
   font-family: monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* 轉乘步道 (5分) */
@@ -3055,12 +3085,17 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(2, 132, 199, 0.25);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 2px 5px;
   margin-top: 2px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .crowd-station-badge {
@@ -3071,13 +3106,16 @@ a.coord-tag:hover {
   align-items: center;
   gap: 3px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .crowd-cars-strip {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 3px;
   flex: 1;
+  min-width: 0;
   justify-content: flex-end;
 }
 
@@ -3085,12 +3123,13 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 1px 4px;
+  padding: 1px 3px;
   border-radius: 3px;
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   font-weight: 600;
   white-space: nowrap;
   transition: transform 0.15s ease;
+  flex-shrink: 0;
 }
 .crowd-car-box:hover {
   transform: scale(1.08);
@@ -3122,6 +3161,7 @@ a.coord-tag:hover {
   height: 5px;
   border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
 }
 .crowd-car-box.level-1 .car-status-dot { background: #10b981; box-shadow: 0 0 4px #10b981; }
 .crowd-car-box.level-2 .car-status-dot { background: #00f0ff; box-shadow: 0 0 4px #00f0ff; }
@@ -3132,12 +3172,18 @@ a.coord-tag:hover {
 .thsr-parking-status-bar {
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 119, 0, 0.25);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 2px 5px;
   margin-top: 2px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .parking-title-tag {
@@ -3148,21 +3194,26 @@ a.coord-tag:hover {
   align-items: center;
   gap: 3px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .parking-lots-strip {
   display: flex;
   align-items: center;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 3px;
   flex: 1;
+  min-width: 0;
   justify-content: flex-end;
 }
 
 .parking-lot-chip {
-  font-size: 0.58rem;
-  padding: 1px 4px;
+  font-size: 0.56rem;
+  padding: 1px 3px;
   border-radius: 3px;
   white-space: nowrap;
+  flex-shrink: 0;
+}
 }
 .parking-lot-chip.lot-available {
   background: rgba(16, 185, 129, 0.16);
@@ -3863,21 +3914,35 @@ a.coord-tag:hover {
   line-height: 1.3;
 }
 
-/* 在途列車標籤與定位修正 */
+/* 在途列車標籤與定位修正 - 改為光標球體上方浮動，徹底防止遮擋下方起訖站名 */
 .beacon-train-tag {
   position: absolute;
-  top: 100%;
+  bottom: calc(100% + 3px);
+  top: auto;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.54rem;
+  font-size: 0.52rem;
   white-space: nowrap;
   padding: 1px 4px;
   border-radius: 3px;
-  margin-top: 2px;
+  margin-bottom: 1px;
   font-weight: 700;
   font-family: monospace;
   pointer-events: none;
-  line-height: 1.2;
+  line-height: 1.15;
+  z-index: 12;
+}
+
+/* 靠近起點或終點時，標籤自動靠內對齊，防止探出軌道容器左右邊緣 */
+.track-train-beacon.beacon-near-start .beacon-train-tag {
+  left: 0;
+  transform: none;
+}
+
+.track-train-beacon.beacon-near-end .beacon-train-tag {
+  left: auto;
+  right: 0;
+  transform: none;
 }
 
 .beacon-train-tag.tag-express {
@@ -4740,9 +4805,97 @@ body {
     font-size: 0.68rem !important;
   }
 
-  /* 軌道車站文字防止擠壓 */
+  /* 軌道車站文字與版面極限防擠壓、防溢出加固 */
+  .transit-tracks-container.full-length-corridor,
+  .transit-track-card.full-width-card,
+  .multi-rail-corridor.full-span-rail,
+  .rail-segment-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
   .segment-stations-row {
-    font-size: 0.6rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.58rem !important;
+    padding: 1px 2px !important;
+  }
+
+  .station-label {
+    font-size: 0.58rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 板南線車廂擁擠度在手機螢幕改為上下兩列結構：上方標題，下方6車廂等分網格，100%容納且絕不溢出 */
+  .bannan-car-crowd-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 3px !important;
+    padding: 3px 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .crowd-station-badge {
+    width: 100% !important;
+    font-size: 0.58rem !important;
+  }
+
+  .crowd-cars-strip {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 2px !important;
+    justify-content: stretch !important;
+  }
+
+  .crowd-car-box {
+    padding: 1px 1px !important;
+    font-size: 0.52rem !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .crowd-car-box span {
+    font-size: 0.52rem !important;
+  }
+
+  /* 桃園高鐵停車場微型條在手機螢幕自動折行與自適應 */
+  .thsr-parking-status-bar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+    padding: 2px 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .parking-title-tag {
+    font-size: 0.56rem !important;
+  }
+
+  .parking-lots-strip {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+    justify-content: flex-end !important;
+    min-width: 0 !important;
+  }
+
+  .parking-lot-chip {
+    font-size: 0.52rem !important;
+    padding: 1px 2px !important;
   }
 
   /* 出門時間表抽屜卡片手機寬度 */
@@ -4906,6 +5059,97 @@ body.native-mobile-mode .nav-tool-btn {
   font-size: 0.9rem !important;
   border-radius: 8px !important;
   flex-shrink: 0 !important;
+}
+
+/* 原生手機模式下高鐵線與軌道防溢出、防遮擋極限加固 */
+body.native-mobile-mode .transit-tracks-container.full-length-corridor,
+body.native-mobile-mode .transit-track-card.full-width-card,
+body.native-mobile-mode .multi-rail-corridor.full-span-rail,
+body.native-mobile-mode .rail-segment-box {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+body.native-mobile-mode .segment-stations-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 0.58rem !important;
+  padding: 1px 2px !important;
+}
+
+body.native-mobile-mode .station-label {
+  font-size: 0.58rem !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+body.native-mobile-mode .bannan-car-crowd-row {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 3px !important;
+  padding: 3px 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.native-mobile-mode .crowd-station-badge {
+  width: 100% !important;
+  font-size: 0.58rem !important;
+}
+
+body.native-mobile-mode .crowd-cars-strip {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 2px !important;
+  justify-content: stretch !important;
+}
+
+body.native-mobile-mode .crowd-car-box {
+  padding: 1px 1px !important;
+  font-size: 0.52rem !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+body.native-mobile-mode .crowd-car-box span {
+  font-size: 0.52rem !important;
+}
+
+body.native-mobile-mode .thsr-parking-status-bar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 3px !important;
+  padding: 2px 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.native-mobile-mode .parking-title-tag {
+  font-size: 0.56rem !important;
+}
+
+body.native-mobile-mode .parking-lots-strip {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px !important;
+  justify-content: flex-end !important;
+  min-width: 0 !important;
+}
+
+body.native-mobile-mode .parking-lot-chip {
+  font-size: 0.52rem !important;
+  padding: 1px 2px !important;
 }
 
 </style>
@@ -10042,7 +10286,7 @@ class TwinCityTransitMonitor {
         </div>
         <div class="track-rail-line bannan-line">
           <div class="track-progress-glow bannan-glow" style="width: ${bannan.progressPercent}%;"></div>
-          <div class="track-train-beacon bannan-beacon ${bannan.isRunning ? 'is-moving' : 'is-docked'}" style="left: ${bannan.progressPercent}%;" title="${bannan.lineName} (${bannan.trainNo} ${bannan.runStatusText})">
+          <div class="track-train-beacon bannan-beacon ${bannan.isRunning ? 'is-moving' : 'is-docked'} ${bannan.progressPercent <= 12 ? 'beacon-near-start' : (bannan.progressPercent >= 88 ? 'beacon-near-end' : '')}" style="left: ${bannan.progressPercent}%;" title="${bannan.lineName} (${bannan.trainNo} ${bannan.runStatusText})">
             <div class="train-icon-bubble bubble-bannan">
               <i class="fa-solid fa-train-subway"></i>
             </div>
@@ -10097,7 +10341,7 @@ class TwinCityTransitMonitor {
           <div class="track-progress-glow thsr-glow" style="width: ${thsr.progressPercent}%;"></div>
           ${hasActiveTrains ? 
             thsr.activeTrains.map(tr => `
-              <div class="track-train-beacon thsr-beacon is-moving ${tr.isExpress ? 'beacon-thsr-express' : 'beacon-thsr-regular'}" 
+              <div class="track-train-beacon thsr-beacon is-moving ${tr.isExpress ? 'beacon-thsr-express' : 'beacon-thsr-regular'} ${tr.progressPercent <= 12 ? 'beacon-near-start' : (tr.progressPercent >= 88 ? 'beacon-near-end' : '')}" 
                    style="left: ${tr.progressPercent}%;" 
                    title="高鐵 ${tr.trainNo}次 (${tr.statusText})">
                 <div class="train-icon-bubble bubble-thsr">
@@ -10108,7 +10352,7 @@ class TwinCityTransitMonitor {
                 </div>
               </div>
             `).join('') :
-            `<div class="track-train-beacon thsr-beacon ${thsr.isRunning ? 'is-moving' : 'is-docked'}" style="left: ${thsr.progressPercent}%;" title="高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})">
+            `<div class="track-train-beacon thsr-beacon ${thsr.isRunning ? 'is-moving' : 'is-docked'} ${thsr.progressPercent <= 12 ? 'beacon-near-start' : (thsr.progressPercent >= 88 ? 'beacon-near-end' : '')}" style="left: ${thsr.progressPercent}%;" title="高鐵 ${thsr.activeTrainNo}次 (${thsr.runStatusText})">
               <div class="train-icon-bubble bubble-thsr">
                 <i class="fa-solid fa-bolt-lightning"></i>
               </div>
@@ -10154,7 +10398,7 @@ class TwinCityTransitMonitor {
         </div>
         <div class="track-rail-line circular-line">
           <div class="track-progress-glow circular-glow" style="width: ${circular.progressPercent}%;"></div>
-          <div class="track-train-beacon circular-beacon ${circular.isRunning ? 'is-moving' : 'is-docked'}" style="left: ${circular.progressPercent}%;" title="${circular.lineName} (${circular.trainNo} ${circular.runStatusText})">
+          <div class="track-train-beacon circular-beacon ${circular.isRunning ? 'is-moving' : 'is-docked'} ${circular.progressPercent <= 12 ? 'beacon-near-start' : (circular.progressPercent >= 88 ? 'beacon-near-end' : '')}" style="left: ${circular.progressPercent}%;" title="${circular.lineName} (${circular.trainNo} ${circular.runStatusText})">
             <div class="train-icon-bubble bubble-circular">
               <i class="fa-solid fa-train-subway"></i>
             </div>
@@ -10196,7 +10440,7 @@ class TwinCityTransitMonitor {
         <div class="track-rail-line tymetro-line ${tymetro.isExpress ? 'line-express' : 'line-commuter'}">
           <div class="track-progress-glow ${tymetro.isExpress ? 'tymetro-glow' : 'tymetro-commuter-glow'}" style="width: ${tymetro.progressPercent}%;"></div>
           ${tymetro.activeTrains.map(tr => `
-            <div class="track-train-beacon tymetro-beacon is-moving ${tr.isExpress ? 'beacon-express' : 'beacon-commuter'}" 
+            <div class="track-train-beacon tymetro-beacon is-moving ${tr.isExpress ? 'beacon-express' : 'beacon-commuter'} ${tr.progressPercent <= 12 ? 'beacon-near-start' : (tr.progressPercent >= 88 ? 'beacon-near-end' : '')}" 
                  style="left: ${tr.progressPercent}%;" 
                  title="${tr.type} ${tr.trainNo}次 (${tr.statusText})">
               <div class="train-icon-bubble ${tr.isExpress ? 'bubble-tymetro' : 'bubble-tymetro-commuter'}">
