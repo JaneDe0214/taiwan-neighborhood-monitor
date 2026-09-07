@@ -2,9 +2,15 @@ name: 自動更新雙埔大眾運輸與 YouBike 數據
 
 on:
   schedule:
-    # 官方支援最高頻率：每 6 分鐘極速定時全自動更新 (高鐵、機捷、捷運看板與 YouBike)
-    - cron: '*/6 * * * *'
+    # 錯峰高頻排程 (避開全球整點 :00 與 :30 嚴重排隊塞車)
+    # 台灣日間營運時間 06:00 ~ 24:00 (UTC 22:00 ~ 16:00)：每 6 分鐘錯峰執行
+    - cron: '3,9,15,21,27,33,39,45,51,57 22-23,0-15 * * *'
+    # 台灣深夜收班時間 00:00 ~ 06:00 (UTC 16:00 ~ 22:00)：每 30 分鐘執行一次 (大幅節省 70% 額度，避免月中額度歸零被降級)
+    - cron: '17,47 16-21 * * *'
   workflow_dispatch:
+  # 支援外部高優先級 Webhook 秒級觸發 (如 cron-job.org / Cloudflare Workers / UptimeRobot)
+  repository_dispatch:
+    types: [sync-transit-data, webhook-trigger]
 
 # 避免高頻執行時 Git push 衝突，確保同一時間僅有一組更新作業執行
 concurrency:
@@ -14,11 +20,14 @@ concurrency:
 jobs:
   update-transit-data:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
     steps:
-      - name: 檢出專案程式碼
+      - name: 檢出專案程式碼 (淺層檢出極速加速)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: 設定 Node.js 環境
         uses: actions/setup-node@v4
