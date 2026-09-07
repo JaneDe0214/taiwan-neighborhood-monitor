@@ -5682,7 +5682,7 @@ class CameraPlayerEngine {
 
     let streamUrl = cam.streamUrl;
     // 若處於本機 file:// 協定且為代理路徑，指向本機伺服器
-    if (streamUrl.startsWith('/api/') && window.location.protocol === 'file:') {
+    if (streamUrl.startsWith('/api/') && (window.location && window.location.protocol === 'file:')) {
       streamUrl = 'http://localhost:3088' + streamUrl;
     }
 
@@ -5850,7 +5850,7 @@ class CameraPlayerEngine {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                if (window.location.protocol === 'file:' && cam.id.startsWith('tpe-')) {
+                if ((window.location && window.location.protocol === 'file:') && cam.id.startsWith('tpe-')) {
                   // 本機 file:// 且伺服器未啟動時提供優雅直開按鈕，絕不白屏或顯示拒絕連線
                   const wrapper = videoEl.parentElement;
                   if (wrapper && !wrapper.querySelector('.bote-offline-card')) {
@@ -7560,11 +7560,11 @@ class WeatherEnvironmentMonitor {
 
     // 判斷是否為 Android 原生應用程式環境 (APK 運作中，擁有原生注入橋接或 file: 協議)
     const isAndroidApp = typeof window !== 'undefined' && 
-      (window.AndroidBridge != null || window.location.protocol === 'file:');
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
 
     // 僅在真正的本機 Node.js 開發環境才啟用 3000 埠代理 (排除 Android APK 原生環境，徹底杜絕逾時卡滯)
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
     // 雲端與同源整合資料端點 (GitHub Actions 每 5 分鐘自動推送最新車況，支援純靜態/APK 免 CORS 直連)
     const cloudDataUrls = [
@@ -8651,6 +8651,8 @@ class TwinCityTransitMonitor {
 
     // 台北捷運與環狀線即時到站看板快取與狀態 (支援 TDX 秒級連動與純靜態全量時刻表雙模)
     this.isMetroOnline = false;
+    this.isDirectMetroApi = false;
+    this.isDirectParkingApi = false;
     this.metroLiveData = null;
     this.metroLastFetchTime = 0;
 
@@ -8836,18 +8838,23 @@ class TwinCityTransitMonitor {
     if (!force && nowMs - this.metroLastFetchTime < 15000) return;
 
     const isAndroidApp = typeof window !== 'undefined' && 
-      (window.AndroidBridge != null || window.location.protocol === 'file:');
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
     try {
       let res = null;
       let weightRes = null;
 
-      // 途徑 1：若是 Android 原生環境，優先調用原生 AndroidNativeBridge 高速直取
-      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+      // 途徑 1：若是 Android 原生環境，優先調用原生專屬高速直打 API (免除 CORS 限制，直打開放資料 API)
+      if (typeof window !== 'undefined' && window.AndroidBridge) {
         try {
-          const raw = window.AndroidBridge.getLatestCloudData('metro-live');
+          let raw = '';
+          if (typeof window.AndroidBridge.getRealtimeMetroLive === 'function') {
+            raw = window.AndroidBridge.getRealtimeMetroLive();
+          } else if (typeof window.AndroidBridge.getLatestCloudData === 'function') {
+            raw = window.AndroidBridge.getLatestCloudData('metro-live');
+          }
           if (raw && raw.trim().startsWith('{')) {
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.trains)) {
@@ -8856,6 +8863,9 @@ class TwinCityTransitMonitor {
                 data: parsed.trains,
                 updatedAt: parsed.updatedAt || null 
               };
+              if (parsed.isDirectApi) {
+                this.isDirectMetroApi = true;
+              }
             }
             if (parsed && parsed.carWeight) {
               weightRes = { success: true, data: parsed.carWeight };
@@ -8923,21 +8933,29 @@ class TwinCityTransitMonitor {
     if (!force && this.parkingLastFetchTime && nowMs - this.parkingLastFetchTime < 30000) return;
 
     const isAndroidApp = typeof window !== 'undefined' && 
-      (window.AndroidBridge != null || window.location.protocol === 'file:');
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
     try {
       let res = null;
 
-      // 途徑 1：Android 原生直取
-      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.getLatestCloudData === 'function') {
+      // 途徑 1：若是 Android 原生環境，優先調用原生專屬高速直打 API
+      if (typeof window !== 'undefined' && window.AndroidBridge) {
         try {
-          const raw = window.AndroidBridge.getLatestCloudData('parking');
+          let raw = '';
+          if (typeof window.AndroidBridge.getRealtimeParking === 'function') {
+            raw = window.AndroidBridge.getRealtimeParking();
+          } else if (typeof window.AndroidBridge.getLatestCloudData === 'function') {
+            raw = window.AndroidBridge.getLatestCloudData('parking');
+          }
           if (raw && raw.trim().startsWith('{')) {
             const parsed = JSON.parse(raw);
             if (parsed && Array.isArray(parsed.lots)) {
               res = { success: true, lots: parsed.lots };
+              if (parsed.isDirectApi) {
+                this.isDirectParkingApi = true;
+              }
             }
           }
         } catch (e) {}
@@ -9096,9 +9114,11 @@ class TwinCityTransitMonitor {
       platformStatus: isArriving 
         ? (isLiveCalibrated ? `列車進站中 (${liveDest || '板南線'})` : '即將進站')
         : (isLiveCalibrated ? `即時推算 (${countdownText} 後進站)` : `${nextTrain.timeStr} 發車 (${countdownText})`),
-      sourceBadgeHtml: isLiveCalibrated 
-        ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測與真實車廂載重"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
-        : '<span class="feed-live-badge sched-badge" title="台北捷運官方全量真實時刻表基準"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>',
+      sourceBadgeHtml: this.isDirectMetroApi
+        ? '<span class="feed-live-badge live-pulse-badge" title="原生直連開放資料 API 秒級即時更新"><i class="fa-solid fa-bolt"></i> 原生即時直連</span>'
+        : (isLiveCalibrated 
+          ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測與真實車廂載重"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
+          : '<span class="feed-live-badge sched-badge" title="台北捷運官方全量真實時刻表基準"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>'),
       carWeight: carWeightInfo
     };
   }
@@ -9181,9 +9201,11 @@ class TwinCityTransitMonitor {
       remainSec,
       countdownText,
       platformStatus,
-      sourceBadgeHtml: isLiveCalibrated 
-        ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
-        : '<span class="feed-live-badge sched-badge"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>'
+      sourceBadgeHtml: this.isDirectMetroApi
+        ? '<span class="feed-live-badge live-pulse-badge" title="原生直連開放資料 API 秒級即時更新"><i class="fa-solid fa-bolt"></i> 原生即時直連</span>'
+        : (isLiveCalibrated 
+          ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
+          : '<span class="feed-live-badge sched-badge"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>')
     };
   }
 
@@ -9205,9 +9227,9 @@ class TwinCityTransitMonitor {
     if (!force && nowMs - this.thsrLastFetchTime < 300000) return;
 
     const isAndroidApp = typeof window !== 'undefined' && 
-      (window.AndroidBridge != null || window.location.protocol === 'file:');
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
     try {
       let southRes = null;
@@ -9302,9 +9324,9 @@ class TwinCityTransitMonitor {
     if (!force && nowMs - this.tymetroLastFetchTime < 300000) return;
 
     const isAndroidApp = typeof window !== 'undefined' && 
-      (window.AndroidBridge != null || window.location.protocol === 'file:');
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
     try {
       let southRes = null;

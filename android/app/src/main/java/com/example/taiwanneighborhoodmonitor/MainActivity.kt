@@ -19,11 +19,19 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.ByteArrayInputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * 雙埔生活圈 (新埔 ‧ 青埔) 原生 Android 應用程式
@@ -363,8 +371,275 @@ class AndroidNativeBridge(
     }
 
     /**
+     * 解析捷運到站看板 HTML
+     */
+    private fun parseDepartureHtml(html: String, defaultStation: String): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
+        val regex = Regex("""<div class="departStation">\s*([^<]+)\s*</div>[\s\S]*?<div class="destinationStation">\s*([^<]+)\s*</div>[\s\S]*?class="countDown"[^>]*data-start="([^"]+)"""")
+        for (m in regex.findAll(html)) {
+            val from = m.groupValues[1].trim().ifEmpty { defaultStation }
+            val to = m.groupValues[2].trim()
+            val countdown = m.groupValues[3].trim()
+            var totalSec = 0
+            if (countdown.contains(":")) {
+                val parts = countdown.split(":").mapNotNull { it.toIntOrNull() }
+                if (parts.size >= 2) {
+                    totalSec = parts[0] * 60 + parts[1]
+                }
+            } else if (countdown.contains("進站")) {
+                totalSec = 20
+            }
+            val line = when {
+                from.contains("民生") -> "環狀線"
+                from.contains("板橋") && (to.contains("大坪林") || to.contains("產業園區")) -> "環狀線"
+                else -> "板南線"
+            }
+            val item = JSONObject().apply {
+                put("station", from)
+                put("dest", to)
+                put("countdownText", countdown)
+                put("remainSec", totalSec)
+                put("line", line)
+            }
+            list.add(item)
+        }
+        return list
+    }
+
+    /**
+     * 解析捷運車廂載重擁擠度 HTML (1~6 車廂)
+     */
+    private fun parseCarWeightHtml(html: String, stationName: String, code: String): JSONObject {
+        val carsArray = JSONArray()
+        val carRegex = Regex("""<span class="carNum">([^<]+)</span>[\s\S]*?<span class="carWeight">([\s\S]*?)</span>""", RegexOption.IGNORE_CASE)
+        val labelRegex = Regex("""class="label\s+([^"]+)"[^>]*>([^<]+)</label>""", RegexOption.IGNORE_CASE)
+        val matches = carRegex.findAll(html).toList()
+
+        for (cm in matches) {
+            val carNum = cm.groupValues[1].trim()
+            val raw = cm.groupValues[2]
+            val lm = labelRegex.find(raw)
+            var status = "舒適"
+            var level = 1
+            if (lm != null) {
+                status = lm.groupValues[2].trim()
+                val cls = lm.groupValues[1].lowercase()
+                level = when {
+                    cls.contains("danger") -> 4
+                    cls.contains("warning") -> 3
+                    cls.contains("info") || cls.contains("primary") -> 2
+                    else -> 1
+                }
+            } else {
+                val clean = raw.replace(Regex("<[^>]+>"), "").trim()
+                status = clean.ifEmpty { "舒適" }
+                level = when {
+                    status.contains("擁擠") -> 4
+                    status.contains("略擠") -> 3
+                    status.contains("普通") || status.contains("適中") -> 2
+                    else -> 1
+                }
+            }
+            val carObj = JSONObject().apply {
+                put("carNum", carNum)
+                put("status", status)
+                put("level", level)
+            }
+            carsArray.put(carObj)
+        }
+
+        var message = "即時更新中"
+        val hasData = carsArray.length() > 0
+        if (!hasData) {
+            message = when {
+                html.contains("尚無資料") -> "目前無列車停靠"
+                html.contains("營運時間已過") -> "營運時間已過"
+                else -> "離峰舒適運轉"
+            }
+            for (i in 1..6) {
+                val carObj = JSONObject().apply {
+                    put("carNum", "${i}車")
+                    put("status", "舒適")
+                    put("level", 1)
+                }
+                carsArray.put(carObj)
+            }
+        }
+
+        return JSONObject().apply {
+            put("station", stationName)
+            put("code", code)
+            put("line", "板南線")
+            put("hasData", hasData)
+            put("message", message)
+            put("cars", carsArray)
+        }
+    }
+
+    /**
+     * 解析高鐵剩餘停車位 HTML
+     */
+    private fun parseParkingHtml(html: String): JSONArray {
+        val lotsArray = JSONArray()
+        val trRegex = Regex("""<tr[^>]*>([\s\S]*?)</tr>""", RegexOption.IGNORE_CASE)
+        val tdRegex = Regex("""<td[^>]*>([\s\S]*?)</td>""", RegexOption.IGNORE_CASE)
+        val tagRegex = Regex("""<[^>]+>""")
+
+        for (tm in trRegex.findAll(html)) {
+            val tr = tm.groupValues[1]
+            if (tr.contains("桃園") || tr.contains("板橋")) {
+                val tds = tdRegex.findAll(tr).map { it.groupValues[1] }.toList()
+                if (tds.size >= 4) {
+                    val name = tds[0].replace(tagRegex, "").trim()
+                    val spaceText = tds[1].replace(tagRegex, "").trim()
+                    val status = tds[3].replace(tagRegex, "").trim()
+                    var available = 0
+                    var total = 0
+                    if (spaceText.contains("/")) {
+                        val parts = spaceText.split("/").map { it.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0 }
+                        if (parts.size >= 2) {
+                            available = parts[0]
+                            total = parts[1]
+                        }
+                    }
+                    val lotObj = JSONObject().apply {
+                        put("name", name)
+                        put("available", available)
+                        put("total", total)
+                        put("spaceText", spaceText)
+                        put("status", status)
+                    }
+                    lotsArray.put(lotObj)
+                }
+            }
+        }
+        return lotsArray
+    }
+
+    /**
+     * 原生秒級即時捷運到站看板與車廂擁擠度直取 (opendata.vip 高速直打優先，免除 5 分鐘 Actions 延遲)
+     * 平行並行抓取：新埔站到站看板、板橋站到站看板、BL08新埔車廂載重、BL07板橋車廂載重
+     */
+    @JavascriptInterface
+    fun getRealtimeMetroLive(): String {
+        // 1. 優先直接高速並行打 opendata.vip API (免除 CORS 限制，秒級最新鮮車廂擁擠度與列車進站)
+        try {
+            val result = runBlocking(Dispatchers.IO) {
+                val xpDepDeferred = async { fetchHttp("https://www.opendata.vip/metro/departure/%E6%96%B0%E5%9F%94", 3500) }
+                val bqDepDeferred = async { fetchHttp("https://www.opendata.vip/metro/departure/%E6%9D%BF%E6%A9%8B", 3500) }
+                val bl08Deferred = async { fetchHttp("https://www.opendata.vip/metro/carWeight/BL/BL08", 3500) }
+                val bl07Deferred = async { fetchHttp("https://www.opendata.vip/metro/carWeight/BL/BL07", 3500) }
+
+                val xpDep = xpDepDeferred.await()
+                val bqDep = bqDepDeferred.await()
+                val bl08Html = bl08Deferred.await()
+                val bl07Html = bl07Deferred.await()
+
+                val allTrains = JSONArray()
+                if (xpDep.isNotBlank()) {
+                    parseDepartureHtml(xpDep, "新埔站").forEach { allTrains.put(it) }
+                }
+                if (bqDep.isNotBlank()) {
+                    parseDepartureHtml(bqDep, "板橋站").forEach { allTrains.put(it) }
+                }
+
+                val carWeightObj = JSONObject()
+                if (bl08Html.isNotBlank()) {
+                    carWeightObj.put("BL08", parseCarWeightHtml(bl08Html, "新埔", "BL08"))
+                }
+                if (bl07Html.isNotBlank()) {
+                    carWeightObj.put("BL07", parseCarWeightHtml(bl07Html, "板橋", "BL07"))
+                }
+
+                if (allTrains.length() > 0 || carWeightObj.length() > 0) {
+                    val now = Date()
+                    val timeStr = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(now)
+                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.format(now)
+
+                    JSONObject().apply {
+                        put("success", true)
+                        put("isDirectApi", true)
+                        put("updatedAt", isoStr)
+                        put("updateTimeDisplay", timeStr)
+                        put("count", allTrains.length())
+                        put("trains", allTrains)
+                        put("carWeight", carWeightObj)
+                    }.toString()
+                } else {
+                    null
+                }
+            }
+            if (!result.isNullOrBlank()) {
+                return result
+            }
+        } catch (_: Exception) {}
+
+        // 2. 備援 1：GitHub 雲端 Actions 資料庫
+        val cloudUrls = listOf(
+            "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json",
+            "https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json"
+        )
+        for (url in cloudUrls) {
+            val res = fetchHttp(url, 3500)
+            if (res.isNotBlank() && res.trim().startsWith("{")) {
+                return res
+            }
+        }
+
+        // 3. 備援 2：本地 Assets 快照
+        return fetchAsset("data/metro-live.json")
+    }
+
+    /**
+     * 原生秒級即時高鐵剩餘停車位直取 (opendata.vip 高鐵即時停車場 API)
+     */
+    @JavascriptInterface
+    fun getRealtimeParking(): String {
+        // 1. 優先直接高速打 opendata.vip 高鐵即時停車位 API
+        try {
+            val html = fetchHttp("https://www.opendata.vip/tdx/parkingTHSR", 3500)
+            if (html.isNotBlank()) {
+                val lotsArray = parseParkingHtml(html)
+                if (lotsArray.length() > 0) {
+                    val now = Date()
+                    val timeStr = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(now)
+                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.format(now)
+
+                    return JSONObject().apply {
+                        put("success", true)
+                        put("isDirectApi", true)
+                        put("updatedAt", isoStr)
+                        put("updateTimeDisplay", timeStr)
+                        put("count", lotsArray.length())
+                        put("lots", lotsArray)
+                    }.toString()
+                }
+            }
+        } catch (_: Exception) {}
+
+        // 2. 備援 1：GitHub 雲端 Actions 資料庫
+        val cloudUrls = listOf(
+            "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json",
+            "https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json"
+        )
+        for (url in cloudUrls) {
+            val res = fetchHttp(url, 3500)
+            if (res.isNotBlank() && res.trim().startsWith("{")) {
+                return res
+            }
+        }
+
+        // 3. 備援 2：本地 Assets 快照
+        return fetchAsset("data/parking.json")
+    }
+
+    /**
      * 原生整合獲取最新資料庫 (youbike, metro-live, parking, thsr, tymetro)
-     * 策略：youbike 走秒級直打開放資料 API；其他優先嘗試 GitHub 雲端 (Actions 每 5 分鐘推送最新資料) -> 若網路離線秒降級 Assets 本地快照
+     * 策略：youbike、metro-live、parking 全數走原生秒級直打開放資料 API 優先；時刻表優先嘗試 GitHub 雲端 -> 若網路離線秒降級 Assets 本地快照
      * 100% 獨立自主，完全不依賴任何電腦端本機伺服器！
      */
     @JavascriptInterface
@@ -372,16 +647,14 @@ class AndroidNativeBridge(
         if (dataType == "youbike") {
             return getRealtimeYouBike()
         }
+        if (dataType == "metro" || dataType == "metro-live") {
+            return getRealtimeMetroLive()
+        }
+        if (dataType == "parking") {
+            return getRealtimeParking()
+        }
 
         val cloudUrls = when (dataType) {
-            "metro", "metro-live" -> listOf(
-                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json",
-                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json"
-            )
-            "parking" -> listOf(
-                "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json",
-                "https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json"
-            )
             "thsr" -> listOf(
                 "https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json",
                 "https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json"
@@ -401,10 +674,7 @@ class AndroidNativeBridge(
         }
 
         // 若雲端暫時逾時或處於離線狀態，秒級回傳 Assets 本地快照
-        val assetFile = when (dataType) {
-            "metro", "metro-live" -> "data/metro-live.json"
-            else -> "data/$dataType.json"
-        }
+        val assetFile = "data/$dataType.json"
         return fetchAsset(assetFile)
     }
 
