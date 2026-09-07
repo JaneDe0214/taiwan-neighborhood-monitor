@@ -10446,7 +10446,7 @@ class TwinCityTransitMonitor {
     };
   }
 
-  // 生成即時出門通勤推薦時程表 (支援向右滑動瀏覽當日後續多班組合，安全提示贅字全數移除)
+  // 生成即時出門通勤推薦時程表 (嚴格考量門到門步行與轉乘緩衝，絕不推薦趕不上的班次)
   generateDeparturePlans(now = new Date()) {
     const isToQingpu = this.direction === 'to_qingpu';
     const plans = [];
@@ -10461,19 +10461,16 @@ class TwinCityTransitMonitor {
     const currentHour = now.getHours();
     const currentMin = now.getMinutes();
     const currentSec = now.getSeconds();
-    const currentFracMin = currentMin + currentSec / 60;
     const nowDayMinutes = currentHour * 60 + currentMin + currentSec / 60;
 
-    // 前往板橋高鐵站或 A3 機捷站所需之門到門前置緩衝時間 (包含步行 + 第一段捷運 + 轉乘步行)
+    // 前往板橋高鐵站或 A3/A18 機捷站所需之門到門前置緩衝時間 (包含步行 + 第一段捷運 + 轉乘步行)
     const thsrBufferMins = isToQingpu ? 13 : 15; // 新埔出門步5分+板南2.5分+轉5分 ≈ 13分；青埔出門步15分 ≈ 15分
     const tymetroBufferMins = isToQingpu ? 22 : 15; // 新埔出門步10分+環狀7分+轉5分 ≈ 22分；青埔出門步15分 ≈ 15分
 
-    const startHour = Math.max(6, currentHour);
-    const endHour = 23;
-
-    // 1. 產生自當下時間點起至當日收班的所有官方真實高鐵出門組合 (保證停靠桃園)
+    // 1. 產生自當下時間點起算、真正「搭得到」的所有官方真實高鐵出門組合 (保證停靠桃園)
     const thsrCandidates = [];
-    const upcomingThsr = validThsr.filter(t => t.depMinutes > nowDayMinutes);
+    // 嚴格前置過濾：高鐵發車時間必須在 (當前時間 + 最小前置緩衝) 之後，才能搭得到！
+    const upcomingThsr = validThsr.filter(t => t.depMinutes >= nowDayMinutes + thsrBufferMins);
 
     for (const t of upcomingThsr) {
       const [depH, depM] = t.depTime.split(':').map(Number);
@@ -10481,9 +10478,8 @@ class TwinCityTransitMonitor {
       depDate.setHours(depH, depM, 0, 0);
 
       const waitSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
-      if (waitSec < 0) continue;
+      if (waitSec < thsrBufferMins * 60) continue;
 
-      // 依板南線官方全量時刻表計算精確銜接班次與建議出門時間
       let metroTrainStr = null;
       let leaveDate = null;
       const thsrDepOpMin = this.timeToOperatingMinutes(t.depTime);
@@ -10506,11 +10502,12 @@ class TwinCityTransitMonitor {
           mDate.setHours(mH, mM, 0, 0);
           leaveDate = this.addMinutes(mDate, -5); // 提早 5 分鐘步程出門
         } else {
-          leaveDate = waitSec / 60 >= thsrBufferMins ? this.addMinutes(depDate, -thsrBufferMins) : new Date(now);
+          // 沒有任何板南線可在發車前 5 分鐘抵達板橋，代表無法及時銜接，跳過此高鐵班次
+          continue;
         }
       } else {
-        // 青埔目的地 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔
-        leaveDate = waitSec / 60 >= thsrBufferMins ? this.addMinutes(depDate, -thsrBufferMins) : new Date(now);
+        // 青埔出發：青埔周邊步行 15 分鐘至桃園高鐵地下月台
+        leaveDate = this.addMinutes(depDate, -thsrBufferMins);
         const arrTrainDate = this.addMinutes(depDate, t.duration);
         const arrTrainOpMin = (arrTrainDate.getHours() < 4 ? arrTrainDate.getHours() + 24 : arrTrainDate.getHours()) * 60 + arrTrainDate.getMinutes();
         const earliestMetroDepMin = arrTrainOpMin + 5; // 站內步行轉乘 5 分鐘
@@ -10523,16 +10520,21 @@ class TwinCityTransitMonitor {
         }
       }
 
+      // 安全防呆：建議出門時間必定不可在過去
+      if (!leaveDate || leaveDate.getTime() < now.getTime()) {
+        continue;
+      }
+
       const arrTrainDate = this.addMinutes(depDate, t.duration);
       const finalDestArr = isToQingpu ? this.addMinutes(arrTrainDate, 15) : this.addMinutes(arrTrainDate, 5);
       const totalDurationMins = Math.round((finalDestArr.getTime() - leaveDate.getTime()) / 60000);
 
-      const trainTypeShort = t.isExpress ? '特快' : '各站停';
-
       thsrCandidates.push({
         typeKey: 'thsr',
+        trainNo: t.trainNo,
         leaveTimeMs: leaveDate.getTime(),
         depTimeMs: depDate.getTime(),
+        arriveTimeMs: finalDestArr.getTime(),
         leaveTime: this.formatTime(leaveDate),
         boardTrainTime: t.depTime,
         arriveTime: this.formatTime(finalDestArr),
@@ -10549,9 +10551,9 @@ class TwinCityTransitMonitor {
       });
     }
 
-    // 2. 產生自當下時間點起至當日收班的所有官方真實機場捷運出門組合 (全數保證停靠 A18/A3)
+    // 2. 產生自當下時間點起算、真正「搭得到」的所有官方真實機場捷運出門組合 (全數保證停靠 A18/A3)
     const tymetroCandidates = [];
-    const upcomingTymetro = validTymetro.filter(t => t.depMinutes > nowDayMinutes);
+    const upcomingTymetro = validTymetro.filter(t => t.depMinutes >= nowDayMinutes + tymetroBufferMins);
 
     for (const p of upcomingTymetro) {
       const [depH, depM] = p.depTime.split(':').map(Number);
@@ -10559,11 +10561,10 @@ class TwinCityTransitMonitor {
       depDate.setHours(depH, depM, 0, 0);
 
       const waitSec = Math.floor((depDate.getTime() - now.getTime()) / 1000);
-      if (waitSec < 0) continue;
+      if (waitSec < tymetroBufferMins * 60) continue;
 
-      const leaveDate = waitSec / 60 >= tymetroBufferMins 
-        ? this.addMinutes(depDate, -tymetroBufferMins) 
-        : new Date(now);
+      const leaveDate = this.addMinutes(depDate, -tymetroBufferMins);
+      if (leaveDate.getTime() < now.getTime()) continue;
 
       const arrTrainDate = this.addMinutes(depDate, p.duration);
       const finalDestArr = isToQingpu ? this.addMinutes(arrTrainDate, 15) : this.addMinutes(arrTrainDate, 10);
@@ -10571,8 +10572,11 @@ class TwinCityTransitMonitor {
 
       tymetroCandidates.push({
         typeKey: 'tymetro',
+        trainNo: p.trainNo || p.type,
+        trainTypeShort: p.isExpress ? '直達' : '普通',
         leaveTimeMs: leaveDate.getTime(),
         depTimeMs: depDate.getTime(),
+        arriveTimeMs: finalDestArr.getTime(),
         leaveTime: this.formatTime(leaveDate),
         boardTrainTime: p.depTime,
         arriveTime: this.formatTime(finalDestArr),
@@ -10589,14 +10593,11 @@ class TwinCityTransitMonitor {
       });
     }
 
-    // 3. 整合所有班次組合，依「建議出門時間」由近到遠精準排序
+    // 3. 整合所有班次組合，依「建議出門時間」為主、抵達時間為輔精準排序
     const allCandidates = [...thsrCandidates, ...tymetroCandidates];
-    allCandidates.sort((a, b) => a.leaveTimeMs - b.leaveTimeMs || a.durationNum - b.durationNum);
+    allCandidates.sort((a, b) => a.leaveTimeMs - b.leaveTimeMs || a.arriveTimeMs - b.arriveTimeMs);
 
-    // 保留當下時間點起算至當日收班的所有組合 (不限筆數，完整呈現當日所有出門方案)
     const finalPlans = allCandidates;
-
-    // 將最快的第一班高鐵加上「最快首選」醒目標記
     if (finalPlans.length > 0) {
       finalPlans[0].highlight = true;
       if (finalPlans[0].badge.includes('高鐵')) {
@@ -10607,10 +10608,35 @@ class TwinCityTransitMonitor {
     return finalPlans;
   }
 
+  // 取得出門指南專屬動態倒數晶片 (精確反映距離出門時間，絕不出現來不及搭車的倒數)
+  getHubCountdownText(plan, fallbackTrain, now = new Date()) {
+    if (!plan) {
+      if (fallbackTrain && fallbackTrain.isOutOfService) {
+        return '<span class="chip-muted" style="color:#94a3b8;"><i class="fa-solid fa-moon"></i> 今日已收班</span>';
+      }
+      return '<span class="chip-muted" style="color:#94a3b8;">無建議班次</span>';
+    }
+    const diffSec = Math.floor((plan.leaveTimeMs - now.getTime()) / 1000);
+    if (diffSec <= 60) {
+      return '<span class="chip-urgent pulse-warn" style="color:#ef4444;font-weight:bold;"><i class="fa-solid fa-person-walking-arrow-right"></i> 建議立即出門</span>';
+    }
+    const mins = Math.ceil(diffSec / 60);
+    return `<span class="chip-active" style="color:#00f0ff;"><i class="fa-regular fa-clock"></i> 約 ${mins} 分後出門</span>`;
+  }
+
   // 原地定向局部快速修補器 (Fast In-Place DOM Patcher)
   // 僅針對每秒變化的倒數文字、月台狀態與列車信標做精確局部賦值，完全不銷毀或重建 DOM 樹，徹底杜絕閃爍！
   fastUpdateElements(mainSlot, isCollapsed, bannan, circular, thsr, tymetro, plans) {
     if (!mainSlot) return false;
+
+    const firstThsrPlan = plans.find(p => p.typeKey === 'thsr');
+    const firstTymetroPlan = plans.find(p => p.typeKey === 'tymetro');
+    const plansSig = `${firstThsrPlan ? firstThsrPlan.boardTrainTime : ''}_${firstTymetroPlan ? firstTymetroPlan.boardTrainTime : ''}`;
+    if (this._lastPlansSig && this._lastPlansSig !== plansSig) {
+      this._lastPlansSig = plansSig;
+      return false; // 推薦搭乘班次已推進，觸發完整結構重繪
+    }
+    this._lastPlansSig = plansSig;
 
     if (isCollapsed) {
       const thsrStatus = mainSlot.querySelector('[data-c-thsr-status]');
@@ -10647,7 +10673,6 @@ class TwinCityTransitMonitor {
 
       const thsrTotal = mainSlot.querySelector('[data-f-thsr-total]');
       if (thsrTotal) {
-        const firstThsrPlan = plans.find(p => p.typeKey === 'thsr');
         thsrTotal.innerHTML = `<i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : (plans[0] ? plans[0].totalDuration : '41分鐘')}</strong>`;
       }
 
@@ -10689,7 +10714,6 @@ class TwinCityTransitMonitor {
 
       const tymetroTotal = mainSlot.querySelector('[data-f-tymetro-total]');
       if (tymetroTotal) {
-        const firstTymetroPlan = plans.find(p => p.typeKey === 'tymetro');
         tymetroTotal.innerHTML = `<i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : (plans[0] ? plans[0].totalDuration : '67分鐘')}</strong>`;
       }
 
@@ -10720,14 +10744,14 @@ class TwinCityTransitMonitor {
         circularBeacon.title = `${circular.lineName} (${circular.trainNo} ${circular.runStatusText})`;
       }
 
-      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新
+      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新 (精準呈現出門倒數，絕不使用來不及搭車之月台倒數)
       const hubThsrCountdown = mainSlot.querySelector('[data-f-hub-thsr-countdown]');
       if (hubThsrCountdown) {
-        hubThsrCountdown.textContent = thsr.platformStatus;
+        hubThsrCountdown.innerHTML = this.getHubCountdownText(firstThsrPlan, thsr);
       }
       const hubTymetroCountdown = mainSlot.querySelector('[data-f-hub-tymetro-countdown]');
       if (hubTymetroCountdown) {
-        hubTymetroCountdown.textContent = tymetro.platformStatus;
+        hubTymetroCountdown.innerHTML = this.getHubCountdownText(firstTymetroPlan, tymetro);
       }
 
       // 即時 YouBike 接駁車況原地更新
@@ -11277,8 +11301,8 @@ class TwinCityTransitMonitor {
               <span class="badge-save-time"><i class="fa-solid fa-stopwatch"></i> 約 ${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</span>
             </div>
             <div class="plan-train-detail">
-              <span class="plan-train-name">高鐵 ${thsr.trainNo}次</span>
-              <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${thsr.platformStatus}</span>
+              <span class="plan-train-name">${firstThsrPlan ? `高鐵 ${firstThsrPlan.trainNo}次` : (thsr.isOutOfService ? '高鐵 已收班' : `高鐵 ${thsr.trainNo}次`)}</span>
+              <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${this.getHubCountdownText(firstThsrPlan, thsr)}</span>
             </div>
             <div class="plan-timeline-hint">
               <span class="timeline-step">出門 ${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</span>
@@ -11297,8 +11321,8 @@ class TwinCityTransitMonitor {
               <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 約 ${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</span>
             </div>
             <div class="plan-train-detail">
-              <span class="plan-train-name">機捷 ${(tymetro.type || '').replace('(站站停)', '')}</span>
-              <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${tymetro.platformStatus}</span>
+              <span class="plan-train-name">${firstTymetroPlan ? `機捷 ${firstTymetroPlan.trainTypeShort || firstTymetroPlan.badge}` : (tymetro.isOutOfService ? '機捷 已收班' : `機捷 ${(tymetro.type || '').replace('(站站停)', '')}`)}</span>
+              <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${this.getHubCountdownText(firstTymetroPlan, tymetro)}</span>
             </div>
             <div class="plan-timeline-hint">
               <span class="timeline-step">出門 ${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</span>
