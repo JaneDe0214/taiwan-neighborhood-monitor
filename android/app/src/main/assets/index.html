@@ -10252,7 +10252,7 @@ class TwinCityTransitMonitor {
         const totalDurationSec = t.duration * 60;
         const progressPercent = Math.min(95, Math.max(5, (elapsedSec / totalDurationSec) * 100));
         const remainRunMins = Math.max(1, Math.ceil((totalDurationSec - elapsedSec) / 60));
-        const trainTypeShort = t.isExpress ? '6xx特快' : '8xx各站停';
+        const trainTypeShort = '';
 
         activeTrains.push({
           trainNo: t.trainNo,
@@ -10294,7 +10294,7 @@ class TwinCityTransitMonitor {
       platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
     }
 
-    const trainTypeShort = nextTrain.isExpress ? '6xx特快' : '8xx各站停';
+    const trainTypeShort = '';
 
     return {
       lineName: '台灣高鐵',
@@ -10538,9 +10538,9 @@ class TwinCityTransitMonitor {
         arriveTime: this.formatTime(finalDestArr),
         totalDuration: `${totalDurationMins} 分鐘`,
         durationNum: totalDurationMins,
-        badge: t.isExpress ? '高鐵特快' : '高鐵各站',
-        badgeClass: t.isExpress ? 'badge-thsr' : 'badge-regular',
-        name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次 (${trainTypeShort})` : `高鐵 ${t.trainNo}次 (${trainTypeShort}) ➔ 板南線`,
+        badge: '高鐵快線',
+        badgeClass: 'badge-thsr',
+        name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次` : `高鐵 ${t.trainNo}次 ➔ 板南線`,
         route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔' : '青埔 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
         detail: isToQingpu
           ? `${this.formatTime(leaveDate)} 出門 ➔ 步行5分搭板南線 (${metroTrainStr ? `${metroTrainStr}發` : '往板橋'}) ➔ 板橋轉乘5分搭高鐵 (${t.trainNo}次 ${t.depTime}發) ➔ 抵桃園步行15分 ➔ ${this.formatTime(finalDestArr)} 抵達`
@@ -10643,7 +10643,7 @@ class TwinCityTransitMonitor {
       if (!thsrPids || !tymetroPids) return false;
 
       // 1. 高鐵 Header 與軌道
-      thsrPids.innerHTML = `<i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ‧ ${thsr.platformStatus} (${thsr.depTime}發)`;
+      thsrPids.innerHTML = `<i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 ‧ ${thsr.platformStatus} (${thsr.depTime}發)`;
 
       const thsrTotal = mainSlot.querySelector('[data-f-thsr-total]');
       if (thsrTotal) {
@@ -11056,7 +11056,7 @@ class TwinCityTransitMonitor {
                   <i class="fa-solid fa-bolt-lightning"></i>
                 </div>
                 <div class="beacon-train-tag tag-thsr ${tr.isExpress ? 'tag-thsr-express' : 'tag-thsr-regular'}">
-                  ${tr.trainNo} ${tr.isExpress ? '特快' : '各站'}
+                  ${tr.trainNo}次
                 </div>
               </div>
             `).join('') :
@@ -11277,7 +11277,7 @@ class TwinCityTransitMonitor {
               <span class="badge-save-time"><i class="fa-solid fa-stopwatch"></i> 約 ${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</span>
             </div>
             <div class="plan-train-detail">
-              <span class="plan-train-name">高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}]</span>
+              <span class="plan-train-name">高鐵 ${thsr.trainNo}次</span>
               <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${thsr.platformStatus}</span>
             </div>
             <div class="plan-timeline-hint">
@@ -11297,7 +11297,7 @@ class TwinCityTransitMonitor {
               <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 約 ${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</span>
             </div>
             <div class="plan-train-detail">
-              <span class="plan-train-name">機捷 ${tymetro.type}</span>
+              <span class="plan-train-name">機捷 ${(tymetro.type || '').replace('(站站停)', '')}</span>
               <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${tymetro.platformStatus}</span>
             </div>
             <div class="plan-timeline-hint">
@@ -11476,7 +11476,7 @@ class TwinCityTransitMonitor {
             </div>
             <div class="track-eta-group">
               <span class="pids-countdown-badge thsr-pids" data-f-thsr-pids>
-                <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 [${thsr.trainTypeShort}] ‧ ${thsr.platformStatus} (${thsr.depTime}發)
+                <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 ‧ ${thsr.platformStatus} (${thsr.depTime}發)
               </span>
               <span class="track-total-time" data-f-thsr-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
@@ -11500,7 +11500,7 @@ class TwinCityTransitMonitor {
             </div>
             <div class="track-eta-group">
               <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}" data-f-tymetro-pids>
-                <i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
+                <i class="fa-solid fa-plane"></i> ${(tymetro.type || '').replace('(站站停)', '')} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
               </span>
               <span class="track-total-time" data-f-tymetro-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
             </div>
