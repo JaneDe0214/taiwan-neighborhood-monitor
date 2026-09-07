@@ -2839,6 +2839,57 @@ a.coord-tag:hover {
   color: #c084fc;
 }
 
+/* 科技感極簡 LIVE 狀態微型膠囊標籤 (取代原官方直連大文字，極致省空間且美觀) */
+.live-chip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  vertical-align: middle;
+  margin-left: 4px;
+  white-space: nowrap;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+}
+
+.live-chip-badge.live-thsr {
+  background: rgba(249, 115, 22, 0.18);
+  border: 1px solid rgba(249, 115, 22, 0.5);
+  color: #ff9900;
+}
+
+.live-chip-badge.live-tymetro {
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  color: #c084fc;
+}
+
+.live-chip-badge.live-metro {
+  background: rgba(2, 132, 199, 0.18);
+  border: 1px solid rgba(2, 132, 199, 0.5);
+  color: #38bdf8;
+}
+
+.live-pulse-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 5px #10b981;
+  animation: live-dot-pulse 1.4s infinite ease-in-out;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes live-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+
 /* 軌道在途行駛班次指示器 - 獨立呈現，不干擾月台等車倒數 */
 .pids-ontrack-pill {
   font-size: 0.6rem;
@@ -9361,9 +9412,9 @@ class TwinCityTransitMonitor {
         ? (isLiveCalibrated ? `列車進站中 (${liveDest || '板南線'})` : '即將進站')
         : (isLiveCalibrated ? `即時推算 (${countdownText} 後進站)` : `${nextTrain.timeStr} 發車 (${countdownText})`),
       sourceBadgeHtml: this.isDirectMetroApi
-        ? '<span class="feed-live-badge live-pulse-badge" title="原生直連開放資料 API 秒級即時更新"><i class="fa-solid fa-bolt"></i> 原生即時直連</span>'
+        ? '<span class="live-chip-badge live-metro" title="官方開放資料原生直連即時看板"><span class="live-pulse-dot"></span>LIVE</span>'
         : (isLiveCalibrated 
-          ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測與真實車廂載重"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
+          ? '<span class="live-chip-badge live-metro" title="即時雷達校正動態推算"><span class="live-pulse-dot"></span>LIVE</span>'
           : '<span class="feed-live-badge sched-badge" title="台北捷運官方全量真實時刻表基準"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>'),
       carWeight: carWeightInfo
     };
@@ -9448,9 +9499,9 @@ class TwinCityTransitMonitor {
       countdownText,
       platformStatus,
       sourceBadgeHtml: this.isDirectMetroApi
-        ? '<span class="feed-live-badge live-pulse-badge" title="原生直連開放資料 API 秒級即時更新"><i class="fa-solid fa-bolt"></i> 原生即時直連</span>'
+        ? '<span class="live-chip-badge live-metro" title="官方開放資料原生直連即時看板"><span class="live-pulse-dot"></span>LIVE</span>'
         : (isLiveCalibrated 
-          ? '<span class="feed-live-badge live-pulse-badge" title="結合每 5 分鐘 Actions 即時列車快照進行秒級航位推測"><i class="fa-solid fa-satellite-dish"></i> 即時雷達校正</span>'
+          ? '<span class="live-chip-badge live-metro" title="即時雷達校正動態推算"><span class="live-pulse-dot"></span>LIVE</span>'
           : '<span class="feed-live-badge sched-badge"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>')
     };
   }
@@ -10086,6 +10137,97 @@ class TwinCityTransitMonitor {
     return finalPlans;
   }
 
+  // 智慧無損 DOM 虛擬差異比對修補器 (Morphing Patch)
+  // 原地同步屬性、樣式與文字，保留所有既有元素，徹底杜絕每秒全量 innerHTML 重設所造成的瘋狂閃爍！
+  morphDom(existingNode, newNode) {
+    if (!existingNode || !newNode) return;
+
+    // 1. 若節點類型不同或標籤名稱不同，直接替換
+    if (existingNode.nodeType !== newNode.nodeType || existingNode.nodeName !== newNode.nodeName) {
+      if (existingNode.parentNode) {
+        existingNode.parentNode.replaceChild(newNode.cloneNode(true), existingNode);
+      }
+      return;
+    }
+
+    // 2. 文字節點 (TEXT_NODE): 僅當文字改變時更新 nodeValue
+    if (existingNode.nodeType === 3) {
+      if (existingNode.nodeValue !== newNode.nodeValue) {
+        existingNode.nodeValue = newNode.nodeValue;
+      }
+      return;
+    }
+
+    // 3. 元素節點 (ELEMENT_NODE): 原地同步屬性與樣式
+    if (existingNode.nodeType === 1) {
+      const existingAttrs = existingNode.attributes;
+      const newAttrs = newNode.attributes;
+
+      // 同步或新增屬性 (如 style="left: xx%", class 等)
+      for (let i = 0; i < newAttrs.length; i++) {
+        const attr = newAttrs[i];
+        if (existingNode.getAttribute(attr.name) !== attr.value) {
+          existingNode.setAttribute(attr.name, attr.value);
+        }
+      }
+
+      // 移除多餘屬性
+      for (let i = existingAttrs.length - 1; i >= 0; i--) {
+        const attr = existingAttrs[i];
+        if (!newNode.hasAttribute(attr.name)) {
+          existingNode.removeAttribute(attr.name);
+        }
+      }
+
+      // 4. 遞迴比對子節點
+      const oldChildren = Array.from(existingNode.childNodes);
+      const newChildren = Array.from(newNode.childNodes);
+      const maxLen = Math.max(oldChildren.length, newChildren.length);
+
+      for (let i = 0; i < maxLen; i++) {
+        const oldChild = oldChildren[i];
+        const newChild = newChildren[i];
+
+        if (!oldChild && newChild) {
+          existingNode.appendChild(newChild.cloneNode(true));
+        } else if (oldChild && !newChild) {
+          existingNode.removeChild(oldChild);
+        } else if (oldChild && newChild) {
+          this.morphDom(oldChild, newChild);
+        }
+      }
+    }
+  }
+
+  // 容器無損增量更新補丁
+  patchContainer(container, newHtml) {
+    if (!container) return;
+    if (!container.firstElementChild) {
+      container.innerHTML = newHtml;
+      return;
+    }
+
+    const temp = document.createElement('div');
+    temp.innerHTML = newHtml;
+
+    const oldChildren = Array.from(container.children);
+    const newChildren = Array.from(temp.children);
+    const maxLen = Math.max(oldChildren.length, newChildren.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      const oldChild = oldChildren[i];
+      const newChild = newChildren[i];
+
+      if (!oldChild && newChild) {
+        container.appendChild(newChild.cloneNode(true));
+      } else if (oldChild && !newChild) {
+        container.removeChild(oldChild);
+      } else if (oldChild && newChild) {
+        this.morphDom(oldChild, newChild);
+      }
+    }
+  }
+
   // 渲染大眾運輸雙線即時走廊
   render() {
     const now = new Date();
@@ -10138,13 +10280,12 @@ class TwinCityTransitMonitor {
     const mainSlot = corridorInner.querySelector('.transit-main-content-slot');
     const drawerSlot = corridorInner.querySelector('.transit-schedule-drawer-slot');
 
-    // 1. 軌道或收合條主區域 (每 1 秒即時動態更新列車 left 百分比與倒數秒數)
+    // 1. 軌道或收合條主區域 (智慧 Morphing 原地無損修補，徹底杜絕每秒全量 innerHTML 重設所引發的瘋狂閃爍)
     if (mainSlot) {
-      if (this.isCollapsed) {
-        mainSlot.innerHTML = this.renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular);
-      } else {
-        mainSlot.innerHTML = this.renderFullCorridorHtml(directionLabel, isToQingpu, bannan, circular, thsr, tymetro, displayStations, plans);
-      }
+      const newHtml = this.isCollapsed 
+        ? this.renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular)
+        : this.renderFullCorridorHtml(directionLabel, isToQingpu, bannan, circular, thsr, tymetro, displayStations, plans);
+      this.patchContainer(mainSlot, newHtml);
     }
 
     // 2. 出門搭車時間表抽屜 (智慧分鐘級快取：同分鐘內 DOM 完全靜止不重繪，跨分鐘即時推進，徹底杜絕每秒閃爍！)
@@ -10624,7 +10765,7 @@ class TwinCityTransitMonitor {
             <div class="track-badge-group">
               <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵快線</span>
               <span class="thsr-safe-pill" title="此路廊保證停靠桃園高鐵站"><i class="fa-solid fa-circle-check"></i> 停靠桃園</span>
-              ${this.isDirectThsrApi ? '<span class="feed-live-badge live-pulse-badge" style="margin-left:4px;" title="原生直連台灣高鐵官網秒級即時更新"><i class="fa-solid fa-bolt"></i> 官方直連</span>' : ''}
+              ${this.isDirectThsrApi ? '<span class="live-chip-badge live-thsr" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 轉乘 ➔ 高鐵' : '高鐵 ➔ 轉乘 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
@@ -10648,7 +10789,7 @@ class TwinCityTransitMonitor {
           <div class="track-header">
             <div class="track-badge-group">
               <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷路線</span>
-              ${this.isDirectTymetroApi ? '<span class="feed-live-badge live-pulse-badge" style="margin-left:4px;" title="原生直連桃園捷運官網秒級即時更新"><i class="fa-solid fa-bolt"></i> 官方直連</span>' : ''}
+              ${this.isDirectTymetroApi ? '<span class="live-chip-badge live-tymetro" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 轉乘 ➔ 機捷' : '機捷 ➔ 轉乘 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">
