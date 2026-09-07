@@ -2800,8 +2800,7 @@ a.coord-tag:hover {
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow: hidden;
-  contain: layout paint;
+  overflow: visible;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
   backface-visibility: hidden;
@@ -2978,10 +2977,10 @@ a.coord-tag:hover {
 /* 軌道本體與進度發光光束 */
 .track-rail-line {
   position: relative;
-  height: 4px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 2px;
-  margin: 15px 8px 6px 8px;
+  border-radius: 3px;
+  margin: 20px 10px 8px 10px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
   overflow: visible !important;
@@ -3008,8 +3007,9 @@ a.coord-tag:hover {
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: 2px;
+  border-radius: 3px;
   transition: width 0.8s ease-in-out;
+  z-index: 1;
 }
 
 .bannan-glow {
@@ -3041,8 +3041,9 @@ a.coord-tag:hover {
   flex-direction: column;
   align-items: center;
   transition: left 0.8s cubic-bezier(0.2, 0.9, 0.3, 1);
-  z-index: 10;
+  z-index: 25;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .train-icon-bubble {
@@ -3054,7 +3055,9 @@ a.coord-tag:hover {
   justify-content: center;
   font-size: 0.58rem;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
-  border: 1px solid #ffffff;
+  border: 1.5px solid #ffffff;
+  flex-shrink: 0;
+  z-index: 26;
 }
 
 .bubble-bannan {
@@ -4899,14 +4902,21 @@ body {
   /* 軌道車站文字與版面極限防擠壓、防溢出加固 */
   .transit-tracks-container.full-length-corridor,
   .transit-track-card.full-width-card,
-  .multi-rail-corridor.full-span-rail,
-  .rail-segment-box {
+  .multi-rail-corridor.full-span-rail {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
     contain: layout paint !important;
+  }
+
+  .rail-segment-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
   }
 
   .segment-stations-row {
@@ -5176,14 +5186,21 @@ body.native-mobile-mode .live-pulse-dot {
 
 body.native-mobile-mode .transit-tracks-container.full-length-corridor,
 body.native-mobile-mode .transit-track-card.full-width-card,
-body.native-mobile-mode .multi-rail-corridor.full-span-rail,
-body.native-mobile-mode .rail-segment-box {
+body.native-mobile-mode .multi-rail-corridor.full-span-rail {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
   contain: layout paint !important;
+}
+
+body.native-mobile-mode .rail-segment-box {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
 }
 
 body.native-mobile-mode .segment-stations-row {
