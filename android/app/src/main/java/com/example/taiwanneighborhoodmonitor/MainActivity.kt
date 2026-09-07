@@ -10,6 +10,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -92,12 +93,15 @@ class MainActivity : ComponentActivity() {
         val s = wv.settings
         s.javaScriptEnabled = true
         s.domStorageEnabled = true
+        @Suppress("DEPRECATION")
+        s.databaseEnabled = true
         s.useWideViewPort = true
         s.loadWithOverviewMode = true
         s.displayZoomControls = false
         s.builtInZoomControls = false
         s.allowFileAccess = true
         s.allowContentAccess = true
+        s.javaScriptCanOpenWindowsAutomatically = true
         @Suppress("DEPRECATION")
         s.allowFileAccessFromFileURLs = true
         @Suppress("DEPRECATION")
@@ -118,6 +122,19 @@ class MainActivity : ComponentActivity() {
         wv.webChromeClient = object : WebChromeClient() {}
 
         wv.webViewClient = object : WebViewClient() {
+            override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
+                // 攔截 Chromium WebView 子進程崩潰，避免直接彈出顛倒 Android 機器人圖示
+                try {
+                    view?.let {
+                        val parent = it.parent as? android.view.ViewGroup
+                        parent?.removeView(it)
+                        it.destroy()
+                    }
+                } catch (_: Exception) {}
+                recreate()
+                return true
+            }
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 // 自動依據設備注入樣式類別與初始化腳本
@@ -141,16 +158,21 @@ class MainActivity : ComponentActivity() {
             }
 
             /**
-             * 原生網路攔截直通：當 Web 請求外部 API 時，可透過原生 HttpURLConnection 高速並行直取 (免 CORS)
+             * 原生網路攔截直通：當 Web 請求外部 API 或串流時，可透過原生 HttpURLConnection 高速並行直取 (免 CORS、免 Referer 限制)
              */
             override fun shouldInterceptRequest(
                 view: WebView?,
                 request: WebResourceRequest?
             ): WebResourceResponse? {
                 val url = request?.url?.toString() ?: return null
-                // 針對外部雲端資料庫與各官方 API 走原生網路連線，秒開且無 CORS 限制
                 if (url.startsWith("http://") || url.startsWith("https://")) {
-                    if (url.contains("raw.githubusercontent.com") || url.contains("janede0214.github.io") ||
+                    // 針對臺北市交工處 HLS 串流與即時視訊資源進行原生代抓 (精準注入 Referer 與 CORS 標頭，徹底消除 403 與 iframe 破圖)
+                    if (url.contains("hls.bote.gov.taipei")) {
+                        try {
+                            val boteRes = fetchNativeBoteUrl(url)
+                            if (boteRes != null) return boteRes
+                        } catch (_: Exception) {}
+                    } else if (url.contains("raw.githubusercontent.com") || url.contains("janede0214.github.io") ||
                         url.contains("opendata.vip") || url.contains("tdx") || url.contains("data.ntpc.gov.tw") ||
                         url.contains("opendata.tycg.gov.tw") || url.contains("cwa.gov.tw") || url.contains("thsrc.com.tw")
                     ) {
@@ -162,6 +184,67 @@ class MainActivity : ComponentActivity() {
                 }
                 return super.shouldInterceptRequest(view, request)
             }
+        }
+    }
+
+    /**
+     * 臺北市交通管制工程處 (hls.bote.gov.taipei) 專屬原生高速代理直透實作
+     * 1. 精準注入官方防盜鏈驗證標頭 (Referer: https://hls.bote.gov.taipei/live/index.html)
+     * 2. 自動分配標準視訊切片 MIME Type (.m3u8 -> application/vnd.apple.mpegurl, .ts -> video/mp2t)
+     * 3. 注入 Access-Control-Allow-Origin: * 消除瀏覽器同源限制
+     * 4. 消除 CSP 與 X-Frame-Options 限制，確保原生硬體解碼與 iframe 雙重暢通
+     */
+    private fun fetchNativeBoteUrl(urlString: String): WebResourceResponse? {
+        return try {
+            val url = URL(urlString)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 6000
+                readTimeout = 10000
+                requestMethod = "GET"
+                setRequestProperty("Referer", "https://hls.bote.gov.taipei/live/index.html")
+                setRequestProperty("Origin", "https://hls.bote.gov.taipei")
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                instanceFollowRedirects = true
+            }
+            conn.connect()
+            val code = conn.responseCode
+            if (code in 200..299) {
+                val rawContentType = conn.contentType ?: ""
+                val mimeType = when {
+                    urlString.contains(".m3u8") -> "application/vnd.apple.mpegurl"
+                    urlString.contains(".ts") -> "video/mp2t"
+                    urlString.contains(".js") -> "application/javascript"
+                    urlString.contains(".css") -> "text/css"
+                    urlString.contains(".html") || (urlString.contains("/live/") && !urlString.contains(".")) -> "text/html"
+                    rawContentType.isNotEmpty() -> rawContentType.split(";")[0].trim()
+                    else -> "application/octet-stream"
+                }
+                val encoding = if (rawContentType.contains("charset=")) {
+                    rawContentType.split("charset=")[1].trim()
+                } else {
+                    "utf-8"
+                }
+                val bytes = conn.inputStream.readBytes()
+
+                val headers = mutableMapOf<String, String>()
+                headers["Access-Control-Allow-Origin"] = "*"
+                headers["Access-Control-Allow-Methods"] = "GET, HEAD, OPTIONS"
+                headers["Access-Control-Allow-Headers"] = "*"
+                headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+
+                WebResourceResponse(
+                    mimeType,
+                    encoding,
+                    200,
+                    "OK",
+                    headers,
+                    ByteArrayInputStream(bytes)
+                )
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 

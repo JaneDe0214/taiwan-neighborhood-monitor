@@ -13440,6 +13440,29 @@ window.CAMERAS_DATA = {
   }
 };
 
+// 智慧串流環境自適應：原生 Android APK / file:// 協定環境下，將臺北市交工處鏡頭自動升級為原生硬體解碼 HLS 直播
+(function adaptTaipeiStreamsForNative() {
+  const isNativeApp = (typeof window.AndroidBridge !== 'undefined') || 
+                      (window.location && window.location.protocol === 'file:') ||
+                      (navigator.userAgent && navigator.userAgent.includes('TaiwanNeighborhoodMonitor'));
+
+  if (isNativeApp && window.CAMERAS_DATA && window.CAMERAS_DATA.cameras) {
+    Object.keys(window.CAMERAS_DATA.cameras).forEach(centerKey => {
+      const list = window.CAMERAS_DATA.cameras[centerKey];
+      if (Array.isArray(list)) {
+        list.forEach(cam => {
+          if (cam.ccdId && (cam.type === 'iframe' || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei')))) {
+            cam.type = 'hls';
+            cam.streamUrl = `https://hls.bote.gov.taipei/stream/${cam.ccdId}/index.m3u8`;
+            cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
+          }
+        });
+      }
+    });
+    console.log('[NativeBridge] 原生環境偵測成功：已將臺北市全域交控鏡頭升級為原生 HLS 硬體解碼串流');
+  }
+})();
+
 /**
  * 區域環境即時影像監控 - 核心應用控制器 (MonitorApp)
  * 支援：雙埔/青埔/新埔/觀光
@@ -13742,6 +13765,20 @@ class MonitorApp {
 
       this.currentCenterData = centerData || { name: '雙埔生活', id: centerId };
       this.currentCameras = cameras || [];
+
+      // 原生 APK 環境下雙重確保臺北市交工處鏡頭為原生 HLS 直播
+      const isNativeMode = (typeof window.AndroidBridge !== 'undefined') || 
+                           (window.location && window.location.protocol === 'file:') ||
+                           (navigator.userAgent && navigator.userAgent.includes('TaiwanNeighborhoodMonitor'));
+      if (isNativeMode) {
+        this.currentCameras.forEach(cam => {
+          if (cam.ccdId && (cam.type === 'iframe' || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei')))) {
+            cam.type = 'hls';
+            cam.streamUrl = `https://hls.bote.gov.taipei/stream/${cam.ccdId}/index.m3u8`;
+            cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
+          }
+        });
+      }
 
       // 更新介面標籤
       const nameEl = document.getElementById('currentCenterName');
