@@ -46,6 +46,7 @@ dependencies {
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose) // 提供 ComponentActivity 支援
+  implementation(libs.okhttp) // 現代高效連線池、HTTP/2 多路複用與 Transparent Gzip
 
   // 單元測試
   testImplementation(libs.junit)

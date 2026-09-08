@@ -27,6 +27,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import okhttp3.ConnectionPool
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
@@ -399,6 +405,16 @@ class AndroidNativeBridge(
     fun getPlatformName(): String = if (isTv) "GoogleTV" else "AndroidMobile"
 
     /**
+     * 高效能 OkHttpClient 單例 (配備連線池、HTTP/2 多路複用與 Transparent Gzip 解壓縮)
+     */
+    private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+        .connectionPool(ConnectionPool(10, 5, TimeUnit.MINUTES))
+        .connectTimeout(4000, TimeUnit.MILLISECONDS)
+        .readTimeout(4000, TimeUnit.MILLISECONDS)
+        .retryOnConnectionFailure(true)
+        .build()
+
+    /**
      * 原生直接以 HTTPS GET 抓取遠端字串 (免除瀏覽器同源 CORS 與 Mixed Content 限制，強化破快取時間戳)
      */
     @JavascriptInterface
@@ -406,23 +422,29 @@ class AndroidNativeBridge(
         return try {
             val sep = if (urlString.contains("?")) "&" else "?"
             val finalUrl = if (urlString.contains("_t=")) urlString else "${urlString}${sep}_t=${System.currentTimeMillis()}"
-            val url = URL(finalUrl)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = if (timeoutMs > 0) timeoutMs else 4000
-                readTimeout = if (timeoutMs > 0) timeoutMs else 4000
-                useCaches = false
-                defaultUseCaches = false
-                requestMethod = "GET"
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
-                setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate")
-                setRequestProperty("Pragma", "no-cache")
-                setRequestProperty("Accept", "application/json, text/plain, */*")
-            }
-            conn.connect()
-            if (conn.responseCode in 200..299) {
-                conn.inputStream.bufferedReader().use { it.readText() }
+            val request = Request.Builder()
+                .url(finalUrl)
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Accept", "application/json, text/plain, */*")
+                .build()
+
+            val client = if (timeoutMs > 0 && timeoutMs != 4000) {
+                okHttpClient.newBuilder()
+                    .connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                    .readTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                    .build()
             } else {
-                ""
+                okHttpClient
+            }
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    response.body?.string() ?: ""
+                } else {
+                    ""
+                }
             }
         } catch (_: Exception) {
             ""
@@ -442,31 +464,35 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生 POST 請求實作 (支援高鐵官網班表查詢)
+     * 原生 POST 請求實作 (支援高鐵官網班表查詢，使用 OkHttp 高效連線池)
      */
     private fun postHttp(urlString: String, postData: String, timeoutMs: Int): String {
         return try {
-            val url = URL(urlString)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = if (timeoutMs > 0) timeoutMs else 6000
-                readTimeout = if (timeoutMs > 0) timeoutMs else 6000
-                requestMethod = "POST"
-                doOutput = true
-                useCaches = false
-                defaultUseCaches = false
-                setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TaiwanNeighborhoodMonitor/1.0")
-                setRequestProperty("Referer", "https://www.thsrc.com.tw/ArticleContent/a3b630bb-1066-4352-a1ef-58c7b4e8ef7c")
-                setRequestProperty("Origin", "https://www.thsrc.com.tw")
-            }
-            conn.outputStream.use { os ->
-                os.write(postData.toByteArray(Charsets.UTF_8))
-            }
-            conn.connect()
-            if (conn.responseCode in 200..299) {
-                conn.inputStream.bufferedReader().use { it.readText() }
+            val mediaType = "application/x-www-form-urlencoded; charset=UTF-8".toMediaType()
+            val body = postData.toRequestBody(mediaType)
+            val request = Request.Builder()
+                .url(urlString)
+                .post(body)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) TaiwanNeighborhoodMonitor/1.0")
+                .header("Referer", "https://www.thsrc.com.tw/ArticleContent/a3b630bb-1066-4352-a1ef-58c7b4e8ef7c")
+                .header("Origin", "https://www.thsrc.com.tw")
+                .build()
+
+            val client = if (timeoutMs > 0 && timeoutMs != 6000) {
+                okHttpClient.newBuilder()
+                    .connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                    .readTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                    .build()
             } else {
-                ""
+                okHttpClient
+            }
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    response.body?.string() ?: ""
+                } else {
+                    ""
+                }
             }
         } catch (_: Exception) {
             ""
@@ -474,7 +500,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 背景非同步通知 WebView 前端最新資料已更新完成，平滑重繪 UI
+     * 背景非同步通知 WebView 前端最新資料已更新完成，平滑重繪 UI (交通走廊與全天候指標同步刷新)
      */
     private fun notifyDataUpdated(dataType: String) {
         activity.runOnUiThread {
@@ -483,11 +509,26 @@ class AndroidNativeBridge(
                     if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
                         window.transitMonitor.forceRefreshAll();
                     }
-                    if (window.weatherMonitor && typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
-                        window.weatherMonitor.fetchRealtimeYouBike(true);
+                    if (window.weatherMonitor) {
+                        if (typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
+                            window.weatherMonitor.fetchRealtimeYouBike(true);
+                        }
+                        if (typeof window.weatherMonitor.triggerAutoRefresh === 'function') {
+                            window.weatherMonitor.triggerAutoRefresh();
+                        }
                     }
                 })();
             """.trimIndent(), null)
+        }
+    }
+
+    /**
+     * 前端 DOMContentLoaded 就緒雙向握手：打開 App 即刻主動推送最新數據，消除載入延遲
+     */
+    @JavascriptInterface
+    fun onFrontendReady() {
+        bridgeScope.launch(Dispatchers.Main) {
+            notifyDataUpdated("ready")
         }
     }
 
@@ -619,9 +660,13 @@ class AndroidNativeBridge(
         val carRegex = Regex("""<span class="carNum">([^<]+)</span>[\s\S]*?<span class="carWeight">([\s\S]*?)</span>""", RegexOption.IGNORE_CASE)
         val labelRegex = Regex("""class="label\s+([^"]+)"[^>]*>([^<]+)</label>""", RegexOption.IGNORE_CASE)
         val matches = carRegex.findAll(html).toList()
+        val seenCars = mutableSetOf<String>()
 
         for (cm in matches) {
             val carNum = cm.groupValues[1].trim()
+            if (seenCars.contains(carNum)) continue
+            seenCars.add(carNum)
+
             val raw = cm.groupValues[2]
             val lm = labelRegex.find(raw)
             var status = "舒適"

@@ -15329,6 +15329,13 @@ window.showToast = showToast;
 window.addEventListener('DOMContentLoaded', () => {
   window.monitorApp = new MonitorApp();
   window.monitorApp.init();
+
+  // 原生 Android 雙向握手：通知原生前端已完全就緒，立即高速推送最新預熱數據
+  if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.onFrontendReady === 'function') {
+    try {
+      window.AndroidBridge.onFrontendReady();
+    } catch(e) {}
+  }
 });
 
 
