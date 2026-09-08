@@ -50,11 +50,20 @@
   --color-danger: #ef4444;
   --color-purple: #8b5cf6;
   
+  /* 交通運具語意化色彩 */
+  --color-thsr: #ff7700;
+  --color-thsr-light: #ff9900;
+  --color-tymetro-express: #a855f7;
+  --color-tymetro-commuter: #0284c7;
+  --color-bannan: #38bdf8;
+  --color-circular: #facc15;
+  
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
   
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
 * {
@@ -328,8 +337,8 @@ body {
 }
 
 .nav-tool-btn {
-  width: 32px !important;
-  height: 32px !important;
+  width: 40px !important;
+  height: 40px !important;
   border-radius: 8px !important;
   display: flex !important;
   align-items: center !important;
@@ -614,6 +623,22 @@ body {
   box-shadow: 0 0 8px rgba(168, 85, 247, 0.15);
 }
 
+/* 鍵盤無障礙焦點指示器 */
+.center-btn:focus-visible,
+.grid-btn:focus-visible,
+.mode-toggle-btn:focus-visible,
+.compact-btn:focus-visible,
+.tool-icon-btn:focus-visible,
+.radar-layer-btn:focus-visible,
+.compact-badge-dir-btn:focus-visible,
+.dir-toggle-btn:focus-visible,
+.nav-tool-btn:focus-visible,
+.schedule-tab-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 240, 255, 0.15);
+}
+
 /* 確保任何視訊內部絕對零標籤遮擋 */
 .live-badge,
 .cam-watermark {
@@ -663,6 +688,12 @@ body {
   display: inline-block;
   position: relative;
   flex-shrink: 0;
+  animation: gentle-live-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes gentle-live-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 .cam-card-header {
@@ -703,8 +734,8 @@ body {
 
 /* 點地圖街景專屬紅色標籤 */
 .cam-map-tag {
-  background: linear-gradient(135deg, #ea4335, #f87171);
-  color: #ffffff !important;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1 !important;
   font-size: 0.7rem;
   font-weight: 700;
   padding: 2px 7px;
@@ -716,18 +747,19 @@ body {
   gap: 3px;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(234, 67, 53, 0.35);
+  box-shadow: none;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 .cam-map-tag:hover {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: rgba(148, 163, 184, 0.2);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(234, 67, 53, 0.5);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   filter: brightness(1.15);
-  color: #ffffff !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(203, 213, 225, 0.5);
 }
 
 .cam-map-tag i {
@@ -755,8 +787,8 @@ body {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -764,6 +796,17 @@ body {
   cursor: pointer;
   font-size: 0.75rem;
   transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  position: relative;
+}
+
+.tool-icon-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
 }
 
 .tool-icon-btn:hover {
@@ -833,34 +876,6 @@ body {
 
 
 
-/* 導覽列畫面自適應控制按鈕 */
-.mode-toggle-btn {
-  background: rgba(16, 24, 40, 0.9);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  padding: 5px 9px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.2s ease;
-}
-
-.mode-toggle-btn:hover {
-  color: var(--text-main);
-  border-color: var(--color-primary);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.mode-toggle-btn.active {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 150, 255, 0.2));
-  color: var(--color-primary);
-  border-color: rgba(0, 240, 255, 0.5);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
-}
 
 /* 狀態徽章 (Live 閃爍圓點) */
 .live-badge {
@@ -2081,8 +2096,8 @@ a.coord-tag:hover {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-muted);
-  font-size: 0.7rem;
-  padding: 2px 7px;
+  font-size: 0.72rem;
+  padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
   display: inline-flex;
@@ -2231,7 +2246,7 @@ a.coord-tag:hover {
 }
 
 .status-sync-tag {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: var(--text-dim);
   display: inline-flex;
   align-items: center;
@@ -2242,7 +2257,7 @@ a.coord-tag:hover {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--text-muted);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   padding: 1px 6px;
   border-radius: 3px;
   cursor: pointer;
@@ -2284,7 +2299,7 @@ a.coord-tag:hover {
 }
 
 .incident-line-tag {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -2313,14 +2328,14 @@ a.coord-tag:hover {
 }
 
 .incident-time-tag {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   color: #f87171;
   white-space: nowrap;
 }
 
 /* PIDS 營運異常標籤 */
 .pids-alert-tag {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 3px;
@@ -2334,7 +2349,7 @@ a.coord-tag:hover {
 }
 
 .plan-alert-badge {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -2345,7 +2360,7 @@ a.coord-tag:hover {
 }
 
 .transit-live-pill i {
-  font-size: 0.35rem;
+  font-size: 0.65rem;
 }
 
 .transit-controls-group {
@@ -2395,8 +2410,8 @@ a.coord-tag:hover {
   background: transparent;
   border: none;
   color: var(--color-primary);
-  width: 20px;
-  height: 20px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2619,7 +2634,7 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: #94a3b8;
 }
 
@@ -2858,7 +2873,7 @@ a.coord-tag:hover {
 
 .corridor-youbike-pill .ebike-sup {
   color: #facc15;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   margin-left: 1px;
 }
 
@@ -3058,7 +3073,7 @@ a.coord-tag:hover {
 
 /* 班次資訊專屬膠囊 - 最佳化清晰展示 */
 .pids-train-pill {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -3093,7 +3108,7 @@ a.coord-tag:hover {
   gap: 3px;
   padding: 1px 4px;
   border-radius: 3px;
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   line-height: 1.1;
@@ -3139,7 +3154,7 @@ a.coord-tag:hover {
 
 /* 軌道在途行駛班次指示器 - 獨立呈現，不干擾月台等車倒數 */
 .pids-ontrack-pill {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
@@ -3177,7 +3192,7 @@ a.coord-tag:hover {
 
 /* 月台即時倒數小膠囊 */
 .pids-mini-pill {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 600;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   background: rgba(56, 189, 248, 0.12);
@@ -3204,7 +3219,7 @@ a.coord-tag:hover {
 
 .leg-info {
   color: var(--text-dim);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   margin-left: auto;
 }
 
@@ -3287,7 +3302,7 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
   border: 1.5px solid #ffffff;
   flex-shrink: 0;
@@ -3335,7 +3350,7 @@ a.coord-tag:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
   width: 100%;
   max-width: 100%;
@@ -3366,7 +3381,7 @@ a.coord-tag:hover {
 }
 
 .connector-badge {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.12);
@@ -3402,7 +3417,7 @@ a.coord-tag:hover {
 }
 
 .crowd-station-badge {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #38bdf8;
   display: flex;
@@ -3428,7 +3443,7 @@ a.coord-tag:hover {
   gap: 2px;
   padding: 1px 3px;
   border-radius: 3px;
-  font-size: 0.56rem;
+  font-size: 0.65rem;
   font-weight: 600;
   white-space: nowrap;
   transition: transform 0.15s ease;
@@ -3490,7 +3505,7 @@ a.coord-tag:hover {
 }
 
 .parking-title-tag {
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #ff9900;
   display: flex;
@@ -3511,7 +3526,7 @@ a.coord-tag:hover {
 }
 
 .parking-lot-chip {
-  font-size: 0.56rem;
+  font-size: 0.65rem;
   padding: 1px 3px;
   border-radius: 3px;
   white-space: nowrap;
@@ -3555,7 +3570,7 @@ a.coord-tag:hover {
   gap: 4px;
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -3691,7 +3706,7 @@ a.coord-tag:hover {
   background: rgba(0, 240, 255, 0.12);
   border: 1px solid rgba(0, 240, 255, 0.35);
   color: #00f0ff;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   padding: 2px 7px;
   border-radius: 4px;
   font-weight: 600;
@@ -3810,7 +3825,7 @@ a.coord-tag:hover {
 }
 
 .plan-idx-tag {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   color: var(--text-dim);
   font-family: monospace;
   margin-left: auto;
@@ -3830,7 +3845,7 @@ a.coord-tag:hover {
 }
 
 .plan-badge {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
@@ -3881,7 +3896,7 @@ a.coord-tag:hover {
 }
 
 .step-label {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   color: var(--text-dim);
 }
 
@@ -3898,7 +3913,7 @@ a.coord-tag:hover {
 
 .plan-arrow {
   color: var(--text-dim);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
 }
 
 .plan-detail-text {
@@ -4024,7 +4039,7 @@ a.coord-tag:hover {
 }
 
 .plan-wait-chip {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 3px;
@@ -4063,7 +4078,7 @@ a.coord-tag:hover {
 }
 
 .schedule-origin-station .st-label, .schedule-dest-station .st-label {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   color: #64748b;
 }
 
@@ -4083,7 +4098,7 @@ a.coord-tag:hover {
 }
 
 .st-type-tag {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   padding: 0 4px;
   border-radius: 2px;
   font-weight: 600;
@@ -4141,7 +4156,7 @@ a.coord-tag:hover {
 
 .pill-best-tag {
   margin-left: auto;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #fbbf24;
 }
@@ -4171,7 +4186,7 @@ a.coord-tag:hover {
 }
 
 .pids-train-no-tag {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: var(--text-dim);
   font-family: monospace;
 }
@@ -4254,7 +4269,7 @@ a.coord-tag:hover {
   background: rgba(16, 185, 129, 0.18);
   border: 1px solid rgba(16, 185, 129, 0.45);
   color: #34d399;
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -4268,7 +4283,7 @@ a.coord-tag:hover {
   background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.4);
   color: #fbbf24;
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
@@ -4279,7 +4294,7 @@ a.coord-tag:hover {
   background: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.4);
   color: #6ee7b7;
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 0 4px;
   border-radius: 3px;
@@ -4288,7 +4303,7 @@ a.coord-tag:hover {
 
 .thsr-warn-note {
   color: #fbbf24;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -4358,7 +4373,7 @@ a.coord-tag:hover {
 }
 
 .station-code-txt {
-  font-size: 0.56rem;
+  font-size: 0.65rem;
   color: #64748b;
   font-family: monospace;
   margin-top: 2px;
@@ -4445,7 +4460,7 @@ a.coord-tag:hover {
   background: rgba(168, 85, 247, 0.25);
   border: 1px solid rgba(168, 85, 247, 0.5);
   color: #d8b4fe;
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   padding: 1px 4px;
   border-radius: 3px;
   font-weight: 600;
@@ -4455,14 +4470,14 @@ a.coord-tag:hover {
   background: rgba(2, 132, 199, 0.25);
   border: 1px solid rgba(2, 132, 199, 0.5);
   color: #7dd3fc;
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   padding: 1px 4px;
   border-radius: 3px;
   font-weight: 600;
 }
 
 .tip-desc {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: #94a3b8;
   margin-top: 3px;
   line-height: 1.3;
@@ -4475,7 +4490,7 @@ a.coord-tag:hover {
   top: auto;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   white-space: nowrap;
   padding: 1px 4px;
   border-radius: 3px;
@@ -4575,7 +4590,7 @@ a.coord-tag:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   transition: all 0.2s ease;
 }
 
@@ -4654,7 +4669,7 @@ a.coord-tag:hover {
 }
 
 .rain-col-prob {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   line-height: 1;
 }
@@ -4693,7 +4708,7 @@ a.coord-tag:hover {
 }
 
 .rain-col-date-tag {
-  font-size: 0.52rem;
+  font-size: 0.65rem;
   color: #64748b;
   white-space: nowrap;
   line-height: 1;
@@ -4709,7 +4724,7 @@ a.coord-tag:hover {
 }
 
 .rain-col-time {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: #64748b;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   line-height: 1;
@@ -5121,7 +5136,7 @@ body {
     flex-direction: column !important;
     align-items: stretch !important;
     padding: 8px 10px !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   .brand-section {
@@ -5195,6 +5210,8 @@ body {
     scrollbar-width: none;
     box-sizing: border-box !important;
     padding: 3px !important;
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+    mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
   .grid-selector::-webkit-scrollbar {
     display: none;
@@ -5408,12 +5425,12 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    font-size: 0.58rem !important;
+    font-size: 0.65rem !important;
     padding: 1px 2px !important;
   }
 
   .station-label {
-    font-size: 0.58rem !important;
+    font-size: 0.65rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
@@ -5430,7 +5447,7 @@ body {
 
   .crowd-station-badge {
     width: 100% !important;
-    font-size: 0.58rem !important;
+    font-size: 0.65rem !important;
   }
 
   .crowd-cars-strip {
@@ -5443,7 +5460,7 @@ body {
 
   .crowd-car-box {
     padding: 1px 1px !important;
-    font-size: 0.52rem !important;
+    font-size: 0.65rem !important;
     justify-content: center !important;
     min-width: 0 !important;
     overflow: hidden !important;
@@ -5452,7 +5469,7 @@ body {
   }
 
   .crowd-car-box span {
-    font-size: 0.52rem !important;
+    font-size: 0.65rem !important;
   }
 
   /* 桃園高鐵停車場微型條在手機螢幕自動折行與自適應 */
@@ -5466,7 +5483,7 @@ body {
   }
 
   .parking-title-tag {
-    font-size: 0.56rem !important;
+    font-size: 0.65rem !important;
   }
 
   .parking-lots-strip {
@@ -5478,7 +5495,7 @@ body {
   }
 
   .parking-lot-chip {
-    font-size: 0.52rem !important;
+    font-size: 0.65rem !important;
     padding: 1px 2px !important;
   }
 
@@ -5692,12 +5709,12 @@ body.native-mobile-mode .segment-stations-row {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  font-size: 0.58rem !important;
+  font-size: 0.65rem !important;
   padding: 1px 2px !important;
 }
 
 body.native-mobile-mode .station-label {
-  font-size: 0.58rem !important;
+  font-size: 0.65rem !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
 }
@@ -5713,7 +5730,7 @@ body.native-mobile-mode .bannan-car-crowd-row {
 
 body.native-mobile-mode .crowd-station-badge {
   width: 100% !important;
-  font-size: 0.58rem !important;
+  font-size: 0.65rem !important;
 }
 
 body.native-mobile-mode .crowd-cars-strip {
@@ -5726,7 +5743,7 @@ body.native-mobile-mode .crowd-cars-strip {
 
 body.native-mobile-mode .crowd-car-box {
   padding: 1px 1px !important;
-  font-size: 0.52rem !important;
+  font-size: 0.65rem !important;
   justify-content: center !important;
   min-width: 0 !important;
   overflow: hidden !important;
@@ -5735,7 +5752,7 @@ body.native-mobile-mode .crowd-car-box {
 }
 
 body.native-mobile-mode .crowd-car-box span {
-  font-size: 0.52rem !important;
+  font-size: 0.65rem !important;
 }
 
 body.native-mobile-mode .thsr-parking-status-bar {
@@ -5748,7 +5765,7 @@ body.native-mobile-mode .thsr-parking-status-bar {
 }
 
 body.native-mobile-mode .parking-title-tag {
-  font-size: 0.56rem !important;
+  font-size: 0.65rem !important;
 }
 
 body.native-mobile-mode .parking-lots-strip {
@@ -5760,13 +5777,171 @@ body.native-mobile-mode .parking-lots-strip {
 }
 
 body.native-mobile-mode .parking-lot-chip {
-  font-size: 0.52rem !important;
+  font-size: 0.65rem !important;
   padding: 1px 2px !important;
+}
+
+/* ==========================================================================
+   全域輕量 Toast 通知系統 (底部中央浮動提示，2.5 秒自動消失)
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast-notification {
+  background: rgba(16, 24, 40, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 240, 255, 0.15);
+  animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+             toast-fade-out 0.3s ease 2.2s forwards;
+  pointer-events: auto;
+  white-space: nowrap;
+  max-width: 90vw;
+}
+
+.toast-notification.toast-success {
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.toast-notification.toast-success i {
+  color: var(--color-success);
+}
+
+.toast-notification.toast-warning {
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.toast-notification.toast-warning i {
+  color: var(--color-warning);
+}
+
+.toast-notification.toast-error {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.toast-notification.toast-error i {
+  color: var(--color-danger);
+}
+
+.toast-notification i {
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out {
+  to {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   攝影機卡片骨架屏載入動畫 (Skeleton Shimmer)
+   ========================================================================== */
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+    rgba(30, 41, 59, 0.6) 25%,
+    rgba(51, 65, 85, 0.6) 37%,
+    rgba(30, 41, 59, 0.6) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-wave 1.6s ease infinite;
+}
+
+@keyframes skeleton-wave {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.cam-card .video-wrapper .skeleton-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.cam-card .video-wrapper .skeleton-placeholder i {
+  font-size: 1.5rem;
+  color: var(--text-dim);
+  animation: skeleton-icon-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skeleton-icon-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* ==========================================================================
+   單格刷新按鈕旋轉回饋動畫
+   ========================================================================== */
+.tool-icon-btn.btn-refreshing i {
+  animation: single-refresh-spin 0.6s cubic-bezier(0.3, 1, 0.4, 1);
+}
+
+@keyframes single-refresh-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   卡片 Hover 精緻化與 Widget 進場動畫強化
+   ========================================================================== */
+.cam-card {
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.cam-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 240, 255, 0.35);
+}
+
+.widget-card {
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.widget-card:hover {
+  transform: translateY(-1px);
 }
 
 </style>
 </head>
 <body>
+
+  <!-- 全域 Toast 通知容器 -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <!-- 頂部科技指揮導航列 -->
   <header class="top-nav">
@@ -5893,7 +6068,7 @@ body.native-mobile-mode .parking-lot-chip {
           </div>
         </div>
 
-        <div class="weather-grid-metrics" style="grid-template-columns: repeat(2, 1fr); gap: 6px;">
+        <div class="weather-grid-metrics">
           <div class="metric-box">
             <i class="fa-solid fa-droplet metric-icon"></i>
             <div>
@@ -14057,7 +14232,10 @@ class MonitorApp {
         if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
           window.transitMonitor.forceRefreshAll();
         }
-        setTimeout(() => btnRefreshAll.classList.remove('btn-spinning'), 700);
+        setTimeout(() => {
+          btnRefreshAll.classList.remove('btn-spinning');
+          if (window.showToast) window.showToast('全部資料已刷新', 'success');
+        }, 700);
       });
     }
     // 全螢幕切換按鈕
@@ -14429,8 +14607,17 @@ class MonitorApp {
     }
   }
 
-  // 單一鏡頭刷新
+  // 單一鏡頭刷新 (含按鈕旋轉回饋動畫)
   refreshSingleCamera(camId) {
+    // 找到該卡片的刷新按鈕並觸發旋轉動畫
+    const card = document.getElementById(`cam-card-${camId}`);
+    if (card) {
+      const refreshBtn = card.querySelector('.tool-icon-btn[title*="刷新"]');
+      if (refreshBtn) {
+        refreshBtn.classList.add('btn-refreshing');
+        setTimeout(() => refreshBtn.classList.remove('btn-refreshing'), 650);
+      }
+    }
     this.playerEngine.refreshCamera(camId);
   }
 
@@ -14455,10 +14642,12 @@ class MonitorApp {
           const a = document.createElement('a');
           a.href = canvas.toDataURL('image/jpeg', 0.95);
           a.download = `${cam.id}_${Date.now()}.jpg`;
-          a.click();
+           a.click();
+          if (window.showToast) window.showToast('截圖已儲存', 'success');
           return;
         } catch (e) {
           console.warn('Canvas 截圖受限:', e);
+          if (window.showToast) window.showToast('因跨域安全限制，無法直接截圖下載', 'warning');
         }
       }
     }
@@ -14768,6 +14957,30 @@ class MonitorApp {
 if (typeof window !== 'undefined') {
   window.MonitorApp = MonitorApp;
 }
+
+// 全域 Toast 通知工具函式
+function showToast(message, type = 'info', durationMs = 2500) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
+  const iconMap = {
+    'info': 'fa-solid fa-circle-info',
+    'success': 'fa-solid fa-circle-check',
+    'warning': 'fa-solid fa-triangle-exclamation',
+    'error': 'fa-solid fa-circle-xmark'
+  };
+  const typeClass = type === 'info' ? '' : `toast-${type}`;
+  
+  const toast = document.createElement('div');
+  toast.className = `toast-notification ${typeClass}`.trim();
+  toast.innerHTML = `<i class="${iconMap[type] || iconMap.info}"></i> ${message}`;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, durationMs);
+}
+window.showToast = showToast;
 
 // 網頁載入完成後啟動應用程式
 window.addEventListener('DOMContentLoaded', () => {
