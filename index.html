@@ -6624,9 +6624,12 @@ class CameraPlayerEngine {
   // 採用階梯式平滑啟動，兼具秒開起播與防止網路並發擁塞
   initPlayersForVisibleCards(cameras) {
     this.clearStaggerTimers();
+    const isNativeApp = typeof window !== 'undefined' && 
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
+
     cameras.forEach((cam, index) => {
-      // 首兩台焦點鏡頭極速啟動 (0ms, 40ms)，後續依序錯開 70ms，平滑分散連線與切片下載請求
-      const delay = index < 2 ? index * 40 : 80 + (index - 2) * 70;
+      // 高階設備與原生 APK 採用極速並行載入 (前 4 台 0~15ms，後續 15ms 錯開)，低階或一般環境維持平滑錯開
+      const delay = isNativeApp ? Math.min(index * 15, 60) : (index < 2 ? index * 40 : 80 + (index - 2) * 70);
       const timer = setTimeout(() => {
         const videoEl = document.getElementById(`video-${cam.id}`);
         const imgEl = document.getElementById(`feed-${cam.id}`);
@@ -6689,10 +6692,10 @@ class CameraPlayerEngine {
           capLevelToPlayerSize: false,    // 解鎖最高畫質：絕不因容器小而降級
           autoLevelCapping: -1,
           startLevel: -1,
-          maxBufferLength: 30,            // 大幅提升前方緩衝深度至 30 秒 (約 5 個切片)，抵抗網路抖動與伺服器延遲
-          maxMaxBufferLength: 60,         // 最大容許 60 秒緩衝深度
-          maxBufferSize: 60 * 1024 * 1024,// 60MB 緩衝記憶體空間
-          backBufferLength: 30,           // 歷史緩衝保留 30 秒，徹底避免頻繁清理 SourceBuffer 造成解碼管線卡死
+          maxBufferLength: 20,            // 多宮格前方緩衝深度 20 秒 (約 3~4 個切片)，抵抗網路抖動
+          maxMaxBufferLength: 40,         // 最大容許 40 秒緩衝深度
+          maxBufferSize: 20 * 1024 * 1024,// 多宮格並行控制在 20MB 緩衝記憶體空間，杜絕 6 路並播吃光 WebView 記憶體造成崩潰閃退
+          backBufferLength: 15,           // 歷史緩衝保留 15 秒，消除頻繁清理 SourceBuffer 造成解碼管線卡死
           fragLoadingTimeOut: 12000,      // 單一切片逾時緊縮為 12 秒，超時即快速重試
           manifestLoadingTimeOut: 10000,
           levelLoadingTimeOut: 10000,
@@ -6823,8 +6826,9 @@ class CameraPlayerEngine {
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                if ((window.location && window.location.protocol === 'file:') && cam.id.startsWith('tpe-')) {
-                  // 本機 file:// 且伺服器未啟動時提供優雅直開按鈕，絕不白屏或顯示拒絕連線
+                const isAndroidApp = typeof window !== 'undefined' && window.AndroidBridge != null;
+                if (!isAndroidApp && (window.location && window.location.protocol === 'file:') && cam.id.startsWith('tpe-')) {
+                  // 僅在非 Android 原生 App 的純本機 file:// 離線環境才顯示離線卡片
                   const wrapper = videoEl.parentElement;
                   if (wrapper && !wrapper.querySelector('.bote-offline-card')) {
                     wrapper.innerHTML = `
