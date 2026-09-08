@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -366,6 +367,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        nativeBridge.cancelScope()
         webView.destroy()
         super.onDestroy()
     }
@@ -382,6 +384,13 @@ class AndroidNativeBridge(
     private val bridgeScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val dataMemoryCache = ConcurrentHashMap<String, String>()
     private val isRefreshing = ConcurrentHashMap<String, Boolean>()
+
+    /**
+     * 取消所有背景協程，防止 Activity 銷毀後記憶體洩漏
+     */
+    fun cancelScope() {
+        bridgeScope.cancel()
+    }
 
     @JavascriptInterface
     fun isTvMode(): Boolean = isTv
@@ -512,11 +521,21 @@ class AndroidNativeBridge(
         try {
             // 1. 優先直打台灣 TDX 即時開放資料 API (opendata.vip，每分鐘動態更新)
             try {
-                val ntpcRaw = fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500)
-                val tycgRaw = fetchHttp("https://www.opendata.vip/tdx/youbikeApi/Taoyuan", 3500)
-                if (ntpcRaw.isNotBlank() && tycgRaw.isNotBlank() && ntpcRaw.trim().startsWith("[") && tycgRaw.trim().startsWith("[")) {
+                val ntpcDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500) }
+                val tycgDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/Taoyuan", 3500) }
+                val ntpcRaw = ntpcDeferred.await()
+                val tycgRaw = tycgDeferred.await()
+
+                fun isValidJsonArray(raw: String?): Boolean {
+                    val trimmed = raw?.trim() ?: return false
+                    return trimmed.startsWith("[") && trimmed.endsWith("]")
+                }
+                val safeNtpc = if (isValidJsonArray(ntpcRaw)) ntpcRaw else "[]"
+                val safeTycg = if (isValidJsonArray(tycgRaw)) tycgRaw else "[]"
+
+                if (isValidJsonArray(ntpcRaw) || isValidJsonArray(tycgRaw)) {
                     val now = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(Date())
-                    val json = """{"success":true,"isDirectApi":true,"updateTimeDisplay":"$now","ntpc":$ntpcRaw,"tycg":$tycgRaw}"""
+                    val json = """{"success":true,"isDirectApi":true,"updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
                     dataMemoryCache["youbike"] = json
                     notifyDataUpdated("youbike")
                     return@withContext

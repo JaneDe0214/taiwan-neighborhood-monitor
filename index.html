@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>雙埔生活</title>
   
-  <!-- 雙埔生活專屬網頁頁籤與 Web App 圖標 (Favicon & Touch Icon) -->
-  <link rel="icon" type="image/jpeg" href="dpuLogo.jpg">
+  <!-- 雙埔生活專屬網頁頁籤與 Web App 圖標 (Favicon & Touch Icon，輕量化極速秒載) -->
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="favicon.png">
   <link rel="icon" type="image/png" sizes="512x512" href="dpuLogo_icon.png">
   <link rel="apple-touch-icon" href="dpuLogo_icon.png">
@@ -60,10 +60,30 @@
   
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-dim: #8b9bb5; /* 提升至 5.1:1 對比度，符合 WCAG 2.1 AA 無障礙標準 */
+  
+  /* 標準化 Design Tokens (間距、圓角與觸控目標) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --touch-target-min: 44px;
   
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* 前庭覺障礙無障礙保護與低功耗偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 * {
@@ -563,22 +583,22 @@ body {
 .adaptive-fit .camera-grid.grid-12 .cam-card-footer,
 .adaptive-fit .camera-grid.grid-16 .cam-card-footer {
   padding: 2px 6px !important;
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
 }
 
 .adaptive-fit .camera-grid.grid-10 .cam-map-tag,
 .adaptive-fit .camera-grid.grid-12 .cam-map-tag,
 .adaptive-fit .camera-grid.grid-16 .cam-map-tag {
-  padding: 1px 4px !important;
-  font-size: 0.64rem !important;
+  padding: 2px 5px !important;
+  font-size: 0.72rem !important;
 }
 
 .adaptive-fit .camera-grid.grid-10 .tool-icon-btn,
 .adaptive-fit .camera-grid.grid-12 .tool-icon-btn,
 .adaptive-fit .camera-grid.grid-16 .tool-icon-btn {
-  width: 22px !important;
-  height: 22px !important;
-  font-size: 0.68rem !important;
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 0.78rem !important;
 }
 
 /* 側邊欄收合/展開酷炫動畫模式 (全寬視訊戰情牆平滑轉換) */
@@ -3666,41 +3686,86 @@ a.coord-tag:hover {
 .drawer-metro-chips-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
 }
 .drawer-metro-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+.drawer-metro-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(22, 34, 58, 0.9);
 }
 .drawer-metro-chip.chip-bannan {
-  border-color: rgba(2, 132, 199, 0.35);
+  border-color: rgba(2, 132, 199, 0.45);
 }
 .drawer-metro-chip.chip-circular {
-  border-color: rgba(234, 179, 8, 0.35);
+  border-color: rgba(234, 179, 8, 0.45);
 }
 .dm-station {
   font-weight: 700;
-  color: #f1f5f9;
+  color: #f8fafc;
+  letter-spacing: 0.3px;
 }
 .dm-dest {
   color: #cbd5e1;
 }
 .dm-status {
-  padding: 0 4px;
-  border-radius: 2px;
-  background: rgba(2, 132, 199, 0.2);
-  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
   font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+.dm-status.dm-counting {
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.3);
 }
 .dm-status.dm-arriving {
-  background: rgba(239, 68, 68, 0.25);
-  color: #f87171;
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  animation: pulse-arriving-glow 1.2s ease-in-out infinite;
+}
+.dm-live-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.pulse-count-glow {
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff;
+  animation: count-heartbeat 1.5s ease-in-out infinite;
+}
+.pulse-arrive-glow {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: arrive-flash 0.8s ease-in-out infinite;
+}
+@keyframes count-heartbeat {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes arrive-flash {
+  0%, 100% { opacity: 0.5; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+@keyframes pulse-arriving-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.45); }
 }
 
 /* ==========================================================================
@@ -4894,11 +4959,12 @@ a.coord-tag:hover {
 
 .radar-layer-btn {
   background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--text-muted);
-  font-size: 0.68rem;
-  padding: 3px 8px;
-  border-radius: 4px;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  min-height: 36px;
+  border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -6119,21 +6185,21 @@ body.native-mobile-mode .parking-lot-chip {
       <div class="nav-control-group">
         <!-- 畫面版型與在地生活資訊切換 -->
         <div class="mode-toggles-wrapper">
-          <button id="btnToggleAdaptive" class="mode-toggle-btn" title="切換顯示模式：自由捲動最大化 (預設) / 一屏呈現 (免捲動)">
-            <i class="fa-solid fa-expand"></i> <span>一屏呈現</span>
+          <button id="btnToggleAdaptive" class="mode-toggle-btn" aria-label="切換一屏呈現或自由捲動模式" title="切換顯示模式：自由捲動最大化 (預設) / 一屏呈現 (免捲動)">
+            <i class="fa-solid fa-expand" aria-hidden="true"></i> <span>一屏呈現</span>
           </button>
-          <button id="btnToggleSidebar" class="mode-toggle-btn active" title="顯示/收合右側氣象、空氣品質與周遭地圖等在地生活資訊">
-            <i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>
+          <button id="btnToggleSidebar" class="mode-toggle-btn active" aria-label="顯示或收合在地生活資訊面板" aria-expanded="true" title="顯示/收合右側氣象、空氣品質與周遭地圖等在地生活資訊">
+            <i class="fa-solid fa-circle-info" aria-hidden="true"></i> <span>當地資訊</span>
           </button>
         </div>
 
         <!-- 功能圖示按鈕組 (刷新、全螢幕) -->
         <div class="nav-icon-tools">
-          <button id="btnRefreshAll" class="tool-icon-btn nav-tool-btn" title="立即刷新全部視訊與資訊">
-            <i class="fa-solid fa-arrows-rotate"></i>
+          <button id="btnRefreshAll" class="tool-icon-btn nav-tool-btn" aria-label="立即重新整理全部資料" title="立即刷新全部視訊與資訊">
+            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
           </button>
-          <button id="btnFullscreen" class="tool-icon-btn nav-tool-btn" title="切換全螢幕模式">
-            <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+          <button id="btnFullscreen" class="tool-icon-btn nav-tool-btn" aria-label="切換全螢幕模式" title="切換全螢幕模式">
+            <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -6363,12 +6429,12 @@ body.native-mobile-mode .parking-lot-chip {
     </aside>
   </main>
 
-  <!-- 全螢幕大圖放大檢視 Modal 視窗 -->
-  <div id="cameraModal" class="modal-overlay">
+  <!-- 全螢幕大圖放大檢視 Modal 視窗 (符合 WAI-ARIA Dialog 標準) -->
+  <div id="cameraModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-content">
       <div class="modal-header">
         <span id="modalTitle" class="modal-title">監視器畫面檢視</span>
-        <button id="modalCloseBtn" class="modal-close-btn">&times;</button>
+        <button id="modalCloseBtn" class="modal-close-btn" aria-label="關閉放大視窗">&times;</button>
       </div>
       <div id="modalBody" class="modal-body">
         <!-- 動態置入大圖或 iframe -->
@@ -6640,22 +6706,26 @@ class CameraPlayerEngine {
     }
   }
 
-  // 啟動攝影機即時日期時間秒級動態時鐘
+  // 啟動集中化攝影機即時日期時間秒級動態時鐘 (單一定時器統一更新所有卡片，降低 CPU 喚醒頻率)
   startLiveClock(camId) {
     if (typeof document === 'undefined') return;
-    this.stopLiveClock(camId);
-    const update = () => {
-      const timeEl = document.getElementById(`time-${camId}`);
-      if (timeEl) {
-        timeEl.innerHTML = `<i class="fa-regular fa-clock"></i> ${this.getFormattedDateTime()}`;
-      }
-    };
-    update();
-    const timer = setInterval(update, 1000);
-    this.liveClockTimers.set(camId, timer);
+    const timeEl = document.getElementById(`time-${camId}`);
+    if (timeEl) {
+      timeEl.innerHTML = `<i class="fa-regular fa-clock"></i> ${this.getFormattedDateTime()}`;
+    }
+    if (!this.centralLiveClockTimer) {
+      this.centralLiveClockTimer = setInterval(() => {
+        const timeBadges = document.querySelectorAll('.cam-time-badge');
+        if (timeBadges.length === 0) return;
+        const nowFormatted = `<i class="fa-regular fa-clock"></i> ${this.getFormattedDateTime()}`;
+        timeBadges.forEach(badge => {
+          badge.innerHTML = nowFormatted;
+        });
+      }, 1000);
+    }
   }
 
-  // 停止單一攝影機時鐘
+  // 停止單一攝影機時鐘 (集中派發架構下安全保留介面相容性)
   stopLiveClock(camId) {
     if (this.liveClockTimers.has(camId)) {
       clearInterval(this.liveClockTimers.get(camId));
@@ -6665,6 +6735,10 @@ class CameraPlayerEngine {
 
   // 清理所有攝影機時鐘
   clearAllLiveClocks() {
+    if (this.centralLiveClockTimer) {
+      clearInterval(this.centralLiveClockTimer);
+      this.centralLiveClockTimer = null;
+    }
     this.liveClockTimers.forEach(timer => clearInterval(timer));
     this.liveClockTimers.clear();
   }
@@ -9231,12 +9305,13 @@ class WeatherEnvironmentMonitor {
     this.refreshRadar();
   }
 
-  // 刷新中央氣象署雷達圖 (精確至分秒之同步標籤，附帶時間戳破除快取)
+  // 刷新中央氣象署雷達圖 (對齊氣象署 10 分鐘產圖間隔，大幅減少頻寬浪費並確保命中快取)
   refreshRadar() {
     if (typeof document === 'undefined') return;
     const radarImg = document.getElementById('radarImg');
     if (radarImg) {
-      radarImg.src = `https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/${this.currentRadarLayer}?_t=${Date.now()}`;
+      const radarBucket = Math.floor(Date.now() / 600000) * 600000;
+      radarImg.src = `https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/${this.currentRadarLayer}?_t=${radarBucket}`;
       const timeStr = this.formatSyncTime(new Date());
       const radarTime = document.getElementById('radarUpdateTime');
       if (radarTime) radarTime.innerText = `最新同步 (${timeStr})`;
@@ -9292,7 +9367,7 @@ class NeighborhoodRadarMap {
     this.cameraMarkers = [];
   }
 
-  // 初始化地圖
+  // 初始化地圖 (行動端防滾動陷阱，雙指縮放)
   init(lat, lon, zoom = 14) {
     if (typeof L === 'undefined') {
       console.warn('Leaflet 地圖庫尚未載入');
@@ -9304,9 +9379,13 @@ class NeighborhoodRadarMap {
     }
 
     // 建立 Leaflet 地圖實例，使用高對比暗色科技圖資
+    const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0));
     this.map = L.map(this.containerId, {
       zoomControl: true,
-      attributionControl: false
+      attributionControl: false,
+      scrollWheelZoom: !isTouchDevice,
+      dragging: !isTouchDevice,
+      touchZoom: true
     }).setView([lat, lon], zoom);
 
     // CartoDB DarkMatter 暗色系底圖
@@ -10252,7 +10331,23 @@ class TwinCityTransitMonitor {
       }
 
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-        this.metroLiveData = res.data;
+        const baseTime = res.updatedAt ? new Date(res.updatedAt).getTime() : nowMs;
+        this.metroLiveData = res.data.map(item => {
+          let sec = typeof item.remainSec === 'number' && !isNaN(item.remainSec) ? item.remainSec : 0;
+          if (!sec && item.countdownText) {
+            const mMatch = item.countdownText.match(/(\d+):(\d+)/);
+            if (mMatch) {
+              sec = parseInt(mMatch[1], 10) * 60 + parseInt(mMatch[2], 10);
+            } else if (item.countdownText.includes('約')) {
+              const minMatch = item.countdownText.match(/(\d+)/);
+              if (minMatch) sec = parseInt(minMatch[1], 10) * 60;
+            }
+          }
+          return {
+            ...item,
+            targetTimestamp: baseTime + sec * 1000
+          };
+        });
         this.metroLiveUpdatedAt = res.updatedAt ? new Date(res.updatedAt) : new Date(nowMs);
         this.isMetroOnline = true;
         this.metroLastFetchTime = nowMs;
@@ -10260,8 +10355,26 @@ class TwinCityTransitMonitor {
         this.isMetroOnline = false;
       }
 
+      // 車廂擁擠度嚴格去重清洗 (防止重複追加造成同時顯示 12 節或多列重複車廂)
       if (weightRes && weightRes.data) {
-        this.carWeightData = weightRes.data;
+        const cleanedWeight = {};
+        for (const [stKey, stVal] of Object.entries(weightRes.data)) {
+          if (stVal && Array.isArray(stVal.cars)) {
+            const seenCars = new Set();
+            const uniqueCars = [];
+            for (const car of stVal.cars) {
+              if (car && car.carNum && !seenCars.has(car.carNum)) {
+                seenCars.add(car.carNum);
+                uniqueCars.push(car);
+              }
+              if (uniqueCars.length >= 6) break;
+            }
+            cleanedWeight[stKey] = { ...stVal, cars: uniqueCars };
+          } else {
+            cleanedWeight[stKey] = stVal;
+          }
+        }
+        this.carWeightData = cleanedWeight;
       }
     } catch (err) {
       this.isMetroOnline = false;
@@ -12446,19 +12559,47 @@ class TwinCityTransitMonitor {
         <!-- 捷運全向即時到站看板 (新埔站 / 新埔民生 / 板橋站 各方向即時倒數) -->
         ${Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0 ? `
           <div class="drawer-metro-live-section">
-            <div class="drawer-section-title">
-              <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> 
-              捷運全向即時到站看板 (新埔 ‧ 新埔民生 ‧ 板橋) <span style="font-size:0.58rem;opacity:0.75;font-weight:normal;">(月台即時快照)</span>
+            <div class="drawer-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>
+                <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> 
+                捷運全向即時到站看板 (新埔 ‧ 新埔民生 ‧ 板橋)
+              </span>
+              <span class="pids-live-badge" style="font-size:0.75rem;opacity:0.9;font-weight:normal;color:#00f0ff;display:inline-flex;align-items:center;gap:4px;">
+                <span class="live-dot pulse-count" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00f0ff;"></span>
+                秒級動態倒數
+              </span>
             </div>
             <div class="drawer-metro-chips-row">
-              ${this.metroLiveData.map(item => `
-                <div class="drawer-metro-chip ${item.line === '環狀線' ? 'chip-circular' : 'chip-bannan'}" title="${item.station} 往 ${item.dest}：${item.countdownText}">
-                  <span class="dm-station">${item.station}</span>
-                  <i class="fa-solid fa-arrow-right" style="font-size:0.5rem;opacity:0.6;"></i>
-                  <span class="dm-dest">${item.dest}</span>
-                  <span class="dm-status ${item.countdownText.includes('進站') ? 'dm-arriving' : ''}">${item.countdownText}</span>
-                </div>
-              `).join('')}
+              ${this.metroLiveData.map(item => {
+                let dynamicText = item.countdownText || '即將進站';
+                let isArriving = dynamicText.includes('進站');
+                if (item.targetTimestamp) {
+                  const now = Date.now();
+                  const diffSec = Math.floor((item.targetTimestamp - now) / 1000);
+                  if (diffSec <= 0) {
+                    dynamicText = '列車進站';
+                    isArriving = true;
+                  } else if (diffSec <= 35) {
+                    dynamicText = '即將進站';
+                    isArriving = true;
+                  } else {
+                    const m = Math.floor(diffSec / 60);
+                    const s = diffSec % 60;
+                    dynamicText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                  }
+                }
+                return `
+                  <div class="drawer-metro-chip ${item.line === '環狀線' ? 'chip-circular' : 'chip-bannan'}" title="${item.station} 往 ${item.dest}：${dynamicText}">
+                    <span class="dm-station">${item.station}</span>
+                    <i class="fa-solid fa-arrow-right" style="font-size:0.6rem;opacity:0.6;"></i>
+                    <span class="dm-dest">${item.dest}</span>
+                    <span class="dm-status ${isArriving ? 'dm-arriving' : 'dm-counting'}">
+                      <span class="dm-live-pulse-dot ${isArriving ? 'pulse-arrive-glow' : 'pulse-count-glow'}"></span>
+                      ${dynamicText}
+                    </span>
+                  </div>
+                `;
+              }).join('')}
             </div>
           </div>
         ` : ''}
@@ -14358,22 +14499,28 @@ class MonitorApp {
       });
     }
 
-    // 全局立即刷新按鈕 (立體旋轉光波與全息重組動效)
+    // 全局立即刷新按鈕 (真實非同步狀態回饋，等待數據完全到位)
     const btnRefreshAll = document.getElementById('btnRefreshAll');
     if (btnRefreshAll) {
-      btnRefreshAll.addEventListener('click', () => {
+      btnRefreshAll.addEventListener('click', async () => {
+        if (btnRefreshAll.classList.contains('btn-spinning')) return;
         btnRefreshAll.classList.add('btn-spinning');
-        this.refreshAll();
-        if (window.weatherMonitor && typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
-          window.weatherMonitor.fetchRealtimeYouBike(true);
-        }
-        if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
-          window.transitMonitor.forceRefreshAll();
-        }
-        setTimeout(() => {
+        try {
+          this.refreshAll();
+          const tasks = [];
+          if (window.weatherMonitor && typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
+            tasks.push(window.weatherMonitor.fetchRealtimeYouBike(true));
+          }
+          if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
+            tasks.push(window.transitMonitor.forceRefreshAll());
+          }
+          await Promise.allSettled(tasks);
+          if (window.showToast) window.showToast('全部資料已刷新至最新動態', 'success');
+        } catch (e) {
+          if (window.showToast) window.showToast('部分資料已更新', 'warning');
+        } finally {
           btnRefreshAll.classList.remove('btn-spinning');
-          if (window.showToast) window.showToast('全部資料已刷新', 'success');
-        }, 700);
+        }
       });
     }
     // 全螢幕切換按鈕
@@ -14445,8 +14592,8 @@ class MonitorApp {
       if (e.key === 'Escape') this.closeModal();
     });
 
-    // Modal 關閉按鈕與遮罩
-    const modalClose = document.getElementById('modalClose');
+    // Modal 關閉按鈕與遮罩 (支援 modalCloseBtn 與 modalClose 雙向相容)
+    const modalClose = document.getElementById('modalCloseBtn') || document.getElementById('modalClose');
     if (modalClose) modalClose.addEventListener('click', () => this.closeModal());
 
     const modalOverlay = document.getElementById('cameraModal');
@@ -14455,6 +14602,20 @@ class MonitorApp {
         if (e.target === modalOverlay) this.closeModal();
       });
     }
+
+    // 全域 Page Visibility 視窗智慧能耗管理 (App 縮至背景暫停串流省電省流量，返回前景即刻喚醒)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        if (this.playerEngine && typeof this.playerEngine.pause === 'function') {
+          this.playerEngine.pause();
+        }
+      } else if (document.visibilityState === 'visible') {
+        if (this.playerEngine && typeof this.playerEngine.resume === 'function') {
+          this.playerEngine.resume();
+        }
+        this.refreshAll();
+      }
+    });
   }
 
   // 自動自適應視窗一屏最大化完整呈現演算法 (零切角、免垂直捲動)
