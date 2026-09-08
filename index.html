@@ -1884,50 +1884,54 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
-   超矮收合狀態 (Ultra-Slim Mini Status Bar) - 高度僅約 30px，完整多段車況
+   超矮收合狀態 (Ultra-Slim Mini Status Bar) - 長輩友善大字快覽版
    ========================================================================== */
 .transit-compact-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
-  min-height: 28px;
+  gap: 8px;
+  min-height: 40px;
+  padding: 2px 0;
 }
 
 .compact-left-group {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  font-size: 0.72rem;
+  gap: 8px;
+  font-size: 0.85rem;
 }
 
 .compact-badge-dir-btn {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0, 150, 255, 0.08));
-  border: 1px solid rgba(0, 240, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.22), rgba(0, 150, 255, 0.15));
+  border: 1px solid rgba(0, 240, 255, 0.55);
   color: #00f0ff;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 5px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   white-space: nowrap;
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.88rem;
+  letter-spacing: 0.3px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 240, 255, 0.15);
 }
 
 .compact-badge-dir-btn:hover {
-  background: rgba(0, 240, 255, 0.25);
+  background: rgba(0, 240, 255, 0.32);
   border-color: #00f0ff;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.45);
+  transform: translateY(-1px);
 }
 
 .compact-badge-dir-btn .dir-swap-icon {
-  font-size: 0.65rem;
-  opacity: 0.8;
+  font-size: 0.8rem;
+  opacity: 0.9;
   transition: transform 0.25s ease;
 }
 
@@ -1939,50 +1943,53 @@ a.coord-tag:hover {
 .compact-route-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 2px 8px;
-  border-radius: 5px;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 5px 12px;
+  border-radius: 6px;
   white-space: nowrap;
   transition: all 0.2s ease;
   cursor: pointer;
+  font-size: 0.85rem;
 }
 
 .compact-route-pill:hover {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(0, 240, 255, 0.45);
+  background: rgba(22, 34, 58, 0.98);
+  transform: translateY(-1px);
 }
 
 .compact-route-pill.thsr-pill {
-  border-left: 3px solid #ff7700;
+  border-left: 4px solid #ff7700;
 }
 
 .compact-route-pill.thsr-pill:hover {
-  box-shadow: 0 0 10px rgba(255, 119, 0, 0.2);
+  box-shadow: 0 0 12px rgba(255, 119, 0, 0.3);
 }
 
 .compact-route-pill.tymetro-pill {
-  border-left: 3px solid #a855f7;
+  border-left: 4px solid #a855f7;
 }
 
 .compact-route-pill.tymetro-pill:hover {
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
 }
 
 .compact-route-pill.youbike-pill {
-  border-left: 3px solid #facc15;
+  border-left: 4px solid #facc15;
 }
 
 .compact-route-pill.youbike-pill:hover {
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.3);
 }
 
 .compact-route-pill .pill-badge {
-  font-weight: 700;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  font-size: 0.85rem;
 }
 
 .compact-route-pill.thsr-pill .pill-badge {
@@ -2000,84 +2007,87 @@ a.coord-tag:hover {
 .compact-route-pill .pill-train-code {
   color: #f8fafc;
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .compact-route-pill .pill-train-type {
   color: #e2e8f0;
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .compact-route-pill .pill-train-type.express {
   color: #c084fc;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .compact-route-pill .pill-dep-time {
   color: #38bdf8;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
 }
 
 .compact-route-pill .pill-status-chip {
-  font-size: 0.65rem;
-  padding: 1px 5px;
+  font-size: 0.76rem;
+  padding: 2px 7px;
   border-radius: 4px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .compact-route-pill .pill-status-chip.chip-active {
-  background: rgba(0, 240, 255, 0.12);
+  background: rgba(0, 240, 255, 0.16);
   color: #00f0ff;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  border: 1px solid rgba(0, 240, 255, 0.45);
 }
 
 .compact-route-pill .pill-status-chip.chip-urgent {
-  background: rgba(239, 68, 68, 0.18);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.55);
   animation: pulseSlow 1.5s infinite ease-in-out;
 }
 
 .compact-route-pill .pill-status-chip.chip-muted {
-  background: rgba(148, 163, 184, 0.12);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 .compact-route-pill .pill-transit-feed {
-  color: #94a3b8;
-  font-size: 0.66rem;
+  color: #cbd5e1;
+  font-size: 0.76rem;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
-  padding-left: 6px;
-  margin-left: 1px;
+  gap: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.18);
+  padding-left: 8px;
+  margin-left: 2px;
 }
 
 .compact-route-pill .feed-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
 }
 
 .compact-route-pill .feed-dot.bannan-dot {
   background: #38bdf8;
-  box-shadow: 0 0 4px #38bdf8;
+  box-shadow: 0 0 5px #38bdf8;
 }
 
 .compact-route-pill .feed-dot.circular-dot {
   background: #facc15;
-  box-shadow: 0 0 4px #facc15;
+  box-shadow: 0 0 5px #facc15;
 }
 
 .compact-route-pill .pill-ubike-data {
-  color: #cbd5e1;
-  font-size: 0.68rem;
+  color: #e2e8f0;
+  font-size: 0.8rem;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .compact-route-pill .pill-ubike-data .ub-num {
@@ -2381,75 +2391,83 @@ a.coord-tag:hover {
 
 .dir-toggle-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
 }
 
 .dir-toggle-btn:hover {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dir-toggle-btn.active {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.28), rgba(255, 119, 0, 0.28));
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.28), rgba(0, 150, 255, 0.22));
   color: #ffffff;
-  border: 1px solid rgba(0, 240, 255, 0.5);
-  font-weight: 700;
+  border: 1px solid rgba(0, 240, 255, 0.65);
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
 }
 
 .dir-swap-icon-btn {
   background: transparent;
   border: none;
   color: var(--color-primary);
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: transform 0.3s ease, color 0.2s ease;
 }
 
 .dir-swap-icon-btn:hover {
   transform: rotate(180deg);
   color: #ff9900;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .transit-plan-toggle-btn,
 .transit-collapse-btn {
-  background: rgba(0, 240, 255, 0.1);
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid rgba(0, 240, 255, 0.35);
   color: var(--color-primary);
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
   transition: all 0.25s ease;
   white-space: nowrap;
 }
 
+.transit-plan-toggle-btn:hover {
+  background: rgba(0, 240, 255, 0.25);
+  border-color: rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
 .transit-collapse-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
   color: var(--text-muted);
 }
 
 .transit-collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
 }
 
@@ -2464,15 +2482,15 @@ a.coord-tag:hover {
    現在出門搭車 ‧ 騎車智慧指南卡片 (Ready-to-Go Hub)
    ========================================================================== */
 .ready-to-go-hub-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(20, 30, 55, 0.85));
-  border: 1px solid rgba(0, 240, 255, 0.28);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  padding: 8px 10px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(20, 32, 60, 0.95));
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 5px;
+  gap: 8px;
+  margin-bottom: 6px;
   box-sizing: border-box;
 }
 
@@ -2481,14 +2499,14 @@ a.coord-tag:hover {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .hub-title-tag {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.76rem;
+  gap: 8px;
+  font-size: 0.95rem;
   font-weight: 800;
   color: #00f0ff;
   letter-spacing: 0.5px;
@@ -2497,13 +2515,14 @@ a.coord-tag:hover {
 .hub-dest-indicator {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.68rem;
-  color: #94a3b8;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
 }
 
 .hub-dest-indicator .dest-highlight {
@@ -2514,24 +2533,24 @@ a.coord-tag:hover {
 .hub-options-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+  gap: 10px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .hub-options-grid {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 10px;
   }
 }
 
 .hub-plan-item {
-  background: rgba(10, 16, 28, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 5px;
-  padding: 6px 8px;
+  background: rgba(10, 18, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 7px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -2539,26 +2558,28 @@ a.coord-tag:hover {
 }
 
 .hub-plan-item:hover {
-  background: rgba(15, 25, 45, 0.85);
-  transform: translateY(-1px);
+  background: rgba(18, 30, 56, 0.95);
+  transform: translateY(-2px);
 }
 
 .hub-plan-item.plan-thsr-fastest {
-  border-color: rgba(255, 119, 0, 0.35);
+  border-color: rgba(255, 119, 0, 0.45);
+  border-left: 4px solid #ff7700;
 }
 
 .hub-plan-item.plan-thsr-fastest:hover {
-  border-color: rgba(255, 119, 0, 0.65);
-  box-shadow: 0 2px 10px rgba(255, 119, 0, 0.2);
+  border-color: rgba(255, 119, 0, 0.75);
+  box-shadow: 0 4px 16px rgba(255, 119, 0, 0.25);
 }
 
 .hub-plan-item.plan-tymetro-alt {
-  border-color: rgba(168, 85, 247, 0.35);
+  border-color: rgba(168, 85, 247, 0.45);
+  border-left: 4px solid #a855f7;
 }
 
 .hub-plan-item.plan-tymetro-alt:hover {
-  border-color: rgba(168, 85, 247, 0.65);
-  box-shadow: 0 2px 10px rgba(168, 85, 247, 0.2);
+  border-color: rgba(168, 85, 247, 0.75);
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.25);
 }
 
 .plan-item-badge {
@@ -2569,78 +2590,128 @@ a.coord-tag:hover {
 }
 
 .plan-item-badge .badge-label {
-  font-size: 0.65rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 3px;
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .plan-thsr-fastest .badge-label {
-  background: rgba(255, 119, 0, 0.2);
+  background: rgba(255, 119, 0, 0.22);
   color: #ff9900;
-  border: 1px solid rgba(255, 119, 0, 0.45);
+  border: 1px solid rgba(255, 119, 0, 0.5);
 }
 
 .plan-tymetro-alt .badge-label {
-  background: rgba(168, 85, 247, 0.2);
+  background: rgba(168, 85, 247, 0.22);
   color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.45);
+  border: 1px solid rgba(168, 85, 247, 0.5);
 }
 
 .plan-item-badge .badge-save-time,
 .plan-item-badge .badge-total-time {
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.88rem;
+  font-weight: 800;
   color: #f1f5f9;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+}
+
+/* 長輩醒目出門時間方塊 */
+.plan-leave-highlight {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.plan-leave-highlight .leave-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.plan-leave-highlight .leave-time-big {
+  font-size: 1.08rem;
+  font-weight: 900;
+  color: #00f0ff;
+  letter-spacing: 0.5px;
 }
 
 .plan-train-detail {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0;
 }
 
 .plan-train-name {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .plan-dep-countdown {
-  font-size: 0.66rem;
-  font-weight: 700;
-  font-family: monospace;
-  padding: 1px 5px;
-  border-radius: 3px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
 }
 
 .plan-thsr-fastest .plan-dep-countdown {
-  background: rgba(255, 119, 0, 0.15);
+  background: rgba(255, 119, 0, 0.2);
   color: #ff9900;
-  border: 1px solid rgba(255, 119, 0, 0.3);
+  border: 1px solid rgba(255, 119, 0, 0.4);
 }
 
 .plan-tymetro-alt .plan-dep-countdown {
-  background: rgba(168, 85, 247, 0.15);
+  background: rgba(168, 85, 247, 0.2);
   color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(168, 85, 247, 0.4);
 }
 
 .plan-timeline-hint {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.65rem;
-  color: #94a3b8;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 4px 8px;
+  border-radius: 5px;
 }
 
 .plan-timeline-hint .dest-time strong {
   color: #38bdf8;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.plan-footer-action {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.plan-footer-action:hover {
+  color: #00f0ff;
 }
 
 /* YouBike 接駁車況速報橫條 */
@@ -2649,34 +2720,43 @@ a.coord-tag:hover {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 0.64rem;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
 }
 
 .youbike-hub-label {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: #f59e0b;
   font-weight: 800;
   white-space: nowrap;
+  font-size: 0.82rem;
 }
 
 .youbike-hub-metrics {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
-  color: #cbd5e1;
+  color: #e2e8f0;
+  font-size: 0.8rem;
 }
 
 .youbike-metric-item .bike-num {
   color: #10b981;
   font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.youbike-metric-item .park-num {
+  color: #38bdf8;
+  font-weight: 800;
+  font-size: 0.9rem;
 }
 
 .youbike-metric-item .park-num {
@@ -2949,36 +3029,41 @@ a.coord-tag:hover {
   font-size: 0.68rem;
 }
 
-/* 月台等車電子看板風格膠囊 (PIDS Countdown Badge) */
+/* 月台等車電子看板風格膠囊 (PIDS Countdown Badge) - 長輩清晰版 */
 .pids-countdown-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 1px 7px;
-  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 5px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.3px;
 }
 
 .pids-countdown-badge.thsr-pids {
-  background: rgba(255, 119, 0, 0.15);
-  border: 1px solid rgba(255, 119, 0, 0.4);
+  background: rgba(255, 119, 0, 0.2);
+  border: 1px solid rgba(255, 119, 0, 0.5);
   color: #ffaa33;
 }
 
 .pids-countdown-badge.tymetro-pids {
-  background: rgba(168, 85, 247, 0.15);
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.5);
   color: #d8b4fe;
 }
 
 .track-total-time {
-  color: var(--text-muted);
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .track-total-time strong {
   color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 800;
 }
 
 /* ==========================================================================
@@ -3350,19 +3435,21 @@ a.coord-tag:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.65rem;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   min-width: 0;
-  padding: 0 2px;
+  padding: 2px 2px;
 }
 
 .station-label {
   font-family: monospace;
   white-space: nowrap;
   flex-shrink: 0;
+  letter-spacing: 0.3px;
 }
 
 /* 轉乘步道 (5分) */
@@ -3371,27 +3458,27 @@ a.coord-tag:hover {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 .connector-line {
   width: 1px;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.2);
+  height: 6px;
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .connector-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  padding: 1px 4px;
-  border-radius: 3px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  padding: 2px 6px;
+  border-radius: 4px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .station-node {
@@ -9399,6 +9486,22 @@ class TwinCityTransitMonitor {
       (typeof document !== 'undefined' && document.body && document.body.classList.contains('native-mobile-mode'))
     );
     this.isCollapsed = !isMobileViewport; // 手機/APP 預設展開，桌面/TV 預設收合
+    
+    // 持久化記憶：優先維持使用者上次的收合動作與通勤方向
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const savedCollapsed = localStorage.getItem('dpu_transit_collapsed');
+        if (savedCollapsed !== null) {
+          this.isCollapsed = (savedCollapsed === 'true');
+        }
+        const savedDir = localStorage.getItem('dpu_transit_direction');
+        if (savedDir === 'to_qingpu' || savedDir === 'to_xinpu') {
+          this.direction = savedDir;
+        }
+      } catch (e) {
+        console.warn('讀取雙埔路網收合偏好失敗:', e);
+      }
+    }
     this.lastScheduleKey = null;     // 快取出門時間表關鍵字，避免每秒銷毀重建閃爍
     this.scheduleTab = 'thsr';       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
 
@@ -9949,6 +10052,9 @@ class TwinCityTransitMonitor {
   // 切換來回方向
   toggleDirection() {
     this.direction = this.direction === 'to_qingpu' ? 'to_xinpu' : 'to_qingpu';
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.setItem('dpu_transit_direction', this.direction); } catch(e) {}
+    }
     this.lastScheduleKey = null;
     this.render();
     this.triggerViewportResize();
@@ -9958,6 +10064,9 @@ class TwinCityTransitMonitor {
   setDirection(dir) {
     if (this.direction !== dir) {
       this.direction = dir;
+      if (typeof localStorage !== 'undefined') {
+        try { localStorage.setItem('dpu_transit_direction', this.direction); } catch(e) {}
+      }
       this.lastScheduleKey = null;
       this.render();
       this.triggerViewportResize();
@@ -10000,6 +10109,9 @@ class TwinCityTransitMonitor {
   // 切換整個走廊收合/展開 (超矮迷你條 ↔ 全寬詳細軌道)
   toggleCollapse() {
     this.isCollapsed = !this.isCollapsed;
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.setItem('dpu_transit_collapsed', String(this.isCollapsed)); } catch(e) {}
+    }
     this.lastScheduleKey = null;
     if (typeof document !== 'undefined') {
       const container = document.getElementById(this.containerId);
@@ -11434,32 +11546,9 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 渲染超矮迷你收合橫條 HTML (依來回方向動態調整，提煉高鐵、機捷、YouBike 全功能微型儀表板)
+  // 渲染超矮迷你收合橫條 HTML (長輩友善大字快覽版：方向明確、大字發車時間、即時狀態一目了然)
   renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular) {
     const isToQingpu = this.direction === 'to_qingpu';
-
-    // 取得雙埔 YouBike 即時可借車輛數摘要
-    let qpBikes = null;
-    let bpBikes = null;
-    let updateTimeStr = '';
-    if (typeof window !== 'undefined' && window.weatherMonitor) {
-      if (typeof window.weatherMonitor.getDualCoreStations === 'function') {
-        const stations = window.weatherMonitor.getDualCoreStations();
-        if (Array.isArray(stations) && stations.length > 0) {
-          const qpList = stations.filter(s => s.city === 'qp' && typeof s.currentBikes === 'number');
-          const bpList = stations.filter(s => s.city === 'bp' && typeof s.currentBikes === 'number');
-          if (qpList.length > 0) {
-            qpBikes = qpList.reduce((sum, s) => sum + s.currentBikes, 0);
-          }
-          if (bpList.length > 0) {
-            bpBikes = bpList.reduce((sum, s) => sum + s.currentBikes, 0);
-          }
-        }
-      }
-      if (window.weatherMonitor.youbikeUpdateTime) {
-        updateTimeStr = String(window.weatherMonitor.youbikeUpdateTime).replace(/[^0-9:]/g, '').trim();
-      }
-    }
 
     const activeAlert = this.alerts.find(a => a.active !== false);
 
@@ -11468,46 +11557,35 @@ class TwinCityTransitMonitor {
     // 機捷狀態晶片樣式
     const tymetroChipClass = tymetro.isOutOfService ? 'chip-muted' : (tymetro.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
 
-    // 高鐵線微型膠囊
+    // 高鐵線大字快覽膠囊
     const thsrPillHtml = `
-      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵快線：搭板南線轉高鐵 (點擊展開)">
+      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵快線：點擊展開查看詳細路線">
         <span class="pill-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
-        <span class="pill-train-code">${thsr.trainNo}次</span>
-        <span class="pill-dep-time">${thsr.depTime}</span>
+        <span class="pill-dep-time">${thsr.depTime} 發車</span>
         <span class="pill-status-chip ${thsrChipClass}" data-c-thsr-status>${thsr.platformStatus}</span>
-        <span class="pill-transit-feed" data-c-thsr-feed title="板南線月台狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
+        <span class="pill-train-code">(${thsr.trainNo}次)</span>
+        <span class="pill-transit-feed" data-c-thsr-feed title="板南線轉乘狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
       </div>
     `;
 
-    // 機捷線微型膠囊
+    // 機捷線大字快覽膠囊
     const tymetroPillHtml = `
-      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷路線：搭環狀線轉機捷 (點擊展開)">
+      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷路線：點擊展開查看詳細路線">
         <span class="pill-badge"><i class="fa-solid fa-route"></i> 機捷</span>
-        <span class="pill-train-type ${tymetro.isExpress ? 'express' : ''}">${tymetro.rawType}</span>
-        <span class="pill-dep-time">${tymetro.depTime}</span>
+        <span class="pill-dep-time">${tymetro.depTime} 發車</span>
         <span class="pill-status-chip ${tymetroChipClass}" data-c-tymetro-status>${tymetro.platformStatus}</span>
-        <span class="pill-transit-feed" data-c-tymetro-feed title="環狀線月台狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
-      </div>
-    `;
-
-    // YouBike 雙埔動態微型膠囊
-    const youbikePillHtml = `
-      <div class="compact-route-pill youbike-pill" onclick="window.transitMonitor.toggleCollapse()" title="YouBike 2.0 即時車況 (點擊展開)">
-        <span class="pill-badge"><i class="fa-solid fa-bicycle"></i> YouBike</span>
-        ${(qpBikes !== null && bpBikes !== null) ? `
-          <span class="pill-ubike-data">可借 青埔 <b class="ub-num">${qpBikes}</b>車 ‧ 新埔 <b class="ub-num">${bpBikes}</b>車</span>
-        ` : `
-          <span class="pill-ubike-data">${updateTimeStr ? `${updateTimeStr} 同步` : '即時車況'}</span>
-        `}
+        <span class="pill-train-type ${tymetro.isExpress ? 'express' : ''}">${tymetro.rawType}</span>
+        <span class="pill-transit-feed" data-c-tymetro-feed title="環狀線轉乘狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
       </div>
     `;
 
     return `
       <div class="transit-compact-bar">
         <div class="compact-left-group">
+          <!-- 醒目通勤方向按鈕 (大字體，點擊立即翻轉) -->
           <button class="compact-badge-dir-btn" onclick="window.transitMonitor.toggleDirection()" title="點擊切換通勤方向 (目前：${directionLabel})">
             <span>${directionLabel}</span>
-            <i class="fa-solid fa-arrows-rotate dir-swap-icon"></i>
+            <i class="fa-solid fa-repeat dir-swap-icon"></i>
           </button>
           
           ${activeAlert ? `
@@ -11516,22 +11594,19 @@ class TwinCityTransitMonitor {
             </span>
           ` : ''}
 
-          <!-- 高鐵快線微型指標卡 -->
+          <!-- 高鐵快線大字快覽卡 -->
           ${thsrPillHtml}
 
-          <!-- 機捷路線微型指標卡 -->
+          <!-- 機捷路線大字快覽卡 -->
           ${tymetroPillHtml}
-
-          <!-- 雙埔 YouBike 即時動態指標卡 -->
-          ${youbikePillHtml}
         </div>
 
         <div class="compact-actions-group">
-          <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看搭車時間表">
-            <span>🕒 時間表</span> <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+          <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看今日搭車時間表">
+            <i class="fa-regular fa-clock"></i> <span>班次時間表</span>
           </button>
-          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看全線即時行駛動態">
-            <span>🚄 動態</span> <i class="fa-solid fa-chevron-down"></i>
+          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看搭車指南與詳細路線">
+            <span>路線詳情</span> <i class="fa-solid ${this.isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
           </button>
         </div>
       </div>
@@ -11818,79 +11893,99 @@ class TwinCityTransitMonitor {
         <div class="hub-header-row">
           <div class="hub-title-tag">
             <i class="fa-solid fa-person-walking-arrow-right"></i>
-            <span>現在出門搭車 ‧ 騎車指南</span>
-          </div>
-          <div class="hub-quick-tabs">
-            <button class="hub-quick-tab-btn hub-btn-thsr" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="快速列出當下與未來所有高鐵班次表 (適合車站/月台候車者)">
-              <i class="fa-solid fa-bolt"></i> <span>🚄 高鐵班表</span>
-            </button>
-            <button class="hub-quick-tab-btn hub-btn-tymetro" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="快速列出當下與未來所有機捷班次表 (適合車站/月台候車者)">
-              <i class="fa-solid fa-plane"></i> <span>🚇 機捷班表</span>
-            </button>
+            <span>現在出門搭車建議 (依目前即時班次計算)</span>
           </div>
           <div class="hub-dest-indicator">
             <span>${originCity} 出發</span>
-            <i class="fa-solid fa-angles-right"></i>
-            <strong class="dest-highlight">${destCity}</strong>
+            <i class="fa-solid fa-arrow-right-long"></i>
+            <strong class="dest-highlight">前往 ${destCity}</strong>
           </div>
         </div>
 
         <div class="hub-options-grid">
-          <!-- 方案一：高鐵快線 (最速首選，直連高鐵即時班次表) -->
-          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="點擊開啟高鐵班次表 (當下與未來所有班次)">
+          <!-- 方案一：高鐵快線 (最速推薦) -->
+          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="點擊查看今日全部高鐵班次表">
             <div class="plan-item-badge">
-              <span class="badge-icon"><i class="fa-solid fa-bolt"></i></span>
-              <span class="badge-label">最速首選</span>
-              <span class="badge-save-time"><i class="fa-solid fa-stopwatch"></i> 約 ${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</span>
+              <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵最速首選</span>
+              <span class="badge-save-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</strong></span>
             </div>
-            <div class="plan-train-detail">
-              <span class="plan-train-name">${firstThsrPlan ? `高鐵 ${firstThsrPlan.trainNo}次` : (thsr.isOutOfService ? '高鐵 已收班' : `高鐵 ${thsr.trainNo}次`)}</span>
+
+            <!-- 長輩醒目出門提示方塊 -->
+            <div class="plan-leave-highlight">
+              <span class="leave-label">建議出門時間：</span>
+              <span class="leave-time-big">${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</span>
               <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${this.getHubCountdownText(firstThsrPlan, thsr)}</span>
             </div>
+
+            <div class="plan-train-detail">
+              <span class="plan-train-name">
+                <i class="fa-solid fa-train"></i> ${firstThsrPlan ? `高鐵 ${firstThsrPlan.trainNo}次 (${firstThsrPlan.boardTrainTime} 板橋發車)` : (thsr.isOutOfService ? '高鐵今日已收班' : `高鐵 ${thsr.trainNo}次`)}
+              </span>
+            </div>
+
+            <!-- 白話乘車路線步驟 -->
             <div class="plan-timeline-hint">
-              <span class="timeline-step">出門 ${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</span>
-              <i class="fa-solid fa-arrow-right-long"></i>
-              <span class="timeline-step">發車 ${firstThsrPlan ? firstThsrPlan.boardTrainTime : '--:--'}</span>
-              <i class="fa-solid fa-arrow-right-long"></i>
-              <span class="timeline-step dest-time">抵達 <strong>${firstThsrPlan ? firstThsrPlan.arriveTime : '--:--'}</strong></span>
+              <span>🏠 出發 <strong>${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</strong></span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span>🚄 板橋發車 <strong>${firstThsrPlan ? firstThsrPlan.boardTrainTime : '--:--'}</strong></span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span class="dest-time">🏁 抵達 <strong>${firstThsrPlan ? firstThsrPlan.arriveTime : '--:--'}</strong></span>
+            </div>
+
+            <div class="plan-footer-action">
+              <span>點擊查看今日全部高鐵班次</span> <i class="fa-solid fa-angles-right"></i>
             </div>
           </div>
 
-          <!-- 方案二：機捷直通 (捷運替代，直連機捷即時班次表) -->
-          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="點擊開啟機捷班次表 (當下與未來所有班次)">
+          <!-- 方案二：機捷直通 (捷運替代) -->
+          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="點擊查看今日全部機捷班次表">
             <div class="plan-item-badge">
-              <span class="badge-icon"><i class="fa-solid fa-plane"></i></span>
-              <span class="badge-label">直達替代</span>
-              <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 約 ${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</span>
+              <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機捷直通替代</span>
+              <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</strong></span>
             </div>
-            <div class="plan-train-detail">
-              <span class="plan-train-name">${firstTymetroPlan ? `機捷 ${firstTymetroPlan.trainTypeShort || firstTymetroPlan.badge}` : (tymetro.isOutOfService ? '機捷 已收班' : `機捷 ${(tymetro.type || '').replace('(站站停)', '')}`)}</span>
+
+            <!-- 長輩醒目出門提示方塊 -->
+            <div class="plan-leave-highlight">
+              <span class="leave-label">建議出門時間：</span>
+              <span class="leave-time-big">${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</span>
               <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${this.getHubCountdownText(firstTymetroPlan, tymetro)}</span>
             </div>
+
+            <div class="plan-train-detail">
+              <span class="plan-train-name">
+                <i class="fa-solid fa-train-subway"></i> ${firstTymetroPlan ? `機捷 ${firstTymetroPlan.trainTypeShort || firstTymetroPlan.badge} (${firstTymetroPlan.boardTrainTime} 發車)` : (tymetro.isOutOfService ? '機捷今日已收班' : `機捷 ${(tymetro.type || '').replace('(站站停)', '')}`)}
+              </span>
+            </div>
+
+            <!-- 白話乘車路線步驟 -->
             <div class="plan-timeline-hint">
-              <span class="timeline-step">出門 ${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</span>
-              <i class="fa-solid fa-arrow-right-long"></i>
-              <span class="timeline-step">發車 ${firstTymetroPlan ? firstTymetroPlan.boardTrainTime : '--:--'}</span>
-              <i class="fa-solid fa-arrow-right-long"></i>
-              <span class="timeline-step dest-time">抵達 <strong>${firstTymetroPlan ? firstTymetroPlan.arriveTime : '--:--'}</strong></span>
+              <span>🏠 出發 <strong>${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</strong></span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span>🚇 機捷發車 <strong>${firstTymetroPlan ? firstTymetroPlan.boardTrainTime : '--:--'}</strong></span>
+              <i class="fa-solid fa-arrow-right"></i>
+              <span class="dest-time">🏁 抵達 <strong>${firstTymetroPlan ? firstTymetroPlan.arriveTime : '--:--'}</strong></span>
+            </div>
+
+            <div class="plan-footer-action">
+              <span>點擊查看今日全部機捷班次</span> <i class="fa-solid fa-angles-right"></i>
             </div>
           </div>
         </div>
 
-        <!-- 出門 YouBike 微移動即時速報條 -->
+        <!-- YouBike 接駁車況速報橫條 -->
         <div class="hub-youbike-strip">
           <div class="youbike-hub-label">
             <i class="fa-solid fa-bicycle"></i>
-            <span>YouBike 接駁車況</span>
+            <span>YouBike 2.0 接駁車況</span>
           </div>
           <div class="youbike-hub-metrics">
             <div class="youbike-metric-item" title="出發端即時可借車況">
-              <span class="metric-prefix">出發：</span>
+              <span class="metric-prefix">出發地：</span>
               <span class="metric-val" data-f-hub-bike-origin>${bikeText}</span>
             </div>
-            <span class="metric-divider">|</span>
+            <span class="metric-divider" style="color:rgba(255,255,255,0.2);">|</span>
             <div class="youbike-metric-item" title="目的地即時可還車位">
-              <span class="metric-prefix">到達：</span>
+              <span class="metric-prefix">目的地：</span>
               <span class="metric-val" data-f-hub-bike-dest>${parkText}</span>
             </div>
           </div>
@@ -11984,7 +12079,7 @@ class TwinCityTransitMonitor {
     `;
 
     return `
-      <!-- 極簡化頂部控制列 -->
+      <!-- 長輩友善直覺頂部控制列 -->
       <div class="transit-header-row">
         <div class="transit-title-group">
           <div class="transit-icon-badge">
@@ -11995,22 +12090,22 @@ class TwinCityTransitMonitor {
           </div>
         </div>
 
-        <!-- 精簡控制群 -->
+        <!-- 直覺方向切換大按鈕群 -->
         <div class="transit-controls-group">
           <div class="transit-dir-switcher">
-            <button class="dir-toggle-btn ${isToQingpu ? 'active' : ''}" onclick="window.transitMonitor.setDirection('to_qingpu')" title="新埔往青埔方向">
-              <i class="fa-solid fa-arrow-right"></i> 往青埔
+            <button class="dir-toggle-btn ${isToQingpu ? 'active' : ''}" onclick="window.transitMonitor.setDirection('to_qingpu')" title="新埔出發前往青埔">
+              <i class="fa-solid fa-arrow-right"></i> 往青埔 (新埔出發)
             </button>
-            <button class="dir-swap-icon-btn" onclick="window.transitMonitor.toggleDirection()" title="一鍵切換來回雙向">
+            <button class="dir-swap-icon-btn" onclick="window.transitMonitor.toggleDirection()" title="點擊對調來回方向">
               <i class="fa-solid fa-repeat"></i>
             </button>
-            <button class="dir-toggle-btn ${!isToQingpu ? 'active' : ''}" onclick="window.transitMonitor.setDirection('to_xinpu')" title="青埔往新埔方向">
-              往新埔 <i class="fa-solid fa-arrow-left"></i>
+            <button class="dir-toggle-btn ${!isToQingpu ? 'active' : ''}" onclick="window.transitMonitor.setDirection('to_xinpu')" title="青埔出發前往新埔">
+              往新埔 (青埔出發) <i class="fa-solid fa-arrow-left"></i>
             </button>
           </div>
 
-          <button class="transit-plan-toggle-btn ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看搭車時間表">
-            <span>🕒 時間表</span>
+          <button class="transit-plan-toggle-btn ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看完整搭車時間表">
+            <i class="fa-regular fa-clock"></i> <span>班次時間表</span>
             <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
           </button>
 
@@ -14102,6 +14197,15 @@ class MonitorApp {
     this.focusedCamId = null;         // 單格特寫聚焦之鏡頭 ID
     this.isAdaptiveFit = false;       // 預設自由捲動最大化清晰呈現 (每格畫面最大、長輩清晰好閱讀)
     this.isSidebarCollapsed = false;  // 預設顯示右側當地生活資訊面板
+    // 持久化記憶：優先維持使用者上次的側邊欄收合動作
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const savedSidebar = localStorage.getItem('dpu_sidebar_collapsed');
+        if (savedSidebar !== null) {
+          this.isSidebarCollapsed = (savedSidebar === 'true');
+        }
+      } catch(e) {}
+    }
     this.currentCenterData = null;
     this.currentCameras = [];
     this.playerEngine = null;
@@ -14128,6 +14232,18 @@ class MonitorApp {
 
     // 啟動首頁：預設雙埔
     await this.switchCenter(this.currentCenterId);
+
+    // 持久化還原：若使用者上次收合了側邊欄，自動套用收合狀態
+    if (this.isSidebarCollapsed) {
+      const container = document.querySelector('.dashboard-container');
+      const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+      if (container) container.classList.add('sidebar-collapsed');
+      if (btnToggleSidebar) {
+        btnToggleSidebar.classList.remove('active');
+        btnToggleSidebar.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>';
+        btnToggleSidebar.title = '點擊展開右側在地即時氣象、AQI與地圖生活指標';
+      }
+    }
 
     // 視窗自適應計算
     this.applyAdaptiveViewportFit();
@@ -14199,6 +14315,9 @@ class MonitorApp {
     if (btnToggleSidebar) {
       btnToggleSidebar.addEventListener('click', () => {
         this.isSidebarCollapsed = !this.isSidebarCollapsed;
+        if (typeof localStorage !== 'undefined') {
+          try { localStorage.setItem('dpu_sidebar_collapsed', String(this.isSidebarCollapsed)); } catch(e) {}
+        }
         const container = document.querySelector('.dashboard-container');
         if (container) {
           if (this.isSidebarCollapsed) {
