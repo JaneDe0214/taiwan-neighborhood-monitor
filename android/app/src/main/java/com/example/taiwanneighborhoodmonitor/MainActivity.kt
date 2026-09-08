@@ -495,22 +495,24 @@ class AndroidNativeBridge(
      * 啟動時毫秒級預熱所有資料庫快照，並於背景非同步並行拉取全台交通即時最新動態 (0 毫秒秒開、0 白屏、0 阻塞)
      */
     fun prewarmAllData() {
-        val prewarmKeys = listOf("youbike", "metro-live", "parking", "thsr", "tymetro")
-        for (key in prewarmKeys) {
-            try {
-                val text = activity.assets.open("data/$key.json").bufferedReader().use { it.readText() }
-                if (text.isNotBlank()) {
-                    dataMemoryCache[key] = text
-                }
-            } catch (_: Exception) {}
-        }
+        bridgeScope.launch(Dispatchers.IO) {
+            val prewarmKeys = listOf("youbike", "metro-live", "parking", "thsr", "tymetro")
+            for (key in prewarmKeys) {
+                try {
+                    val text = activity.assets.open("data/$key.json").bufferedReader().use { it.readText() }
+                    if (text.isNotBlank()) {
+                        dataMemoryCache[key] = text
+                    }
+                } catch (_: Exception) {}
+            }
 
-        // 高階手機全並行背景預取最新即時資料
-        bridgeScope.launch { refreshYouBikeAsync() }
-        bridgeScope.launch { refreshMetroLiveAsync() }
-        bridgeScope.launch { refreshParkingAsync() }
-        bridgeScope.launch { refreshThsrAsync() }
-        bridgeScope.launch { refreshTymetroAsync() }
+            // 全並行背景預取最新即時資料 (完全不阻塞主執行緒)
+            launch { refreshYouBikeAsync() }
+            launch { refreshMetroLiveAsync() }
+            launch { refreshParkingAsync() }
+            launch { refreshThsrAsync() }
+            launch { refreshTymetroAsync() }
+        }
     }
 
     /**

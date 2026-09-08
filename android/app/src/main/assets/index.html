@@ -621,7 +621,7 @@ body {
 
 /* 雙埔區域專屬標籤 */
 .area-tag {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 800;
   padding: 1px 6px;
   border-radius: 4px;
@@ -853,6 +853,35 @@ body {
   overflow: hidden;
 }
 
+/* 視訊載入緩衝科技感置中光環 Spinner (提升起播與連線感知度) */
+.video-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border: 2px solid rgba(0, 240, 255, 0.15);
+  border-top-color: #00f0ff;
+  border-radius: 50%;
+  animation: video-spin-glow 0.85s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
+  transition: opacity 0.35s ease;
+}
+
+.video-wrapper.is-ready::before {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@keyframes video-spin-glow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .video-wrapper img.cam-feed,
 .video-wrapper video.cam-feed,
 .video-wrapper iframe.cam-feed {
@@ -931,7 +960,7 @@ body {
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   color: #94a3b8;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-family: monospace;
   padding: 2px 6px;
   border-radius: 4px;
@@ -976,7 +1005,7 @@ body {
 .format-res-badge {
   color: #38bdf8;
   font-weight: 700;
-  font-size: 0.69rem;
+  font-size: 0.74rem;
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.25);
   padding: 1px 6px;
@@ -991,7 +1020,7 @@ body {
 
 .feed-status-tag {
   color: var(--text-dim);
-  font-size: 0.69rem;
+  font-size: 0.74rem;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -1005,7 +1034,7 @@ body {
 .cam-time-badge {
   color: #10b981;
   font-weight: 600;
-  font-size: 0.69rem;
+  font-size: 0.74rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.22);
@@ -1256,7 +1285,7 @@ a.coord-tag:hover {
 }
 
 .chip-name {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
 }
 
@@ -1418,7 +1447,7 @@ a.coord-tag:hover {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 5px;
@@ -1440,7 +1469,7 @@ a.coord-tag:hover {
   align-items: center;
   gap: 4px;
   color: var(--text-dim);
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   flex-shrink: 0;
 }
 
@@ -1452,7 +1481,7 @@ a.coord-tag:hover {
 .dual-metric-row .metric-val {
   color: #f1f5f9;
   font-weight: 600;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -1498,7 +1527,7 @@ a.coord-tag:hover {
 }
 
 .dual-aqi-meta {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   display: flex;
   justify-content: space-between;
@@ -1540,7 +1569,7 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
 }
 
 .rate-secure-badge {
@@ -1563,7 +1592,7 @@ a.coord-tag:hover {
   padding: 1px 6px;
   border-radius: 4px;
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1578,7 +1607,7 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: #94a3b8;
   background: rgba(255, 255, 255, 0.02);
   padding: 4px 8px;
@@ -1603,7 +1632,7 @@ a.coord-tag:hover {
 }
 
 .data-obs-time {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: #cbd5e1;
   background: rgba(0, 0, 0, 0.35);
   padding: 1px 6px;
@@ -1618,7 +1647,7 @@ a.coord-tag:hover {
 
 .data-obs-time i {
   color: #38bdf8;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
 }
 
 /* 互動地圖雷達抽屜區 */
@@ -2126,7 +2155,7 @@ a.coord-tag:hover {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -2135,6 +2164,18 @@ a.coord-tag:hover {
   gap: 3px;
   transition: all 0.2s ease;
   white-space: nowrap;
+  position: relative;
+}
+
+.compact-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 42px;
+  min-width: 44px;
+  transform: translate(-50%, -50%);
 }
 
 .compact-btn:hover {
@@ -2207,7 +2248,7 @@ a.coord-tag:hover {
 }
 
 .transit-live-pill {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   background: rgba(16, 185, 129, 0.16);
   border: 1px solid rgba(16, 185, 129, 0.35);
@@ -2226,7 +2267,7 @@ a.coord-tag:hover {
   width: 100%;
   border-radius: 5px;
   padding: 3px 8px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2276,7 +2317,7 @@ a.coord-tag:hover {
 }
 
 .status-sync-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
   display: inline-flex;
   align-items: center;
@@ -2287,7 +2328,7 @@ a.coord-tag:hover {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--text-muted);
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding: 1px 6px;
   border-radius: 3px;
   cursor: pointer;
@@ -2318,7 +2359,7 @@ a.coord-tag:hover {
 }
 
 .incident-badge {
-  font-size: 0.64rem;
+  font-size: 0.74rem;
   font-weight: 800;
   padding: 1px 6px;
   border-radius: 3px;
@@ -2329,7 +2370,7 @@ a.coord-tag:hover {
 }
 
 .incident-line-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -2349,7 +2390,7 @@ a.coord-tag:hover {
 }
 
 .incident-msg {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #fecaca;
   white-space: nowrap;
@@ -2358,14 +2399,14 @@ a.coord-tag:hover {
 }
 
 .incident-time-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: #f87171;
   white-space: nowrap;
 }
 
 /* PIDS 營運異常標籤 */
 .pids-alert-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 3px;
@@ -2379,7 +2420,7 @@ a.coord-tag:hover {
 }
 
 .plan-alert-badge {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -2390,7 +2431,7 @@ a.coord-tag:hover {
 }
 
 .transit-live-pill i {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
 }
 
 .transit-controls-group {
@@ -2936,7 +2977,7 @@ a.coord-tag:hover {
 }
 
 .corridor-youbike-loc {
-  font-size: 0.62rem;
+  font-size: 0.74rem;
   color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;
@@ -2957,7 +2998,7 @@ a.coord-tag:hover {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
@@ -2990,7 +3031,7 @@ a.coord-tag:hover {
 
 .corridor-youbike-pill .ebike-sup {
   color: #facc15;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   margin-left: 1px;
 }
 
@@ -3033,7 +3074,7 @@ a.coord-tag:hover {
 }
 
 .track-type-badge {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -3055,7 +3096,7 @@ a.coord-tag:hover {
 }
 
 .track-mode-hint {
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
 }
 
@@ -3063,7 +3104,7 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
 }
 
 /* 月台等車電子看板風格膠囊 (PIDS Countdown Badge) - 長輩清晰版 */
@@ -3145,7 +3186,7 @@ a.coord-tag:hover {
 }
 
 .walk-endpoint-tag {
-  font-size: 0.64rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #94a3b8;
   background: rgba(148, 163, 184, 0.1);
@@ -3183,7 +3224,7 @@ a.coord-tag:hover {
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding-bottom: 2px;
 }
 
@@ -3195,7 +3236,7 @@ a.coord-tag:hover {
 
 /* 班次資訊專屬膠囊 - 最佳化清晰展示 */
 .pids-train-pill {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 3px;
@@ -3230,7 +3271,7 @@ a.coord-tag:hover {
   gap: 3px;
   padding: 1px 4px;
   border-radius: 3px;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   line-height: 1.1;
@@ -3276,7 +3317,7 @@ a.coord-tag:hover {
 
 /* 軌道在途行駛班次指示器 - 獨立呈現，不干擾月台等車倒數 */
 .pids-ontrack-pill {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
@@ -3314,7 +3355,7 @@ a.coord-tag:hover {
 
 /* 月台即時倒數小膠囊 */
 .pids-mini-pill {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   background: rgba(56, 189, 248, 0.12);
@@ -3341,7 +3382,7 @@ a.coord-tag:hover {
 
 .leg-info {
   color: var(--text-dim);
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   margin-left: auto;
 }
 
@@ -3424,7 +3465,7 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
   border: 1.5px solid #ffffff;
   flex-shrink: 0;
@@ -3541,7 +3582,7 @@ a.coord-tag:hover {
 }
 
 .crowd-station-badge {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #38bdf8;
   display: flex;
@@ -3567,7 +3608,7 @@ a.coord-tag:hover {
   gap: 2px;
   padding: 1px 3px;
   border-radius: 3px;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   white-space: nowrap;
   transition: transform 0.15s ease;
@@ -3629,7 +3670,7 @@ a.coord-tag:hover {
 }
 
 .parking-title-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #ff9900;
   display: flex;
@@ -3650,7 +3691,7 @@ a.coord-tag:hover {
 }
 
 .parking-lot-chip {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding: 1px 3px;
   border-radius: 3px;
   white-space: nowrap;
@@ -3675,7 +3716,7 @@ a.coord-tag:hover {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 .drawer-section-title {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #94a3b8;
   margin-bottom: 5px;
@@ -3833,7 +3874,7 @@ a.coord-tag:hover {
 }
 
 .schedule-dir-note {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
   font-weight: normal;
 }
@@ -3856,7 +3897,7 @@ a.coord-tag:hover {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 600;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -3875,7 +3916,7 @@ a.coord-tag:hover {
   background: rgba(0, 240, 255, 0.12);
   border: 1px solid rgba(0, 240, 255, 0.35);
   color: #00f0ff;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding: 2px 7px;
   border-radius: 4px;
   font-weight: 600;
@@ -3994,7 +4035,7 @@ a.coord-tag:hover {
 }
 
 .plan-idx-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
   font-family: monospace;
   margin-left: auto;
@@ -4014,7 +4055,7 @@ a.coord-tag:hover {
 }
 
 .plan-badge {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
@@ -4039,7 +4080,7 @@ a.coord-tag:hover {
 }
 
 .plan-total {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
 }
 
@@ -4065,7 +4106,7 @@ a.coord-tag:hover {
 }
 
 .step-label {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
 }
 
@@ -4082,11 +4123,11 @@ a.coord-tag:hover {
 
 .plan-arrow {
   color: var(--text-dim);
-  font-size: 0.65rem;
+  font-size: 0.74rem;
 }
 
 .plan-detail-text {
-  font-size: 0.64rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   line-height: 1.3;
 }
@@ -4160,7 +4201,7 @@ a.coord-tag:hover {
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #cbd5e1;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 4px;
@@ -4208,7 +4249,7 @@ a.coord-tag:hover {
 }
 
 .plan-wait-chip {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 3px;
@@ -4247,7 +4288,7 @@ a.coord-tag:hover {
 }
 
 .schedule-origin-station .st-label, .schedule-dest-station .st-label {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: #64748b;
 }
 
@@ -4263,11 +4304,11 @@ a.coord-tag:hover {
   align-items: center;
   gap: 1px;
   color: #64748b;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
 }
 
 .st-type-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding: 0 4px;
   border-radius: 2px;
   font-weight: 600;
@@ -4304,7 +4345,7 @@ a.coord-tag:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.64rem;
+  font-size: 0.74rem;
   padding: 2px 6px;
   border-radius: 4px;
   width: 100%;
@@ -4325,7 +4366,7 @@ a.coord-tag:hover {
 
 .pill-best-tag {
   margin-left: auto;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #fbbf24;
 }
@@ -4355,7 +4396,7 @@ a.coord-tag:hover {
 }
 
 .pids-train-no-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
   font-family: monospace;
 }
@@ -4438,7 +4479,7 @@ a.coord-tag:hover {
   background: rgba(16, 185, 129, 0.18);
   border: 1px solid rgba(16, 185, 129, 0.45);
   color: #34d399;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
@@ -4452,7 +4493,7 @@ a.coord-tag:hover {
   background: rgba(245, 158, 11, 0.15);
   border: 1px solid rgba(245, 158, 11, 0.4);
   color: #fbbf24;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 4px;
@@ -4463,7 +4504,7 @@ a.coord-tag:hover {
   background: rgba(16, 185, 129, 0.2);
   border: 1px solid rgba(16, 185, 129, 0.4);
   color: #6ee7b7;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 700;
   padding: 0 4px;
   border-radius: 3px;
@@ -4472,7 +4513,7 @@ a.coord-tag:hover {
 
 .thsr-warn-note {
   color: #fbbf24;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -4542,7 +4583,7 @@ a.coord-tag:hover {
 }
 
 .station-code-txt {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: #64748b;
   font-family: monospace;
   margin-top: 2px;
@@ -4612,7 +4653,7 @@ a.coord-tag:hover {
 .tip-code {
   background: rgba(168, 85, 247, 0.25);
   color: #c084fc;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-weight: 800;
   padding: 1px 5px;
   border-radius: 3px;
@@ -4629,7 +4670,7 @@ a.coord-tag:hover {
   background: rgba(168, 85, 247, 0.25);
   border: 1px solid rgba(168, 85, 247, 0.5);
   color: #d8b4fe;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding: 1px 4px;
   border-radius: 3px;
   font-weight: 600;
@@ -4639,14 +4680,14 @@ a.coord-tag:hover {
   background: rgba(2, 132, 199, 0.25);
   border: 1px solid rgba(2, 132, 199, 0.5);
   color: #7dd3fc;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   padding: 1px 4px;
   border-radius: 3px;
   font-weight: 600;
 }
 
 .tip-desc {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: #94a3b8;
   margin-top: 3px;
   line-height: 1.3;
@@ -4659,7 +4700,7 @@ a.coord-tag:hover {
   top: auto;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   white-space: nowrap;
   padding: 1px 4px;
   border-radius: 3px;
@@ -4734,7 +4775,7 @@ a.coord-tag:hover {
 }
 
 .rain-legend-tag {
-  font-size: 0.64rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
@@ -4759,7 +4800,7 @@ a.coord-tag:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   transition: all 0.2s ease;
 }
 
@@ -4838,7 +4879,7 @@ a.coord-tag:hover {
 }
 
 .rain-col-prob {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   line-height: 1;
 }
@@ -4877,7 +4918,7 @@ a.coord-tag:hover {
 }
 
 .rain-col-date-tag {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: #64748b;
   white-space: nowrap;
   line-height: 1;
@@ -4893,7 +4934,7 @@ a.coord-tag:hover {
 }
 
 .rain-col-time {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: #64748b;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   line-height: 1;
@@ -4919,7 +4960,7 @@ a.coord-tag:hover {
   background: rgba(16, 185, 129, 0.14);
   border: 1px solid rgba(16, 185, 129, 0.35);
   color: #10b981;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 4px;
@@ -5046,7 +5087,7 @@ a.coord-tag:hover {
 }
 
 .youbike-station-loc {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: #94a3b8;
   display: flex;
   align-items: center;
@@ -5059,7 +5100,7 @@ a.coord-tag:hover {
 
 .youbike-station-loc i {
   color: #38bdf8;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   flex-shrink: 0;
 }
 
@@ -5130,7 +5171,7 @@ a.coord-tag:hover {
 }
 
 .youbike-ebike-tag {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 700;
   line-height: 1.35;
   color: #facc15;
@@ -5183,7 +5224,7 @@ a.coord-tag:hover {
 }
 
 .life-index-title {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
 }
 
@@ -5336,7 +5377,7 @@ body {
   }
 
   .disaster-compact-pill {
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
     padding: 2px 8px !important;
     margin-left: 0 !important;
     max-width: 100%;
@@ -5355,7 +5396,7 @@ body {
   }
 
   .brand-subtitle {
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
   }
 
   /* 監控中心切換選擇器：支援手指平滑水平滑動 */
@@ -5520,7 +5561,7 @@ body {
 
   .compact-route-pill {
     padding: 2px 6px !important;
-    font-size: 0.68rem !important;
+    font-size: 0.74rem !important;
     flex-shrink: 0 !important;
   }
 
@@ -5555,13 +5596,13 @@ body {
 
   .dir-toggle-btn {
     padding: 3px 6px !important;
-    font-size: 0.68rem !important;
+    font-size: 0.74rem !important;
   }
 
   .transit-plan-toggle-btn,
   .transit-collapse-btn {
     padding: 3px 6px !important;
-    font-size: 0.68rem !important;
+    font-size: 0.74rem !important;
   }
 
   /* 手機端徹底釋放 16 站 Hover 氣泡，根除 GPU 瓦片 RenderLayer 超載與黑塊撕裂 */
@@ -5613,12 +5654,12 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
     padding: 1px 2px !important;
   }
 
   .station-label {
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
@@ -5635,7 +5676,7 @@ body {
 
   .crowd-station-badge {
     width: 100% !important;
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
   }
 
   .crowd-cars-strip {
@@ -5648,7 +5689,7 @@ body {
 
   .crowd-car-box {
     padding: 1px 1px !important;
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
     justify-content: center !important;
     min-width: 0 !important;
     overflow: hidden !important;
@@ -5657,7 +5698,7 @@ body {
   }
 
   .crowd-car-box span {
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
   }
 
   /* 桃園高鐵停車場微型條在手機螢幕自動折行與自適應 */
@@ -5671,7 +5712,7 @@ body {
   }
 
   .parking-title-tag {
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
   }
 
   .parking-lots-strip {
@@ -5683,7 +5724,7 @@ body {
   }
 
   .parking-lot-chip {
-    font-size: 0.65rem !important;
+    font-size: 0.74rem !important;
     padding: 1px 2px !important;
   }
 
@@ -5779,7 +5820,7 @@ body {
   }
 
   .compact-btn {
-    font-size: 0.68rem !important;
+    font-size: 0.74rem !important;
     padding: 3px 4px !important;
   }
 }
@@ -5897,12 +5938,12 @@ body.native-mobile-mode .segment-stations-row {
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
   padding: 1px 2px !important;
 }
 
 body.native-mobile-mode .station-label {
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
 }
@@ -5918,7 +5959,7 @@ body.native-mobile-mode .bannan-car-crowd-row {
 
 body.native-mobile-mode .crowd-station-badge {
   width: 100% !important;
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
 }
 
 body.native-mobile-mode .crowd-cars-strip {
@@ -5931,7 +5972,7 @@ body.native-mobile-mode .crowd-cars-strip {
 
 body.native-mobile-mode .crowd-car-box {
   padding: 1px 1px !important;
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
   justify-content: center !important;
   min-width: 0 !important;
   overflow: hidden !important;
@@ -5940,7 +5981,7 @@ body.native-mobile-mode .crowd-car-box {
 }
 
 body.native-mobile-mode .crowd-car-box span {
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
 }
 
 body.native-mobile-mode .thsr-parking-status-bar {
@@ -5953,7 +5994,7 @@ body.native-mobile-mode .thsr-parking-status-bar {
 }
 
 body.native-mobile-mode .parking-title-tag {
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
 }
 
 body.native-mobile-mode .parking-lots-strip {
@@ -5965,7 +6006,7 @@ body.native-mobile-mode .parking-lots-strip {
 }
 
 body.native-mobile-mode .parking-lot-chip {
-  font-size: 0.65rem !important;
+  font-size: 0.74rem !important;
   padding: 1px 2px !important;
 }
 
@@ -7104,6 +7145,8 @@ class CameraPlayerEngine {
         });
 
         const onHlsPlaying = () => {
+          const wrapper = videoEl.parentElement;
+          if (wrapper) wrapper.classList.add('is-ready');
           if (wm) {
             wm.style.background = '#10b981';
             wm.title = '正常串流中';
@@ -7409,6 +7452,7 @@ class CameraPlayerEngine {
             this.retryCounts.delete(cam.id);
             const wrapper = videoEl.parentElement;
             if (wrapper) {
+              wrapper.classList.add('is-ready');
               const overlay = wrapper.querySelector('.ntpc-retry-overlay');
               if (overlay) overlay.remove();
             }
