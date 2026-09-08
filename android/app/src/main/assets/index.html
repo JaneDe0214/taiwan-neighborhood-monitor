@@ -7334,13 +7334,20 @@ class CameraPlayerEngine {
         player.load();
         
         videoEl.muted = true;
-        const playPromise = player.play();
-        if (playPromise && playPromise.catch) {
-          playPromise.catch(() => {
-            videoEl.muted = true;
-            player.play().catch(() => {});
-          });
-        }
+        try {
+          const playPromise = player.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+              try {
+                if (player && typeof player.play === 'function') {
+                  videoEl.muted = true;
+                  const retryP = player.play();
+                  if (retryP && typeof retryP.catch === 'function') retryP.catch(() => {});
+                }
+              } catch (e) {}
+            });
+          }
+        } catch (e) {}
 
         const wm = document.getElementById(`wm-${cam.id}`);
         if (wm) {
@@ -8977,13 +8984,12 @@ class WeatherEnvironmentMonitor {
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
       (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
-    // 雲端與同源整合資料端點 (GitHub Actions 每 5 分鐘自動推送最新車況，支援純靜態/APK 免 CORS 直連)
+    // 雲端與同源整合資料端點 (優先同源秒讀，支援純靜態/APK 免 CORS 直連)
     const cloudDataUrls = [
-      'https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/youbike.json',
-      'https://janede0214.github.io/taiwan-neighborhood-monitor/data/youbike.json',
-      'data/youbike.json',
       './data/youbike.json',
-      '../data/youbike.json'
+      'data/youbike.json',
+      'https://janede0214.github.io/taiwan-neighborhood-monitor/data/youbike.json',
+      'https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/youbike.json'
     ];
 
     // 本機代理端點 (僅真正的本機 Node.js 環境啟用)
@@ -8997,7 +9003,7 @@ class WeatherEnvironmentMonitor {
       'http://127.0.0.1:3000/api/youbike/tycg'
     ] : [];
 
-    // 安全取得 JSON 函式 (支援快取破除時間戳與 3500ms 快速容錯)
+    // 安全取得 JSON 函式 (支援快取破除時間戳與 3000ms 快速容錯，零 Preflight 負擔)
     const fetchJsonSafe = async (urls) => {
       const ts = Date.now();
       for (const rawUrl of urls) {
@@ -9006,8 +9012,7 @@ class WeatherEnvironmentMonitor {
           const fetchUrl = `${rawUrl}${sep}_t=${ts}`;
           const res = await fetch(fetchUrl, {
             cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-            signal: AbortSignal.timeout(3500)
+            signal: AbortSignal.timeout(3000)
           });
           if (res.ok) {
             const data = await res.json();
@@ -10348,18 +10353,18 @@ class TwinCityTransitMonitor {
         weightRes = await fetch('/api/metro/carweight', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
       if (!res) {
         const candidateUrls = [
-          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json?_t=${nowMs}`,
+          `./data/metro-live.json?_t=${nowMs}`,
+          `data/metro-live.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json?_t=${nowMs}`,
-          `data/metro-live.json?_t=${nowMs}`
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json?_t=${nowMs}`
         ];
         for (const u of candidateUrls) {
           const staticLive = await fetch(u, {
             cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-            signal: AbortSignal.timeout(3500)
+            signal: AbortSignal.timeout(3000)
           }).then(r => r.ok ? r.json() : null).catch(() => null);
 
           if (staticLive) {
@@ -10469,17 +10474,18 @@ class TwinCityTransitMonitor {
       }
 
       // 途徑 3：GitHub 雲端最新資料庫與同源備援
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
       if (!res || !res.lots) {
         const candidateUrls = [
-          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json?_t=${nowMs}`,
+          `./data/parking.json?_t=${nowMs}`,
+          `data/parking.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json?_t=${nowMs}`,
-          `data/parking.json?_t=${nowMs}`
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json?_t=${nowMs}`
         ];
         for (const u of candidateUrls) {
           const staticParking = await fetch(u, {
             cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-            signal: AbortSignal.timeout(3500)
+            signal: AbortSignal.timeout(3000)
           }).then(r => r.ok ? r.json() : null).catch(() => null);
 
           if (staticParking && Array.isArray(staticParking.lots)) {
@@ -10767,18 +10773,18 @@ class TwinCityTransitMonitor {
         ]);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
       if (!southRes && !northRes) {
         const candidateUrls = [
-          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json?_t=${nowMs}`,
+          `./data/thsr.json?_t=${nowMs}`,
+          `data/thsr.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json?_t=${nowMs}`,
-          `data/thsr.json?_t=${nowMs}`
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json?_t=${nowMs}`
         ];
         for (const u of candidateUrls) {
           const thsrJson = await fetch(u, {
             cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-            signal: AbortSignal.timeout(3500)
+            signal: AbortSignal.timeout(3000)
           }).then(r => r.ok ? r.json() : null).catch(() => null);
 
           if (thsrJson) {
@@ -10872,18 +10878,18 @@ class TwinCityTransitMonitor {
         ]);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
       if (!southRes && !northRes) {
         const candidateUrls = [
-          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json?_t=${nowMs}`,
+          `./data/tymetro.json?_t=${nowMs}`,
+          `data/tymetro.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json?_t=${nowMs}`,
-          `data/tymetro.json?_t=${nowMs}`
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json?_t=${nowMs}`
         ];
         for (const u of candidateUrls) {
           const tymetroJson = await fetch(u, {
             cache: 'no-store',
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' },
-            signal: AbortSignal.timeout(3500)
+            signal: AbortSignal.timeout(3000)
           }).then(r => r.ok ? r.json() : null).catch(() => null);
 
           if (tymetroJson) {
@@ -11602,7 +11608,8 @@ class TwinCityTransitMonitor {
 
   // 渲染大眾運輸雙線即時走廊
   render() {
-    const now = new Date();
+    try {
+      const now = new Date();
     const isToQingpu = this.direction === 'to_qingpu';
 
     // 週期性向後端代理確認最新官方時刻表 (內部具備 5 分鐘節流與快取防抖保護，捷運看板每15秒更新)
@@ -11715,6 +11722,9 @@ class TwinCityTransitMonitor {
           this.bindTrackWheel();
         }
       }
+    }
+    } catch (err) {
+      console.error('[TwinCityTransitMonitor.render 異常]', err);
     }
   }
 
@@ -12313,7 +12323,7 @@ class TwinCityTransitMonitor {
               <span class="pids-countdown-badge thsr-pids" data-f-thsr-pids>
                 <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 ‧ ${thsr.platformStatus} (${thsr.depTime}發)
               </span>
-              <span class="track-total-time" data-f-thsr-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time" data-f-thsr-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : (plans && plans[0] ? plans[0].totalDuration : '38分')}</strong></span>
             </div>
           </div>
 
@@ -12337,7 +12347,7 @@ class TwinCityTransitMonitor {
               <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}" data-f-tymetro-pids>
                 <i class="fa-solid fa-plane"></i> ${(tymetro.type || '').replace('(站站停)', '')} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
               </span>
-              <span class="track-total-time" data-f-tymetro-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : plans[0].totalDuration}</strong></span>
+              <span class="track-total-time" data-f-tymetro-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : (plans && plans[0] ? plans[0].totalDuration : '64分')}</strong></span>
             </div>
           </div>
 
@@ -14429,10 +14439,14 @@ class MonitorApp {
     this.weatherMonitor = new WeatherEnvironmentMonitor();
     this.radarMap = new NeighborhoodRadarMap();
 
-    if (typeof TwinCityTransitMonitor !== 'undefined') {
-      this.transitMonitor = new TwinCityTransitMonitor('transitTransitBar');
-      window.transitMonitor = this.transitMonitor;
-      this.transitMonitor.start();
+    try {
+      if (typeof TwinCityTransitMonitor !== 'undefined') {
+        this.transitMonitor = new TwinCityTransitMonitor('transitTransitBar');
+        window.transitMonitor = this.transitMonitor;
+        this.transitMonitor.start();
+      }
+    } catch(err) {
+      console.error('[大眾運輸監控初始化異常]', err);
     }
 
     this.initClock();
@@ -15200,9 +15214,12 @@ class MonitorApp {
           cors: true,
           url: cam.streamUrl
         });
-        this.modalFlvPlayer.attachMedia(modalVideo);
-        this.modalFlvPlayer.load();
-        this.modalFlvPlayer.play();
+        try {
+          this.modalFlvPlayer.attachMediaElement(modalVideo);
+          this.modalFlvPlayer.load();
+          const p = this.modalFlvPlayer.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } catch(e) {}
       }
       return;
     }
