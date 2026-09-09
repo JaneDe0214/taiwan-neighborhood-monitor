@@ -3605,14 +3605,16 @@ a.coord-tag:hover {
 .crowd-car-box {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 1px 3px;
+  justify-content: center;
+  padding: 2px 5px;
   border-radius: 3px;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
   transition: transform 0.15s ease;
   flex-shrink: 0;
+  min-width: 22px;
+  text-align: center;
 }
 .crowd-car-box:hover {
   transform: scale(1.08);
@@ -5692,13 +5694,10 @@ body {
   }
 
   .crowd-car-box {
-    padding: 1px 1px !important;
+    padding: 2px 3px !important;
     font-size: 0.74rem !important;
     justify-content: center !important;
     min-width: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
   }
 
   .crowd-car-box span {
@@ -5975,13 +5974,10 @@ body.native-mobile-mode .crowd-cars-strip {
 }
 
 body.native-mobile-mode .crowd-car-box {
-  padding: 1px 1px !important;
+  padding: 2px 3px !important;
   font-size: 0.74rem !important;
   justify-content: center !important;
   min-width: 0 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
 }
 
 body.native-mobile-mode .crowd-car-box span {
@@ -11822,13 +11818,11 @@ class TwinCityTransitMonitor {
         </div>
         ${bannan.carWeight && Array.isArray(bannan.carWeight.cars) && bannan.carWeight.cars.length > 0 ? `
           <div class="bannan-car-crowd-row" title="${bannan.carWeight.station}站即時車廂擁擠度 (1~6車)">
-            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station}車廂擁擠度</span>
+            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station}站車廂</span>
             <div class="crowd-cars-strip">
               ${bannan.carWeight.cars.map(c => `
-                <div class="crowd-car-box level-${c.level}" title="${c.carNum}：${c.status}">
-                  <span class="car-status-dot"></span>
+                <div class="crowd-car-box level-${c.level}" title="${c.carNum}車：${c.status}">
                   <span>${c.carNum}</span>
-                  <span style="font-size:0.55rem;opacity:0.9;">${c.status}</span>
                 </div>
               `).join('')}
             </div>
