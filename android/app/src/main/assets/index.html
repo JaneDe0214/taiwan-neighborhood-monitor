@@ -6567,6 +6567,274 @@ body.native-mobile-mode .parking-lot-chip {
   transform: translateY(-1px);
 }
 
+
+/* ===== 體驗升級：我的最愛、出行快報、快搜標籤、TV遙控器焦點 ===== */
+
+/* 我的最愛收藏星號按鈕樣式 */
+.fav-star-btn {
+  color: rgba(255, 255, 255, 0.45);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fav-star-btn:hover {
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.5) !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4) !important;
+}
+.fav-star-btn.active {
+  color: #fbbf24 !important;
+  border-color: rgba(251, 191, 36, 0.7) !important;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.15)) !important;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.5) !important;
+  animation: fav-star-bounce 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fav-star-bounce {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.35) rotate(15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* 收藏空狀態引導卡 */
+.fav-empty-placeholder {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px dashed rgba(251, 191, 36, 0.4);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  text-align: center;
+  margin: 30px auto;
+  max-width: 540px;
+  width: 90%;
+  animation: fadeIn 0.4s ease-out;
+}
+.fav-empty-icon {
+  font-size: 3.2rem;
+  color: #fbbf24;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.6));
+  animation: gentle-live-pulse 2.2s infinite ease-in-out;
+}
+.fav-empty-title {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 8px;
+}
+.fav-empty-desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+.fav-quick-add-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+.fav-quick-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55);
+}
+
+/* 出門前 3 秒智慧出行快報膠囊 */
+.smart-commute-capsule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.18));
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 30px;
+  padding: 6px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  overflow: hidden;
+}
+.smart-commute-capsule:hover {
+  background: linear-gradient(90deg, rgba(14, 165, 233, 0.25), rgba(99, 102, 241, 0.28));
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
+  transform: translateY(-1px);
+}
+.capsule-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.4);
+}
+.capsule-text-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.capsule-text-wrap::-webkit-scrollbar {
+  display: none;
+}
+.capsule-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.capsule-item i {
+  color: #38bdf8;
+  font-size: 0.85rem;
+}
+.capsule-divider {
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 300;
+}
+.capsule-arrow {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+.smart-commute-capsule:hover .capsule-arrow {
+  transform: translateX(3px);
+  color: #38bdf8;
+}
+
+/* 鏡頭快搜與標籤篩選列 */
+.camera-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 2px 2px;
+  flex-wrap: wrap;
+}
+.filter-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 4px 12px;
+  width: 220px;
+  transition: all 0.25s ease;
+}
+.filter-search-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+  background: rgba(15, 23, 42, 0.9);
+  width: 260px;
+}
+.filter-search-icon {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+.filter-search-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 0.76rem;
+  width: 100%;
+}
+.filter-search-input::placeholder {
+  color: #64748b;
+}
+.filter-clear-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  display: none;
+  font-size: 0.75rem;
+  transition: color 0.15s ease;
+}
+.filter-clear-btn:hover {
+  color: #f8fafc;
+}
+.filter-tags-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 0;
+  flex: 1;
+}
+.filter-tags-scroll::-webkit-scrollbar {
+  display: none;
+}
+.filter-tag-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.filter-tag-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.filter-tag-pill.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 150, 255, 0.2));
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+/* Android TV 遙控器焦點發光環與鍵盤導航 */
+.cam-card {
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.25s ease, 
+              border-color 0.25s ease,
+              outline 0.2s ease;
+}
+.cam-card:focus,
+.cam-card:focus-visible {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 3px !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 26px rgba(0, 240, 255, 0.85), inset 0 0 15px rgba(0, 240, 255, 0.25) !important;
+  transform: scale(1.025);
+  z-index: 25;
+}
+.cam-card:focus .cam-card-header,
+.cam-card:focus-visible .cam-card-header {
+  background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(15, 23, 42, 0.8)) !important;
+}
+
 </style>
 </head>
 <body>
@@ -6661,6 +6929,10 @@ body.native-mobile-mode .parking-lot-chip {
         <i class="fa-solid fa-plane-arrival"></i>
         <span>觀光</span>
       </button>
+            <button class="center-btn" data-center="favorites" title="我的最愛：自選專屬跨區即時視訊牆">
+        <i class="fa-solid fa-star"></i>
+        <span>收藏</span>
+      </button>
       <button class="center-btn" data-center="japan" title="日本精選：澀谷 ‧ 富士山4K ‧ 歌舞伎町 ‧ 道頓堀 ‧ 秋葉原 ‧ 東京鐵塔 ‧ 京都">
         <i class="fa-solid fa-torii-gate"></i>
         <span>日本</span>
@@ -6717,7 +6989,35 @@ body.native-mobile-mode .parking-lot-chip {
     <!-- 左側視訊矩陣區 -->
     <section class="matrix-section">
       <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
+            <!-- 出門前 3 秒智慧出行快報膠囊 -->
+      <div id="smartCommuteCapsule" class="smart-commute-capsule" title="點擊展開通勤詳細資訊與轉乘指引">
+        <span class="capsule-badge"><i class="fa-solid fa-bolt"></i> 3秒出行速報</span>
+        <div class="capsule-text-wrap" id="smartCommuteCapsuleContent">
+          <span class="capsule-item"><i class="fa-solid fa-cloud-sun"></i> 載入即時天候與交通速報...</span>
+        </div>
+        <i class="fa-solid fa-angle-right capsule-arrow"></i>
+      </div>
+
+      <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
       <div id="transitTransitBar" class="transit-corridor-bar is-collapsed-bar"></div>
+
+      <!-- 鏡頭即時快搜與熱門標籤篩選列 -->
+      <div class="camera-filter-bar" id="cameraFilterBar">
+        <div class="filter-search-wrap">
+          <i class="fa-solid fa-magnifying-glass filter-search-icon"></i>
+          <input type="text" id="cameraSearchInput" class="filter-search-input" placeholder="快速搜尋名稱、路段、景點..." autocomplete="off">
+          <button class="filter-clear-btn" id="filterClearBtn" title="清除搜尋"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="filter-tags-scroll" id="filterTagsScroll">
+          <button class="filter-tag-pill active" data-tag="all">全部</button>
+          <button class="filter-tag-pill" data-tag="商圈">熱門商圈</button>
+          <button class="filter-tag-pill" data-tag="風景">自然名勝</button>
+          <button class="filter-tag-pill" data-tag="溫泉">溫泉名勝</button>
+          <button class="filter-tag-pill" data-tag="富士山">富士山</button>
+          <button class="filter-tag-pill" data-tag="交通">交通樞紐</button>
+          <button class="filter-tag-pill" data-tag="4K">4K極清</button>
+        </div>
+      </div>
 
       <!-- 攝影機視訊卡片網格 -->
       <div id="cameraGrid" class="camera-grid grid-6">
@@ -7379,6 +7679,7 @@ class CameraPlayerEngine {
     card.className = 'cam-card';
     card.id = `cam-card-${cam.id}`;
     card.dataset.camId = cam.id;
+    card.tabIndex = 0; // 支援 Android TV 遙控器 D-Pad 焦點與無障礙導航
 
     // 依串流類型生成內容 (畫面上完全零標籤遮擋)
     let mediaHtml = '';
@@ -13583,6 +13884,14 @@ window.CAMERAS_DATA = {
       "lon": 121.5053,
       "description": "九份 ‧ 西門町 ‧ 台北101 ‧ 台北車站 ‧ 大稻埕 ‧ 松山商圈"
     },
+        {
+      "id": "favorites",
+      "name": "收藏",
+      "address": "個人化專屬視訊牆",
+      "lat": 25.0153,
+      "lon": 121.2213,
+      "description": "自選專屬跨區即時視訊牆 (點擊各畫面右上角星號 ★ 即可加入/移除收藏)"
+    },
     {
       "id": "japan",
       "name": "日本",
@@ -15474,6 +15783,227 @@ window.CAMERAS_DATA = {
         "tag": "沖繩",
         "distanceMeters": 0,
         "distanceKm": 0
+      },
+      {
+        "id": "jp-13-kusatsu",
+        "cctvCode": "JP-KUSATSU-1",
+        "name": "群馬 ‧ 草津溫泉湯畑 湯瀑布前 (日本第一名湯 ‧ 4K實況)",
+        "authority": "草津溫泉觀光協會 官方實況",
+        "type": "youtube",
+        "videoId": "GrEEoEmmrKs",
+        "lat": 36.6206,
+        "lon": 138.5963,
+        "streamUrl": "https://www.youtube.com/watch?v=GrEEoEmmrKs",
+        "sourceUrl": "https://www.youtube.com/watch?v=GrEEoEmmrKs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "群馬草津",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-14-kusatsu-foot",
+        "cctvCode": "JP-KUSATSU-2",
+        "name": "群馬 ‧ 草津溫泉湯畑 足湯之湯 (遊客聚集名所)",
+        "authority": "草津溫泉官方 24H實況",
+        "type": "youtube",
+        "videoId": "SJpBa3u-wsI",
+        "lat": 36.6209,
+        "lon": 138.5965,
+        "streamUrl": "https://www.youtube.com/watch?v=SJpBa3u-wsI",
+        "sourceUrl": "https://www.youtube.com/watch?v=SJpBa3u-wsI",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "群馬草津",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-15-kamikochi",
+        "cctvCode": "JP-KAMIKOCHI",
+        "name": "長野 ‧ 上高地河童橋與穗高連峰 4K (日本阿爾卑斯極致雪山)",
+        "authority": "五千尺HOTEL上高地 官方4K實況",
+        "type": "youtube",
+        "videoId": "Iv2VUE_UhRQ",
+        "lat": 36.2483,
+        "lon": 137.6375,
+        "streamUrl": "https://www.youtube.com/watch?v=Iv2VUE_UhRQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=Iv2VUE_UhRQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "長野上高地",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-16-hakone",
+        "cctvCode": "JP-HAKONE",
+        "name": "神奈川 ‧ 箱根大觀山遠眺蘆之湖與富士山 (箱根絕景)",
+        "authority": "ANEST IWATA Turnpike 箱根官方實況",
+        "type": "youtube",
+        "videoId": "maMMEh-2Bsk",
+        "lat": 35.1843,
+        "lon": 139.0435,
+        "streamUrl": "https://www.youtube.com/watch?v=maMMEh-2Bsk",
+        "sourceUrl": "https://www.youtube.com/watch?v=maMMEh-2Bsk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "箱根蘆之湖",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-17-yamanakako",
+        "cctvCode": "JP-YAMANAKAKO",
+        "name": "山梨 ‧ 富士山山中湖全景 (富士五湖第一大湖 ‧ 逆富士勝景)",
+        "authority": "Hotel Mt. Fuji 官方實況",
+        "type": "youtube",
+        "videoId": "EDmEOeWNbtU",
+        "lat": 35.4182,
+        "lon": 138.8687,
+        "streamUrl": "https://www.youtube.com/watch?v=EDmEOeWNbtU",
+        "sourceUrl": "https://www.youtube.com/watch?v=EDmEOeWNbtU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山山中湖",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-18-oshino",
+        "cctvCode": "JP-OSHINO",
+        "name": "山梨 ‧ 富士山世界文化遺產 忍野八海 4K (清泉倒映神山)",
+        "authority": "忍野八海觀光情報 官方4K實況",
+        "type": "youtube",
+        "videoId": "PxzwnWh1dKk",
+        "lat": 35.4608,
+        "lon": 138.8329,
+        "streamUrl": "https://www.youtube.com/watch?v=PxzwnWh1dKk",
+        "sourceUrl": "https://www.youtube.com/watch?v=PxzwnWh1dKk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山忍野八海",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-19-motosuko",
+        "cctvCode": "JP-MOTOSUKO",
+        "name": "山梨 ‧ 富士山本栖湖富士芝櫻 (日幣千圓背面經典神山視角)",
+        "authority": "富士本栖湖渡假村 官方實況",
+        "type": "youtube",
+        "videoId": "JGyGoXlKZmw",
+        "lat": 35.4716,
+        "lon": 138.5833,
+        "streamUrl": "https://www.youtube.com/watch?v=JGyGoXlKZmw",
+        "sourceUrl": "https://www.youtube.com/watch?v=JGyGoXlKZmw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山本栖湖",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-20-fumotoppara",
+        "cctvCode": "JP-FUMOTOPPARA",
+        "name": "靜岡 ‧ 富士宮麓原大草原遠眺富士山全景 (戶外露營名勝)",
+        "authority": "ふもとっぱら 官方實況",
+        "type": "youtube",
+        "videoId": "hBaHx5WdnbQ",
+        "lat": 35.3995,
+        "lon": 138.5606,
+        "streamUrl": "https://www.youtube.com/watch?v=hBaHx5WdnbQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=hBaHx5WdnbQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山靜岡",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-21-odaiba",
+        "cctvCode": "JP-ODAIBA",
+        "name": "東京 ‧ 台場海濱公園與彩虹大橋 (東京灣浪漫夜景)",
+        "authority": "首都高速道路 / 東京灣官方實況",
+        "type": "youtube",
+        "videoId": "kGG1CaeQ9oM",
+        "lat": 35.6298,
+        "lon": 139.7745,
+        "streamUrl": "https://www.youtube.com/watch?v=kGG1CaeQ9oM",
+        "sourceUrl": "https://www.youtube.com/watch?v=kGG1CaeQ9oM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "東京台場",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-22-yokohama",
+        "cctvCode": "JP-YOKOHAMA",
+        "name": "神奈川 ‧ 橫濱港未來21紅磚倉庫與汽車道 (摩天輪海港勝景)",
+        "authority": "橫濱港灣都市整備局 官方實況",
+        "type": "youtube",
+        "videoId": "fRdk6I337hE",
+        "lat": 35.4526,
+        "lon": 139.6384,
+        "streamUrl": "https://www.youtube.com/watch?v=fRdk6I337hE",
+        "sourceUrl": "https://www.youtube.com/watch?v=fRdk6I337hE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "橫濱港未來",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-23-haneda",
+        "cctvCode": "JP-HANEDA",
+        "name": "東京 ‧ 羽田國際機場第一航廈 24H 停機坪跑道 (飛機起降動態)",
+        "authority": "TBS NEWS DIG 官方實況",
+        "type": "youtube",
+        "videoId": "2f9NOSw-FqM",
+        "lat": 35.5494,
+        "lon": 139.7798,
+        "streamUrl": "https://www.youtube.com/watch?v=2f9NOSw-FqM",
+        "sourceUrl": "https://www.youtube.com/watch?v=2f9NOSw-FqM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "東京羽田",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-24-fukuoka-tenjin",
+        "cctvCode": "JP-FUKUOKA-1",
+        "name": "福岡 ‧ 博多天神一丁目潮流十字路口 (九州第一大流行商圈)",
+        "authority": "福岡天神街區 官方實況",
+        "type": "youtube",
+        "videoId": "vOURyxLGME4",
+        "lat": 33.5904,
+        "lon": 130.4017,
+        "streamUrl": "https://www.youtube.com/watch?v=vOURyxLGME4",
+        "sourceUrl": "https://www.youtube.com/watch?v=vOURyxLGME4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "福岡天神",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-25-hakata-station",
+        "cctvCode": "JP-FUKUOKA-2",
+        "name": "福岡 ‧ JR博多車站博多口站前廣場 (九州鐵道門戶 ‧ 人潮穿梭)",
+        "authority": "博多站前即時連線 官方實況",
+        "type": "youtube",
+        "videoId": "yETDDgrE2E4",
+        "lat": 33.5901,
+        "lon": 130.4207,
+        "streamUrl": "https://www.youtube.com/watch?v=yETDDgrE2E4",
+        "sourceUrl": "https://www.youtube.com/watch?v=yETDDgrE2E4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "福岡博多",
+        "distanceMeters": 0,
+        "distanceKm": 0
       }
     ]
   }
@@ -15538,6 +16068,9 @@ class MonitorApp {
     this.radarMap = null;
     this.modalFlvPlayer = null;
     this.modalHlsPlayer = null;
+    this.filterKeyword = '';
+    this.filterTag = 'all';
+    this.commuteCapsuleTimer = null;
   }
 
   // 初始化系統
@@ -15574,10 +16107,23 @@ class MonitorApp {
       }
     }
 
+    // 啟動出門前 3 秒智慧快報膠囊計算
+    this.updateCommuteCapsule();
+    this.commuteCapsuleTimer = setInterval(() => this.updateCommuteCapsule(), 10000);
+
+    const capsuleBtn = document.getElementById('smartCommuteCapsule');
+    if (capsuleBtn) {
+      capsuleBtn.addEventListener('click', () => {
+        if (this.transitMonitor && typeof this.transitMonitor.toggleCollapse === 'function') {
+          this.transitMonitor.toggleCollapse();
+        }
+      });
+    }
+
     // 視窗自適應計算
     this.applyAdaptiveViewportFit();
 
-    console.log('雙埔生活資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊)');
+    console.log('雙埔生活資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊 ‧ 收藏專屬牆 ‧ TV導航)');
   }
 
   // 數位時鐘
@@ -15593,6 +16139,145 @@ class MonitorApp {
     };
     updateTime();
     setInterval(updateTime, 1000);
+  }
+
+
+  // ===== 收藏管理 (我的最愛專屬視訊牆) =====
+  getFavorites() {
+    try {
+      const raw = localStorage.getItem('neighborhood_monitor_favorites');
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) {
+      return [];
+    }
+  }
+
+  saveFavorites(list) {
+    try {
+      localStorage.setItem('neighborhood_monitor_favorites', JSON.stringify(list));
+    } catch(e) {}
+  }
+
+  isFavorite(camId) {
+    return this.getFavorites().includes(camId);
+  }
+
+  toggleCamFavorite(camId, btnEl) {
+    let favs = this.getFavorites();
+    const idx = favs.indexOf(camId);
+    const willFav = (idx === -1);
+    if (willFav) {
+      favs.push(camId);
+    } else {
+      favs.splice(idx, 1);
+    }
+    this.saveFavorites(favs);
+
+    // 同步更新所有畫面上對應的收藏星號
+    document.querySelectorAll(`.fav-star-btn[data-cam-id="${camId}"]`).forEach(btn => {
+      if (willFav) {
+        btn.classList.add('active');
+        btn.title = '已在我的最愛 (點擊取消收藏)';
+        btn.innerHTML = '<i class="fa-solid fa-star"></i>';
+      } else {
+        btn.classList.remove('active');
+        btn.title = '加入我的最愛 (自選專屬視訊牆)';
+        btn.innerHTML = '<i class="fa-regular fa-star"></i>';
+      }
+    });
+
+    if (window.showToast) {
+      window.showToast(willFav ? '已加入我的最愛收藏牆 ★' : '已從我的最愛中移除', willFav ? 'success' : 'info');
+    }
+
+    // 若當前停留在收藏中心，取消收藏後即時重新計算畫面
+    if (this.currentCenterId === 'favorites') {
+      this.switchCenter('favorites');
+    }
+  }
+
+  getAllUniqueCameras() {
+    if (!window.CAMERAS_DATA || !window.CAMERAS_DATA.cameras) return [];
+    const map = new Map();
+    Object.keys(window.CAMERAS_DATA.cameras).forEach(key => {
+      const list = window.CAMERAS_DATA.cameras[key];
+      if (Array.isArray(list)) {
+        list.forEach(c => {
+          if (!map.has(c.id)) {
+            map.set(c.id, c);
+          }
+        });
+      }
+    });
+    return Array.from(map.values());
+  }
+
+  // ===== 出門前 3 秒智慧出行快報膠囊 =====
+  updateCommuteCapsule() {
+    const capsuleEl = document.getElementById('smartCommuteCapsuleContent');
+    if (!capsuleEl) return;
+
+    // 1. 天候資訊
+    let weatherPart = '🌤️ 今日天候良好';
+    if (this.weatherMonitor) {
+      if (this.weatherMonitor.currentWeatherData) {
+        const w = this.weatherMonitor.currentWeatherData;
+        const temp = w.temp != null ? `${Math.round(w.temp)}°C` : '';
+        const desc = w.condition || '舒適';
+        const rain = w.rainProb != null ? ` (降雨 ${w.rainProb}%)` : '';
+        weatherPart = `🌤️ ${temp} ${desc}${rain}`;
+      } else if (this.weatherMonitor.weatherDual && this.weatherMonitor.weatherDual.qp) {
+        const qp = this.weatherMonitor.weatherDual.qp;
+        const temp = qp.temp != null ? `${Math.round(qp.temp)}°C` : '';
+        const desc = qp.condition || '多雲';
+        weatherPart = `🌤️ 青埔 ${temp} ${desc}`;
+      }
+    }
+
+    // 2. YouBike 核心站點車況
+    let youbikePart = '🚲 站前 YouBike 車源充足';
+    if (this.weatherMonitor && Array.isArray(this.weatherMonitor.youbikeStations) && this.weatherMonitor.youbikeStations.length > 0) {
+      const keyStation = this.weatherMonitor.youbikeStations.find(st => st.name && (st.name.includes('高鐵') || st.name.includes('新埔') || st.name.includes('站前'))) || this.weatherMonitor.youbikeStations[0];
+      if (keyStation && typeof keyStation.bikes === 'number') {
+        const eText = keyStation.ebikes ? ` (含電輔車${keyStation.ebikes}台)` : '';
+        youbikePart = `🚲 ${keyStation.name.replace(/YouBike2.0_/g, '')} 剩 ${keyStation.bikes} 台${eText}`;
+      }
+    }
+
+    // 3. 大眾運輸鐵道速報
+    let transitPart = '🚄 鐵道捷運運轉正常';
+    if (this.transitMonitor) {
+      const thsr = this.transitMonitor.getThsrNextTrain ? this.transitMonitor.getThsrNextTrain() : null;
+      if (thsr && thsr.depTime) {
+        const minText = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (約 ${Math.ceil(thsr.waitSec / 60)} 分鐘後)` : '';
+        transitPart = `🚄 下班高鐵 ${thsr.depTime} 發車${minText}`;
+      }
+    }
+
+    capsuleEl.innerHTML = `
+      <span class="capsule-item">${weatherPart}</span>
+      <span class="capsule-divider">│</span>
+      <span class="capsule-item">${youbikePart}</span>
+      <span class="capsule-divider">│</span>
+      <span class="capsule-item">${transitPart}</span>
+    `;
+  }
+
+  // ===== 鏡頭快搜與標籤篩選 =====
+  clearFilters() {
+    this.filterKeyword = '';
+    this.filterTag = 'all';
+    const input = document.getElementById('cameraSearchInput');
+    const clearBtn = document.getElementById('filterClearBtn');
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    document.querySelectorAll('#filterTagsScroll .filter-tag-pill').forEach(pill => {
+      if (pill.dataset.tag === 'all') pill.classList.add('active');
+      else pill.classList.remove('active');
+    });
+
+    this.renderVideoMatrix();
   }
 
   // 綁定 UI 事件
@@ -15843,7 +16528,17 @@ class MonitorApp {
 
     try {
       let centerData, cameras;
-      if (window.CAMERAS_DATA) {
+      if (centerId === 'favorites') {
+        const favIds = this.getFavorites();
+        const allCams = this.getAllUniqueCameras();
+        centerData = {
+          id: 'favorites',
+          name: '收藏',
+          address: '個人化專屬視訊牆',
+          description: '自選專屬跨區即時視訊牆 (點擊各畫面右上角星號 ★ 即可加入/移除收藏)'
+        };
+        cameras = favIds.map(id => allCams.find(c => c.id === id)).filter(Boolean);
+      } else if (window.CAMERAS_DATA) {
         centerData = window.CAMERAS_DATA.centers.find(c => c.id === centerId);
         cameras = window.CAMERAS_DATA.cameras[centerId] || [];
       } else {
@@ -15896,6 +16591,8 @@ class MonitorApp {
           sortIndicator.innerText = '雙埔公平呈現：青埔與新埔各半均分 (零切角自適應)';
         } else if (centerId === 'japan') {
           sortIndicator.innerText = '日本精選：澀谷 ‧ 富士山4K ‧ 歌舞伎町 ‧ 道頓堀 ‧ 秋葉原 ‧ 東京鐵塔 ‧ 京都 (1080P/4K 官方實況)';
+        } else if (centerId === 'favorites') {
+          sortIndicator.innerText = `自選專屬視訊牆：已收藏 ${this.currentCameras.length} 處即時鏡頭 (點擊畫面星號 ★ 自由增刪)`;
         } else if (centerId === 'tourist') {
           sortIndicator.innerText = '觀光精選：九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水 (4K UHD / 1080P FHD 動態串流)';
         } else if (centerId === 'qingpu') {
@@ -15923,6 +16620,17 @@ class MonitorApp {
           } else {
             btn.classList.remove('active');
           }
+        });
+      } else if (centerId === 'favorites') {
+        const defaultMode = this.currentCameras.length <= 4 ? 'grid-4' : (this.currentCameras.length <= 6 ? 'grid-6' : 'grid-all');
+        this.currentGridMode = defaultMode;
+        this.previousGridMode = defaultMode;
+        this.focusedCamId = null;
+        const gridContainer = document.getElementById('cameraGrid');
+        if (gridContainer) gridContainer.className = `camera-grid ${defaultMode}`;
+        document.querySelectorAll('.grid-btn').forEach(btn => {
+          if (btn.dataset.grid === defaultMode) btn.classList.add('active');
+          else btn.classList.remove('active');
         });
       } else if (centerId === 'tourist' || centerId === 'qingpu' || centerId === 'banqiao') {
         this.currentGridMode = 'grid-all';
@@ -16049,26 +16757,80 @@ class MonitorApp {
       if (sortIndicator && visibleCams[0]) {
         sortIndicator.innerText = `單格特寫模式：${visibleCams[0].name} (按兩下縮小回到原本多宮格)`;
       }
-    } else if (this.currentCenterId === 'dual') {
-      // 雙埔分配：偶數時各半均分；奇數時(如9宮格無法平分)青埔多1個以完整填滿，絕不浪費格子只顯示8個
-      const qpQuota = Math.ceil(maxDisplay / 2);
-      const bpQuota = Math.floor(maxDisplay / 2);
-      const qpList = this.currentCameras.filter(c => c.areaTag === '青埔').slice(0, qpQuota);
-      const bpList = this.currentCameras.filter(c => c.areaTag === '新埔').slice(0, bpQuota);
-      visibleCams = [...qpList, ...bpList];
-
-      const sortIndicator = document.querySelector('.sort-indicator span');
-      if (sortIndicator) {
-        const qpCount = qpList.length;
-        const bpCount = bpList.length;
-        if (qpCount === bpCount) {
-          sortIndicator.innerText = `雙埔公平呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 各半均分`;
-        } else {
-          sortIndicator.innerText = `雙埔呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 九宮格滿版全開 (青埔+1)`;
-        }
-      }
     } else {
-      visibleCams = this.currentCameras.slice(0, maxDisplay);
+      // 依快搜關鍵字與標籤過濾鏡頭清單
+      let filteredList = this.currentCameras;
+      if (this.filterTag && this.filterTag !== 'all') {
+        const tag = this.filterTag.toLowerCase();
+        filteredList = filteredList.filter(c => {
+          const t = ((c.name || '') + ' ' + (c.tag || '') + ' ' + (c.authority || '') + ' ' + (c.description || '') + ' ' + (c.areaTag || '')).toLowerCase();
+          if (tag === '富士山') return t.includes('富士山') || t.includes('fuji');
+          if (tag === '溫泉') return t.includes('溫泉') || t.includes('草津') || t.includes('箱根') || t.includes('onsen');
+          if (tag === '商圈') return t.includes('商圈') || t.includes('十字路口') || t.includes('街') || t.includes('夜市') || t.includes('站前') || t.includes('歌舞伎町') || t.includes('澀谷') || t.includes('天神') || t.includes('西門') || t.includes('大稻埕') || t.includes('松山');
+          if (tag === '風景') return t.includes('湖') || t.includes('公園') || t.includes('海') || t.includes('山') || t.includes('寺') || t.includes('橋') || t.includes('上高地') || t.includes('九份') || t.includes('淡水');
+          if (tag === '交通') return t.includes('路口') || t.includes('交流道') || t.includes('高鐵') || t.includes('捷運') || t.includes('機場') || t.includes('車站') || t.includes('公路') || t.includes('國道');
+          if (tag === '4k') return t.includes('4k');
+          return t.includes(tag);
+        });
+      }
+      if (this.filterKeyword) {
+        const kw = this.filterKeyword.toLowerCase();
+        filteredList = filteredList.filter(c => {
+          const t = ((c.name || '') + ' ' + (c.tag || '') + ' ' + (c.authority || '') + ' ' + (c.cctvCode || '') + ' ' + (c.areaTag || '')).toLowerCase();
+          return t.includes(kw);
+        });
+      }
+
+      // 收藏空狀態檢查
+      if (this.currentCenterId === 'favorites' && this.getFavorites().length === 0) {
+        gridContainer.innerHTML = `
+          <div class="fav-empty-placeholder">
+            <i class="fa-solid fa-star fav-empty-icon"></i>
+            <div class="fav-empty-title">尚未收藏任何即時視訊</div>
+            <div class="fav-empty-desc">在「雙埔」、「觀光」或「日本」視訊畫面的右上角<br>點擊 <i class="fa-solid fa-star" style="color:#fbbf24;"></i> 星號，即可自選建立專屬於您的跨區跨國視訊牆！</div>
+            <button class="fav-quick-add-btn" onclick="window.monitorApp.switchCenter('dual')">
+              <i class="fa-solid fa-compass"></i> 前往瀏覽熱門視訊
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      // 搜尋無結果檢查
+      if (filteredList.length === 0) {
+        gridContainer.innerHTML = `
+          <div class="fav-empty-placeholder" style="border-color: rgba(56, 189, 248, 0.4);">
+            <i class="fa-solid fa-magnifying-glass fav-empty-icon" style="color: #38bdf8; filter: drop-shadow(0 0 10px rgba(56,189,248,0.5));"></i>
+            <div class="fav-empty-title">查無符合條件的即時視訊</div>
+            <div class="fav-empty-desc">找不到與「${this.filterKeyword || this.filterTag}」相符的畫面<br>請嘗試其他關鍵字或點擊「全部」標籤。</div>
+            <button class="fav-quick-add-btn" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);" onclick="window.monitorApp.clearFilters()">
+              <i class="fa-solid fa-rotate-left"></i> 重設篩選條件
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      if (this.currentCenterId === 'dual' && !this.filterKeyword && this.filterTag === 'all') {
+        const qpQuota = Math.ceil(maxDisplay / 2);
+        const bpQuota = Math.floor(maxDisplay / 2);
+        const qpList = filteredList.filter(c => c.areaTag === '青埔').slice(0, qpQuota);
+        const bpList = filteredList.filter(c => c.areaTag === '新埔').slice(0, bpQuota);
+        visibleCams = [...qpList, ...bpList];
+
+        const sortIndicator = document.querySelector('.sort-indicator span');
+        if (sortIndicator) {
+          const qpCount = qpList.length;
+          const bpCount = bpList.length;
+          if (qpCount === bpCount) {
+            sortIndicator.innerText = `雙埔公平呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 各半均分`;
+          } else {
+            sortIndicator.innerText = `雙埔呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 九宮格滿版全開 (青埔+1)`;
+          }
+        }
+      } else {
+        visibleCams = filteredList.slice(0, maxDisplay);
+      }
     }
 
     visibleCams.forEach((cam, index) => {
