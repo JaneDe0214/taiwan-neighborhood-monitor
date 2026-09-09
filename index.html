@@ -380,6 +380,19 @@ body {
   filter: drop-shadow(0 0 6px var(--color-primary));
 }
 
+/* 全局按鈕觸控反饋與微互動 (流暢物理按壓質感) */
+.center-btn:active,
+.grid-btn:active,
+.mode-toggle-btn:active,
+.compact-btn:active,
+.tool-icon-btn:active,
+.transit-plan-toggle-btn:active,
+.transit-collapse-btn:active,
+.radar-layer-btn:active {
+  transform: scale(0.94) !important;
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
 .clock-widget {
   display: flex;
   flex-direction: column;
@@ -603,20 +616,26 @@ body {
 
 /* 側邊欄收合/展開酷炫動畫模式 (全寬視訊戰情牆平滑轉換) */
 .dashboard-container.sidebar-collapsed {
-  grid-template-columns: 1fr 0px !important;
+  grid-template-columns: minmax(0, 1fr) 0px !important;
   gap: 0 !important;
 }
 
 .dashboard-container.sidebar-collapsed .sidebar-section {
-  transform: translateX(50px) scale(0.95);
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  transform: translateX(40px) scale(0.96);
   opacity: 0;
-  filter: blur(10px);
+  filter: blur(8px);
   pointer-events: none;
   visibility: hidden;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.3s ease,
-              filter 0.35s ease,
-              visibility 0.4s;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s ease,
+              filter 0.3s ease,
+              width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.38s;
 }
 
 /* 雙埔區域專屬標籤 */
@@ -685,7 +704,7 @@ body {
 @keyframes card-matrix-in {
   0% {
     opacity: 0;
-    transform: translateY(18px) scale(0.96);
+    transform: translateY(10px) scale(0.98);
   }
   100% {
     opacity: 1;
@@ -1073,10 +1092,11 @@ a.coord-tag:hover {
   min-width: 380px;
   transform-origin: right center;
   position: relative;
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
               opacity 0.35s ease,
-              filter 0.4s ease;
-  will-change: transform, opacity;
+              filter 0.35s ease,
+              width 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity, width;
 }
 
 /* 展開時觸發的全息掃描光束 */
@@ -1960,6 +1980,18 @@ a.coord-tag:hover {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  animation: transit-expand-anim 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes transit-expand-anim {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* ==========================================================================
@@ -1973,6 +2005,18 @@ a.coord-tag:hover {
   gap: 8px;
   min-height: 40px;
   padding: 2px 0;
+  animation: transit-compact-anim 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes transit-compact-anim {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .compact-left-group {
@@ -3858,12 +3902,24 @@ a.coord-tag:hover {
   padding: 8px 10px;
   margin-top: 3px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  transition: opacity 0.2s ease;
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
+  animation: drawer-expand-anim 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top center;
+}
+
+@keyframes drawer-expand-anim {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scaleY(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
 }
 
 .schedule-drawer-header {
