@@ -11821,8 +11821,8 @@ class TwinCityTransitMonitor {
             <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station}站車廂</span>
             <div class="crowd-cars-strip">
               ${bannan.carWeight.cars.map(c => `
-                <div class="crowd-car-box level-${c.level}" title="${c.carNum}車：${c.status}">
-                  <span>${c.carNum}</span>
+                <div class="crowd-car-box level-${c.level}" title="${c.carNum}：${c.status}">
+                  <span>${c.carNum.replace('車','')}</span>
                 </div>
               `).join('')}
             </div>
