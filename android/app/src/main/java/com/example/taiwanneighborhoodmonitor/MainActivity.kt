@@ -196,7 +196,8 @@ class MainActivity : ComponentActivity() {
                         } catch (_: Exception) {}
                     } else if (url.contains("raw.githubusercontent.com") || url.contains("janede0214.github.io") ||
                         url.contains("opendata.vip") || url.contains("tdx") || url.contains("data.ntpc.gov.tw") ||
-                        url.contains("opendata.tycg.gov.tw") || url.contains("cwa.gov.tw") || url.contains("thsrc.com.tw")
+                        url.contains("opendata.tycg.gov.tw") || url.contains("cwa.gov.tw") || url.contains("thsrc.com.tw") ||
+                        url.contains("earthquake.usgs.gov")
                     ) {
                         try {
                             val nativeRes = fetchNativeUrl(url)

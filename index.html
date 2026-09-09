@@ -5374,6 +5374,225 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
+   國家級地震速報與緊急避難全螢幕通知 (平時完全不佔空間，唯有地震時喚醒)
+   ========================================================================== */
+.earthquake-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: rgba(10, 10, 20, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  animation: alarm-bg-pulse 2s infinite ease-in-out;
+}
+
+.earthquake-alert-overlay.active {
+  display: flex !important;
+}
+
+@keyframes alarm-bg-pulse {
+  0%, 100% { background-color: rgba(15, 10, 15, 0.90); }
+  50% { background-color: rgba(45, 10, 15, 0.93); }
+}
+
+.earthquake-alert-card {
+  max-width: 440px;
+  width: 100%;
+  background: linear-gradient(145deg, rgba(35, 12, 18, 0.98), rgba(18, 8, 12, 0.99));
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.5), inset 0 0 20px rgba(239, 68, 68, 0.2);
+  color: #fff;
+  text-align: center;
+  position: relative;
+  box-sizing: border-box;
+  animation: card-alert-pop 0.3s ease-out;
+}
+
+@keyframes card-alert-pop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.eq-header-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+  animation: eq-tag-blink 1s infinite alternate;
+}
+
+@keyframes eq-tag-blink {
+  0% { opacity: 0.85; }
+  100% { opacity: 1; transform: scale(1.03); }
+}
+
+.eq-intensity-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.eq-intensity-num-box {
+  width: 76px;
+  height: 76px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border: 2px solid #fecaca;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.7);
+  flex-shrink: 0;
+}
+
+.eq-intensity-num-box .num {
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.eq-intensity-num-box .sub {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.eq-meta-info {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.eq-meta-info .eq-place {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.eq-meta-info .eq-metrics {
+  font-size: 0.82rem;
+  color: #fca5a5;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.eq-meta-info .eq-time {
+  font-size: 0.74rem;
+  color: #94a3b8;
+}
+
+/* 避難安全指引黃金三部曲 */
+.eq-safety-steps {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  padding: 10px 8px;
+  margin: 14px 0 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.eq-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.eq-step-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f87171;
+  font-size: 1.05rem;
+}
+
+.eq-step-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.eq-step-sub {
+  font-size: 0.66rem;
+  color: #cbd5e1;
+}
+
+.eq-action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.eq-dismiss-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+  transition: all 0.2s ease;
+}
+
+.eq-dismiss-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.eq-detail-link-btn {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.eq-detail-link-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* ==========================================================================
    全功能智慧型手機與行動裝置自適應系統 (Mobile Responsive Layout & Anti-Overflow)
    ========================================================================== */
 
@@ -6226,6 +6445,59 @@ body.native-mobile-mode .parking-lot-chip {
 
   <!-- 全域 Toast 通知容器 -->
   <div id="toastContainer" class="toast-container"></div>
+
+  <!-- 國家級地震緊急避難全螢幕通知遮罩 (平時完全不佔空間，唯有地震時喚醒) -->
+  <div id="earthquakeModalOverlay" class="earthquake-alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="eqTitleText">
+    <div class="earthquake-alert-card">
+      <div class="eq-header-tag" id="eqHeaderTag">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span id="eqTitleText">國家級地震即時警報</span>
+      </div>
+      
+      <div class="eq-intensity-display">
+        <div class="eq-intensity-num-box" id="eqIntensityBox">
+          <span class="num" id="eqIntensityNum">4</span>
+          <span class="sub" id="eqIntensitySub">預估震度</span>
+        </div>
+        <div class="eq-meta-info">
+          <div class="eq-place" id="eqPlaceText">花蓮縣近海</div>
+          <div class="eq-metrics">
+            <span>規模 <strong id="eqMagText">5.8</strong></span>
+            <span>深度 <strong id="eqDepthText">15km</strong></span>
+          </div>
+          <div class="eq-time" id="eqTimeText">剛剛發震</div>
+        </div>
+      </div>
+
+      <!-- 避難指引三部曲 -->
+      <div class="eq-safety-steps">
+        <div class="eq-step-item">
+          <div class="eq-step-icon"><i class="fa-solid fa-person-falling"></i></div>
+          <span class="eq-step-title">1. 趴下</span>
+          <span class="eq-step-sub">Drop</span>
+        </div>
+        <div class="eq-step-item">
+          <div class="eq-step-icon"><i class="fa-solid fa-person-shelter"></i></div>
+          <span class="eq-step-title">2. 掩護</span>
+          <span class="eq-step-sub">Cover</span>
+        </div>
+        <div class="eq-step-item">
+          <div class="eq-step-icon"><i class="fa-solid fa-hand-fist"></i></div>
+          <span class="eq-step-title">3. 穩住</span>
+          <span class="eq-step-sub">Hold on</span>
+        </div>
+      </div>
+
+      <div class="eq-action-buttons">
+        <button class="eq-dismiss-btn" onclick="window.earthquakeMonitor && window.earthquakeMonitor.dismissAlert()">
+          <i class="fa-solid fa-check"></i> 我知道了 ‧ 關閉警報
+        </button>
+        <a id="eqDetailLink" class="eq-detail-link-btn" href="#" target="_blank" rel="noopener" title="查看詳細地震測報">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> 報告
+        </a>
+      </div>
+    </div>
+  </div>
 
   <!-- 頂部科技指揮導航列 -->
   <header class="top-nav">
@@ -8993,6 +9265,12 @@ class WeatherEnvironmentMonitor {
     const textEl = document.getElementById('disasterAlertText');
     if (!banner || !textEl) return;
 
+    // 若當前有近期有感地震，優先維持地震高亮通報，不被一般天候覆蓋
+    if (window.earthquakeMonitor && window.earthquakeMonitor.latestEarthquake) {
+      window.earthquakeMonitor.updateDisasterPill(window.earthquakeMonitor.latestEarthquake);
+      return;
+    }
+
     const gust = curWeather?.wind_gusts_10m || 0;
     const rain = (curWeather?.precipitation || 0) + (curWeather?.rain || 0);
     const code = curWeather?.weather_code || 0;
@@ -9669,6 +9947,250 @@ class NeighborhoodRadarMap {
 
 window.NeighborhoodRadarMap = NeighborhoodRadarMap;
 window.RadarMap = NeighborhoodRadarMap;
+
+/* ==========================================================================
+   國家級地震速報與重大緊急災害高亮通報模組 (Earthquake Emergency Monitor)
+   - 平時零空間消耗：全螢幕遮罩完全隱藏，導航列維持極簡膠囊。
+   - 地震觸發時：30分鐘內顯著有感地震自動彈出全螢幕避難卡片與頂部高亮橫幅。
+   ========================================================================== */
+class EarthquakeEmergencyMonitor {
+  constructor() {
+    this.latestEarthquake = null;
+    this.isAlertActive = false;
+    this.pollInterval = 60000; // 60 秒輪詢一次
+    this.timerId = null;
+    this.audioCtx = null;
+    this.dismissedIds = new Set();
+  }
+
+  init() {
+    this.fetchEarthquakeData();
+    this.startPolling();
+    this.bindBannerInteraction();
+  }
+
+  // 綁定頂部安全膠囊點擊互動
+  bindBannerInteraction() {
+    if (typeof document === 'undefined') return;
+    const banner = document.getElementById('disasterAlertBanner');
+    if (banner) {
+      banner.style.cursor = 'pointer';
+      banner.addEventListener('click', () => {
+        if (this.latestEarthquake) {
+          this.showOverlay(this.latestEarthquake);
+        } else {
+          if (window.monitorApp && typeof window.monitorApp.showToast === 'function') {
+            window.monitorApp.showToast('雙埔生活全域安全 ‧ 30分鐘內無顯著有感地震', 'info');
+          }
+        }
+      });
+    }
+  }
+
+  startPolling() {
+    if (this.timerId) clearInterval(this.timerId);
+    this.timerId = setInterval(() => {
+      if (document.hidden) return; // 頁面置於背景時暫停，節省電量與網路流量
+      this.fetchEarthquakeData();
+    }, this.pollInterval);
+  }
+
+  stopPolling() {
+    if (this.timerId) clearInterval(this.timerId);
+  }
+
+  // 非同步抓取最新地震資訊 (USGS 台灣網格高可用端點 + CWA 擴充)
+  async fetchEarthquakeData() {
+    try {
+      const usgsUrl = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=21.5&maxlatitude=26.0&minlongitude=119.5&maxlongitude=123.0&minmagnitude=3.0&limit=3';
+      const res = await fetch(usgsUrl, { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !Array.isArray(data.features) || data.features.length === 0) return;
+
+      const latestFeature = data.features[0];
+      const props = latestFeature.properties;
+      const coords = latestFeature.geometry?.coordinates || [121.5, 24.0, 10];
+      const eventTime = props.time;
+      const now = Date.now();
+      const ageMinutes = (now - eventTime) / (60 * 1000);
+
+      // 地名中文化翻譯（USGS 台灣區域地點解析）
+      const parsedPlace = this.translatePlace(props.place, coords[1], coords[0]);
+      
+      // 估算雙埔地區受影響之震度 (依震源距離與規模進行衰減簡化估算)
+      const estIntensity = this.estimateLocalIntensity(props.mag, coords[1], coords[0], coords[2]);
+
+      const eqObj = {
+        id: latestFeature.id || `eq-${eventTime}`,
+        mag: props.mag ? props.mag.toFixed(1) : '4.0',
+        depth: coords[2] ? Math.round(coords[2]) : 10,
+        place: parsedPlace,
+        time: new Date(eventTime),
+        ageMinutes: Math.round(ageMinutes),
+        url: props.url || '#',
+        estIntensity: estIntensity
+      };
+
+      // 檢查是否為 30 分鐘內之近期有感地震
+      if (ageMinutes <= 30) {
+        this.latestEarthquake = eqObj;
+        this.updateDisasterPill(eqObj);
+        
+        // 顯著強震 (規模 >= 4.5 或雙埔估計震度 >= 3 級)：且使用者尚未手動關閉過該事件 -> 喚醒全螢幕通知
+        if ((parseFloat(eqObj.mag) >= 4.5 || estIntensity >= 3) && !this.dismissedIds.has(eqObj.id)) {
+          this.showOverlay(eqObj);
+          this.playAlertSound();
+          this.triggerVibrate();
+        }
+      } else {
+        // 超過 30 分鐘，不觸發強彈窗干擾
+        this.latestEarthquake = null;
+      }
+    } catch (err) {
+      // 靜默容錯
+    }
+  }
+
+  // 估算雙埔受影響震度 (青埔/新埔大致在北緯 25.0, 東經 121.3)
+  estimateLocalIntensity(mag, lat, lon, depth = 10) {
+    const dLat = (lat - 25.0) * 110.574;
+    const dLon = (lon - 121.3) * 100.86;
+    const epicentralDist = Math.sqrt(dLat * dLat + dLon * dLon);
+    const hypoDist = Math.sqrt(epicentralDist * epicentralDist + depth * depth);
+    let localPga = Math.pow(10, 0.0056 * Math.pow(mag, 2) + 0.17 * mag - 1.25 * Math.log10(hypoDist + 0.006 * Math.pow(10, 0.5 * mag)) - 0.0016 * hypoDist + 0.85);
+    if (isNaN(localPga) || localPga <= 0) localPga = 1;
+    if (localPga >= 250) return 6;
+    if (localPga >= 80) return 5;
+    if (localPga >= 25) return 4;
+    if (localPga >= 8) return 3;
+    if (localPga >= 2.5) return 2;
+    return 1;
+  }
+
+  // 翻譯 USGS 英文地點為親民台灣地理名稱
+  translatePlace(placeStr = '', lat = 0, lon = 0) {
+    if (!placeStr) return '台灣近海';
+    let place = placeStr;
+    if (place.includes('Hualien')) return '花蓮縣近海';
+    if (place.includes('Yilan')) return '宜蘭縣近海';
+    if (place.includes('Taitung')) return '台東縣海域';
+    if (place.includes('Nantou')) return '南投縣山區';
+    if (place.includes('Chiayi')) return '嘉義縣近山';
+    if (place.includes('Tainan')) return '台南地區';
+    if (place.includes('Taipei') || place.includes('New Taipei')) return '北部近郊海域';
+    if (place.includes('Taoyuan')) return '桃園周邊海域';
+    if (place.includes('Yonakuni') || place.includes('Ishigaki')) return '台灣東部外海 (與那國島鄰近)';
+    if (place.includes('Taiwan')) return place.replace(/km\s+[NSEW]+\s+of\s+/i, '').replace(/,\s*Taiwan/i, '周邊海域');
+    return place;
+  }
+
+  // 更新頂部安全膠囊為地震高亮警戒
+  updateDisasterPill(eq) {
+    if (typeof document === 'undefined') return;
+    const banner = document.getElementById('disasterAlertBanner');
+    const textEl = document.getElementById('disasterAlertText');
+    if (!banner || !textEl) return;
+
+    banner.classList.add('has-warning', 'active');
+    textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:2px;"></i> 有感地震 ‧ 規模 ${eq.mag} (震度 ${eq.estIntensity}級)`;
+    banner.title = `【有感地震速報】震央：${eq.place}，規模 ${eq.mag}，雙埔預估震度約 ${eq.estIntensity} 級，點擊查看避難引導！`;
+  }
+
+  // 顯示全螢幕緊急避難通知
+  showOverlay(eq) {
+    if (typeof document === 'undefined') return;
+    const overlay = document.getElementById('earthquakeModalOverlay');
+    if (!overlay) return;
+
+    const numEl = document.getElementById('eqIntensityNum');
+    const placeEl = document.getElementById('eqPlaceText');
+    const magEl = document.getElementById('eqMagText');
+    const depthEl = document.getElementById('eqDepthText');
+    const timeEl = document.getElementById('eqTimeText');
+    const linkEl = document.getElementById('eqDetailLink');
+
+    if (numEl) numEl.textContent = eq.estIntensity || 4;
+    if (placeEl) placeEl.textContent = eq.place || '台灣東部近海';
+    if (magEl) magEl.textContent = eq.mag || '5.8';
+    if (depthEl) depthEl.textContent = `${eq.depth || 15}km`;
+    if (timeEl) timeEl.textContent = `${eq.ageMinutes <= 1 ? '剛剛' : eq.ageMinutes + '分鐘前'} 發震 (${eq.time.toLocaleTimeString('zh-TW', { hour12: false })})`;
+    if (linkEl) linkEl.href = eq.url || 'https://www.cwa.gov.tw/V8/C/E/index.html';
+
+    overlay.classList.add('active');
+    this.isAlertActive = true;
+  }
+
+  // 關閉全螢幕通知
+  dismissAlert() {
+    if (typeof document === 'undefined') return;
+    const overlay = document.getElementById('earthquakeModalOverlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+    this.isAlertActive = false;
+    if (this.latestEarthquake) {
+      this.dismissedIds.add(this.latestEarthquake.id);
+    }
+  }
+
+  // 播放安全警報提示嗶聲 (Web Audio API 合成，無須外部音效檔)
+  playAlertSound() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!this.audioCtx) this.audioCtx = new AudioCtx();
+      if (this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+      const now = this.audioCtx.currentTime;
+      for (let i = 0; i < 3; i++) {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, now + i * 0.25);
+        osc.frequency.setValueAtTime(660, now + i * 0.25 + 0.12);
+        gain.gain.setValueAtTime(0.3, now + i * 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.25 + 0.22);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now + i * 0.25);
+        osc.stop(now + i * 0.25 + 0.23);
+      }
+    } catch (_) {}
+  }
+
+  // 觸發手機震動
+  triggerVibrate() {
+    try {
+      if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+        navigator.vibrate([300, 150, 300, 150, 500]);
+      }
+    } catch (_) {}
+  }
+
+  // 模擬地震警報測試 (給使用者隨時體驗驗證)
+  triggerMockEarthquake() {
+    const mockEq = {
+      id: `mock-${Date.now()}`,
+      mag: '5.8',
+      depth: 15,
+      place: '花蓮縣近海 (模擬測試)',
+      time: new Date(),
+      ageMinutes: 0,
+      url: 'https://www.cwa.gov.tw/V8/C/E/index.html',
+      estIntensity: 4
+    };
+    this.latestEarthquake = mockEq;
+    this.updateDisasterPill(mockEq);
+    this.showOverlay(mockEq);
+    this.playAlertSound();
+    this.triggerVibrate();
+  }
+}
+
+window.EarthquakeEmergencyMonitor = EarthquakeEmergencyMonitor;
+window.earthquakeMonitor = new EarthquakeEmergencyMonitor();
 
 
 /* 雙埔大眾運輸通勤整合模組 (高鐵極速線 + 環狀機捷線) */
@@ -15417,6 +15939,10 @@ window.showToast = showToast;
 window.addEventListener('DOMContentLoaded', () => {
   window.monitorApp = new MonitorApp();
   window.monitorApp.init();
+
+  if (window.earthquakeMonitor) {
+    window.earthquakeMonitor.init();
+  }
 
   // 原生 Android 雙向握手：通知原生前端已完全就緒，立即高速推送最新預熱數據
   if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.onFrontendReady === 'function') {
