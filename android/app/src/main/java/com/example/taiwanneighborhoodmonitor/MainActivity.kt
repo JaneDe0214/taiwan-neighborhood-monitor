@@ -221,8 +221,8 @@ class MainActivity : ComponentActivity() {
         return try {
             val url = URL(urlString)
             val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 3000
-                readTimeout = 6000
+                connectTimeout = 5000
+                readTimeout = 10000
                 requestMethod = "GET"
                 setRequestProperty("Referer", "https://hls.bote.gov.taipei/live/index.html")
                 setRequestProperty("Origin", "https://hls.bote.gov.taipei")
@@ -233,35 +233,47 @@ class MainActivity : ComponentActivity() {
             val code = conn.responseCode
             if (code in 200..299) {
                 val rawContentType = conn.contentType ?: ""
+                val isM3u8 = urlString.contains(".m3u8")
+                val isTs = urlString.contains(".ts")
+                val isBinary = isTs || urlString.contains(".png") || urlString.contains(".jpg") || urlString.contains(".ico")
+
                 val mimeType = when {
-                    urlString.contains(".m3u8") -> "application/vnd.apple.mpegurl"
-                    urlString.contains(".ts") -> "video/mp2t"
+                    isM3u8 -> "application/vnd.apple.mpegurl"
+                    isTs -> "video/mp2t"
                     urlString.contains(".js") -> "application/javascript"
                     urlString.contains(".css") -> "text/css"
                     urlString.contains(".html") || (urlString.contains("/live/") && !urlString.contains(".")) -> "text/html"
                     rawContentType.isNotEmpty() -> rawContentType.split(";")[0].trim()
                     else -> "application/octet-stream"
                 }
-                val encoding = if (rawContentType.contains("charset=")) {
-                    rawContentType.split("charset=")[1].trim()
-                } else {
-                    "utf-8"
+
+                // 核心關鍵修復：針對二進位視訊切片 (.ts) 與圖檔，encoding 必須傳入 null！
+                // 傳入 "utf-8" 會強制 Chromium 進行字串解碼，導致二進位位元組串流損毀造成 Hls.js demux 失敗黑畫面！
+                val encoding = if (isBinary) null else {
+                    if (rawContentType.contains("charset=")) {
+                        rawContentType.split("charset=")[1].trim()
+                    } else {
+                        "utf-8"
+                    }
                 }
+
+                val bytes = conn.inputStream.use { it.readBytes() }
 
                 val headers = mutableMapOf<String, String>()
                 headers["Access-Control-Allow-Origin"] = "*"
                 headers["Access-Control-Allow-Methods"] = "GET, HEAD, OPTIONS"
                 headers["Access-Control-Allow-Headers"] = "*"
                 headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+                headers["Content-Length"] = bytes.size.toString()
+                headers["Accept-Ranges"] = "bytes"
 
-                // 核心改進：改用 64KB 高速緩衝串流進行流式傳輸，絕不一次性 readBytes() 塞爆記憶體！
                 WebResourceResponse(
                     mimeType,
                     encoding,
                     200,
                     "OK",
                     headers,
-                    java.io.BufferedInputStream(conn.inputStream, 65536)
+                    ByteArrayInputStream(bytes)
                 )
             } else {
                 null
