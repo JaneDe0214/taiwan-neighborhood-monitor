@@ -1332,34 +1332,64 @@ a.coord-tag:hover {
   gap: 6px;
 }
 
-/* 智慧生活安全管家建議 */
+/* 智慧生活安全管家建議 - 直覺精簡排版 */
 .life-assistant-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .assistant-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-left: 3px solid var(--color-primary);
+  border-radius: 6px;
+  transition: transform 0.15s ease;
+}
+
+.assistant-item:hover {
+  transform: translateX(2px);
 }
 
 .assistant-item.warning {
-  border-left-color: var(--color-warning);
+  border-left-color: var(--color-warning, #f59e0b);
+  background: rgba(245, 158, 11, 0.08);
 }
 .assistant-item.success {
-  border-left-color: var(--color-success);
+  border-left-color: var(--color-success, #10b981);
+  background: rgba(16, 185, 129, 0.06);
 }
 .assistant-item.danger {
-  border-left-color: var(--color-danger);
+  border-left-color: var(--color-danger, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
 }
 .assistant-item.normal {
-  border-left-color: var(--color-primary);
+  border-left-color: var(--color-primary, #38bdf8);
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.assistant-item .assistant-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.assistant-item.success .assistant-icon { color: #10b981; }
+.assistant-item.warning .assistant-icon { color: #f59e0b; }
+.assistant-item.danger .assistant-icon { color: #ef4444; }
+.assistant-item.normal .assistant-icon { color: #38bdf8; }
+
+.assistant-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 /* 雙埔生活資訊卡片專用樣式 */
@@ -5192,54 +5222,79 @@ a.coord-tag:hover {
 }
 
 /* ==========================================================================
-   生活安全管家 4 大出行生活指標 (Living & Commute Index)
+   生活安全管家 4 大出行生活指標 (Living & Commute Index) - 直覺精簡儀表板風格
    ========================================================================== */
 .life-index-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .life-index-card {
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
   padding: 6px 8px;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  min-width: 0;
+}
+
+.life-index-card:hover {
+  border-color: rgba(0, 240, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 .life-index-icon-box {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   flex-shrink: 0;
 }
 
 .life-index-info {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
+  flex: 1;
+}
+
+.life-index-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
 }
 
 .life-index-title {
-  font-size: 0.74rem;
-  color: var(--text-dim);
+  font-size: 0.72rem;
+  color: var(--text-dim, #94a3b8);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.life-index-subval {
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .life-index-state {
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 
 /* ==========================================================================
@@ -8492,7 +8547,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 渲染雙埔生活安全管家
+  // 渲染雙埔生活安全管家 - 直覺簡化排版
   renderDualLifeAssistant(qpData, bpData, qpInfo, bpInfo) {
     const container = document.getElementById('lifeAssistantList');
     if (!container) return;
@@ -8507,27 +8562,26 @@ class WeatherEnvironmentMonitor {
     const qpSafety = this.evaluateRainSafety(qpCur, qpRainProb, '青埔');
     const bpSafety = this.evaluateRainSafety(bpCur, bpRainProb, '新埔');
 
-    if (qpCur?.apparent_temperature !== undefined) {
-      qpSafety.detail += ` 體感 ${qpCur.apparent_temperature.toFixed(1)}°C。`;
-    }
-    if (bpCur?.apparent_temperature !== undefined) {
-      bpSafety.detail += ` 體感 ${bpCur.apparent_temperature.toFixed(1)}°C。`;
-    }
+    // 簡潔出行短評：過濾冗贅括號與長文
+    const formatConcise = (safety, cur, prob) => {
+      const tempStr = cur?.apparent_temperature !== undefined ? `體感 ${Math.round(cur.apparent_temperature)}°C` : '';
+      const cleanTitle = safety.title.replace(/\(.*?\)/, '').trim();
+      return `${cleanTitle} ‧ ${tempStr} ‧ 降雨率 ${prob}%`;
+    };
 
     const tips = [
-      { tag: '青埔', ...qpSafety },
-      { tag: '新埔', ...bpSafety }
+      { tag: '青埔', level: qpSafety.level, icon: qpSafety.icon, text: formatConcise(qpSafety, qpCur, qpRainProb), full: qpSafety.detail },
+      { tag: '新埔', level: bpSafety.level, icon: bpSafety.icon, text: formatConcise(bpSafety, bpCur, bpRainProb), full: bpSafety.detail }
     ];
 
     container.innerHTML = tips.map(t => `
-      <div class="assistant-item ${t.level}">
+      <div class="assistant-item ${t.level}" title="${t.full}">
         <i class="fa-solid ${t.icon} assistant-icon"></i>
         <div class="assistant-content">
-          <div style="display: flex; align-items: center; gap: 6px;">
+          <div class="assistant-summary-row">
             <span class="dual-city-tag ${t.tag === '青埔' ? 'qp' : 'bp'}">${t.tag}</span>
-            <span class="assistant-title">${t.title}</span>
+            <span class="assistant-title">${t.text}</span>
           </div>
-          <span class="assistant-detail">${t.detail}</span>
         </div>
       </div>
     `).join('');
@@ -8772,7 +8826,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 單一中心視圖：生活管家
+  // 單一中心視圖：生活管家 - 直覺簡化排版
   renderSingleLifeAssistant(data, locationName) {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('lifeAssistantList');
@@ -8792,43 +8846,42 @@ class WeatherEnvironmentMonitor {
 
     const tips = [];
     const rainSafety = this.evaluateRainSafety(cur, rainProb, locationName);
+    const cleanTitle = rainSafety.title.replace(/\(.*?\)/, '').trim();
+    const tempStr = cur.apparent_temperature !== undefined ? `體感 ${Math.round(cur.apparent_temperature)}°C` : '';
     tips.push({
-      title: rainSafety.title,
+      text: `${cleanTitle} ‧ ${tempStr} ‧ 降雨率 ${rainProb}%`,
       detail: rainSafety.detail,
       icon: rainSafety.icon,
-      class: rainSafety.level
+      level: rainSafety.level
     });
 
     if (aqiNum > 100) {
-      tips.push({ title: '空氣品質警戒', detail: `目前空氣指標 (AQI) 達 ${aqiNum}，建議緊閉門窗並開啟空氣清淨機。`, icon: 'fa-wind', class: 'danger' });
-    } else {
-      tips.push({ title: '通風環境適宜', detail: `空氣品質優良 (AQI: ${aqiNum})，可開窗享受自然對流。`, icon: 'fa-house-chimney-window', class: 'success' });
+      tips.push({ text: `空品警戒 ‧ AQI 達 ${aqiNum}，建議緊閉門窗`, detail: `目前空氣品質 AQI 達 ${aqiNum}，建議開啟空氣清淨機。`, icon: 'fa-wind', level: 'danger' });
     }
 
     if (uvInfo.val >= 6) {
-      tips.push({ title: `紫外線防曬提醒 (${uvInfo.text})`, detail: `目前紫外線指數達 ${uvInfo.val}，戶外活動建議配戴帽子遮陽並防範中暑。`, icon: 'fa-sun', class: 'warning' });
+      tips.push({ text: `紫外線提醒 ‧ 指數 ${uvInfo.val} (${uvInfo.text})`, detail: `戶外活動建議配戴遮陽帽防範中暑。`, icon: 'fa-sun', level: 'warning' });
     }
 
     if (gustInfo.level >= 5) {
-      tips.push({ title: `瞬間陣風較大 (${gustInfo.level}級風)`, detail: `瞬間強陣風達 ${gustInfo.speed} 公里/時，騎車行經空曠路段請穩握龍頭。`, icon: 'fa-fan', class: 'warning' });
+      tips.push({ text: `強風提醒 ‧ 最大 ${gustInfo.speed} km/h (${gustInfo.level}級風)`, detail: `騎車行經空曠路段請穩握龍頭。`, icon: 'fa-fan', level: 'warning' });
     }
 
     if (visInfo.text === '薄霧輕霾' || visInfo.text === '濃霧警示') {
-      tips.push({ title: `大氣視距提醒 (${visInfo.text})`, detail: `目前能見度約 ${visInfo.km} 公里，行駛車輛請開啟大燈減速慢行。`, icon: 'fa-eye-slash', class: 'warning' });
+      tips.push({ text: `大氣視距 ‧ 能見度約 ${visInfo.km} 公里`, detail: `行駛車輛請開啟大燈並減速慢行。`, icon: 'fa-eye-slash', level: 'warning' });
     }
 
     container.innerHTML = tips.map(t => `
-      <div class="assistant-item ${t.class}">
+      <div class="assistant-item ${t.level}" title="${t.detail}">
         <i class="fa-solid ${t.icon} assistant-icon"></i>
         <div class="assistant-content">
-          <span class="assistant-title">${t.title}</span>
-          <span class="assistant-detail">${t.detail}</span>
+          <span class="assistant-title">${t.text}</span>
         </div>
       </div>
     `).join('');
   }
 
-  // 渲染生活出行 4 大指標 (雨具、晾衣、戶外活動、路況視距)
+  // 渲染生活出行 4 大指標 (雨具、晾衣、戶外活動、路況視距) - 直覺精簡儀表板風格
   renderLivingIndexes(cur, hourlyProb = 0) {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('lifeIndexContainer');
@@ -8842,72 +8895,92 @@ class WeatherEnvironmentMonitor {
     const gust = cur?.wind_gusts_10m || 0;
     const vis = (cur?.visibility || 10000) / 1000; // km
 
-    // 1. 雨具指標
-    let umbrella = { status: '無須帶傘', desc: '降雨機率低，出行晴朗無礙', color: '#10b981', icon: 'fa-umbrella' };
+    // 1. 雨具出行
+    let umbrella = { status: '無須帶傘', sub: `${rainProb}%`, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', icon: 'fa-umbrella', desc: `降雨機率 ${rainProb}%，出行晴朗無礙` };
     if (rain > 0.5 || rainProb >= 60) {
-      umbrella = { status: '必備雨具', desc: `即時雨量 ${rain.toFixed(1)}mm (機率 ${rainProb}%)，務必攜帶雨具`, color: '#ef4444', icon: 'fa-umbrella' };
+      umbrella = { status: '必備雨具', sub: `${rain.toFixed(1)}mm`, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.18)', icon: 'fa-umbrella', desc: `降雨機率 ${rainProb}% (雨量 ${rain.toFixed(1)}mm)，出門必帶雨具` };
     } else if (rainProb >= 30 || rain > 0) {
-      umbrella = { status: '攜傘備用', desc: `降雨機率 ${rainProb}%，出門建議帶把摺疊傘防驟雨`, color: '#38bdf8', icon: 'fa-umbrella' };
+      umbrella = { status: '攜傘備用', sub: `${rainProb}%`, color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.15)', icon: 'fa-umbrella', desc: `降雨機率 ${rainProb}%，出門建議帶把摺疊傘` };
     }
 
     // 2. 晾衣指數
-    let drying = { status: '極適曝曬', desc: `濕度 ${rh}% 且無雨，衣物快乾芬芳`, color: '#10b981', icon: 'fa-shirt' };
+    let drying = { status: '適宜晾曬', sub: `${rh}%`, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', icon: 'fa-shirt', desc: `相對濕度 ${rh}%，衣物快乾芬芳` };
     if (rain > 0 || rainProb >= 50 || rh >= 85) {
-      drying = { status: '室內烘乾', desc: `相對濕度達 ${rh}% 或有雨，建議室內除濕`, color: '#ef4444', icon: 'fa-shirt' };
+      drying = { status: '室內烘乾', sub: `${rh}%`, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.18)', icon: 'fa-shirt', desc: `相對濕度達 ${rh}% 或有雨，建議室內除濕` };
     } else if (rh >= 70 || rainProb >= 30) {
-      drying = { status: '通風微晾', desc: `濕度稍高 (${rh}%)，適合遮雨棚通風處晾乾`, color: '#f59e0b', icon: 'fa-shirt' };
+      drying = { status: '通風微晾', sub: `${rh}%`, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', icon: 'fa-shirt', desc: `濕度稍高 (${rh}%)，適合遮雨棚通風處` };
     }
 
     // 3. 戶外運動
-    let sport = { status: '適宜運動', desc: '氣候宜人，適合戶外慢跑或單車騎乘', color: '#10b981', icon: 'fa-person-running' };
+    let sport = { status: '適宜運動', sub: `${Math.round(apparent)}°C`, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', icon: 'fa-person-running', desc: `體感 ${apparent.toFixed(1)}°C，氣候宜人適合運動` };
     if (rain > 1.0) {
-      sport = { status: '不宜戶外', desc: '地面濕滑且有降雨，建議進行室內伸展', color: '#ef4444', icon: 'fa-person-running' };
+      sport = { status: '不宜戶外', sub: `${rain.toFixed(1)}mm`, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.18)', icon: 'fa-person-running', desc: '地面濕滑且有降雨，建議進行室內活動' };
     } else if (apparent >= 35) {
-      sport = { status: '防範中暑', desc: `體感高達 ${apparent.toFixed(1)}°C，戶外運動需適時補水`, color: '#f97316', icon: 'fa-person-running' };
+      sport = { status: '防範中暑', sub: `${Math.round(apparent)}°C`, color: '#f97316', bg: 'rgba(249, 115, 22, 0.18)', icon: 'fa-person-running', desc: `體感高達 ${apparent.toFixed(1)}°C，戶外運動需適時補水` };
     } else if (gust >= 45) {
-      sport = { status: '留意陣風', desc: '陣風較強，騎行自行車時請特別注意重心', color: '#f59e0b', icon: 'fa-person-running' };
+      sport = { status: '留意陣風', sub: `${Math.round(gust)}km`, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', icon: 'fa-person-running', desc: `瞬間陣風較大 (${Math.round(gust)}km/h)，注意重心` };
     }
 
     // 4. 路況視距
-    let traffic = { status: '視距良好', desc: `能見度約 ${vis.toFixed(1)} 公里，全線行車路況視野極佳`, color: '#10b981', icon: 'fa-car' };
+    let traffic = { status: '路況良好', sub: `${vis >= 10 ? '>10' : vis.toFixed(1)}km`, color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', icon: 'fa-car', desc: `能見度約 ${vis.toFixed(1)} 公里，行車路況視野極佳` };
     if (vis < 3.0) {
-      traffic = { status: '濃霧警戒', desc: `能見度僅 ${vis.toFixed(1)} 公里，請開啟大燈並減速慢行`, color: '#ef4444', icon: 'fa-car' };
+      traffic = { status: '濃霧警戒', sub: `${vis.toFixed(1)}km`, color: '#ef4444', bg: 'rgba(239, 68, 68, 0.18)', icon: 'fa-car', desc: `能見度僅 ${vis.toFixed(1)} 公里，請開啟大燈並減速慢行` };
     } else if (rain > 2.0 || gust >= 50) {
-      traffic = { status: '雨天路滑', desc: '留意路面積水與側風，拉長行車安全車距', color: '#f59e0b', icon: 'fa-car' };
+      traffic = { status: '雨天路滑', sub: `${rain > 0 ? rain.toFixed(1) + 'mm' : Math.round(gust) + 'km'}`, color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', icon: 'fa-car', desc: '留意路面積水與側風，拉長行車安全車距' };
     }
 
     container.innerHTML = `
       <div class="life-index-grid">
-        <div class="life-index-card">
-          <div class="life-index-header">
-            <span class="life-index-name"><i class="fa-solid ${umbrella.icon}"></i> 雨具出行</span>
-            <span class="life-index-val" style="color:${umbrella.color};">${umbrella.status}</span>
+        <div class="life-index-card" title="${umbrella.desc}">
+          <div class="life-index-icon-box" style="background:${umbrella.bg}; color:${umbrella.color};">
+            <i class="fa-solid ${umbrella.icon}"></i>
           </div>
-          <div class="life-index-desc">${umbrella.desc}</div>
+          <div class="life-index-info">
+            <div class="life-index-top-row">
+              <span class="life-index-title">雨具</span>
+              <span class="life-index-subval">${umbrella.sub}</span>
+            </div>
+            <span class="life-index-state" style="color:${umbrella.color};">${umbrella.status}</span>
+          </div>
         </div>
 
-        <div class="life-index-card">
-          <div class="life-index-header">
-            <span class="life-index-name"><i class="fa-solid ${drying.icon}"></i> 晾曬衣物</span>
-            <span class="life-index-val" style="color:${drying.color};">${drying.status}</span>
+        <div class="life-index-card" title="${drying.desc}">
+          <div class="life-index-icon-box" style="background:${drying.bg}; color:${drying.color};">
+            <i class="fa-solid ${drying.icon}"></i>
           </div>
-          <div class="life-index-desc">${drying.desc}</div>
+          <div class="life-index-info">
+            <div class="life-index-top-row">
+              <span class="life-index-title">晾曬</span>
+              <span class="life-index-subval">${drying.sub}</span>
+            </div>
+            <span class="life-index-state" style="color:${drying.color};">${drying.status}</span>
+          </div>
         </div>
 
-        <div class="life-index-card">
-          <div class="life-index-header">
-            <span class="life-index-name"><i class="fa-solid ${sport.icon}"></i> 戶外運動</span>
-            <span class="life-index-val" style="color:${sport.color};">${sport.status}</span>
+        <div class="life-index-card" title="${sport.desc}">
+          <div class="life-index-icon-box" style="background:${sport.bg}; color:${sport.color};">
+            <i class="fa-solid ${sport.icon}"></i>
           </div>
-          <div class="life-index-desc">${sport.desc}</div>
+          <div class="life-index-info">
+            <div class="life-index-top-row">
+              <span class="life-index-title">運動</span>
+              <span class="life-index-subval">${sport.sub}</span>
+            </div>
+            <span class="life-index-state" style="color:${sport.color};">${sport.status}</span>
+          </div>
         </div>
 
-        <div class="life-index-card">
-          <div class="life-index-header">
-            <span class="life-index-name"><i class="fa-solid ${traffic.icon}"></i> 路況視距</span>
-            <span class="life-index-val" style="color:${traffic.color};">${traffic.status}</span>
+        <div class="life-index-card" title="${traffic.desc}">
+          <div class="life-index-icon-box" style="background:${traffic.bg}; color:${traffic.color};">
+            <i class="fa-solid ${traffic.icon}"></i>
           </div>
-          <div class="life-index-desc">${traffic.desc}</div>
+          <div class="life-index-info">
+            <div class="life-index-top-row">
+              <span class="life-index-title">路況</span>
+              <span class="life-index-subval">${traffic.sub}</span>
+            </div>
+            <span class="life-index-state" style="color:${traffic.color};">${traffic.status}</span>
+          </div>
         </div>
       </div>
     `;
