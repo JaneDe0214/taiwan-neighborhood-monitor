@@ -11589,11 +11589,11 @@ class TwinCityTransitMonitor {
 
           const hubBikeOrigin = mainSlot.querySelector('[data-f-hub-bike-origin]');
           if (hubBikeOrigin && originStation && typeof originStation.currentBikes === 'number') {
-            hubBikeOrigin.innerHTML = `${originStation.name} 剩 <strong class="bike-num">${originStation.currentBikes}</strong> 台車可借${originStation.currentBikes >= 5 ? ' (車輛充足)' : ' (車輛吃緊)'}`;
+            hubBikeOrigin.innerHTML = `${originStation.name} 剩 <strong class="bike-num">${originStation.currentBikes}</strong> 台車可借`;
           }
           const hubBikeDest = mainSlot.querySelector('[data-f-hub-bike-dest]');
           if (hubBikeDest && destStation && typeof destStation.currentBikes === 'number') {
-            hubBikeDest.innerHTML = `${destStation.name} 剩 <strong class="bike-num">${destStation.currentBikes}</strong> 台車可借${destStation.currentBikes >= 5 ? ' (下車有車)' : ' (車輛吃緊)'}`;
+            hubBikeDest.innerHTML = `${destStation.name} 剩 <strong class="bike-num">${destStation.currentBikes}</strong> 台車可借`;
           }
         }
       }
@@ -12057,12 +12057,12 @@ class TwinCityTransitMonitor {
 
     const hasOriginData = originBikeStation && typeof originBikeStation.currentBikes === 'number';
     const originBikeText = hasOriginData 
-      ? `${originBikeStation.name} 剩 <strong class="bike-num">${originBikeStation.currentBikes}</strong> 台車可借${originBikeStation.currentBikes >= 5 ? ' (車輛充足)' : ' (車輛吃緊)'}`
+      ? `${originBikeStation.name} 剩 <strong class="bike-num">${originBikeStation.currentBikes}</strong> 台車可借`
       : '即時查詢中...';
 
     const hasDestData = destBikeStation && typeof destBikeStation.currentBikes === 'number';
     const destBikeText = hasDestData
-      ? `${destBikeStation.name} 剩 <strong class="bike-num">${destBikeStation.currentBikes}</strong> 台車可借${destBikeStation.currentBikes >= 5 ? ' (下車有車)' : ' (車輛吃緊)'}`
+      ? `${destBikeStation.name} 剩 <strong class="bike-num">${destBikeStation.currentBikes}</strong> 台車可借`
       : '即時查詢中...';
 
     return `
@@ -12070,7 +12070,7 @@ class TwinCityTransitMonitor {
         <div class="hub-header-row">
           <div class="hub-title-tag">
             <i class="fa-solid fa-person-walking-arrow-right"></i>
-            <span>現在出門搭車建議 (依目前即時班次計算)</span>
+            <span>現在出門搭車建議</span>
           </div>
           <div class="hub-dest-indicator">
             <span>${originCity} 出發</span>
@@ -12081,7 +12081,7 @@ class TwinCityTransitMonitor {
 
         <div class="hub-options-grid">
           <!-- 方案一：高鐵快線 (最速推薦) -->
-          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="點擊查看今日全部高鐵班次表">
+          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="查看今日全部高鐵班次表">
             <div class="plan-item-badge">
               <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵最速首選</span>
               <span class="badge-save-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</strong></span>
@@ -12089,7 +12089,7 @@ class TwinCityTransitMonitor {
 
             <!-- 長輩醒目出門提示方塊 -->
             <div class="plan-leave-highlight">
-              <span class="leave-label">建議出門時間：</span>
+              <span class="leave-label">建議出門</span>
               <span class="leave-time-big">${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</span>
               <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${this.getHubCountdownText(firstThsrPlan, thsr)}</span>
             </div>
@@ -12110,12 +12110,12 @@ class TwinCityTransitMonitor {
             </div>
 
             <div class="plan-footer-action">
-              <span>點擊查看今日全部高鐵班次</span> <i class="fa-solid fa-angles-right"></i>
+              <span>查看全日時刻</span> <i class="fa-solid fa-angles-right"></i>
             </div>
           </div>
 
           <!-- 方案二：機捷直通 (捷運替代) -->
-          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="點擊查看今日全部機捷班次表">
+          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="查看今日全部機捷班次表">
             <div class="plan-item-badge">
               <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機捷直通替代</span>
               <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</strong></span>
@@ -12123,7 +12123,7 @@ class TwinCityTransitMonitor {
 
             <!-- 長輩醒目出門提示方塊 -->
             <div class="plan-leave-highlight">
-              <span class="leave-label">建議出門時間：</span>
+              <span class="leave-label">建議出門</span>
               <span class="leave-time-big">${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</span>
               <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${this.getHubCountdownText(firstTymetroPlan, tymetro)}</span>
             </div>
@@ -12144,7 +12144,7 @@ class TwinCityTransitMonitor {
             </div>
 
             <div class="plan-footer-action">
-              <span>點擊查看今日全部機捷班次</span> <i class="fa-solid fa-angles-right"></i>
+              <span>查看全日時刻</span> <i class="fa-solid fa-angles-right"></i>
             </div>
           </div>
         </div>
