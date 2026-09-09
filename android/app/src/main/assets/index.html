@@ -3050,15 +3050,55 @@ a.coord-tag:hover {
   min-width: 0;
 }
 
+a.corridor-youbike-loc,
 .corridor-youbike-loc {
   font-size: 0.74rem;
   color: #94a3b8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   opacity: 0.85;
   margin-top: 1px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 100%;
+}
+
+a.corridor-youbike-loc:hover {
+  color: #00f0ff;
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a.corridor-youbike-loc i.fa-location-dot {
+  color: #38bdf8;
+  font-size: 0.68rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+a.corridor-youbike-loc:hover i.fa-location-dot {
+  color: #00f0ff;
+  transform: scale(1.15);
+}
+
+a.corridor-youbike-loc .youbike-loc-external-icon {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  margin-left: 2px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+a.corridor-youbike-loc:hover .youbike-loc-external-icon {
+  opacity: 1;
+  color: #00f0ff;
+  transform: translate(1px, -1px);
 }
 
 .corridor-youbike-pills {
@@ -5174,10 +5214,11 @@ a.coord-tag:hover {
   flex: 1;
 }
 
+a.youbike-station-loc,
 .youbike-station-loc {
   font-size: 0.72rem;
   color: #94a3b8;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   margin: 0;
@@ -5185,12 +5226,43 @@ a.coord-tag:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 100%;
 }
 
+a.youbike-station-loc:hover {
+  color: #00f0ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a.youbike-station-loc i.fa-location-dot,
 .youbike-station-loc i {
   color: #38bdf8;
   font-size: 0.68rem;
   flex-shrink: 0;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+a.youbike-station-loc:hover i.fa-location-dot {
+  color: #00f0ff;
+  transform: scale(1.15);
+}
+
+a.youbike-station-loc .youbike-loc-external-icon {
+  font-size: 0.6rem;
+  opacity: 0.5;
+  margin-left: 2px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+a.youbike-station-loc:hover .youbike-loc-external-icon {
+  opacity: 1;
+  color: #00f0ff;
+  transform: translate(1px, -1px);
 }
 
 /* 右側緊湊雙列數據欄 (可借在上、空位在下，齊頭對齊絕不溢出) */
@@ -8050,6 +8122,26 @@ window.CameraPlayerEngine = CameraPlayerEngine;
 window.CctvPlayer = CameraPlayerEngine;
 
 
+// 全域 YouBike 站點開啟 Google 地圖點位函式 (支援 Android 原生 Intent 與 Web 瀏覽器新分頁雙軌容錯)
+if (typeof window !== 'undefined') {
+  window.openYouBikeMap = function(e, url) {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (!url) return;
+    if (window.AndroidBridge && typeof window.AndroidBridge.openExternalMap === 'function') {
+      try {
+        window.AndroidBridge.openExternalMap(url);
+        return;
+      } catch (err) {
+        console.warn('[YouBike 地圖開啟] 原生橋接呼叫失敗，切換為瀏覽器開啟:', err);
+      }
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+}
+
 /* 即時環境氣象與空氣品質模組 */
 /**
  * 區域環境即時影像監控系統 - 天氣、降雨與空氣品質監控模組 (支援單城與雙埔對照)
@@ -9669,6 +9761,9 @@ class WeatherEnvironmentMonitor {
     const itemsHtml = filtered.map(st => {
       const cityBadgeClass = st.city === 'qp' ? 'qp' : 'bp';
       const hasRealData = st.isRealtime && typeof st.currentBikes === 'number';
+      const mapUrl = (st.lat && st.lon)
+        ? `https://www.google.com/maps/search/?api=1&query=${st.lat},${st.lon}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((st.cityName || '') + ' ' + st.name + ' ' + (st.location || ''))}`;
 
       if (hasRealData) {
         const ratio = st.total ? Math.round((st.currentBikes / st.total) * 100) : 50;
@@ -9684,9 +9779,9 @@ class WeatherEnvironmentMonitor {
                 <span class="youbike-station-name" title="${st.name}">${st.name}</span>
               </div>
               ${st.location ? `
-              <div class="youbike-station-loc" title="站點位置：${st.location}">
-                <i class="fa-solid fa-location-dot"></i> <span>${st.location}</span>
-              </div>` : ''}
+              <a class="youbike-station-loc" href="${mapUrl}" target="_blank" rel="noopener noreferrer" title="在 Google 地圖開啟站點位置：${st.location}" onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, '${mapUrl}');}">
+                <i class="fa-solid fa-location-dot"></i> <span>${st.location}</span> <i class="fa-solid fa-arrow-up-right-from-square youbike-loc-external-icon"></i>
+              </a>` : ''}
             </div>
 
             <div class="youbike-station-stats">
@@ -9718,9 +9813,9 @@ class WeatherEnvironmentMonitor {
                 <span class="youbike-station-name" title="${st.name}">${st.name}</span>
               </div>
               ${st.location ? `
-              <div class="youbike-station-loc" title="站點位置：${st.location}">
-                <i class="fa-solid fa-location-dot"></i> <span>${st.location}</span>
-              </div>` : ''}
+              <a class="youbike-station-loc" href="${mapUrl}" target="_blank" rel="noopener noreferrer" title="在 Google 地圖開啟站點位置：${st.location}" onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, '${mapUrl}');}">
+                <i class="fa-solid fa-location-dot"></i> <span>${st.location}</span> <i class="fa-solid fa-arrow-up-right-from-square youbike-loc-external-icon"></i>
+              </a>` : ''}
             </div>
 
             <div class="youbike-station-stats">
@@ -13018,13 +13113,13 @@ class TwinCityTransitMonitor {
     }
     if (!stations || stations.length === 0) {
       stations = [
-        { id: 'qp-1', city: 'qp', cityName: '青埔', name: '領航南青昇二街口', location: '領航南路四段81號', total: 23, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青昇公園', location: '領航南路四段與青昇路口', total: 32, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青峰青昇路口', location: '青峰路一段/青昇路(南側)', total: 56, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', location: '青心路/高鐵北路一段(南側)', total: 43, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'qp-5', city: 'qp', cityName: '青埔', name: '高鐵桃園站(3號出口)', location: '高鐵北路一段6號前人行道', total: 81, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'bp-1', city: 'bp', cityName: '新埔', name: '民生路二段226巷8弄', location: '民生路二段226巷8弄10號(旁)', total: 21, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false },
-        { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(3號出口)', location: '民生路二段232號', total: 20, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false }
+        { id: 'qp-1', city: 'qp', cityName: '青埔', name: '領航南青昇二街口', location: '領航南路四段81號', total: 23, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.01638, lon: 121.22210 },
+        { id: 'qp-2', city: 'qp', cityName: '青埔', name: '青昇公園', location: '領航南路四段與青昇路口', total: 32, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.01471, lon: 121.22195 },
+        { id: 'qp-3', city: 'qp', cityName: '青埔', name: '青峰青昇路口', location: '青峰路一段/青昇路(南側)', total: 56, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.01549, lon: 121.21964 },
+        { id: 'qp-4', city: 'qp', cityName: '青埔', name: 'IKEA桃園店', location: '青心路/高鐵北路一段(南側)', total: 43, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.01383, lon: 121.21747 },
+        { id: 'qp-5', city: 'qp', cityName: '青埔', name: '高鐵桃園站(3號出口)', location: '高鐵北路一段6號前人行道', total: 81, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.01242, lon: 121.21522 },
+        { id: 'bp-1', city: 'bp', cityName: '新埔', name: '民生路二段226巷8弄', location: '民生路二段226巷8弄10號(旁)', total: 21, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.02151, lon: 121.46996 },
+        { id: 'bp-2', city: 'bp', cityName: '新埔', name: '捷運新埔站(3號出口)', location: '民生路二段232號', total: 20, currentBikes: null, currentEbikes: null, currentSpaces: null, isRealtime: false, lat: 25.02247, lon: 121.46868 }
       ];
     }
 
@@ -13035,6 +13130,10 @@ class TwinCityTransitMonitor {
 
     const renderItem = (st) => {
       const hasReal = st.isRealtime && typeof st.currentBikes === 'number';
+      const mapUrl = (st.lat && st.lon)
+        ? `https://www.google.com/maps/search/?api=1&query=${st.lat},${st.lon}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((st.cityName || '') + ' ' + st.name + ' ' + (st.location || ''))}`;
+
       if (hasReal) {
         const isUrgent = st.currentBikes <= 3;
         const rentClass = isUrgent ? 'danger' : (st.currentBikes <= 6 ? 'warning' : '');
@@ -13044,7 +13143,7 @@ class TwinCityTransitMonitor {
             <div class="corridor-youbike-header">
               <div class="corridor-youbike-title-group">
                 <span class="corridor-youbike-name" title="${st.name}">${st.name}</span>
-                ${st.location ? `<span class="corridor-youbike-loc" title="${st.location}"><i class="fa-solid fa-location-dot"></i> ${st.location}</span>` : ''}
+                ${st.location ? `<a class="corridor-youbike-loc" href="${mapUrl}" target="_blank" rel="noopener noreferrer" title="在 Google 地圖開啟站點位置：${st.location}" onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, '${mapUrl}');}"><i class="fa-solid fa-location-dot"></i> <span>${st.location}</span> <i class="fa-solid fa-arrow-up-right-from-square youbike-loc-external-icon"></i></a>` : ''}
               </div>
               <div class="corridor-youbike-pills">
                 <span class="corridor-youbike-pill pill-rent ${rentClass}" title="官方即時可借車輛數">
@@ -13067,7 +13166,7 @@ class TwinCityTransitMonitor {
             <div class="corridor-youbike-header">
               <div class="corridor-youbike-title-group">
                 <span class="corridor-youbike-name" title="${st.name}">${st.name}</span>
-                ${st.location ? `<span class="corridor-youbike-loc" title="${st.location}"><i class="fa-solid fa-location-dot"></i> ${st.location}</span>` : ''}
+                ${st.location ? `<a class="corridor-youbike-loc" href="${mapUrl}" target="_blank" rel="noopener noreferrer" title="在 Google 地圖開啟站點位置：${st.location}" onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, '${mapUrl}');}"><i class="fa-solid fa-location-dot"></i> <span>${st.location}</span> <i class="fa-solid fa-arrow-up-right-from-square youbike-loc-external-icon"></i></a>` : ''}
               </div>
               <div class="corridor-youbike-pills">
                 <span class="corridor-youbike-pill pill-rent" style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.12);" title="待官方數據">

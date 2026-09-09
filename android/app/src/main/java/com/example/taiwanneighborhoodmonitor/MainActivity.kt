@@ -3,8 +3,10 @@ package com.example.taiwanneighborhoodmonitor
 import android.annotation.SuppressLint
 import android.app.UiModeManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -155,6 +157,65 @@ class MainActivity : ComponentActivity() {
                 } catch (_: Exception) {}
                 recreate()
                 return true
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val uri = request?.url ?: return false
+                val url = uri.toString()
+                if (url.startsWith("https://www.google.com/maps") ||
+                    url.startsWith("https://maps.google.com") ||
+                    url.startsWith("http://maps.google.com") ||
+                    url.startsWith("geo:")
+                ) {
+                    return try {
+                        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        this@MainActivity.startActivity(intent)
+                        true
+                    } catch (e: Exception) {
+                        try {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            this@MainActivity.startActivity(browserIntent)
+                            true
+                        } catch (_: Exception) {
+                            false
+                        }
+                    }
+                }
+                return super.shouldOverrideUrlLoading(view, request)
+            }
+
+            @Deprecated("Deprecated in Java")
+            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                if (url == null) return false
+                if (url.startsWith("https://www.google.com/maps") ||
+                    url.startsWith("https://maps.google.com") ||
+                    url.startsWith("http://maps.google.com") ||
+                    url.startsWith("geo:")
+                ) {
+                    return try {
+                        val uri = Uri.parse(url)
+                        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        this@MainActivity.startActivity(intent)
+                        true
+                    } catch (e: Exception) {
+                        try {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            this@MainActivity.startActivity(browserIntent)
+                            true
+                        } catch (_: Exception) {
+                            false
+                        }
+                    }
+                }
+                return super.shouldOverrideUrlLoading(view, url)
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -416,6 +477,29 @@ class AndroidNativeBridge(
 
     @JavascriptInterface
     fun getPlatformName(): String = if (isTv) "GoogleTV" else "AndroidMobile"
+
+    /**
+     * 原生呼叫外部 Intent 開啟地圖 (支援 Google 地圖 App 或系統瀏覽器)
+     */
+    @JavascriptInterface
+    fun openExternalMap(url: String) {
+        activity.runOnUiThread {
+            try {
+                val uri = Uri.parse(url)
+                val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                activity.startActivity(intent)
+            } catch (e: Exception) {
+                try {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    activity.startActivity(browserIntent)
+                } catch (_: Exception) {}
+            }
+        }
+    }
 
     /**
      * 高效能 OkHttpClient 單例 (配備連線池、HTTP/2 多路複用與 Transparent Gzip 解壓縮)
