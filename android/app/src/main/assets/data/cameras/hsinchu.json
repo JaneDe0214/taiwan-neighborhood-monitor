@@ -1,0 +1,52 @@
+{
+  "cityId": "hsinchu",
+  "cityName": "新竹縣市",
+  "cameraCount": 4,
+  "updatedAt": "2026-09-10T04:30:13.521Z",
+  "cameras": [
+    {
+      "id": "HC_001",
+      "name": "東區 光復路二段與學府路口 (新竹清華大學 ‧ 交大光復門戶)",
+      "authority": "新竹市政府交通處智慧交控",
+      "district": "東區",
+      "lat": 24.7985,
+      "lon": 120.9922,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-095-000-01.m3u8",
+      "sourceUrl": "https://traffic.hccg.gov.tw"
+    },
+    {
+      "id": "HC_002",
+      "name": "東區 新安路與園區一路口 (新竹科學園區竹科大門口)",
+      "authority": "國家科學及技術委員會新竹科學園區管理局",
+      "district": "東區",
+      "lat": 24.7812,
+      "lon": 121.0065,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-095-000-02.m3u8",
+      "sourceUrl": "https://sipa.gov.tw"
+    },
+    {
+      "id": "HC_003",
+      "name": "竹北市 光明六路與自強南路口 (竹北交流道 ‧ 喜來登商圈)",
+      "authority": "新竹縣政府交通旅遊處",
+      "district": "竹北市",
+      "lat": 24.8235,
+      "lon": 121.0252,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-091-000-01.m3u8",
+      "sourceUrl": "https://hsinchu.gov.tw"
+    },
+    {
+      "id": "HC_004",
+      "name": "竹北市 高鐵七路與高鐵東二路口 (高鐵新竹站 ‧ 生醫園區門戶)",
+      "authority": "新竹縣政府交通旅遊處",
+      "district": "竹北市",
+      "lat": 24.8085,
+      "lon": 121.0402,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-091-000-02.m3u8",
+      "sourceUrl": "https://hsinchu.gov.tw"
+    }
+  ]
+}

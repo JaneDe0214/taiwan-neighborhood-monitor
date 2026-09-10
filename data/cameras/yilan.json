@@ -1,0 +1,52 @@
+{
+  "cityId": "yilan",
+  "cityName": "宜蘭縣",
+  "cameraCount": 4,
+  "updatedAt": "2026-09-10T04:30:13.521Z",
+  "cameras": [
+    {
+      "id": "YL_001",
+      "name": "礁溪鄉 礁溪路五段與溫泉路口 (礁溪溫泉觀光徒步區 ‧ 礁溪轉運站)",
+      "authority": "宜蘭縣政府警察局智慧交控",
+      "district": "礁溪鄉",
+      "lat": 24.8278,
+      "lon": 121.7725,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-030-000-01.m3u8",
+      "sourceUrl": "https://ilcpb.gov.tw"
+    },
+    {
+      "id": "YL_002",
+      "name": "宜蘭市 中山路二段與舊城南路口 (宜蘭新月廣場 ‧ 宜蘭美術館門戶)",
+      "authority": "宜蘭縣政府警察局智慧交控",
+      "district": "宜蘭市",
+      "lat": 24.7558,
+      "lon": 121.7512,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-038-000-01.m3u8",
+      "sourceUrl": "https://ilcpb.gov.tw"
+    },
+    {
+      "id": "YL_003",
+      "name": "羅東鎮 中正北路與公正路口 (羅東火車站前 ‧ 羅東林業文化園區)",
+      "authority": "宜蘭縣政府警察局智慧交控",
+      "district": "羅東鎮",
+      "lat": 24.6785,
+      "lon": 121.7718,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-046-000-01.m3u8",
+      "sourceUrl": "https://ilcpb.gov.tw"
+    },
+    {
+      "id": "YL_004",
+      "name": "頭城鎮 國道5號頭城交流道匝道口 (宜蘭雪山隧道南端門戶)",
+      "authority": "交通部高速公路局北區養護工程分局",
+      "district": "頭城鎮",
+      "lat": 24.8485,
+      "lon": 121.8012,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-030-000-02.m3u8",
+      "sourceUrl": "https://freeway.gov.tw"
+    }
+  ]
+}

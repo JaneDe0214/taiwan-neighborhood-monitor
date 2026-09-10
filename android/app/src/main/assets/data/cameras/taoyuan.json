@@ -1,0 +1,261 @@
+{
+  "cityId": "taoyuan",
+  "cityName": "桃園市",
+  "cameraCount": 23,
+  "updatedAt": "2026-09-10T04:30:13.520Z",
+  "cameras": [
+    {
+      "id": "T244800",
+      "name": "中壢區 領航南路四段與青昇路口",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01439,
+      "lon": 121.22188,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera219/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T270450",
+      "name": "中壢區 高鐵北路一段與青心路(高鐵北路一段往南)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01423,
+      "lon": 121.2173,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera223/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TC12010",
+      "name": "中壢區  青昇路與高鐵北路二段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01669,
+      "lon": 121.21876,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera153/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TB15850",
+      "name": "中壢區  高鐵站前東路二段-領航南路三段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01029,
+      "lon": 121.21993,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera151/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T244310",
+      "name": "中壢區 領航南路二段-青埔路二段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.00672,
+      "lon": 121.21638,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr5/camera278/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T247710",
+      "name": "中壢區 高鐵北路二段-大成路一段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01957,
+      "lon": 121.22181,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr5/camera286/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TA17640",
+      "name": "中壢區 中正東路與青昇路(中正東路往南)(大園)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "大園區",
+      "lat": 25.01421,
+      "lon": 121.22769,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera225/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T244920",
+      "name": "大園區 五青路-領航南路",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "大園區",
+      "lat": 25.02035,
+      "lon": 121.22482,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera143/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T245130",
+      "name": "中壢區 高鐵北路二段-領航南路四段路口",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.02141,
+      "lon": 121.22366,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr5/camera277/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T245150",
+      "name": "中壢區 高鐵北路二段-領航北路四段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.02177,
+      "lon": 121.22329,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera160/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TC04260",
+      "name": "中壢區 領航北路四段-青昇路",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01964,
+      "lon": 121.21492,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera149/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T245510",
+      "name": "大園區 中山南路二段與領航北路三段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "大園區",
+      "lat": 25.01821,
+      "lon": 121.2136,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera157/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TC00960",
+      "name": "中壢區 青埔路二段-高鐵北路一段",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01053,
+      "lon": 121.2137,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera150/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T247130",
+      "name": "中壢區 高鐵北路一段與青埔路一段(青埔路上往東)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.01203,
+      "lon": 121.21232,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera222/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "T245270",
+      "name": "中壢區 領航北路四段與大豐四街(領航北路慢車道往西北)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 25.02436,
+      "lon": 121.22004,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera226/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TA04240",
+      "name": "中壢區 中正東路三段與內定十一街(中正東路往南)(大園)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "大園區",
+      "lat": 25.00681,
+      "lon": 121.22819,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera224/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_001",
+      "name": "桃園區 中正路與大興西路口 (桃園中正藝文特區核心)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "桃園區",
+      "lat": 25.0168,
+      "lon": 121.3005,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr1/camera101/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_002",
+      "name": "桃園區 復興路與中正路口 (桃園火車站站前大門戶)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "桃園區",
+      "lat": 24.9894,
+      "lon": 121.3132,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr1/camera105/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_003",
+      "name": "桃園區 春日路與三民路口 (桃園南崁往返幹道)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "桃園區",
+      "lat": 25.0022,
+      "lon": 121.3148,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr1/camera112/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_004",
+      "name": "中壢區 中正路與延平路口 (中壢大時鐘商圈核心)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "中壢區",
+      "lat": 24.9565,
+      "lon": 121.2245,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr2/camera120/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_005",
+      "name": "八德區 介壽路一段與大興路口 (八德廣豐商圈/大湳市場)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "八德區",
+      "lat": 24.9628,
+      "lon": 121.2985,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr3/camera130/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_006",
+      "name": "蘆竹區 中正路與忠孝東路口 (南崁交流道特力屋商圈)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "蘆竹區",
+      "lat": 25.0485,
+      "lon": 121.2922,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera140/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    },
+    {
+      "id": "TY_007",
+      "name": "龜山區 文化二路與復興一路口 (長庚醫院商圈/機捷A8)",
+      "authority": "桃園市政府交通局智慧交控中心",
+      "district": "龜山區",
+      "lat": 25.0612,
+      "lon": 121.3688,
+      "type": "hls",
+      "streamUrl": "https://cctvtraffic.tycg.gov.tw/hls/nvr4/camera150/live.m3u8",
+      "sourceUrl": "https://tcc.tycg.gov.tw/ATISNew/#"
+    }
+  ]
+}

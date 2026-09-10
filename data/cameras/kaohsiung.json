@@ -1,0 +1,85 @@
+{
+  "cityId": "kaohsiung",
+  "cityName": "高雄市",
+  "cameraCount": 7,
+  "updatedAt": "2026-09-10T04:30:13.521Z",
+  "cameras": [
+    {
+      "id": "KH_001",
+      "name": "左營區 博愛四路與高鐵路口 (高鐵左營站門戶 ‧ 新光三越左營店)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "左營區",
+      "lat": 22.6885,
+      "lon": 120.3092,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-362-000-01.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    },
+    {
+      "id": "KH_002",
+      "name": "前鎮區 中山二路與三多三路口 (三多商圈大遠百 ‧ SOGO商圈)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "前鎮區",
+      "lat": 22.6138,
+      "lon": 120.3065,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-367-000-01.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    },
+    {
+      "id": "KH_003",
+      "name": "新興區 中山一路與中正四路口 (美麗島站捷運紅橘線交會門戶)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "新興區",
+      "lat": 22.6312,
+      "lon": 120.3022,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-365-000-01.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    },
+    {
+      "id": "KH_004",
+      "name": "前金區 五福四路與市中一路口 (高雄愛河水岸 ‧ 高雄流行音樂中心)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "前金區",
+      "lat": 22.6225,
+      "lon": 120.2915,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-365-000-02.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    },
+    {
+      "id": "KH_005",
+      "name": "鹽埕區 大勇路與大南街口 (駁二藝術特區 ‧ 大港橋門戶)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "鹽埕區",
+      "lat": 22.6205,
+      "lon": 120.2818,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-365-000-03.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    },
+    {
+      "id": "KH_006",
+      "name": "三民區 建國二路與站前南路口 (高雄火車站站前綠色商圈)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "三民區",
+      "lat": 22.6385,
+      "lon": 120.3028,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-364-000-01.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    },
+    {
+      "id": "KH_007",
+      "name": "鼓山區 博愛二路與明誠二路口 (漢神巨蛋商圈 ‧ 凹子底森林公園)",
+      "authority": "高雄市政府交通局智慧交控中心",
+      "district": "鼓山區",
+      "lat": 22.6602,
+      "lon": 120.3042,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-362-000-02.m3u8",
+      "sourceUrl": "https://traffic.kcg.gov.tw"
+    }
+  ]
+}

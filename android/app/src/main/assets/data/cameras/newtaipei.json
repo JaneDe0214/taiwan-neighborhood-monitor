@@ -1,0 +1,283 @@
+{
+  "cityId": "newtaipei",
+  "cityName": "新北市",
+  "cameraCount": 25,
+  "updatedAt": "2026-09-10T04:30:13.519Z",
+  "cameras": [
+    {
+      "id": "C000054",
+      "name": "板橋區民生路、萬板路",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.020297,
+      "lon": 121.469901,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000054/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000054"
+    },
+    {
+      "id": "C000002",
+      "name": "板橋區文化路1段、民生路(下大漢橋)",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.0226266105529,
+      "lon": 121.467940517557,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000002/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000002"
+    },
+    {
+      "id": "C000034",
+      "name": "板橋區文化路2段、民生路2段(文化路中央分隔島)",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.023203,
+      "lon": 121.468443,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000034/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000034"
+    },
+    {
+      "id": "C000215",
+      "name": "板橋區民生路三段(號誌控制器旁L桿)",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.02717,
+      "lon": 121.46552,
+      "type": "hls",
+      "streamUrl": "https://cctvatis3.ntpc.gov.tw/hls/C000215/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000215"
+    },
+    {
+      "id": "C000053",
+      "name": "板橋區文化路、新站路",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.016232,
+      "lon": 121.463035,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000053/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000053"
+    },
+    {
+      "id": "C000039",
+      "name": "板橋區台64線萬板路上方",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.01983,
+      "lon": 121.470233,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000039/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000039"
+    },
+    {
+      "id": "C000003",
+      "name": "板橋區縣民大道、民生路",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.0188599487265,
+      "lon": 121.471347592054,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000003/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000003"
+    },
+    {
+      "id": "C000554",
+      "name": "台64板橋段",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.0174294,
+      "lon": 121.471933,
+      "type": "hls",
+      "streamUrl": "https://cctvatis5.ntpc.gov.tw/hls/C000554/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000554"
+    },
+    {
+      "id": "C000013",
+      "name": "板橋區縣民大道二段中央分隔島",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.0165927184753,
+      "lon": 121.46840708637,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000013/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000013"
+    },
+    {
+      "id": "C000375",
+      "name": "板橋區文化路漢生東路",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.017583,
+      "lon": 121.464238,
+      "type": "hls",
+      "streamUrl": "https://cctvatis3.ntpc.gov.tw/hls/C000375/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000375"
+    },
+    {
+      "id": "C000294",
+      "name": "板橋區縣民大道板新路口",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.016205,
+      "lon": 121.467868,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000294/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000294"
+    },
+    {
+      "id": "C000052",
+      "name": "板橋區文化路2段、雙十路",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.029787,
+      "lon": 121.472173,
+      "type": "hls",
+      "streamUrl": "https://cctvatis2.ntpc.gov.tw/hls/C000052/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000052"
+    },
+    {
+      "id": "C000020",
+      "name": "板橋區民生路、中山路",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.015711,
+      "lon": 121.473477,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000020/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000020"
+    },
+    {
+      "id": "C000133",
+      "name": "板橋區三民路、縣民大道(華翠橋)(南側路燈桿上)",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.024018,
+      "lon": 121.47838,
+      "type": "hls",
+      "streamUrl": "https://cctvatis3.ntpc.gov.tw/hls/C000133/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000133"
+    },
+    {
+      "id": "C000290",
+      "name": "板橋區華翠橋(三民路上方路南向燈桿)",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.023895,
+      "lon": 121.478566,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000290/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000290"
+    },
+    {
+      "id": "C000293",
+      "name": "板橋區縣民大道新站路口",
+      "authority": "新北市政府交通局",
+      "district": "板橋區",
+      "lat": 25.014526,
+      "lon": 121.465559,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000293/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000293"
+    },
+    {
+      "id": "C000232",
+      "name": "瑞芳區 九份老街 (汽車路九份老街口-輕便路)",
+      "authority": "新北市政府交通局",
+      "district": "瑞芳區",
+      "lat": 25.10986,
+      "lon": 121.84518,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000232/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000101",
+      "name": "三重區 重新路四段與重安街口 (重新橋頭門戶)",
+      "authority": "新北市政府交通局",
+      "district": "三重區",
+      "lat": 25.0562,
+      "lon": 121.4886,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000101/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000108",
+      "name": "新莊區 中正路與新泰路口 (新莊捷運廟街商圈)",
+      "authority": "新北市政府交通局",
+      "district": "新莊區",
+      "lat": 25.0368,
+      "lon": 121.4503,
+      "type": "hls",
+      "streamUrl": "https://cctvatis2.ntpc.gov.tw/hls/C000108/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000115",
+      "name": "中和區 中山路二段與景平路口 (華中橋門戶)",
+      "authority": "新北市政府交通局",
+      "district": "中和區",
+      "lat": 25.0028,
+      "lon": 121.5035,
+      "type": "hls",
+      "streamUrl": "https://cctvatis3.ntpc.gov.tw/hls/C000115/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000122",
+      "name": "永和區 中正橋永和端 ‧ 永和路二段口",
+      "authority": "新北市政府交通局",
+      "district": "永和區",
+      "lat": 25.0152,
+      "lon": 121.5178,
+      "type": "hls",
+      "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000122/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000135",
+      "name": "新店區 北新路一段與光明街口 (捷運新店區公所站)",
+      "authority": "新北市政府交通局",
+      "district": "新店區",
+      "lat": 24.9678,
+      "lon": 121.5412,
+      "type": "hls",
+      "streamUrl": "https://cctvatis5.ntpc.gov.tw/hls/C000135/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000142",
+      "name": "土城區 中央路二段與裕民路口 (土城捷運海山站生活圈)",
+      "authority": "新北市政府交通局",
+      "district": "土城區",
+      "lat": 24.9856,
+      "lon": 121.4468,
+      "type": "hls",
+      "streamUrl": "https://cctvatis6.ntpc.gov.tw/hls/C000142/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000150",
+      "name": "淡水區 中正東路二段與淡金路口 (紅樹林交會捷運輕軌站)",
+      "authority": "新北市政府交通局",
+      "district": "淡水區",
+      "lat": 25.1542,
+      "lon": 121.4598,
+      "type": "hls",
+      "streamUrl": "https://cctvatis1.ntpc.gov.tw/hls/C000150/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    },
+    {
+      "id": "C000165",
+      "name": "汐止區 大同路一段與新台五路一段口 (南港汐止門戶)",
+      "authority": "新北市政府交通局",
+      "district": "汐止區",
+      "lat": 25.0592,
+      "lon": 121.6375,
+      "type": "hls",
+      "streamUrl": "https://cctvatis2.ntpc.gov.tw/hls/C000165/live.m3u8",
+      "sourceUrl": "https://atis.ntpc.gov.tw"
+    }
+  ]
+}

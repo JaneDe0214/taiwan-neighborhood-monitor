@@ -5,6 +5,21 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- 定位權限 (支援「附近」自動定位功能) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- 宣告定位硬體為選用 (避免無 GPS 的 Android TV / 盒子被阻擋安裝) -->
+    <uses-feature
+        android:name="android.hardware.location"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.network"
+        android:required="false" />
+
     <!-- Google TV / Android TV 電視硬體特性宣告 (設定 required="false" 以相容手機與電視雙平台) -->
     <uses-feature
         android:name="android.software.leanback"

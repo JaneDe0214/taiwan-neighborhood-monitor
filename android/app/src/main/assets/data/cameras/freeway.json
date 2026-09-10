@@ -1,0 +1,96 @@
+{
+  "cityId": "freeway",
+  "cityName": "國道全線骨幹",
+  "cameraCount": 8,
+  "updatedAt": "2026-09-10T04:30:13.522Z",
+  "cameras": [
+    {
+      "id": "FW_001",
+      "name": "國道1號 23K 圓山交流道南下 (台北市重慶北路/士林門戶)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 25.0745,
+      "lon": 121.5248,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-023-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_002",
+      "name": "國道1號 41K 林口交流道雙向 (新北林口 ‧ 桃園龜山交界)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 25.0645,
+      "lon": 121.3652,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-041-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_003",
+      "name": "國道1號 49K 桃園交流道雙向 (南崁商圈 ‧ 桃園航空城走廊)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 25.0435,
+      "lon": 121.2985,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-049-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_004",
+      "name": "國道1號 91K 竹北交流道雙向 (竹北縣政特區 ‧ 高鐵新竹門戶)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 24.8262,
+      "lon": 121.0182,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-091-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_005",
+      "name": "國道1號 178K 台中交流道雙向 (西屯台灣大道 ‧ 朝馬中港交流道)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 24.1725,
+      "lon": 120.6315,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-178-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_006",
+      "name": "國道1號 319K 永康交流道雙向 (台南市區 ‧ 永康工業區門戶)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 23.0412,
+      "lon": 120.2458,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-319-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_007",
+      "name": "國道1號 362K 鼎金系統交流道雙向 (高雄國1與國10交會大樞紐)",
+      "authority": "交通部高速公路局",
+      "district": "國道1號",
+      "lat": 22.6712,
+      "lon": 120.3275,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-362-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    },
+    {
+      "id": "FW_008",
+      "name": "國道5號 15K 雪山隧道北口 (新北坪林門戶 ‧ 往宜蘭隧道入口)",
+      "authority": "交通部高速公路局",
+      "district": "國道5號",
+      "lat": 24.9125,
+      "lon": 121.7258,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-015-000-01.m3u8",
+      "sourceUrl": "https://1968.freeway.gov.tw"
+    }
+  ]
+}

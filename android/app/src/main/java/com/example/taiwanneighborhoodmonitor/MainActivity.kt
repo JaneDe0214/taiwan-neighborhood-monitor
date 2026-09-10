@@ -59,6 +59,10 @@ class MainActivity : ComponentActivity() {
     private val scope = CoroutineScope(Dispatchers.Main)
     private lateinit var nativeBridge: AndroidNativeBridge
 
+    private var pendingLocationCallback: android.webkit.GeolocationPermissions.Callback? = null
+    private var pendingLocationOrigin: String? = null
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,11 +143,42 @@ class MainActivity : ComponentActivity() {
         // 支援混合內容以流暢播放各地交控中心 HTTP/HTTPS 監視器串流
         s.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
+        // 啟用地理定位支援 (附近即時生活圈)
+        s.setGeolocationEnabled(true)
+
         // 注入原生 JS 橋接器
         nativeBridge = AndroidNativeBridge(this, isTvDevice, wv)
         wv.addJavascriptInterface(nativeBridge, "AndroidBridge")
 
-        wv.webChromeClient = object : WebChromeClient() {}
+        wv.webChromeClient = object : WebChromeClient() {
+            override fun onGeolocationPermissionsShowPrompt(
+                origin: String?,
+                callback: android.webkit.GeolocationPermissions.Callback?
+            ) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED ||
+                    androidx.core.content.ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    callback?.invoke(origin, true, false)
+                } else {
+                    pendingLocationCallback = callback
+                    pendingLocationOrigin = origin
+                    androidx.core.app.ActivityCompat.requestPermissions(
+                        this@MainActivity,
+                        arrayOf(
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION
+                        ),
+                        LOCATION_PERMISSION_REQUEST_CODE
+                    )
+                }
+            }
+        }
 
         wv.webViewClient = object : WebViewClient() {
             override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
@@ -367,6 +402,23 @@ class MainActivity : ComponentActivity() {
             }
         } catch (_: Exception) {
             null
+        }
+    }
+
+    /**
+     * 處理執行階段定位權限授權結果
+     */
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            pendingLocationCallback?.invoke(pendingLocationOrigin, granted, false)
+            pendingLocationCallback = null
+            pendingLocationOrigin = null
         }
     }
 

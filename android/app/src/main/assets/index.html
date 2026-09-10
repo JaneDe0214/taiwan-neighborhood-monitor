@@ -248,6 +248,41 @@ body {
   100% { transform: scale(1); }
 }
 
+/* 附近生活圈按鈕定位中旋轉呼吸燈效果 */
+.center-btn[data-center="nearby"].locating i {
+  animation: locating-spin 1s linear infinite !important;
+  color: var(--color-warning) !important;
+}
+
+@keyframes locating-spin {
+  0% { transform: rotate(0deg) scale(1.1); }
+  50% { transform: rotate(180deg) scale(1.25); }
+  100% { transform: rotate(360deg) scale(1.1); }
+}
+
+/* 距離膠囊標籤 (由近到遠精準空間大圓距離) */
+.distance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(16, 185, 129, 0.22);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.distance-pill i {
+  font-size: 0.65rem;
+  color: #34d399;
+}
+
 /* 網格切換與工具區 */
 .nav-actions {
   display: flex;
@@ -6979,8 +7014,12 @@ body.native-mobile-mode .parking-lot-chip {
       </div>
     </div>
 
-    <!-- 監控中心切換 (首頁預設雙埔 vs 青埔 vs 新埔 vs 觀光 vs 日本) -->
+    <!-- 監控中心切換 (附近 vs 雙埔 vs 青埔 vs 新埔 vs 觀光 vs 日本) -->
     <div class="center-switch-group">
+      <button class="center-btn" data-center="nearby" title="附近：自動偵測目前所在位置，由近到遠呈現鄰近即時監視器與生活資訊">
+        <i class="fa-solid fa-location-crosshairs"></i>
+        <span>附近</span>
+      </button>
       <button class="center-btn active" data-center="dual" title="雙埔：青埔與新埔各半平均顯示 (4格/6格/9格/12格/16格)">
         <i class="fa-solid fa-layer-group"></i>
         <span>雙埔</span>
@@ -7793,6 +7832,7 @@ class CameraPlayerEngine {
         <div class="cam-title-group">
           <span class="live-dot" id="wm-${cam.id}" title="即時連線中"></span>
           ${cam.areaTag ? `<span class="area-tag ${cam.areaTag === '青埔' ? 'tag-qp' : 'tag-bp'}">${cam.areaTag}</span>` : ''}
+          ${(window.monitorApp && window.monitorApp.currentCenterId === 'nearby' && typeof cam.distanceKm === 'number') ? `<span class="distance-pill" title="距離您的目前位置約 ${cam.distanceKm} 公里"><i class="fa-solid fa-location-arrow"></i> ${cam.distanceKm} km</span>` : ''}
           <span class="cam-name-text" title="${cam.name}">#${index + 1} ${cam.name}</span>
         </div>
         <div class="cam-card-tools">
@@ -14058,6 +14098,14 @@ if (typeof module !== 'undefined' && module.exports) {
 window.CAMERAS_DATA = {
   "centers": [
     {
+      "id": "nearby",
+      "name": "附近",
+      "address": "自動偵測目前所在位置",
+      "lat": 25.0153,
+      "lon": 121.2213,
+      "description": "自動偵測目前所在位置，由近到遠呈現鄰近即時監視器與生活資訊"
+    },
+    {
       "id": "dual",
       "name": "雙埔",
       "address": "",
@@ -16223,9 +16271,95 @@ window.CAMERAS_DATA = {
   }
 })();
 
+// ===== 全台「附近」即時生活圈距離運算與分縣市隨選載入引擎 (方案 B) =====
+
+// 1. 半正矢公式計算空間大圓距離 (公里，精確至小數點後一位)
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // 地球半徑 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
+
+// 2. 分縣市動態加載器 (按需隨選非同步載入，零首頁延遲)
+class DynamicCameraLoader {
+  constructor() {
+    this.loadedCities = {};
+    this.freewayLoaded = false;
+    this.freewayCams = [];
+    this.cityMetrics = [
+      { id: 'taipei', name: '台北市', center: { lat: 25.0375, lon: 121.5168 } },
+      { id: 'newtaipei', name: '新北市', center: { lat: 25.0125, lon: 121.4658 } },
+      { id: 'taoyuan', name: '桃園市', center: { lat: 24.9936, lon: 121.2510 } },
+      { id: 'hsinchu', name: '新竹縣市', center: { lat: 24.8138, lon: 121.0075 } },
+      { id: 'taichung', name: '台中市', center: { lat: 24.1624, lon: 120.6472 } },
+      { id: 'tainan', name: '台南市', center: { lat: 22.9972, lon: 120.2025 } },
+      { id: 'kaohsiung', name: '高雄市', center: { lat: 22.6312, lon: 120.3022 } },
+      { id: 'yilan', name: '宜蘭縣', center: { lat: 24.7558, lon: 121.7512 } },
+      { id: 'hualien', name: '花蓮縣', center: { lat: 23.9932, lon: 121.6015 } }
+    ];
+  }
+
+  // 依經緯度判別最相鄰縣市核心生活圈
+  detectCityByCoords(lat, lon) {
+    let closest = this.cityMetrics[0];
+    let minD = Infinity;
+    for (const c of this.cityMetrics) {
+      const d = calculateDistanceKm(lat, lon, c.center.lat, c.center.lon);
+      if (d < minD) {
+        minD = d;
+        closest = c;
+      }
+    }
+    return closest;
+  }
+
+  // 按需隨選加載指定縣市與國道攝影機資料集 (方案 B)
+  async loadCityCameras(cityId) {
+    const results = [];
+    if (!this.loadedCities[cityId]) {
+      try {
+        const res = await fetch(`data/cameras/${cityId}.json`);
+        if (res.ok) {
+          const data = await res.json();
+          this.loadedCities[cityId] = Array.isArray(data.cameras) ? data.cameras : [];
+          console.log(`[DynamicCameraLoader] 隨選加載 ${cityId}.json 成功 (${this.loadedCities[cityId].length} 處鏡頭)`);
+        }
+      } catch (e) {
+        console.warn(`[DynamicCameraLoader] 隨選加載 ${cityId}.json 失敗，使用內建資料庫備援:`, e.message);
+      }
+    }
+    if (this.loadedCities[cityId]) {
+      results.push(...this.loadedCities[cityId]);
+    }
+
+    // 同步隨選加載國道全線骨幹
+    if (!this.freewayLoaded) {
+      try {
+        const resFw = await fetch('data/cameras/freeway.json');
+        if (resFw.ok) {
+          const fwData = await resFw.json();
+          this.freewayCams = Array.isArray(fwData.cameras) ? fwData.cameras : [];
+          this.freewayLoaded = true;
+          console.log(`[DynamicCameraLoader] 隨選加載 freeway.json 國道全線骨幹成功`);
+        }
+      } catch (_e) {}
+    }
+    if (this.freewayCams) {
+      results.push(...this.freewayCams);
+    }
+
+    return results;
+  }
+}
+
 /**
  * 區域環境即時影像監控 - 核心應用控制器 (MonitorApp)
- * 支援：雙埔/青埔/新埔/觀光
+ * 支援：附近/雙埔/青埔/新埔/觀光/日本/收藏
  * 特色：
  *  1. 最原始官方原生來源 (桃園 HLS、新北 FLV、台北 HLS/iframe)
  *  2. 低延遲極速秒開 (20ms 起播延遲) 與自動追幀看門狗 (累積延遲 > 1.8s 自動跳至 Live Edge)
@@ -16243,6 +16377,9 @@ class MonitorApp {
     this.focusedCamId = null;         // 單格特寫聚焦之鏡頭 ID
     this.isAdaptiveFit = false;       // 預設自由捲動最大化清晰呈現 (每格畫面最大、長輩清晰好閱讀)
     this.isSidebarCollapsed = false;  // 預設顯示右側當地生活資訊面板
+    this.dynamicCameraLoader = new DynamicCameraLoader();
+    this.userLocation = null;
+    this.isLocatingNearby = false;
     // 持久化記憶：優先維持使用者上次的側邊欄收合動作
     if (typeof localStorage !== 'undefined') {
       try {
@@ -16643,6 +16780,183 @@ class MonitorApp {
     }
   }
 
+  // ===== 附近即時生活圈處理核心 (自動定位 ‧ 隨選加載 ‧ 距離排序) =====
+  async handleNearbyCenter() {
+    const nearbyBtn = document.querySelector('.center-btn[data-center="nearby"]');
+    if (nearbyBtn) nearbyBtn.classList.add('locating');
+    this.isLocatingNearby = true;
+
+    // 1. 優先使用快取座標極速渲染 (0 延遲秒開體驗)
+    let hasRenderedFromCache = false;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('dpu_last_coords');
+        if (cached) {
+          const { lat, lon } = JSON.parse(cached);
+          if (typeof lat === 'number' && typeof lon === 'number') {
+            await this.applyNearbyLocation(lat, lon, true);
+            hasRenderedFromCache = true;
+          }
+        }
+      } catch (_e) {}
+    }
+
+    // 2. 啟動非同步高精準地理定位
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          if (typeof localStorage !== 'undefined') {
+            try {
+              localStorage.setItem('dpu_last_coords', JSON.stringify({ lat, lon }));
+            } catch (_e) {}
+          }
+          await this.applyNearbyLocation(lat, lon, false);
+          if (nearbyBtn) nearbyBtn.classList.remove('locating');
+          this.isLocatingNearby = false;
+        },
+        (error) => {
+          console.warn('[Geolocation] 定位授權或逾時異常:', error.message);
+          if (nearbyBtn) nearbyBtn.classList.remove('locating');
+          this.isLocatingNearby = false;
+          // 若無快取，安全容錯退回預設雙埔中心
+          if (!hasRenderedFromCache) {
+            alert('未能取得您的目前地理位置，已為您自動載入預設「雙埔生活」中心。');
+            this.switchCenter('dual');
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 8000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      if (nearbyBtn) nearbyBtn.classList.remove('locating');
+      this.isLocatingNearby = false;
+      if (!hasRenderedFromCache) {
+        this.switchCenter('dual');
+      }
+    }
+  }
+
+  // 依經緯度計算空間距離並渲染附近生活圈視訊牆與生活資訊
+  async applyNearbyLocation(lat, lon, isCached = false) {
+    this.userLocation = { lat, lon };
+
+    // 1. 識別最近之縣市生活圈
+    const city = this.dynamicCameraLoader.detectCityByCoords(lat, lon);
+
+    // 2. 按需非同步載入該縣市攝影機資料集與國道全線骨幹 (方案 B)
+    const dynamicCams = await this.dynamicCameraLoader.loadCityCameras(city.id);
+
+    // 3. 聚合既有內建鏡頭池與動態加載鏡頭池
+    const existingCams = this.getAllUniqueCameras();
+    const camMap = new Map();
+    [...existingCams, ...dynamicCams].forEach(c => {
+      if (c && c.id && !camMap.has(c.id)) {
+        camMap.set(c.id, c);
+      }
+    });
+    const pool = Array.from(camMap.values());
+
+    // 4. 計算每支鏡頭與使用者座標之大圓距離 (公里)
+    pool.forEach(c => {
+      if (typeof c.lat === 'number' && typeof c.lon === 'number') {
+        c.distanceKm = calculateDistanceKm(lat, lon, c.lat, c.lon);
+      } else {
+        c.distanceKm = 9999;
+      }
+    });
+
+    // 5. 由近到遠升冪排序 (最靠近當前位置的鏡頭排最前面)
+    pool.sort((a, b) => a.distanceKm - b.distanceKm);
+
+    this.currentCameras = pool;
+    this.currentCenterData = {
+      id: 'nearby',
+      name: `附近 (${city.name})`,
+      lat,
+      lon,
+      description: `依目前位置 (${city.name}) 由近到遠即時排序呈現`
+    };
+
+    // 原生 APK 環境下臺北市交工處鏡頭直出相容
+    const isNativeMode = (typeof window.AndroidBridge !== 'undefined') || 
+                         (window.location && window.location.protocol === 'file:') ||
+                         (navigator.userAgent && navigator.userAgent.includes('TaiwanNeighborhoodMonitor'));
+    if (isNativeMode) {
+      this.currentCameras.forEach(cam => {
+        if (cam.ccdId && (cam.type === 'iframe' || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei')))) {
+          cam.type = 'hls';
+          cam.streamUrl = `https://hls.bote.gov.taipei/stream/${cam.ccdId}/index.m3u8`;
+          cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
+        }
+      });
+    }
+
+    // 6. 更新介面標籤
+    const nameEl = document.getElementById('currentCenterName');
+    const addrEl = document.getElementById('currentAddressText');
+    const countEl = document.getElementById('totalCamCount');
+    if (nameEl) nameEl.innerText = `附近生活圈 (${city.name})`;
+    if (addrEl) {
+      addrEl.innerText = '';
+      addrEl.style.display = 'none';
+    }
+    const nearestKm = pool[0] ? pool[0].distanceKm : 0;
+    if (countEl) countEl.innerText = `${this.currentCameras.length} 處即時視訊 (最近 ${nearestKm} km)`;
+
+    // 更新導航按鈕高亮
+    document.querySelectorAll('.center-btn').forEach(btn => {
+      if (btn.dataset.center === 'nearby') {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    const sortIndicator = document.querySelector('.sort-indicator span');
+    if (sortIndicator) {
+      sortIndicator.innerText = `附近模式：依空間距離由近到遠呈現 ‧ 最近路口距 ${nearestKm} km${isCached ? ' (快取快速開)' : ''}`;
+    }
+
+    // 預設宮格：六分割標準視角 (grid-6)
+    if (!this.currentGridMode || this.currentGridMode === 'grid-all') {
+      this.currentGridMode = 'grid-6';
+      this.previousGridMode = 'grid-6';
+      const gridContainer = document.getElementById('cameraGrid');
+      if (gridContainer) gridContainer.className = 'camera-grid grid-6';
+      document.querySelectorAll('.grid-btn').forEach(btn => {
+        if (btn.dataset.grid === 'grid-6') btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+
+    // 7. 渲染視訊牆
+    this.renderVideoMatrix();
+
+    // 8. 載入即時環境氣象與空氣品質 (Open-Meteo 自動提供所在地天氣)
+    if (this.weatherMonitor) {
+      this.weatherMonitor.fetchEnvironment(lat, lon, `附近 (${city.name})`);
+      this.weatherMonitor.startAutoRefresh(lat, lon, `附近 (${city.name})`);
+    }
+
+    // 9. 更新雷達地圖中心至使用者位置
+    if (this.radarMap) {
+      this.radarMap.setCenterAndCameras(this.currentCenterData, this.currentCameras);
+    }
+
+    // 10. 出門通勤建議膠囊在地化
+    const alertEl = document.getElementById('disasterAlertText');
+    if (alertEl && pool[0]) {
+      alertEl.innerHTML = `<i class="fa-solid fa-location-dot" style="color:#10b981; margin-right:2px;"></i> 已定位於 ${city.name} ‧ 最近鏡頭 ${nearestKm} km`;
+    }
+
+    this.applyAdaptiveViewportFit();
+  }
+
   // 全局立即刷新 (視訊影像、即時環境氣象、雙埔大眾運輸)
   refreshAll() {
     this.switchCenter(this.currentCenterId);
@@ -16655,6 +16969,11 @@ class MonitorApp {
   async switchCenter(centerId) {
     this.currentCenterId = centerId;
     this.playerEngine.destroyAllPlayers();
+
+    if (centerId === 'nearby') {
+      await this.handleNearbyCenter();
+      return;
+    }
 
     try {
       let centerData, cameras;

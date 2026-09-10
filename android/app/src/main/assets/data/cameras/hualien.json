@@ -1,0 +1,41 @@
+{
+  "cityId": "hualien",
+  "cityName": "花蓮縣",
+  "cameraCount": 3,
+  "updatedAt": "2026-09-10T04:30:13.522Z",
+  "cameras": [
+    {
+      "id": "HL_001",
+      "name": "花蓮市 國聯一路與中山路口 (花蓮火車站前站門戶)",
+      "authority": "花蓮縣警察局智慧交控",
+      "district": "花蓮市",
+      "lat": 23.9932,
+      "lon": 121.6015,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-054-000-01.m3u8",
+      "sourceUrl": "https://hlpb.gov.tw"
+    },
+    {
+      "id": "HL_002",
+      "name": "花蓮市 中正路與中正橋口 (花蓮市東大門夜市商圈門戶)",
+      "authority": "花蓮縣警察局智慧交控",
+      "district": "花蓮市",
+      "lat": 23.9785,
+      "lon": 121.6095,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-054-000-02.m3u8",
+      "sourceUrl": "https://hlpb.gov.tw"
+    },
+    {
+      "id": "HL_003",
+      "name": "秀林鄉 台9線蘇花公路崇德段 (太魯閣大橋北端 ‧ 清水斷崖門戶)",
+      "authority": "交通部公路局東區養護工程分局",
+      "district": "秀林鄉",
+      "lat": 24.1612,
+      "lon": 121.6522,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-054-000-03.m3u8",
+      "sourceUrl": "https://thb.gov.tw"
+    }
+  ]
+}

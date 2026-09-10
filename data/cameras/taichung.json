@@ -1,0 +1,96 @@
+{
+  "cityId": "taichung",
+  "cityName": "台中市",
+  "cameraCount": 8,
+  "updatedAt": "2026-09-10T04:30:13.520Z",
+  "cameras": [
+    {
+      "id": "TC_001",
+      "name": "西屯區 台灣大道三段與惠中路口 (台中市政府 ‧ 七期門戶)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "西屯區",
+      "lat": 24.1624,
+      "lon": 120.6472,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-178-000-01.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_002",
+      "name": "西屯區 台灣大道三段與朝富路口 (秋紅谷生態公園 ‧ 朝馬轉運站)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "西屯區",
+      "lat": 24.1672,
+      "lon": 120.6385,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-178-000-02.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_003",
+      "name": "西屯區 河南路二段與福星路口 (逢甲夜市國際商圈核心)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "西屯區",
+      "lat": 24.1788,
+      "lon": 120.6455,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-178-000-03.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_004",
+      "name": "南屯區 文心路一段與向上路二段口 (文心森林公園 ‧ 圓滿戶外劇場)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "南屯區",
+      "lat": 24.1465,
+      "lon": 120.6468,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-181-000-01.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_005",
+      "name": "中區 臺灣大道一段與建國路口 (台中火車站前站門戶)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "中區",
+      "lat": 24.1378,
+      "lon": 120.6852,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-181-000-02.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_006",
+      "name": "北區 崇德路一段與進化北路口 (崇德商圈 ‧ 北區交會要道)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "北區",
+      "lat": 24.1612,
+      "lon": 120.6865,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-174-000-01.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_007",
+      "name": "烏日區 高鐵東一路與高鐵五路口 (高鐵台中站 ‧ 新烏日三鐵共構)",
+      "authority": "臺中市政府交通局智慧交控中心",
+      "district": "烏日區",
+      "lat": 24.1122,
+      "lon": 120.6158,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-189-000-01.m3u8",
+      "sourceUrl": "https://traffic.taichung.gov.tw"
+    },
+    {
+      "id": "TC_008",
+      "name": "西屯區 環中路二段與西屯路口 (台74中彰快速公路中清西屯段)",
+      "authority": "交通部公路局中區養護工程分局",
+      "district": "西屯區",
+      "lat": 24.1795,
+      "lon": 120.6322,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-178-000-04.m3u8",
+      "sourceUrl": "https://thb.gov.tw"
+    }
+  ]
+}

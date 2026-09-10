@@ -1,0 +1,166 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-09-10T04:30:13.516Z",
+  "cities": [
+    {
+      "id": "taipei",
+      "name": "台北市",
+      "file": "data/cameras/taipei.json",
+      "cameraCount": 49,
+      "center": {
+        "lat": 25.0425,
+        "lon": 121.5053
+      },
+      "bounds": {
+        "minLat": 24.96,
+        "maxLat": 25.21,
+        "minLon": 121.45,
+        "maxLon": 121.66
+      }
+    },
+    {
+      "id": "newtaipei",
+      "name": "新北市",
+      "file": "data/cameras/newtaipei.json",
+      "cameraCount": 25,
+      "center": {
+        "lat": 25.0125,
+        "lon": 121.4688
+      },
+      "bounds": {
+        "minLat": 24.67,
+        "maxLat": 25.3,
+        "minLon": 121.28,
+        "maxLon": 122.01
+      }
+    },
+    {
+      "id": "taoyuan",
+      "name": "桃園市",
+      "file": "data/cameras/taoyuan.json",
+      "cameraCount": 23,
+      "center": {
+        "lat": 24.9936,
+        "lon": 121.301
+      },
+      "bounds": {
+        "minLat": 24.58,
+        "maxLat": 25.13,
+        "minLon": 121,
+        "maxLon": 121.48
+      }
+    },
+    {
+      "id": "taichung",
+      "name": "台中市",
+      "file": "data/cameras/taichung.json",
+      "cameraCount": 8,
+      "center": {
+        "lat": 24.1624,
+        "lon": 120.6472
+      },
+      "bounds": {
+        "minLat": 24,
+        "maxLat": 24.45,
+        "minLon": 120.45,
+        "maxLon": 121.45
+      }
+    },
+    {
+      "id": "kaohsiung",
+      "name": "高雄市",
+      "file": "data/cameras/kaohsiung.json",
+      "cameraCount": 7,
+      "center": {
+        "lat": 22.6312,
+        "lon": 120.3022
+      },
+      "bounds": {
+        "minLat": 22.45,
+        "maxLat": 23.47,
+        "minLon": 120.15,
+        "maxLon": 121.05
+      }
+    },
+    {
+      "id": "tainan",
+      "name": "台南市",
+      "file": "data/cameras/tainan.json",
+      "cameraCount": 5,
+      "center": {
+        "lat": 22.9972,
+        "lon": 120.2125
+      },
+      "bounds": {
+        "minLat": 22.88,
+        "maxLat": 23.42,
+        "minLon": 120.02,
+        "maxLon": 120.65
+      }
+    },
+    {
+      "id": "hsinchu",
+      "name": "新竹縣市",
+      "file": "data/cameras/hsinchu.json",
+      "cameraCount": 4,
+      "center": {
+        "lat": 24.8085,
+        "lon": 120.9922
+      },
+      "bounds": {
+        "minLat": 24.4,
+        "maxLat": 24.95,
+        "minLon": 120.88,
+        "maxLon": 121.35
+      }
+    },
+    {
+      "id": "yilan",
+      "name": "宜蘭縣",
+      "file": "data/cameras/yilan.json",
+      "cameraCount": 4,
+      "center": {
+        "lat": 24.7558,
+        "lon": 121.7512
+      },
+      "bounds": {
+        "minLat": 24.3,
+        "maxLat": 24.99,
+        "minLon": 121.3,
+        "maxLon": 121.95
+      }
+    },
+    {
+      "id": "hualien",
+      "name": "花蓮縣",
+      "file": "data/cameras/hualien.json",
+      "cameraCount": 3,
+      "center": {
+        "lat": 23.9932,
+        "lon": 121.6015
+      },
+      "bounds": {
+        "minLat": 23.1,
+        "maxLat": 24.38,
+        "minLon": 121.15,
+        "maxLon": 121.75
+      }
+    },
+    {
+      "id": "freeway",
+      "name": "國道全線骨幹",
+      "file": "data/cameras/freeway.json",
+      "cameraCount": 8,
+      "center": {
+        "lat": 24.5,
+        "lon": 121
+      },
+      "bounds": {
+        "minLat": 21.8,
+        "maxLat": 25.3,
+        "minLon": 120,
+        "maxLon": 122
+      }
+    }
+  ]
+}

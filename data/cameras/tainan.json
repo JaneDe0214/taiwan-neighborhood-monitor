@@ -1,0 +1,63 @@
+{
+  "cityId": "tainan",
+  "cityName": "台南市",
+  "cameraCount": 5,
+  "updatedAt": "2026-09-10T04:30:13.521Z",
+  "cameras": [
+    {
+      "id": "TN_001",
+      "name": "東區 北門路二段與民族路口 (台南火車站前站門戶)",
+      "authority": "臺南市政府交通局智慧交控中心",
+      "district": "東區",
+      "lat": 22.9972,
+      "lon": 120.2125,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-319-000-01.m3u8",
+      "sourceUrl": "https://traffic.tainan.gov.tw"
+    },
+    {
+      "id": "TN_002",
+      "name": "中西區 海安路二段與中正路口 (海安路藝術街 ‧ 國華街美食聚落)",
+      "authority": "臺南市政府交通局智慧交控中心",
+      "district": "中西區",
+      "lat": 22.9935,
+      "lon": 120.1972,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-319-000-02.m3u8",
+      "sourceUrl": "https://traffic.tainan.gov.tw"
+    },
+    {
+      "id": "TN_003",
+      "name": "安平區 安平路與古堡街口 (安平老街 ‧ 安平古堡歷史園區)",
+      "authority": "臺南市政府交通局智慧交控中心",
+      "district": "安平區",
+      "lat": 23.0012,
+      "lon": 120.1608,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-327-000-01.m3u8",
+      "sourceUrl": "https://traffic.tainan.gov.tw"
+    },
+    {
+      "id": "TN_004",
+      "name": "安平區 永華路二段與中華西路二段口 (臺南市政府永華市政中心)",
+      "authority": "臺南市政府交通局智慧交控中心",
+      "district": "安平區",
+      "lat": 22.9902,
+      "lon": 120.1865,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-327-000-02.m3u8",
+      "sourceUrl": "https://traffic.tainan.gov.tw"
+    },
+    {
+      "id": "TN_005",
+      "name": "東區 中華東路一段與小東路口 (南紡購物中心門戶)",
+      "authority": "臺南市政府交通局智慧交控中心",
+      "district": "東區",
+      "lat": 22.9985,
+      "lon": 120.2335,
+      "type": "hls",
+      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-14-327-000-03.m3u8",
+      "sourceUrl": "https://traffic.tainan.gov.tw"
+    }
+  ]
+}
