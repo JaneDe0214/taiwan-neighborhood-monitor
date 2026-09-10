@@ -1958,8 +1958,45 @@ a.coord-tag:hover {
 }
 
 .transit-corridor-bar.is-collapsed-bar {
-  padding: 3px 10px;
-  min-height: 30px;
+  padding: 3px 8px;
+  min-height: 34px;
+}
+.integrated-commute-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.compact-info-stream {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.compact-info-stream::-webkit-scrollbar {
+  display: none;
+}
+.stream-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.77rem;
+  color: #e2e8f0;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.stream-pill strong {
+  color: #38bdf8;
+  font-weight: 700;
+}
+.stream-divider {
+  color: rgba(255, 255, 255, 0.18);
+  font-size: 0.75rem;
+  font-weight: 300;
 }
 
 .transit-corridor-bar::before {
@@ -6984,26 +7021,8 @@ body.native-mobile-mode .parking-lot-chip {
     <!-- 左側視訊矩陣區 -->
     <section class="matrix-section">
       <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
-            <!-- 出門前 3 秒智慧出行快報膠囊 -->
-      <div id="smartCommuteCapsule" class="smart-commute-capsule" title="點擊展開通勤詳細資訊與轉乘指引">
-        <span class="capsule-badge"><i class="fa-solid fa-bolt"></i> 3秒出行速報</span>
-        <div class="capsule-text-wrap" id="smartCommuteCapsuleContent">
-          <span class="capsule-item"><i class="fa-solid fa-cloud-sun"></i> 載入即時天候與交通速報...</span>
-        </div>
-        <i class="fa-solid fa-angle-right capsule-arrow"></i>
-      </div>
-
-      <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
+      <!-- 雙埔出行速報與即時路網 (收合時為超薄整合膠囊列，展開時為詳細軌道走廊) -->
       <div id="transitTransitBar" class="transit-corridor-bar is-collapsed-bar"></div>
-
-      <!-- 鏡頭即時快搜與熱門標籤篩選列 -->
-      <div class="camera-filter-bar" id="cameraFilterBar">
-        <div class="filter-search-wrap">
-          <i class="fa-solid fa-magnifying-glass filter-search-icon"></i>
-          <input type="text" id="cameraSearchInput" class="filter-search-input" placeholder="快速搜尋名稱、路段、景點..." autocomplete="off">
-          <button class="filter-clear-btn" id="filterClearBtn" title="清除搜尋"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-      </div>
 
       <!-- 攝影機視訊卡片網格 -->
       <div id="cameraGrid" class="camera-grid grid-6">
@@ -12496,27 +12515,23 @@ class TwinCityTransitMonitor {
     this._lastPlansSig = plansSig;
 
     if (isCollapsed) {
-      const thsrStatus = mainSlot.querySelector('[data-c-thsr-status]');
-      const tymetroStatus = mainSlot.querySelector('[data-c-tymetro-status]');
-      if (!thsrStatus || !tymetroStatus) return false;
+      const thsrPill = mainSlot.querySelector('[data-c-thsr]');
+      const tymetroPill = mainSlot.querySelector('[data-c-tymetro]');
+      if (!thsrPill || !tymetroPill) return false;
 
-      const thsrChipClass = thsr.isOutOfService ? 'chip-muted' : (thsr.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
-      thsrStatus.className = `pill-status-chip ${thsrChipClass}`;
-      thsrStatus.textContent = thsr.platformStatus;
+      const thsrWait = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (${Math.ceil(thsr.waitSec / 60)}分後)` : '';
+      thsrPill.innerHTML = `<i class="fa-solid fa-bolt" style="color:#ff7700;"></i> 高鐵 <strong>${thsr.depTime}</strong>${thsrWait}`;
 
-      const thsrFeed = mainSlot.querySelector('[data-c-thsr-feed]');
-      if (thsrFeed) {
-        thsrFeed.innerHTML = `<span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}`;
-      }
+      const tymetroWait = (tymetro.waitSec != null && tymetro.waitSec > 0) ? ` (${Math.ceil(tymetro.waitSec / 60)}分後)` : '';
+      tymetroPill.innerHTML = `<i class="fa-solid fa-route" style="color:#8b5cf6;"></i> 機捷 <strong>${tymetro.depTime}</strong>${tymetroWait}`;
 
-      const tymetroChipClass = tymetro.isOutOfService ? 'chip-muted' : (tymetro.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
-      tymetroStatus.className = `pill-status-chip ${tymetroChipClass}`;
-      tymetroStatus.textContent = tymetro.platformStatus;
-
-      const tymetroFeed = mainSlot.querySelector('[data-c-tymetro-feed]');
-      if (tymetroFeed) {
-        tymetroFeed.innerHTML = `<span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}`;
-      }
+      const brief = this.getCommuteBriefInfo();
+      const gearEl = mainSlot.querySelector('[data-c-gear]');
+      if (gearEl) gearEl.innerHTML = `${brief.umbrellaTip} ‧ ${brief.outfitTip}`;
+      const weatherEl = mainSlot.querySelector('[data-c-weather]');
+      if (weatherEl) weatherEl.innerHTML = brief.weatherPart;
+      const bikeEl = mainSlot.querySelector('[data-c-bike]');
+      if (bikeEl) bikeEl.innerHTML = brief.bikePart;
 
       return true;
     } else {
@@ -12762,67 +12777,122 @@ class TwinCityTransitMonitor {
     }
   }
 
-  // 渲染超矮迷你收合橫條 HTML (長輩友善大字快覽版：方向明確、大字發車時間、即時狀態一目了然)
+  // 取得出門前裝備、天氣與車況速查簡訊 (雨傘、穿衣、天候氣溫、YouBike)
+  getCommuteBriefInfo() {
+    let umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴免帶傘</span>';
+    let outfitTip = '👕 舒適穿著';
+    let weatherPart = '🌤️ 雙埔';
+
+    const wm = (typeof window !== 'undefined') ? window.weatherMonitor : null;
+    if (wm) {
+      const dual = wm.currentDualData;
+      const single = wm.currentData;
+      let cur = null;
+      let prob = 0;
+      let locationLabel = this.direction === 'to_qingpu' ? '新埔' : '青埔';
+
+      if (dual) {
+        const qp = dual.qp || dual.qpData;
+        const bp = dual.bp || dual.bpData;
+        const originData = this.direction === 'to_qingpu' ? bp : qp;
+        const backupData = this.direction === 'to_qingpu' ? qp : bp;
+        const main = (originData && originData.weather?.current) ? originData : backupData;
+
+        if (main && main.weather?.current) {
+          cur = main.weather.current;
+          const p = Array.isArray(main.weather.hourly?.precipitation_probability) ? main.weather.hourly.precipitation_probability[0] : 0;
+          prob = p || 0;
+        }
+      } else if (single && single.weather?.current) {
+        cur = single.weather.current;
+        prob = Array.isArray(single.weather.hourly?.precipitation_probability) ? single.weather.hourly.precipitation_probability[0] : 0;
+        locationLabel = '當地';
+      }
+
+      if (cur) {
+        const temp = cur.temperature_2m != null ? Math.round(cur.temperature_2m) : null;
+        const appTemp = cur.apparent_temperature != null ? Math.round(cur.apparent_temperature) : temp;
+        const rainProbVal = Math.round(prob);
+        const prec = (cur.precipitation || 0) + (cur.rain || 0);
+        const code = cur.weather_code != null ? cur.weather_code : -1;
+        const isRaining = prec > 0.1 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96].includes(code);
+
+        if (isRaining) {
+          umbrellaTip = '<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨中 必帶傘</span>';
+        } else if (rainProbVal >= 30) {
+          umbrellaTip = `<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨 ${rainProbVal}% 備傘</span>`;
+        } else {
+          umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴免帶傘</span>';
+        }
+
+        if (appTemp !== null) {
+          if (appTemp < 17) outfitTip = '🧥 添外套防寒';
+          else if (appTemp <= 22) outfitTip = '🧥 備薄外套';
+          else if (appTemp >= 29) outfitTip = '☀️ 留意防曬';
+          else outfitTip = '👕 舒適穿著';
+        }
+
+        weatherPart = `🌤️ ${locationLabel} ${temp !== null ? `${temp}°C` : ''}`;
+      }
+    }
+
+    let bikePart = '🚲 YouBike充足';
+    if (wm && Array.isArray(wm.youbikeStations) && wm.youbikeStations.length > 0) {
+      const keyKw = this.direction === 'to_qingpu' ? '新埔' : '高鐵';
+      const st = wm.youbikeStations.find(s => s.name && s.name.includes(keyKw)) || wm.youbikeStations[0];
+      if (st && typeof st.bikes === 'number') {
+        const eText = st.ebikes ? ` (電輔${st.ebikes})` : '';
+        bikePart = `🚲 ${st.name.replace(/YouBike2.0_/g, '')} 剩 ${st.bikes} 台${eText}`;
+      }
+    }
+
+    return { umbrellaTip, outfitTip, weatherPart, bikePart };
+  }
+
+  // 渲染雙埔出行速報與即時路網整合橫條 HTML (超薄 34px ‧ 高度極致節省 ‧ 直覺清晰易懂)
   renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular) {
     const isToQingpu = this.direction === 'to_qingpu';
-
     const activeAlert = this.alerts.find(a => a.active !== false);
 
-    // 高鐵狀態晶片樣式
-    const thsrChipClass = thsr.isOutOfService ? 'chip-muted' : (thsr.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
-    // 機捷狀態晶片樣式
-    const tymetroChipClass = tymetro.isOutOfService ? 'chip-muted' : (tymetro.waitSec <= 60 ? 'chip-urgent' : 'chip-active');
+    const brief = this.getCommuteBriefInfo();
 
-    // 高鐵線大字快覽膠囊
-    const thsrPillHtml = `
-      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵：點擊展開查看詳細路線">
-        <span class="pill-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
-        <span class="pill-dep-time">${thsr.depTime} 發車</span>
-        <span class="pill-status-chip ${thsrChipClass}" data-c-thsr-status>${thsr.platformStatus}</span>
-        <span class="pill-train-code">(${thsr.trainNo}次)</span>
-        <span class="pill-transit-feed" data-c-thsr-feed title="板南線轉乘狀態"><span class="feed-dot bannan-dot"></span>板南 ${bannan.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
-      </div>
-    `;
-
-    // 機捷線大字快覽膠囊
-    const tymetroPillHtml = `
-      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷：點擊展開查看詳細路線">
-        <span class="pill-badge"><i class="fa-solid fa-route"></i> 機捷</span>
-        <span class="pill-dep-time">${tymetro.depTime} 發車</span>
-        <span class="pill-status-chip ${tymetroChipClass}" data-c-tymetro-status>${tymetro.platformStatus}</span>
-        <span class="pill-train-type ${tymetro.isExpress ? 'express' : ''}">${tymetro.rawType}</span>
-        <span class="pill-transit-feed" data-c-tymetro-feed title="環狀線轉乘狀態"><span class="feed-dot circular-dot"></span>環狀 ${circular.platformStatus.replace('班距約 ', '').replace('等車 ', '')}</span>
-      </div>
-    `;
+    const thsrWait = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (${Math.ceil(thsr.waitSec / 60)}分後)` : '';
+    const tymetroWait = (tymetro.waitSec != null && tymetro.waitSec > 0) ? ` (${Math.ceil(tymetro.waitSec / 60)}分後)` : '';
 
     return `
-      <div class="transit-compact-bar">
-        <div class="compact-left-group">
-          <!-- 醒目通勤方向按鈕 (大字體，點擊立即翻轉) -->
-          <button class="compact-badge-dir-btn" onclick="window.transitMonitor.toggleDirection()" title="點擊切換通勤方向 (目前：${directionLabel})">
-            <span>${directionLabel}</span>
-            <i class="fa-solid fa-repeat dir-swap-icon"></i>
-          </button>
-          
-          ${activeAlert ? `
-            <span class="incident-badge pulse-red" style="cursor:pointer;" onclick="window.transitMonitor.toggleCollapse()" title="${activeAlert.lineName}${activeAlert.title}：${activeAlert.desc}">
-              🚨 ${activeAlert.lineName}${activeAlert.title}
-            </span>
-          ` : ''}
+      <div class="transit-compact-bar integrated-commute-bar">
+        <!-- 1. 左側：醒目通勤方向翻轉按鈕 -->
+        <button class="compact-badge-dir-btn" onclick="window.transitMonitor.toggleDirection()" title="點擊切換通勤方向 (目前：${directionLabel})">
+          <span>${directionLabel}</span>
+          <i class="fa-solid fa-repeat dir-swap-icon"></i>
+        </button>
 
-          <!-- 高鐵大字快覽卡 -->
-          ${thsrPillHtml}
+        ${activeAlert ? `
+          <span class="incident-badge pulse-red" style="cursor:pointer;" onclick="window.transitMonitor.toggleCollapse()" title="${activeAlert.lineName}${activeAlert.title}：${activeAlert.desc}">
+            🚨 ${activeAlert.lineName}${activeAlert.title}
+          </span>
+        ` : ''}
 
-          <!-- 機捷大字快覽卡 -->
-          ${tymetroPillHtml}
+        <!-- 2. 中間：出門速查串流 (雨傘穿衣 + 氣候 + YouBike車況 + 高鐵/機捷班次) -->
+        <div class="compact-info-stream" onclick="window.transitMonitor.toggleCollapse()" title="點擊展開雙埔路網詳細路線與轉乘動線">
+          <span class="stream-pill gear-pill" data-c-gear>${brief.umbrellaTip} ‧ ${brief.outfitTip}</span>
+          <span class="stream-divider">│</span>
+          <span class="stream-pill weather-pill" data-c-weather>${brief.weatherPart}</span>
+          <span class="stream-divider">│</span>
+          <span class="stream-pill bike-pill" data-c-bike>${brief.bikePart}</span>
+          <span class="stream-divider">│</span>
+          <span class="stream-pill thsr-pill" data-c-thsr><i class="fa-solid fa-bolt" style="color:#ff7700;"></i> 高鐵 <strong>${thsr.depTime}</strong>${thsrWait}</span>
+          <span class="stream-divider">│</span>
+          <span class="stream-pill tymetro-pill" data-c-tymetro><i class="fa-solid fa-route" style="color:#8b5cf6;"></i> 機捷 <strong>${tymetro.depTime}</strong>${tymetroWait}</span>
         </div>
 
+        <!-- 3. 右側：時刻表按鈕 + 展開路網詳情按鈕 -->
         <div class="compact-actions-group">
           <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看今日搭車時間表">
             <i class="fa-regular fa-clock"></i> <span>時刻表</span>
           </button>
-          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看搭車指南與詳細路線">
-            <span>路線詳情</span> <i class="fa-solid ${this.isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
+          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開雙埔路網詳細路線與動線">
+            <span>路網詳情</span> <i class="fa-solid ${this.isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
           </button>
         </div>
       </div>
@@ -16097,14 +16167,6 @@ class MonitorApp {
     this.updateCommuteCapsule();
     this.commuteCapsuleTimer = setInterval(() => this.updateCommuteCapsule(), 10000);
 
-    const capsuleBtn = document.getElementById('smartCommuteCapsule');
-    if (capsuleBtn) {
-      capsuleBtn.addEventListener('click', () => {
-        if (this.transitMonitor && typeof this.transitMonitor.toggleCollapse === 'function') {
-          this.transitMonitor.toggleCollapse();
-        }
-      });
-    }
 
     // 視窗自適應計算
     this.applyAdaptiveViewportFit();
@@ -16199,151 +16261,22 @@ class MonitorApp {
   }
 
   // ===== 出門前 3 秒智慧出行快報膠囊 =====
-  // ===== 出門前 3 秒智慧出行快報膠囊 =====
+  // 出行速報與雙埔路網即時同步
   updateCommuteCapsule() {
-    const capsuleEl = document.getElementById('smartCommuteCapsuleContent');
-    if (!capsuleEl) return;
-
-    // 1. 出門裝備速查：一眼即知要不要帶雨傘、要不要穿外套
-    let umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴朗無雨免帶傘</span>';
-    let outfitTip = '👕 舒適穿著';
-    let weatherPart = '🌤️ 今日天候良好';
-
-    if (this.weatherMonitor) {
-      const dual = this.weatherMonitor.currentDualData;
-      const single = this.weatherMonitor.currentData;
-      let cur = null;
-      let prob = 0;
-      let locationLabel = '雙埔';
-
-      if (dual) {
-        const qp = dual.qp || dual.qpData;
-        const bp = dual.bp || dual.bpData;
-        if (qp && qp.weather && qp.weather.current) {
-          cur = qp.weather.current;
-          const qpProb = Array.isArray(qp.weather.hourly?.precipitation_probability) ? qp.weather.hourly.precipitation_probability[0] : 0;
-          prob = qpProb || 0;
-
-          if (bp && bp.weather && bp.weather.current) {
-            const bpCur = bp.weather.current;
-            const bpProb = Array.isArray(bp.weather.hourly?.precipitation_probability) ? bp.weather.hourly.precipitation_probability[0] : 0;
-            if (bpProb > prob) {
-              prob = bpProb;
-            }
-            if ((bpCur.precipitation || 0) > (cur.precipitation || 0)) {
-              cur = bpCur;
-              locationLabel = '新埔';
-            } else {
-              locationLabel = '青埔';
-            }
-          }
-        }
-      } else if (single && single.weather && single.weather.current) {
-        cur = single.weather.current;
-        const sProb = Array.isArray(single.weather.hourly?.precipitation_probability) ? single.weather.hourly.precipitation_probability[0] : 0;
-        prob = sProb || 0;
-        locationLabel = this.currentCenterData?.name || '當地';
-      }
-
-      if (cur) {
-        const temp = cur.temperature_2m != null ? Math.round(cur.temperature_2m) : null;
-        const appTemp = cur.apparent_temperature != null ? Math.round(cur.apparent_temperature) : temp;
-        const rainProbVal = Math.round(prob);
-        const prec = (cur.precipitation || 0) + (cur.rain || 0);
-        const code = cur.weather_code != null ? cur.weather_code : -1;
-        const isRaining = prec > 0.1 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96].includes(code);
-
-        // 雨傘提醒
-        if (isRaining) {
-          umbrellaTip = '<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨中 必帶雨傘</span>';
-        } else if (rainProbVal >= 30) {
-          umbrellaTip = `<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨機率 ${rainProbVal}% 建議帶傘</span>`;
-        } else {
-          umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴朗無雨免帶傘</span>';
-        }
-
-        // 外套與穿著提醒
-        if (appTemp !== null) {
-          if (appTemp < 17) {
-            outfitTip = '🧥 氣溫偏低 添外套防寒';
-          } else if (appTemp <= 22) {
-            outfitTip = '🧥 稍有涼意 建議備薄外套';
-          } else if (appTemp >= 29) {
-            outfitTip = '☀️ 氣候炎熱 留意防曬補水';
-          } else {
-            outfitTip = '👕 舒適穿著';
-          }
-        }
-
-        const weatherCodeInfo = this.weatherMonitor.getWeatherCodeInfo ? this.weatherMonitor.getWeatherCodeInfo(code) : { text: '良好' };
-        const rainStr = rainProbVal > 0 ? ` (降雨 ${rainProbVal}%)` : '';
-        weatherPart = `🌤️ ${locationLabel} ${temp !== null ? `${temp}°C` : ''} ${weatherCodeInfo.text}${rainStr}`;
-      }
+    if (this.transitMonitor && typeof this.transitMonitor.render === "function") {
+      this.transitMonitor.render();
     }
-
-    // 2. YouBike 核心站點車況
-    let youbikePart = '🚲 站前車況充裕';
-    if (this.weatherMonitor && Array.isArray(this.weatherMonitor.youbikeStations) && this.weatherMonitor.youbikeStations.length > 0) {
-      const keyStation = this.weatherMonitor.youbikeStations.find(st => st.name && (st.name.includes('高鐵') || st.name.includes('新埔') || st.name.includes('站前'))) || this.weatherMonitor.youbikeStations[0];
-      if (keyStation && typeof keyStation.bikes === 'number') {
-        const eText = keyStation.ebikes ? ` (電輔車${keyStation.ebikes})` : '';
-        youbikePart = `🚲 ${keyStation.name.replace(/YouBike2.0_/g, '')} 剩 ${keyStation.bikes} 台${eText}`;
-      }
-    }
-
-    // 3. 大眾運輸速報
-    let transitPart = '🚄 鐵道正常運轉';
-    if (this.transitMonitor) {
-      const thsr = this.transitMonitor.getThsrNextTrain ? this.transitMonitor.getThsrNextTrain() : null;
-      if (thsr && thsr.depTime) {
-        const minText = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (${Math.ceil(thsr.waitSec / 60)}分後)` : '';
-        transitPart = `🚄 高鐵 ${thsr.depTime} 發車${minText}`;
-      }
-    }
-
-    capsuleEl.innerHTML = `
-      <span class="capsule-item capsule-gear">${umbrellaTip} ‧ ${outfitTip}</span>
-      <span class="capsule-divider">│</span>
-      <span class="capsule-item">${weatherPart}</span>
-      <span class="capsule-divider">│</span>
-      <span class="capsule-item">${youbikePart}</span>
-      <span class="capsule-divider">│</span>
-      <span class="capsule-item">${transitPart}</span>
-    `;
   }
 
   // ===== 鏡頭快搜與標籤篩選 =====
   clearFilters() {
     this.filterKeyword = '';
     this.filterTag = 'all';
-    const input = document.getElementById('cameraSearchInput');
-    const clearBtn = document.getElementById('filterClearBtn');
-    if (input) input.value = '';
-    if (clearBtn) clearBtn.style.display = 'none';
-
-
     this.renderVideoMatrix();
   }
 
   // 綁定 UI 事件
   bindEvents() {
-    // 快速搜尋輸入框監聽 (即時響應)
-    const searchInput = document.getElementById('cameraSearchInput');
-    const clearBtn = document.getElementById('filterClearBtn');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        this.filterKeyword = (e.target.value || '').trim();
-        if (clearBtn) {
-          clearBtn.style.display = this.filterKeyword ? 'block' : 'none';
-        }
-        this.renderVideoMatrix();
-      });
-    }
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        this.clearFilters();
-      });
-    }
     // 中心切換按鈕
     document.querySelectorAll('.center-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -16614,13 +16547,10 @@ class MonitorApp {
 
       // 進到觀光和日本的時候，交通資訊自動隱藏
       const transitBar = document.getElementById('transitTransitBar');
-      const commuteCapsule = document.getElementById('smartCommuteCapsule');
       if (centerId === 'tourist' || centerId === 'japan') {
         if (transitBar) transitBar.style.display = 'none';
-        if (commuteCapsule) commuteCapsule.style.display = 'none';
       } else {
         if (transitBar) transitBar.style.display = '';
-        if (commuteCapsule) commuteCapsule.style.display = '';
       }
       this.currentCameras = cameras || [];
 
