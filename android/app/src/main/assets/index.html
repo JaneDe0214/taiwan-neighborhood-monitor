@@ -12653,9 +12653,17 @@ class TwinCityTransitMonitor {
       const weatherEl = mainSlot.querySelector('[data-c-weather]');
       if (weatherEl) weatherEl.innerHTML = brief.weatherPart;
       const bikeEl = mainSlot.querySelector('[data-c-bike]');
-      if (bikeEl) {
-        bikeEl.innerHTML = brief.bikePart;
-        if (brief.bikeTooltip) bikeEl.title = brief.bikeTooltip;
+      const bikeDiv = mainSlot.querySelector('[data-c-bike-div]');
+      if (brief.bikePart) {
+        if (bikeEl) {
+          bikeEl.style.display = '';
+          bikeEl.innerHTML = brief.bikePart;
+          if (brief.bikeTooltip) bikeEl.title = brief.bikeTooltip;
+        }
+        if (bikeDiv) bikeDiv.style.display = '';
+      } else {
+        if (bikeEl) bikeEl.style.display = 'none';
+        if (bikeDiv) bikeDiv.style.display = 'none';
       }
 
       return true;
@@ -12949,60 +12957,48 @@ class TwinCityTransitMonitor {
       }
     }
 
-    let bikePart = '🚲 YouBike充足';
-    let bikeTooltip = '點擊展開查看雙埔生活圈 7 大核心 YouBike 站點';
-    const bikeStations = (wm && typeof wm.getDualCoreStations === 'function') 
-      ? wm.getDualCoreStations() 
-      : (wm && Array.isArray(wm.youbikeStations) ? wm.youbikeStations : []);
+    let bikePart = '';
+    let bikeTooltip = '';
 
-    if (bikeStations && bikeStations.length > 0) {
-      if (this.direction === 'to_qingpu') {
-        // 新埔出發往青埔：新埔出門優先顯示捷運新埔站(3號出口) ➔ 次選民生路二段226巷8弄
-        const s1 = bikeStations.find(s => s.name && s.name.includes('新埔站')) || bikeStations.find(s => s.city === 'bp');
-        const s2 = bikeStations.find(s => s.name && s.name.includes('民生路'));
-        const b1 = (s1 && typeof s1.currentBikes === 'number') ? s1.currentBikes : (s1 ? s1.bikes : null);
-        const b2 = (s2 && typeof s2.currentBikes === 'number') ? s2.currentBikes : (s2 ? s2.bikes : null);
-        const sp1 = (s1 && typeof s1.currentSpaces === 'number') ? s1.currentSpaces : (s1 ? s1.spaces : null);
-        const sp2 = (s2 && typeof s2.currentSpaces === 'number') ? s2.currentSpaces : (s2 ? s2.spaces : null);
+    // 依使用者指示：收合時新埔到青埔不顯示 UBIKE；青埔出發時 0 台不顯示，按照優先順序顯示有車站點
+    if (this.direction !== 'to_qingpu') {
+      const bikeStations = (wm && typeof wm.getDualCoreStations === 'function') 
+        ? wm.getDualCoreStations() 
+        : (wm && Array.isArray(wm.youbikeStations) ? wm.youbikeStations : []);
 
-        if (b1 != null && b1 > 0) {
-          const eb = (s1.currentEbikes != null) ? s1.currentEbikes : s1.ebikes;
+      if (bikeStations && bikeStations.length > 0) {
+        // 青埔出發：家門口出門不搭高鐵騎車，優先順序：領航南青昇二街口 ➔ 青昇公園 ➔ 青峰青昇路口 (0 台不顯示，依序找有車站點)
+        const candidateNames = ['領航南青昇二街口', '青昇公園', '青峰青昇路口'];
+        const candidates = candidateNames.map(name => {
+          return bikeStations.find(s => s.name && (s.name.includes(name) || (name.includes('領航南') && s.name.includes('領航南'))));
+        }).filter(Boolean);
+
+        // 依優先順序挑選第一家可借台數 > 0 的站點 (0 台直接略過不顯示)
+        const available = candidates.find(s => {
+          const b = (typeof s.currentBikes === 'number') ? s.currentBikes : s.bikes;
+          return b != null && b > 0;
+        });
+
+        if (available) {
+          const b = (typeof available.currentBikes === 'number') ? available.currentBikes : available.bikes;
+          const eb = (typeof available.currentEbikes === 'number') ? available.currentEbikes : available.ebikes;
           const eText = eb ? ` (電輔${eb})` : '';
-          bikePart = `🚲 捷運新埔站 剩 ${b1} 台${eText}`;
-        } else if (b1 === 0 && b2 != null && b2 > 0) {
-          bikePart = `🚲 新埔站 0台 ‧ 民生路巷 剩 ${b2}台`;
-        } else if (b1 === 0) {
-          bikePart = `🚲 捷運新埔站 0台 (${sp1 != null ? `空位${sp1}` : '可還'})`;
+          const shortName = available.name
+            .replace(/YouBike2\.0_/g, '')
+            .replace('二街口', '')
+            .replace('路口', '');
+          bikePart = `🚲 ${shortName} 剩 ${b} 台${eText}`;
+        } else {
+          // 若家門週邊三站目前皆 0 台
+          bikePart = '🚲 家門週邊暫無車';
         }
-        bikeTooltip = `【新埔出門借車】捷運新埔站(3號出口): ${b1 ?? '--'}台可借 (${sp1 ?? '--'}空位) | 民生路二段226巷8弄: ${b2 ?? '--'}台可借 (${sp2 ?? '--'}空位)`;
-      } else {
-        // 青埔出發往新埔：從家裡出門到高鐵不用再騎車，出門優先順序：領航南青昇二街口 ➔ 青昇公園 ➔ 青峰青昇路口 (嚴禁出門顯示高鐵)
-        const s1 = bikeStations.find(s => s.name && (s.name.includes('領航南青昇二街口') || s.name.includes('領航南')));
-        const s2 = bikeStations.find(s => s.name && s.name.includes('青昇公園'));
-        const s3 = bikeStations.find(s => s.name && (s.name.includes('青峰青昇路口') || s.name.includes('青峰')));
 
-        const b1 = (s1 && typeof s1.currentBikes === 'number') ? s1.currentBikes : (s1 ? s1.bikes : null);
-        const b2 = (s2 && typeof s2.currentBikes === 'number') ? s2.currentBikes : (s2 ? s2.bikes : null);
-        const b3 = (s3 && typeof s3.currentBikes === 'number') ? s3.currentBikes : (s3 ? s3.bikes : null);
-
-        const sp1 = (s1 && typeof s1.currentSpaces === 'number') ? s1.currentSpaces : (s1 ? s1.spaces : null);
-        const sp2 = (s2 && typeof s2.currentSpaces === 'number') ? s2.currentSpaces : (s2 ? s2.spaces : null);
-        const sp3 = (s3 && typeof s3.currentSpaces === 'number') ? s3.currentSpaces : (s3 ? s3.spaces : null);
-
-        if (b1 != null && b1 > 0) {
-          const eb = (s1.currentEbikes != null) ? s1.currentEbikes : s1.ebikes;
-          const eText = eb ? ` (電輔${eb})` : '';
-          bikePart = `🚲 領航南青昇 剩 ${b1} 台${eText}`;
-        } else if (b1 === 0) {
-          if (b2 != null && b2 > 0) {
-            bikePart = `🚲 領航南 0台 ‧ 青昇公園 剩 ${b2}台`;
-          } else if (b3 != null && b3 > 0) {
-            bikePart = `🚲 領航南 0台 ‧ 青峰路口 剩 ${b3}台`;
-          } else {
-            bikePart = `🚲 領航南 0台 (${sp1 != null ? `空位${sp1}` : '可還'})`;
-          }
-        }
-        bikeTooltip = `【青埔出門借車】領航南青昇二街口: ${b1 ?? '--'}台可借 (${sp1 ?? '--'}空位) | 青昇公園: ${b2 ?? '--'}台可借 (${sp2 ?? '--'}空位) | 青峰青昇路口: ${b3 ?? '--'}台可借 (${sp3 ?? '--'}空位)`;
+        const tooltipParts = candidates.map(s => {
+          const b = (typeof s.currentBikes === 'number') ? s.currentBikes : s.bikes;
+          const sp = (typeof s.currentSpaces === 'number') ? s.currentSpaces : s.spaces;
+          return `${s.name}: ${b ?? '--'}台可借 (${sp ?? '--'}空位)`;
+        });
+        bikeTooltip = `【青埔出門借車 (依優先序)】` + tooltipParts.join(' | ');
       }
     }
 
@@ -13038,8 +13034,10 @@ class TwinCityTransitMonitor {
           <span class="stream-pill gear-pill" data-c-gear>${brief.umbrellaTip} ‧ ${brief.outfitTip}</span>
           <span class="stream-divider">│</span>
           <span class="stream-pill weather-pill" data-c-weather>${brief.weatherPart}</span>
-          <span class="stream-divider">│</span>
-          <span class="stream-pill bike-pill" data-c-bike title="${brief.bikeTooltip || '點擊展開查看雙埔生活圈 7 大核心 YouBike 站點'}">${brief.bikePart}</span>
+          ${brief.bikePart ? `
+            <span class="stream-divider bike-divider" data-c-bike-div>│</span>
+            <span class="stream-pill bike-pill" data-c-bike title="${brief.bikeTooltip || '點擊展開查看雙埔生活圈 7 大核心 YouBike 站點'}">${brief.bikePart}</span>
+          ` : ''}
           <span class="stream-divider">│</span>
           <!-- 高鐵月台看板風格晶片 (標註往哪裡、發車時間、即時秒數跳動) -->
           <div class="pids-stream-card pids-thsr" data-c-thsr title="高鐵：${isToQingpu ? '往桃園' : '往板橋'}，預計 ${thsr.depTime} 發車">
@@ -13329,19 +13327,15 @@ class TwinCityTransitMonitor {
                     stations.find(s => s.name && s.name.includes('IKEA')) ||
                     stations.find(s => s.city === 'qp') || stations[0];
     } else {
-      // 青埔出發：家門口出門不搭高鐵騎車，優先：領航南青昇二街口 ➔ 青昇公園 ➔ 青峰青昇路口 (出門絕不顯示高鐵)
-      const qp1 = stations.find(s => s.name && (s.name.includes('領航南青昇二街口') || s.name.includes('領航南')));
-      const qp2 = stations.find(s => s.name && s.name.includes('青昇公園'));
-      const qp3 = stations.find(s => s.name && (s.name.includes('青峰青昇路口') || s.name.includes('青峰')));
-      originStation = qp1 || qp2 || qp3 || stations[0];
+      // 青埔出發：家門口出門不搭高鐵騎車，0 台不顯示，按照優先順序挑選第一家有車之站點：領航南青昇二街口 ➔ 青昇公園 ➔ 青峰青昇路口
+      const qpCandidates = [
+        stations.find(s => s.name && (s.name.includes('領航南青昇二街口') || s.name.includes('領航南'))),
+        stations.find(s => s.name && s.name.includes('青昇公園')),
+        stations.find(s => s.name && (s.name.includes('青峰青昇路口') || s.name.includes('青峰')))
+      ].filter(Boolean);
 
-      if (qp1 && qp1.currentBikes === 0) {
-        if (qp2 && typeof qp2.currentBikes === 'number' && qp2.currentBikes > 0) {
-          originAltText = ` (青昇公園 剩 ${qp2.currentBikes} 台)`;
-        } else if (qp3 && typeof qp3.currentBikes === 'number' && qp3.currentBikes > 0) {
-          originAltText = ` (青峰路口 剩 ${qp3.currentBikes} 台)`;
-        }
-      }
+      const qpAvailable = qpCandidates.find(s => typeof s.currentBikes === 'number' && s.currentBikes > 0);
+      originStation = qpAvailable || qpCandidates[0] || stations[0];
 
       // 下車借車 (抵達新埔)：捷運新埔站 ➔ 民生路
       destStation = stations.find(s => s.name && s.name.includes('新埔站')) ||
