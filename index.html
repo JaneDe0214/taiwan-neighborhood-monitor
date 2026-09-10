@@ -3935,7 +3935,22 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   color: #c084fc;
 }
 
-/* 科技感極簡 LIVE 狀態微型膠囊標籤 (取代原官方直連大文字，極致省空間且美觀) */
+/* 科技感極簡 LIVE 狀態微型呼吸綠燈 (取代文字標籤，零占空間，直覺清晰) */
+.live-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981, 0 0 10px rgba(16, 185, 129, 0.4);
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 3px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  animation: live-dot-pulse 1.4s infinite ease-in-out;
+}
+
+/* 科技感極簡 LIVE 狀態微型膠囊標籤 (相容保留) */
 .live-chip-badge {
   display: inline-flex;
   align-items: center;
@@ -11153,6 +11168,7 @@ class TwinCityTransitMonitor {
     this.nearbyBusStates = {};
     this.lastNearbyTickTime = Date.now();
     this.lastNearbySignature = null;       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
+    this.metroSmoothTracker = new Map();   // 捷運秒級航位推測平滑追蹤器 (補足 API 間隔，保證秒數平滑跳動，永不定格)
 
 // 台灣高鐵官方最新真實時刻表基準 (板橋南下往桃園，保證停靠桃園，共 55 班)
     this.thsrSouthTrains = [
@@ -12210,26 +12226,54 @@ class TwinCityTransitMonitor {
       }
 
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-        const baseTime = res.updatedAt ? new Date(res.updatedAt).getTime() : nowMs;
+        const clientNowMs = Date.now();
         this.metroLiveData = res.data.map(item => {
           let sec = typeof item.remainSec === 'number' && !isNaN(item.remainSec) ? item.remainSec : 0;
           if (!sec && item.countdownText) {
             const mMatch = item.countdownText.match(/(\d+):(\d+)/);
             if (mMatch) {
               sec = parseInt(mMatch[1], 10) * 60 + parseInt(mMatch[2], 10);
+            } else if (item.countdownText.includes('進站')) {
+              sec = 20;
             } else if (item.countdownText.includes('約')) {
               const minMatch = item.countdownText.match(/(\d+)/);
               if (minMatch) sec = parseInt(minMatch[1], 10) * 60;
             }
           }
+
+          // 航位推測與平滑補足引擎 (Dead Reckoning Fusion)：
+          // 透過 Station + Dest 唯一識別，解決伺服器 HTML 快取 15~30 秒更新間隔導致前端秒數定格或回跳的問題
+          const trackerKey = `${item.station || ''}_${item.dest || ''}`;
+          const existing = this.metroSmoothTracker.get(trackerKey);
+          let targetArrivalMs = clientNowMs + sec * 1000;
+
+          if (existing) {
+            const curEstSec = Math.round((existing.targetArrivalMs - clientNowMs) / 1000);
+            // 情況 1：伺服器端 HTML 快取尚未推進 (文字相同) 且目標尚未超逾 25 秒 -> 維持既有單調倒數基準，永不卡死回跳！
+            if (existing.rawText === item.countdownText && curEstSec > -25) {
+              targetArrivalMs = existing.targetArrivalMs;
+            } else if (Math.abs(curEstSec - sec) <= 8 && curEstSec > 0) {
+              // 情況 2：網路與輪詢小抖動 (差值 8 秒內) -> 保持連續平滑跳秒
+              targetArrivalMs = existing.targetArrivalMs;
+            }
+          }
+
+          this.metroSmoothTracker.set(trackerKey, {
+            targetArrivalMs,
+            rawText: item.countdownText,
+            rawSec: sec,
+            lastApiUpdateMs: clientNowMs
+          });
+
           return {
             ...item,
-            targetTimestamp: baseTime + sec * 1000
+            remainSec: sec,
+            targetArrivalMs
           };
         });
-        this.metroLiveUpdatedAt = res.updatedAt ? new Date(res.updatedAt) : new Date(nowMs);
+        this.metroLiveUpdatedAt = new Date(clientNowMs);
         this.isMetroOnline = true;
-        this.metroLastFetchTime = nowMs;
+        this.metroLastFetchTime = clientNowMs;
       } else {
         this.isMetroOnline = false;
       }
@@ -12398,38 +12442,45 @@ class TwinCityTransitMonitor {
     let isLive = false;
     let liveDest = '';
 
-    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveUpdatedAt) {
-      const elapsedSec = Math.floor((now.getTime() - this.metroLiveUpdatedAt.getTime()) / 1000);
-      if (elapsedSec >= 0 && elapsedSec < 480) {
-        const targetStation = isToQingpu ? '新埔' : '板橋';
-        const candidates = this.metroLiveData.filter(item => {
-          if (!item.station || !item.station.includes(targetStation)) return false;
-          if (item.line && !item.line.includes('板南')) return false;
-          if (isToQingpu) {
-            return item.dest && (item.dest.includes('頂埔') || item.dest.includes('亞東') || item.dest.includes('板橋'));
-          } else {
-            return item.dest && (item.dest.includes('南港') || item.dest.includes('昆陽') || item.dest.includes('新埔'));
-          }
-        });
-
-        // 挑選秒數最小（最快進站）之即時班次
-        let bestMatch = null;
-        let minCalibratedSec = Infinity;
-        candidates.forEach(c => {
-          if (c.remainSec != null && !isNaN(c.remainSec)) {
-            const cal = c.remainSec - elapsedSec;
-            if (cal >= -25 && cal < minCalibratedSec) {
-              minCalibratedSec = cal;
-              bestMatch = c;
-            }
-          }
-        });
-
-        if (bestMatch) {
-          remainSec = Math.max(0, minCalibratedSec);
-          isLive = true;
-          liveDest = bestMatch.dest;
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0) {
+      const targetStation = isToQingpu ? '新埔' : '板橋';
+      const nowMs = now.getTime();
+      const candidates = this.metroLiveData.filter(item => {
+        if (!item.station || !item.station.includes(targetStation)) return false;
+        if (item.line && !item.line.includes('板南')) return false;
+        if (isToQingpu) {
+          return item.dest && (item.dest.includes('頂埔') || item.dest.includes('亞東') || item.dest.includes('板橋'));
+        } else {
+          return item.dest && (item.dest.includes('南港') || item.dest.includes('昆陽') || item.dest.includes('新埔'));
         }
+      });
+
+      // 挑選秒數最小（最快進站）之即時班次，以航位推測平滑引擎計算每秒真實剩餘秒數
+      let bestMatch = null;
+      let minCalibratedSec = Infinity;
+      candidates.forEach(c => {
+        const trackerKey = `${c.station || ''}_${c.dest || ''}`;
+        const tracked = this.metroSmoothTracker ? this.metroSmoothTracker.get(trackerKey) : null;
+        let currentSec = 0;
+        if (tracked && tracked.targetArrivalMs) {
+          currentSec = Math.round((tracked.targetArrivalMs - nowMs) / 1000);
+        } else if (c.targetArrivalMs) {
+          currentSec = Math.round((c.targetArrivalMs - nowMs) / 1000);
+        } else if (c.remainSec != null && !isNaN(c.remainSec)) {
+          currentSec = c.remainSec;
+        }
+
+        // 容許進站停靠中 (-35秒內) 仍判定為該班車，不直接斷開跳表
+        if (currentSec >= -35 && currentSec < minCalibratedSec) {
+          minCalibratedSec = currentSec;
+          bestMatch = { ...c, currentSec };
+        }
+      });
+
+      if (bestMatch) {
+        remainSec = Math.max(0, minCalibratedSec);
+        isLive = true;
+        liveDest = bestMatch.dest;
       }
     }
 
@@ -12456,9 +12507,9 @@ class TwinCityTransitMonitor {
       countdownText,
       platformStatus: isArriving 
         ? (isLive ? `列車進站中 (${liveDest || '板南線'})` : '即將進站')
-        : (isLive ? `倒數 ${countdownText} (${liveDest || '板南線'})` : `${nextTrain.timeStr} 發車 (${countdownText})`),
+        : (isLive ? `${countdownText} (${liveDest || '板南線'})` : `${nextTrain.timeStr} 發車 (${countdownText})`),
       sourceBadgeHtml: isLive
-        ? '<span class="live-chip-badge live-metro" title="官方即時到站看板 (優先主要)"><span class="live-pulse-dot"></span>LIVE</span>'
+        ? '<span class="live-status-dot" title="官方即時到站看板 (優先主要)"></span>'
         : '<span class="feed-live-badge sched-badge" title="官方全量真實時刻表基準 (備用)"><i class="fa-regular fa-clock"></i> 班表</span>',
       carWeight: carWeightInfo
     };
@@ -12503,42 +12554,48 @@ class TwinCityTransitMonitor {
     let liveDest = '';
 
     // 優先以 opendata.vip 即時看板為主：精確依方向匹配新埔民生站與新北產業園區站
-    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveUpdatedAt) {
-      const elapsedSec = Math.floor((now.getTime() - this.metroLiveUpdatedAt.getTime()) / 1000);
-      if (elapsedSec >= 0 && elapsedSec < 480) {
-        const candidates = this.metroLiveData.filter(item => {
-          if (item.line && !item.line.includes('環狀')) return false;
-          if (isToQingpu) {
-            // 去程：新埔民生 ➔ 新北產業園區 (搭乘環狀線往產業園區)
-            return item.station && item.station.includes('新埔民生') && item.dest && (item.dest.includes('產業園區') || item.dest.includes('新北'));
-          } else {
-            // 回程：新北產業園區 ➔ 新埔民生 (搭乘環狀線回新埔民生/大坪林方向)
-            return (item.station && item.station.includes('新北產業園區') && item.dest && item.dest.includes('大坪林')) ||
-                   (item.station && item.station.includes('新埔民生') && item.dest && item.dest.includes('大坪林')) ||
-                   (item.station && item.station.includes('板橋') && item.dest && item.dest.includes('大坪林'));
-          }
-        });
-
-        let bestMatch = null;
-        let minCalibratedSec = Infinity;
-        candidates.forEach(c => {
-          if (c.remainSec != null && !isNaN(c.remainSec)) {
-            const cal = c.remainSec - elapsedSec;
-            if (cal >= -25 && cal < minCalibratedSec) {
-              minCalibratedSec = cal;
-              bestMatch = c;
-            }
-          }
-        });
-
-        if (bestMatch) {
-          remainSec = Math.max(0, minCalibratedSec);
-          isLive = true;
-          liveDest = bestMatch.dest;
-          isRunning = remainSec > 35;
-          progressPercent = isRunning ? Math.max(5, Math.min(95, Math.round(((420 - Math.min(420, remainSec)) / 420) * 100))) : 98;
-          runStatusText = isRunning ? '行駛中' : '即將進站';
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0) {
+      const nowMs = now.getTime();
+      const candidates = this.metroLiveData.filter(item => {
+        if (item.line && !item.line.includes('環狀')) return false;
+        if (isToQingpu) {
+          // 去程：新埔民生 ➔ 新北產業園區 (搭乘環狀線往產業園區)
+          return item.station && item.station.includes('新埔民生') && item.dest && (item.dest.includes('產業園區') || item.dest.includes('新北'));
+        } else {
+          // 回程：新北產業園區 ➔ 新埔民生 (搭乘環狀線回新埔民生/大坪林方向)
+          return (item.station && item.station.includes('新北產業園區') && item.dest && item.dest.includes('大坪林')) ||
+                 (item.station && item.station.includes('新埔民生') && item.dest && item.dest.includes('大坪林')) ||
+                 (item.station && item.station.includes('板橋') && item.dest && item.dest.includes('大坪林'));
         }
+      });
+
+      let bestMatch = null;
+      let minCalibratedSec = Infinity;
+      candidates.forEach(c => {
+        const trackerKey = `${c.station || ''}_${c.dest || ''}`;
+        const tracked = this.metroSmoothTracker ? this.metroSmoothTracker.get(trackerKey) : null;
+        let currentSec = 0;
+        if (tracked && tracked.targetArrivalMs) {
+          currentSec = Math.round((tracked.targetArrivalMs - nowMs) / 1000);
+        } else if (c.targetArrivalMs) {
+          currentSec = Math.round((c.targetArrivalMs - nowMs) / 1000);
+        } else if (c.remainSec != null && !isNaN(c.remainSec)) {
+          currentSec = c.remainSec;
+        }
+
+        if (currentSec >= -35 && currentSec < minCalibratedSec) {
+          minCalibratedSec = currentSec;
+          bestMatch = { ...c, currentSec };
+        }
+      });
+
+      if (bestMatch) {
+        remainSec = Math.max(0, minCalibratedSec);
+        isLive = true;
+        liveDest = bestMatch.dest;
+        isRunning = remainSec > 35;
+        progressPercent = isRunning ? Math.max(5, Math.min(95, Math.round(((420 - Math.min(420, remainSec)) / 420) * 100))) : 98;
+        runStatusText = isRunning ? '行駛中' : '即將進站';
       }
     }
 
@@ -12546,7 +12603,7 @@ class TwinCityTransitMonitor {
     const isArriving = remainSec <= 35;
     const platformStatus = isArriving 
       ? (isLive ? `列車進站中 (${liveDest || '環狀線'})` : '即將進站')
-      : (isLive ? `倒數 ${countdownText} (${liveDest || '即時看板'})` : `班距推算 (${countdownText})`);
+      : (isLive ? `${countdownText} (${liveDest || '即時看板'})` : `${countdownText} (班距推算)`);
 
     return {
       lineName: '台北捷運環狀線',
@@ -12563,7 +12620,7 @@ class TwinCityTransitMonitor {
       countdownText,
       platformStatus,
       sourceBadgeHtml: isLive
-        ? '<span class="live-chip-badge live-metro" title="官方即時到站看板 (優先主要)"><span class="live-pulse-dot"></span>LIVE</span>'
+        ? '<span class="live-status-dot" title="官方即時到站看板 (優先主要)"></span>'
         : '<span class="feed-live-badge sched-badge" title="常態班距推算 (備用)"><i class="fa-regular fa-clock"></i> 班距 7~10分</span>'
     };
   }
@@ -12879,11 +12936,11 @@ class TwinCityTransitMonitor {
       progressPercent = primary.progressPercent;
       runStatusText = primary.statusText;
       activeTrainNo = primary.trainNo;
-      platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
+      platformStatus = waitSec <= 60 ? '即將發車' : `${countdownText}`;
     } else {
       progressPercent = waitSec < 120 ? 95 : 5;
       runStatusText = waitSec < 60 ? '即將發車' : `候車中 (${waitMins}分)`;
-      platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
+      platformStatus = waitSec <= 60 ? '即將發車' : `${countdownText}`;
     }
 
     const trainTypeShort = '';
@@ -13004,11 +13061,11 @@ class TwinCityTransitMonitor {
       progressPercent = primary.progressPercent;
       runStatusText = primary.statusText;
       activeTrainNo = primary.trainNo;
-      platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
+      platformStatus = waitSec <= 60 ? '即將發車' : `${countdownText}`;
     } else {
       progressPercent = waitSec < 120 ? 95 : 5;
       runStatusText = waitSec < 60 ? '即將發車' : `候車中 (${waitMins}分)`;
-      platformStatus = waitSec <= 60 ? '即將發車' : `倒數 ${countdownText}`;
+      platformStatus = waitSec <= 60 ? '即將發車' : `${countdownText}`;
     }
 
     return {
@@ -13392,6 +13449,11 @@ class TwinCityTransitMonitor {
         bannanStatus.innerHTML = `<i class="fa-regular fa-clock"></i> ${bannan.platformStatus}`;
       }
 
+      const bannanBadge = mainSlot.querySelector('[data-f-bannan-badge]');
+      if (bannanBadge && bannan.sourceBadgeHtml) {
+        bannanBadge.innerHTML = bannan.sourceBadgeHtml;
+      }
+
       const bannanGlow = mainSlot.querySelector('[data-f-bannan-glow]');
       if (bannanGlow) {
         bannanGlow.style.width = `${bannan.progressPercent}%`;
@@ -13425,6 +13487,11 @@ class TwinCityTransitMonitor {
       const circularStatus = mainSlot.querySelector('[data-f-circular-status]');
       if (circularStatus) {
         circularStatus.innerHTML = `<i class="fa-regular fa-clock"></i> ${circular.platformStatus}`;
+      }
+
+      const circularBadge = mainSlot.querySelector('[data-f-circular-badge]');
+      if (circularBadge && circular.sourceBadgeHtml) {
+        circularBadge.innerHTML = circular.sourceBadgeHtml;
       }
 
       const circularGlow = mainSlot.querySelector('[data-f-circular-glow]');
@@ -13796,7 +13863,7 @@ class TwinCityTransitMonitor {
           <div class="pids-title-group">
             <span class="leg-dot bannan-dot"></span>
             <span class="leg-title">板南線</span>
-            ${bannan.sourceBadgeHtml ? bannan.sourceBadgeHtml : '<span class="pids-train-pill">約 2~4分一班</span>'}
+            <span data-f-bannan-badge>${bannan.sourceBadgeHtml ? bannan.sourceBadgeHtml : '<span class="pids-train-pill">約 2~4分一班</span>'}</span>
           </div>
           <span class="pids-mini-pill" data-f-bannan-status><i class="fa-regular fa-clock"></i> ${bannan.platformStatus}</span>
           <span class="leg-info">車程 2.5分</span>
@@ -13906,7 +13973,7 @@ class TwinCityTransitMonitor {
           <div class="pids-title-group">
             <span class="leg-dot circular-dot"></span>
             <span class="leg-title">環狀線</span>
-            ${circular.sourceBadgeHtml ? circular.sourceBadgeHtml : '<span class="pids-train-pill circular-train-pill">約 7~10分一班</span>'}
+            <span data-f-circular-badge>${circular.sourceBadgeHtml ? circular.sourceBadgeHtml : '<span class="pids-train-pill circular-train-pill">約 7~10分一班</span>'}</span>
           </div>
           <span class="pids-mini-pill" data-f-circular-status><i class="fa-regular fa-clock"></i> ${circular.platformStatus}</span>
           <span class="leg-info">車程 7分</span>
@@ -14375,7 +14442,7 @@ class TwinCityTransitMonitor {
             <div class="track-badge-group">
               <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
 
-              ${this.isDirectThsrApi ? '<span class="live-chip-badge live-thsr" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
+              ${this.isDirectThsrApi ? '<span class="live-status-dot" title="官方原生直連即時動態"></span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 高鐵' : '高鐵 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
@@ -14399,7 +14466,7 @@ class TwinCityTransitMonitor {
           <div class="track-header">
             <div class="track-badge-group">
               <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷</span>
-              ${this.isDirectTymetroApi ? '<span class="live-chip-badge live-tymetro" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
+              ${this.isDirectTymetroApi ? '<span class="live-status-dot" title="官方原生直連即時動態"></span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 機捷' : '機捷 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">

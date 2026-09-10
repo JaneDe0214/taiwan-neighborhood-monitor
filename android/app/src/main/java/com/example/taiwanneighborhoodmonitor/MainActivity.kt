@@ -25,6 +25,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -702,6 +704,24 @@ class AndroidNativeBridge(
             launch { refreshParkingAsync() }
             launch { refreshThsrAsync() }
             launch { refreshTymetroAsync() }
+
+            // 常駐背景定時同步：捷運每 12 秒自動更新看板與擁擠度，YouBike 每 45 秒自動更新
+            launch {
+                while (isActive) {
+                    delay(12000)
+                    try {
+                        refreshMetroLiveAsync()
+                    } catch (_: Exception) {}
+                }
+            }
+            launch {
+                while (isActive) {
+                    delay(45000)
+                    try {
+                        refreshYouBikeAsync()
+                    } catch (_: Exception) {}
+                }
+            }
         }
     }
 
