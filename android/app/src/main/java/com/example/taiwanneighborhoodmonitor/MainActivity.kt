@@ -785,7 +785,7 @@ class AndroidNativeBridge(
                 totalSec = 20
             }
             val line = when {
-                from.contains("民生") -> "環狀線"
+                from.contains("民生") || from.contains("產業園區") -> "環狀線"
                 from.contains("板橋") && (to.contains("大坪林") || to.contains("產業園區")) -> "環狀線"
                 else -> "板南線"
             }
@@ -1026,11 +1026,13 @@ class AndroidNativeBridge(
             try {
                 val xpDepDeferred = async { fetchHttp("https://www.opendata.vip/metro/departure/%E6%96%B0%E5%9F%94", 3500) }
                 val bqDepDeferred = async { fetchHttp("https://www.opendata.vip/metro/departure/%E6%9D%BF%E6%A9%8B", 3500) }
+                val y20DepDeferred = async { fetchHttp("https://www.opendata.vip/metro/departure/%E6%96%B0%E5%8C%97%E7%94%A2%E6%A5%AD%E5%9C%92%E5%8D%80", 3500) }
                 val bl08Deferred = async { fetchHttp("https://www.opendata.vip/metro/carWeight/BL/BL08", 3500) }
                 val bl07Deferred = async { fetchHttp("https://www.opendata.vip/metro/carWeight/BL/BL07", 3500) }
 
                 val xpDep = xpDepDeferred.await()
                 val bqDep = bqDepDeferred.await()
+                val y20Dep = y20DepDeferred.await()
                 val bl08Html = bl08Deferred.await()
                 val bl07Html = bl07Deferred.await()
 
@@ -1040,6 +1042,9 @@ class AndroidNativeBridge(
                 }
                 if (bqDep.isNotBlank()) {
                     parseDepartureHtml(bqDep, "板橋站").forEach { allTrains.put(it) }
+                }
+                if (y20Dep.isNotBlank()) {
+                    parseDepartureHtml(y20Dep, "新北產業園區站").forEach { allTrains.put(it) }
                 }
 
                 val carWeightObj = JSONObject()

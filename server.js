@@ -444,22 +444,24 @@ function parseDepartureHtml(html, defaultStation = '') {
       dest: to,
       countdownText: countdown,
       remainSec: totalSec,
-      line: from.includes('民生') ? '環狀線' : (from.includes('板橋') && (to.includes('大坪林') || to.includes('產業園區')) ? '環狀線' : '板南線')
+      line: (from.includes('民生') || from.includes('產業園區')) ? '環狀線' : (from.includes('板橋') && (to.includes('大坪林') || to.includes('產業園區')) ? '環狀線' : '板南線')
     });
   }
   return list;
 }
 
-// 抓取台北捷運與環狀線 (新埔站、新埔民生站、板橋站) 即時到站看板
+// 抓取台北捷運與環狀線 (新埔站、新埔民生站、板橋站、新北產業園區站) 即時到站看板
 async function fetchMetroLiveBoard() {
-  const [xpDep, bqDep] = await Promise.all([
+  const [xpDep, bqDep, y20Dep] = await Promise.all([
     fetchRemoteHtml('https://www.opendata.vip/metro/departure/%E6%96%B0%E5%9F%94', 7000).catch(() => ''),
-    fetchRemoteHtml('https://www.opendata.vip/metro/departure/%E6%9D%BF%E6%A9%8B', 7000).catch(() => '')
+    fetchRemoteHtml('https://www.opendata.vip/metro/departure/%E6%9D%BF%E6%A9%8B', 7000).catch(() => ''),
+    fetchRemoteHtml('https://www.opendata.vip/metro/departure/%E6%96%B0%E5%8C%97%E7%94%A2%E6%A5%AD%E5%9C%92%E5%8D%80', 7000).catch(() => '')
   ]);
 
   const list = [];
   if (xpDep) list.push(...parseDepartureHtml(xpDep, '新埔站'));
   if (bqDep) list.push(...parseDepartureHtml(bqDep, '板橋站'));
+  if (y20Dep) list.push(...parseDepartureHtml(y20Dep, '新北產業園區站'));
   return list;
 }
 
