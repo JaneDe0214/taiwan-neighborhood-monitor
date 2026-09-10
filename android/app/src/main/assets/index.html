@@ -2884,86 +2884,110 @@ a.coord-tag:hover {
   gap: 4px;
 }
 
-/* 長輩醒目出門時間方塊 */
-.plan-leave-highlight {
-  background: rgba(0, 240, 255, 0.08);
-  border: 1px solid rgba(0, 240, 255, 0.28);
+/* 出門搭車建議月台看板風格晶片 (邏輯同月台看到的大字體 + 即時倒數跳秒) */
+.hub-pids-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 11px;
   border-radius: 6px;
-  padding: 6px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
+  margin: 4px 0;
+  gap: 8px;
 }
 
-.plan-leave-highlight .leave-label {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #e2e8f0;
+.pids-thsr-hub {
+  background: rgba(255, 119, 0, 0.1);
+  border: 1px solid rgba(255, 119, 0, 0.32);
 }
 
-.plan-leave-highlight .leave-time-big {
-  font-size: 1.08rem;
-  font-weight: 900;
-  color: #00f0ff;
-  letter-spacing: 0.5px;
+.pids-tymetro-hub {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.32);
 }
 
-.plan-train-detail {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 2px 0;
-}
-
-.plan-train-name {
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #ffffff;
+.hub-pids-main {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.plan-dep-countdown {
+.hub-pids-dest {
   font-size: 0.82rem;
   font-weight: 800;
-  padding: 3px 8px;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
-.plan-thsr-fastest .plan-dep-countdown {
-  background: rgba(255, 119, 0, 0.2);
-  color: #ff9900;
-  border: 1px solid rgba(255, 119, 0, 0.4);
+.hub-pids-train, .hub-pids-type {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
-.plan-tymetro-alt .plan-dep-countdown {
-  background: rgba(168, 85, 247, 0.2);
+.hub-pids-type.express {
   color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  font-weight: 900;
 }
 
+.pids-thsr-hub .hub-pids-time {
+  font-size: 1.28rem;
+  font-weight: 900;
+  color: #ff9900;
+  letter-spacing: 0.5px;
+}
+
+.pids-tymetro-hub .hub-pids-time {
+  font-size: 1.28rem;
+  font-weight: 900;
+  color: #c084fc;
+  letter-spacing: 0.5px;
+}
+
+.hub-pids-countdown {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 長輩白話極簡出門與抵達導引 */
 .plan-timeline-hint {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.86rem;
+  font-weight: 700;
   color: #cbd5e1;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 6px 10px;
   border-radius: 5px;
 }
 
-.plan-timeline-hint .dest-time strong {
+.plan-timeline-hint .hint-leave {
+  color: #e2e8f0;
+}
+
+.plan-timeline-hint .hint-leave strong {
   color: #38bdf8;
+  font-size: 0.94rem;
+}
+
+.plan-timeline-hint .hint-arrow {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.8rem;
+}
+
+.plan-timeline-hint .dest-time {
+  color: #94a3b8;
+}
+
+.plan-timeline-hint .dest-time strong {
+  color: #34d399;
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.94rem;
 }
 
 .plan-footer-action {
@@ -11788,7 +11812,7 @@ class TwinCityTransitMonitor {
         ? '<span class="live-chip-badge live-metro" title="官方開放資料原生直連即時看板"><span class="live-pulse-dot"></span>LIVE</span>'
         : (isLiveCalibrated 
           ? '<span class="live-chip-badge live-metro" title="即時雷達校正動態推算"><span class="live-pulse-dot"></span>LIVE</span>'
-          : '<span class="feed-live-badge sched-badge" title="台北捷運官方全量真實時刻表基準"><i class="fa-solid fa-calendar-check"></i> 官方班表</span>'),
+          : '<span class="feed-live-badge sched-badge" title="台北捷運官方全量真實時刻表基準">📅</span>'),
       carWeight: carWeightInfo
     };
   }
@@ -12749,14 +12773,22 @@ class TwinCityTransitMonitor {
         circularBeacon.title = `${circular.lineName} (${circular.trainNo} ${circular.runStatusText})`;
       }
 
-      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新 (精準呈現出門倒數，絕不使用來不及搭車之月台倒數)
+      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新 (邏輯同月台發車倒數跳秒)
+      const now = new Date();
+      const thsrPlanWaitSec = (firstThsrPlan && firstThsrPlan.boardTimeMs)
+        ? Math.max(0, Math.floor((firstThsrPlan.boardTimeMs - now.getTime()) / 1000))
+        : thsr.waitSec;
+      const tymetroPlanWaitSec = (firstTymetroPlan && firstTymetroPlan.boardTimeMs)
+        ? Math.max(0, Math.floor((firstTymetroPlan.boardTimeMs - now.getTime()) / 1000))
+        : tymetro.waitSec;
+
       const hubThsrCountdown = mainSlot.querySelector('[data-f-hub-thsr-countdown]');
       if (hubThsrCountdown) {
-        hubThsrCountdown.innerHTML = this.getHubCountdownText(firstThsrPlan, thsr);
+        hubThsrCountdown.innerHTML = this.formatPlatformCountdown(thsrPlanWaitSec, thsr.isOutOfService);
       }
       const hubTymetroCountdown = mainSlot.querySelector('[data-f-hub-tymetro-countdown]');
       if (hubTymetroCountdown) {
-        hubTymetroCountdown.innerHTML = this.getHubCountdownText(firstTymetroPlan, tymetro);
+        hubTymetroCountdown.innerHTML = this.formatPlatformCountdown(tymetroPlanWaitSec, tymetro.isOutOfService);
       }
 
       // 即時 YouBike車況原地更新 (出門優先家門口站點，青埔優先領航南/青昇/青峰，新埔優先新埔站)
@@ -13394,75 +13426,107 @@ class TwinCityTransitMonitor {
           </div>
         </div>
 
-        <div class="hub-options-grid">
-          <!-- 方案一：高鐵 (最速推薦) -->
-          <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="查看今日全部高鐵班次表">
-            <div class="plan-item-badge">
-              <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵</span>
-              <span class="badge-save-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</strong></span>
-            </div>
+        ${(() => {
+          const now = new Date();
+          const thsrPlanWaitSec = (firstThsrPlan && firstThsrPlan.boardTimeMs)
+            ? Math.max(0, Math.floor((firstThsrPlan.boardTimeMs - now.getTime()) / 1000))
+            : thsr.waitSec;
+          const thsrDepTime = firstThsrPlan ? firstThsrPlan.boardTrainTime : thsr.depTime;
+          const thsrTrainNo = firstThsrPlan ? `${firstThsrPlan.trainNo}次` : `${thsr.trainNo}次`;
+          const thsrDest = isToQingpu ? '往桃園' : '往板橋';
 
-            <!-- 長輩醒目出門提示方塊 -->
-            <div class="plan-leave-highlight">
-              <span class="leave-label">建議出門</span>
-              <span class="leave-time-big">${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</span>
-              <span class="plan-dep-countdown" data-f-hub-thsr-countdown>${this.getHubCountdownText(firstThsrPlan, thsr)}</span>
-            </div>
+          let leaveTipThsr = '建議及早出門';
+          if (firstThsrPlan && firstThsrPlan.leaveTimeMs) {
+            const diffSec = Math.floor((firstThsrPlan.leaveTimeMs - now.getTime()) / 1000);
+            if (diffSec <= 60 && diffSec >= -180) {
+              leaveTipThsr = '<span style="color:#ef4444;font-weight:800;">🚶 建議立即出門</span>';
+            } else if (diffSec > 60) {
+              const m = Math.ceil(diffSec / 60);
+              leaveTipThsr = `🚶 建議 <strong>${firstThsrPlan.leaveTime}</strong> 出門 (約 ${m}分後)`;
+            } else {
+              leaveTipThsr = `🚶 建議 <strong>${firstThsrPlan.leaveTime}</strong> 出門`;
+            }
+          }
 
-            <div class="plan-train-detail">
-              <span class="plan-train-name">
-                <i class="fa-solid fa-train"></i> ${firstThsrPlan ? `高鐵 ${firstThsrPlan.trainNo}次 (${firstThsrPlan.boardTrainTime} 板橋發車)` : (thsr.isOutOfService ? '高鐵今日已收班' : `高鐵 ${thsr.trainNo}次`)}
-              </span>
-            </div>
+          const tymetroPlanWaitSec = (firstTymetroPlan && firstTymetroPlan.boardTimeMs)
+            ? Math.max(0, Math.floor((firstTymetroPlan.boardTimeMs - now.getTime()) / 1000))
+            : tymetro.waitSec;
+          const tymetroDepTime = firstTymetroPlan ? firstTymetroPlan.boardTrainTime : tymetro.depTime;
+          const isExpress = firstTymetroPlan ? firstTymetroPlan.isExpress : tymetro.isExpress;
+          const tymetroTypeTag = isExpress ? '直達' : '普通';
+          const tymetroDest = isToQingpu ? '往青埔' : '往新埔';
 
-            <!-- 白話乘車路線步驟 -->
-            <div class="plan-timeline-hint">
-              <span>🏠 出發 <strong>${firstThsrPlan ? firstThsrPlan.leaveTime : '--:--'}</strong></span>
-              <i class="fa-solid fa-arrow-right"></i>
-              <span>🚄 板橋發車 <strong>${firstThsrPlan ? firstThsrPlan.boardTrainTime : '--:--'}</strong></span>
-              <i class="fa-solid fa-arrow-right"></i>
-              <span class="dest-time">🏁 抵達 <strong>${firstThsrPlan ? firstThsrPlan.arriveTime : '--:--'}</strong></span>
-            </div>
+          let leaveTipTymetro = '建議及早出門';
+          if (firstTymetroPlan && firstTymetroPlan.leaveTimeMs) {
+            const diffSec = Math.floor((firstTymetroPlan.leaveTimeMs - now.getTime()) / 1000);
+            if (diffSec <= 60 && diffSec >= -180) {
+              leaveTipTymetro = '<span style="color:#ef4444;font-weight:800;">🚶 建議立即出門</span>';
+            } else if (diffSec > 60) {
+              const m = Math.ceil(diffSec / 60);
+              leaveTipTymetro = `🚶 建議 <strong>${firstTymetroPlan.leaveTime}</strong> 出門 (約 ${m}分後)`;
+            } else {
+              leaveTipTymetro = `🚶 建議 <strong>${firstTymetroPlan.leaveTime}</strong> 出門`;
+            }
+          }
 
-            <div class="plan-footer-action">
-              <span>查看全日時刻</span> <i class="fa-solid fa-angles-right"></i>
-            </div>
-          </div>
+          return `
+            <div class="hub-options-grid">
+              <!-- 方案一：高鐵 (最速推薦 ‧ 月台看板等車風格 + 極簡導引) -->
+              <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="查看今日全部高鐵班次表">
+                <div class="plan-item-badge">
+                  <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵</span>
+                  <span class="badge-save-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</strong></span>
+                </div>
 
-          <!-- 方案二：機捷直通 (捷運替代) -->
-          <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="查看今日全部機捷班次表">
-            <div class="plan-item-badge">
-              <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機運</span>
-              <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</strong></span>
-            </div>
+                <!-- 月台等車 PIDS 看板 (邏輯同月台看到的：終點、車次、發車時間、即時倒數跳秒) -->
+                <div class="hub-pids-card pids-thsr-hub">
+                  <div class="hub-pids-main">
+                    <span class="hub-pids-dest">${thsrDest}</span>
+                    <span class="hub-pids-train">${thsrTrainNo}</span>
+                    <strong class="hub-pids-time">${thsrDepTime}</strong>
+                  </div>
+                  <div class="hub-pids-countdown" data-f-hub-thsr-countdown>
+                    ${this.formatPlatformCountdown(thsrPlanWaitSec, thsr.isOutOfService)}
+                  </div>
+                </div>
 
-            <!-- 長輩醒目出門提示方塊 -->
-            <div class="plan-leave-highlight">
-              <span class="leave-label">建議出門</span>
-              <span class="leave-time-big">${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</span>
-              <span class="plan-dep-countdown" data-f-hub-tymetro-countdown>${this.getHubCountdownText(firstTymetroPlan, tymetro)}</span>
-            </div>
+                <!-- 白話極簡出門與抵達導引 (長輩一眼看懂) -->
+                <div class="plan-timeline-hint">
+                  <span class="hint-leave">${leaveTipThsr}</span>
+                  <i class="fa-solid fa-arrow-right-long hint-arrow"></i>
+                  <span class="dest-time">🏁 <strong>${firstThsrPlan ? firstThsrPlan.arriveTime : '--:--'}</strong> 抵達</span>
+                </div>
+              </div>
 
-            <div class="plan-train-detail">
-              <span class="plan-train-name">
-                <i class="fa-solid fa-train-subway"></i> ${firstTymetroPlan ? `機捷 ${firstTymetroPlan.trainTypeShort || firstTymetroPlan.badge} (${firstTymetroPlan.boardTrainTime} 發車)` : (tymetro.isOutOfService ? '機捷今日已收班' : `機捷 ${(tymetro.type || '').replace('(站站停)', '')}`)}
-              </span>
-            </div>
+              <!-- 方案二：機捷直通 (捷運替代 ‧ 月台看板等車風格 + 極簡導引) -->
+              <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="查看今日全部機捷班次表">
+                <div class="plan-item-badge">
+                  <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機運</span>
+                  <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</strong></span>
+                </div>
 
-            <!-- 白話乘車路線步驟 -->
-            <div class="plan-timeline-hint">
-              <span>🏠 出發 <strong>${firstTymetroPlan ? firstTymetroPlan.leaveTime : '--:--'}</strong></span>
-              <i class="fa-solid fa-arrow-right"></i>
-              <span>🚇 機捷發車 <strong>${firstTymetroPlan ? firstTymetroPlan.boardTrainTime : '--:--'}</strong></span>
-              <i class="fa-solid fa-arrow-right"></i>
-              <span class="dest-time">🏁 抵達 <strong>${firstTymetroPlan ? firstTymetroPlan.arriveTime : '--:--'}</strong></span>
-            </div>
+                <!-- 月台等車 PIDS 看板 (邏輯同月台看到的：終點、車種、發車時間、即時倒數跳秒) -->
+                <div class="hub-pids-card pids-tymetro-hub">
+                  <div class="hub-pids-main">
+                    <span class="hub-pids-dest">${tymetroDest}</span>
+                    <span class="hub-pids-type ${isExpress ? 'express' : ''}">${tymetroTypeTag}</span>
+                    <strong class="hub-pids-time">${tymetroDepTime}</strong>
+                  </div>
+                  <div class="hub-pids-countdown" data-f-hub-tymetro-countdown>
+                    ${this.formatPlatformCountdown(tymetroPlanWaitSec, tymetro.isOutOfService)}
+                  </div>
+                </div>
 
-            <div class="plan-footer-action">
-              <span>查看全日時刻</span> <i class="fa-solid fa-angles-right"></i>
+                <!-- 白話極簡出門與抵達導引 (長輩一眼看懂) -->
+                <div class="plan-timeline-hint">
+                  <span class="hint-leave">${leaveTipTymetro}</span>
+                  <i class="fa-solid fa-arrow-right-long hint-arrow"></i>
+                  <span class="dest-time">🏁 <strong>${firstTymetroPlan ? firstTymetroPlan.arriveTime : '--:--'}</strong> 抵達</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          `;
+        })()}
 
         <!-- YouBike車況速報橫條 (出發借車 + 下車借車，符合真實通勤生活動線) -->
         <div class="hub-youbike-strip">
