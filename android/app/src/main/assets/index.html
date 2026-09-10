@@ -2003,14 +2003,19 @@ a.coord-tag:hover {
   width: 100%;
 }
 .compact-info-stream {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   cursor: pointer;
   padding: 2px 4px;
+  contain: layout;
+  box-sizing: border-box;
 }
 .compact-info-stream::-webkit-scrollbar {
   display: none;
@@ -2534,10 +2539,14 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
-  min-height: 40px;
+  min-height: 38px;
   padding: 2px 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   animation: transit-compact-anim 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -5195,8 +5204,18 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   box-shadow: 0 0 10px #ffffff;
 }
 
+.station-dot-node::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+}
+
 .station-code-txt {
-  font-size: 0.74rem;
+  display: none;
+  font-size: 0.72rem;
   color: #64748b;
   font-family: monospace;
   margin-top: 2px;
@@ -5204,6 +5223,12 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   transition: color 0.15s ease;
   pointer-events: none;
   user-select: none;
+  white-space: nowrap;
+}
+
+.station-dot-node.is-major-station .station-code-txt,
+.station-dot-node.is-terminal .station-code-txt {
+  display: block;
 }
 
 .station-dot-node.is-major-station .station-code-txt {
@@ -5216,7 +5241,9 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   font-weight: 800;
 }
 
-.station-dot-node:hover .station-code-txt {
+.station-dot-node:hover .station-code-txt,
+.station-dot-node:active .station-code-txt {
+  display: block;
   color: #ffffff;
   font-weight: 800;
   text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
@@ -6431,45 +6458,127 @@ body {
     font-size: 0.72rem !important;
   }
 
-  /* 大眾運輸通勤走廊手機專屬配置 */
-  .transit-compact-bar {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 6px !important;
+  /* 大眾運輸通勤走廊手機專屬配置：收合狀態維持單行超矮、橫向自適應滑動，絕不超出版面 */
+  .transit-corridor-bar.is-collapsed-bar {
+    padding: 3px 6px !important;
+    min-height: 34px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  .compact-left-group {
-    width: 100% !important;
+  .transit-compact-bar {
     display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     flex-wrap: nowrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    padding: 2px 0 !important;
+  }
+
+  .compact-badge-dir-btn {
+    flex-shrink: 0 !important;
+    padding: 3px 6px !important;
+    font-size: 0.74rem !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    letter-spacing: 0 !important;
+  }
+  .compact-badge-dir-btn .dir-swap-icon {
+    font-size: 0.72rem !important;
+  }
+
+  .compact-info-stream {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    gap: 4px !important;
-    padding-bottom: 2px !important;
-    scrollbar-width: none;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+    padding: 1px 2px !important;
+    box-sizing: border-box !important;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 16px), transparent 100%);
   }
-  .compact-left-group::-webkit-scrollbar {
-    display: none;
+  .compact-info-stream::-webkit-scrollbar {
+    display: none !important;
   }
 
-  .compact-route-pill {
-    padding: 2px 6px !important;
-    font-size: 0.74rem !important;
+  .stream-pill {
+    font-size: 0.70rem !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .stream-divider {
+    font-size: 0.68rem !important;
+    margin: 0 1px !important;
     flex-shrink: 0 !important;
   }
 
+  .pids-stream-card {
+    padding: 1px 4px !important;
+    font-size: 0.68rem !important;
+    gap: 3px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .pids-tag {
+    font-size: 0.66rem !important;
+  }
+
+  .pids-dest {
+    font-size: 0.66rem !important;
+    padding: 0 3px !important;
+  }
+
+  .pids-time {
+    font-size: 0.70rem !important;
+  }
+
+  .pids-countdown-chip {
+    font-size: 0.68rem !important;
+    padding: 0 3px !important;
+  }
+
   .compact-actions-group {
-    width: 100% !important;
+    flex-shrink: 0 !important;
     display: flex !important;
-    gap: 4px !important;
+    align-items: center !important;
+    gap: 3px !important;
+    width: auto !important;
   }
 
   .compact-btn {
-    flex: 1 !important;
+    flex: 0 0 auto !important;
     justify-content: center !important;
     text-align: center !important;
-    padding: 4px 6px !important;
-    font-size: 0.72rem !important;
+    padding: 3px 6px !important;
+    font-size: 0.70rem !important;
+    gap: 2px !important;
+    white-space: nowrap !important;
+  }
+
+  @media (max-width: 400px) {
+    .compact-actions-group .btn-expand-main span {
+      display: none !important;
+    }
+    .compact-badge-dir-btn span {
+      font-size: 0.70rem !important;
+    }
   }
 
   /* 展開狀態標題與控制列 */
