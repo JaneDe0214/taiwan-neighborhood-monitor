@@ -3902,16 +3902,22 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   font-size: 0.74rem;
   padding-bottom: 2px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .pids-title-group {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* 班次資訊專屬膠囊 - 最佳化清晰展示 */
@@ -4061,6 +4067,11 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pids-mini-pill.thsr-pill-pids {
@@ -4079,6 +4090,8 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   color: var(--text-dim);
   font-size: 0.74rem;
   margin-left: auto;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 /* 軌道本體與進度發光光束 */
@@ -6714,6 +6727,45 @@ body {
     min-width: 0 !important;
     box-sizing: border-box !important;
     overflow: visible !important;
+  }
+
+  /* 所有運具頂部圖例列手機端嚴格單行鎖定：車程時間絕不折行，各運具卡片高度 100% 齊平 */
+  .segment-legend {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    font-size: 0.72rem !important;
+  }
+
+  .segment-legend .leg-info {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    margin-left: auto !important;
+    font-size: 0.70rem !important;
+    color: var(--text-dim) !important;
+  }
+
+  .segment-legend .pids-title-group {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    gap: 3px !important;
+  }
+
+  .segment-legend .pids-mini-pill {
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 0.70rem !important;
+    padding: 0 3px !important;
+    max-width: 155px !important;
   }
 
   .segment-stations-row {
@@ -12656,7 +12708,7 @@ class TwinCityTransitMonitor {
       if (bestMatch) {
         remainSec = Math.max(0, minCalibratedSec);
         isLive = true;
-        liveDest = bestMatch.dest;
+        liveDest = (bestMatch.dest || '').replace(/站$/, '').replace('新北產業園區', '新北產園');
       }
     }
 
@@ -12677,13 +12729,13 @@ class TwinCityTransitMonitor {
       isLive,
       sourceTag: isLive ? '官方即時看板 (主要)' : '官方時刻表 (備用)',
       nextDepTime: nextTrain.timeStr,
-      runStatusText: isArriving ? (isLive ? `列車進站中 (${liveDest || '板南線'})` : '列車進站中') : '行駛中',
+      runStatusText: isArriving ? (isLive ? `進站中 (${liveDest || '板南線'})` : '列車進站中') : '行駛中',
       durationText: '車程 2.5分',
       remainSec,
       countdownText,
       platformStatus: isArriving 
-        ? (isLive ? `列車進站中 (${liveDest || '板南線'})` : '即將進站')
-        : (isLive ? `${countdownText} (${liveDest || '板南線'})` : `${nextTrain.timeStr} 發車 (${countdownText})`),
+        ? (isLive ? `進站中 (${liveDest || '板南線'})` : '即將進站')
+        : (isLive ? `${countdownText} (${liveDest || '板南線'})` : `${nextTrain.timeStr}發 (${countdownText})`),
       sourceBadgeHtml: isLive
         ? '<span class="live-status-dot" title="官方即時到站看板 (優先主要)"></span>'
         : '<span class="feed-live-badge sched-badge" title="官方全量真實時刻表基準 (備用)"><i class="fa-regular fa-clock"></i> 班表</span>',
@@ -12768,7 +12820,7 @@ class TwinCityTransitMonitor {
       if (bestMatch) {
         remainSec = Math.max(0, minCalibratedSec);
         isLive = true;
-        liveDest = bestMatch.dest;
+        liveDest = (bestMatch.dest || '').replace(/站$/, '').replace('新北產業園區', '新北產園');
         isRunning = remainSec > 35;
         progressPercent = isRunning ? Math.max(5, Math.min(95, Math.round(((420 - Math.min(420, remainSec)) / 420) * 100))) : 98;
         runStatusText = isRunning ? '行駛中' : '即將進站';
@@ -12778,8 +12830,8 @@ class TwinCityTransitMonitor {
     const countdownText = this.formatCountdown(remainSec);
     const isArriving = remainSec <= 35;
     const platformStatus = isArriving 
-      ? (isLive ? `列車進站中 (${liveDest || '環狀線'})` : '即將進站')
-      : (isLive ? `${countdownText} (${liveDest || '即時看板'})` : `${countdownText} (班距推算)`);
+      ? (isLive ? `進站中 (${liveDest || '環狀線'})` : '即將進站')
+      : (isLive ? `${countdownText} (${liveDest || '環狀線'})` : `${countdownText} (推算)`);
 
     return {
       lineName: '台北捷運環狀線',
