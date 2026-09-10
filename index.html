@@ -2172,7 +2172,6 @@ a.coord-tag:hover {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  animation: transit-compact-anim 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .transit-nearby-bar {
@@ -11138,7 +11137,8 @@ class TwinCityTransitMonitor {
     this.isNearbyDetailOpen = false;
     this.selectedNearbyBusCode = null;
     this.nearbyBusStates = {};
-    this.lastNearbyTickTime = Date.now();       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
+    this.lastNearbyTickTime = Date.now();
+    this.lastNearbySignature = null;       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
 
 // 台灣高鐵官方最新真實時刻表基準 (板橋南下往桃園，保證停靠桃園，共 55 班)
     this.thsrSouthTrains = [
@@ -11890,18 +11890,19 @@ class TwinCityTransitMonitor {
     return r ? r.initialWaitSec : 300;
   }
 
-  formatNearbyBusBadge(waitSec) {
+  formatNearbyBusBadge(waitSec, isDrawer = false, routeCode = '') {
+    const attr = isDrawer ? 'data-nearby-drawer-badge="true"' : `data-nearby-bus-badge="${routeCode}"`;
     if (waitSec == null || waitSec < 0) {
-      return '<span class="nearby-bus-badge badge-offline">班次已過</span>';
+      return `<span class="nearby-bus-badge badge-offline" ${attr}>班次已過</span>`;
     }
     if (waitSec < 60) {
-      return `<span class="nearby-bus-badge badge-arriving pulse-arriving"><i class="fa-solid fa-bus-simple"></i> 即將進站 (${waitSec}秒)</span>`;
+      return `<span class="nearby-bus-badge badge-arriving pulse-arriving" ${attr}><i class="fa-solid fa-bus-simple"></i> 即將進站 (${waitSec}秒)</span>`;
     }
     const min = Math.ceil(waitSec / 60);
     if (min <= 3) {
-      return `<span class="nearby-bus-badge badge-soon"><i class="fa-solid fa-clock"></i> ${min} 分鐘</span>`;
+      return `<span class="nearby-bus-badge badge-soon" ${attr}><i class="fa-solid fa-clock"></i> ${min} 分鐘</span>`;
     }
-    return `<span class="nearby-bus-badge badge-normal"><i class="fa-regular fa-clock"></i> ${min} 分鐘</span>`;
+    return `<span class="nearby-bus-badge badge-normal" ${attr}><i class="fa-regular fa-clock"></i> ${min} 分鐘</span>`;
   }
 
   // 切換選中公車路線
@@ -11945,7 +11946,7 @@ class TwinCityTransitMonitor {
                      title="點擊查看 ${r.code} 往 ${r.dest} 沿途站點與公車去哪裡">
                   <span class="bus-badge-num">${r.code}</span>
                   <span class="bus-dest-text">${r.dest}</span>
-                  ${this.formatNearbyBusBadge(waitSec)}
+                  ${this.formatNearbyBusBadge(waitSec, false, r.code)}
                   <span class="bus-action-tag">去哪 🗺️</span>
                 </div>
               `;
@@ -11979,7 +11980,7 @@ class TwinCityTransitMonitor {
                 </div>
               </div>
               <div class="drawer-action-badges">
-                ${this.formatNearbyBusBadge(this.getNearbyRouteWaitSec(cityId, activeRoute.code))}
+                ${this.formatNearbyBusBadge(this.getNearbyRouteWaitSec(cityId, activeRoute.code), true, activeRoute.code)}
                 <a class="btn-external-google-bus" 
                    href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hub.cityLabel} 公車 ${activeRoute.code} ${hub.stopName}`)}" 
                    target="_blank" 
@@ -12015,10 +12016,46 @@ class TwinCityTransitMonitor {
     `;
   }
 
-  // 渲染附近交通面板至容器
+  // 渲染附近交通面板至容器 (結構指紋比對 + 原地定向微更新，零 DOM 重建，徹底根治整塊閃爍)
   renderNearbyTransit(cityId, container) {
     if (!container) return;
-    container.innerHTML = this.renderNearbyTransitHtml(cityId);
+    const hub = this.getNearbyHub(cityId);
+    const routes = hub.routes || [];
+    const activeRoute = routes.find(r => r.code === this.selectedNearbyBusCode) || routes[0];
+    const activeCode = activeRoute ? activeRoute.code : 'none';
+    const structureSignature = `${cityId}::${this.isNearbyDetailOpen}::${activeCode}`;
+
+    const existingWrapper = container.querySelector('.transit-nearby-wrapper');
+
+    // 1. 若 DOM 骨架不存在，或結構發生實質改變 (切換縣市、展開/收合抽屜、切換選中路線)，才替換 innerHTML
+    if (!existingWrapper || this.lastNearbySignature !== structureSignature) {
+      container.innerHTML = this.renderNearbyTransitHtml(cityId);
+      this.lastNearbySignature = structureSignature;
+      return;
+    }
+
+    // 2. 結構相同時 (僅每秒秒數跳動)：原地微定向替換標籤，0毫秒負擔、零DOM重組、保證絕對零閃爍！
+    routes.forEach(r => {
+      const waitSec = this.getNearbyRouteWaitSec(cityId, r.code);
+      const badgeEl = container.querySelector(`[data-nearby-bus-badge="${r.code}"]`);
+      if (badgeEl) {
+        const newHtml = this.formatNearbyBusBadge(waitSec, false, r.code);
+        if (badgeEl.outerHTML !== newHtml) {
+          badgeEl.outerHTML = newHtml;
+        }
+      }
+    });
+
+    if (this.isNearbyDetailOpen && activeRoute) {
+      const drawerBadgeEl = container.querySelector('[data-nearby-drawer-badge="true"]');
+      if (drawerBadgeEl) {
+        const waitSec = this.getNearbyRouteWaitSec(cityId, activeRoute.code);
+        const newHtml = this.formatNearbyBusBadge(waitSec, true, activeRoute.code);
+        if (drawerBadgeEl.outerHTML !== newHtml) {
+          drawerBadgeEl.outerHTML = newHtml;
+        }
+      }
+    }
   }
 
   // 切換整個走廊收合/展開 (超矮迷你條 ↔ 全寬詳細軌道)
@@ -13428,6 +13465,7 @@ class TwinCityTransitMonitor {
     this.fetchMetroLiveboard();
     this.fetchParkingData();
 
+    this.lastNearbySignature = null;
     const bannan = this.calculateBannanState(now);
     const circular = this.calculateCircularState(now);
     const thsr = this.calculateThsrState(now);
