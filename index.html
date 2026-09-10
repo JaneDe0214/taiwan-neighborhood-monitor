@@ -4107,6 +4107,7 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
 
 .track-rail-line.tymetro-line {
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.25), rgba(192, 132, 252, 0.3));
+  margin: 20px 16px 8px 16px !important;
 }
 
 .track-progress-glow {
@@ -5148,11 +5149,11 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
    ========================================================================== */
 .tymetro-stations-strip {
   position: relative;
-  width: 100%;
+  width: auto !important;
+  margin: 6px 16px 2px 16px !important;
   height: 24px;
-  margin-top: 6px;
-  margin-bottom: 2px;
-  contain: layout paint;
+  overflow: visible !important;
+  contain: layout;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
@@ -5167,6 +5168,20 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   cursor: pointer;
   z-index: 5;
   transition: transform 0.15s ease;
+}
+
+/* 起點端點站 (A3 或 A18)：左對齊向右展開，絕不超出左側被裁切 */
+.station-dot-node.is-origin-node,
+.station-dot-node:first-child {
+  transform: translateX(0) !important;
+  align-items: flex-start !important;
+}
+
+/* 終點端點站 (A18 或 A3)：右對齊向左展開，絕不超出右側被裁切 */
+.station-dot-node.is-dest-node,
+.station-dot-node:last-child {
+  transform: translateX(-100%) !important;
+  align-items: flex-end !important;
 }
 
 .station-dot-node:hover {
@@ -5282,6 +5297,28 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
 .station-dot-node:hover .station-hover-tooltip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+.station-dot-node.is-origin-node:hover .station-hover-tooltip,
+.station-dot-node:first-child:hover .station-hover-tooltip {
+  transform: translateX(0) translateY(0) !important;
+  left: 0 !important;
+}
+.station-dot-node.is-origin-node .station-hover-tooltip::after,
+.station-dot-node:first-child .station-hover-tooltip::after {
+  left: 8px !important;
+}
+
+.station-dot-node.is-dest-node:hover .station-hover-tooltip,
+.station-dot-node:last-child:hover .station-hover-tooltip {
+  transform: translateX(0) translateY(0) !important;
+  left: auto !important;
+  right: 0 !important;
+}
+.station-dot-node.is-dest-node .station-hover-tooltip::after,
+.station-dot-node:last-child .station-hover-tooltip::after {
+  left: auto !important;
+  right: 8px !important;
 }
 
 .tip-header {
@@ -5402,7 +5439,37 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
 }
 
 .tymetro-endpoints-row {
-  margin-top: 4px;
+  margin: 6px 14px 2px 14px !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  overflow: visible !important;
+}
+
+.tymetro-endpoints-row .station-label {
+  font-size: 0.74rem;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+.tymetro-endpoints-row .station-label:first-child {
+  text-align: left;
+}
+
+.tymetro-endpoints-row .station-label:last-child {
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .tymetro-endpoints-row {
+    margin: 4px 10px 2px 10px !important;
+  }
+  .tymetro-endpoints-row .station-label {
+    font-size: 0.70rem !important;
+    letter-spacing: 0 !important;
+  }
 }
 
 /* ==========================================================================
@@ -14154,7 +14221,7 @@ class TwinCityTransitMonitor {
             const isDest = idx === displayStations.length - 1;
             const isMajor = st.isMajor;
             return `
-              <div class="station-dot-node ${isMajor ? 'is-major-station' : ''} ${isOrigin || isDest ? 'is-terminal' : ''}" 
+              <div class="station-dot-node ${isMajor ? 'is-major-station' : ''} ${isOrigin ? 'is-origin-node is-terminal' : ''} ${isDest ? 'is-dest-node is-terminal' : ''}" 
                    style="left: ${posPercent}%;"
                    data-code="${st.code}" 
                    data-name="${st.name}">
