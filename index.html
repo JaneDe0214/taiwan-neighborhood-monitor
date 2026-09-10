@@ -2171,22 +2171,31 @@ a.coord-tag:hover {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  box-sizing: border-box;
 }
 
-.transit-nearby-bar {
+.transit-nearby-card-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.nearby-top-nav-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  min-height: 42px;
-  padding: 4px 8px;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(56, 189, 248, 0.28);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  flex-wrap: nowrap;
-  overflow: hidden;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
 }
 
 .nearby-stop-pill {
@@ -2198,7 +2207,6 @@ a.coord-tag:hover {
   padding: 4px 10px;
   border-radius: 6px;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .nearby-stop-pill .pill-dot-live {
@@ -2229,109 +2237,19 @@ a.coord-tag:hover {
 }
 
 .nearby-stop-pill .pill-city-tag {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #38bdf8;
   background: rgba(56, 189, 248, 0.15);
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
 .nearby-stop-pill .pill-stop-name {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: #f8fafc;
   letter-spacing: 0.3px;
-}
-
-.nearby-chips-scroll {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 2px 0;
-}
-.nearby-chips-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.nearby-bus-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: rgba(30, 41, 59, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 6px;
-  padding: 4px 10px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-.nearby-bus-card:hover {
-  background: rgba(51, 65, 85, 0.95);
-  border-color: rgba(56, 189, 248, 0.6);
-  transform: translateY(-1px);
-}
-.nearby-bus-card.is-selected {
-  background: rgba(14, 116, 144, 0.4);
-  border-color: #06b6d4;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
-}
-
-.nearby-bus-card .bus-badge-num {
-  font-size: 0.92rem;
-  font-weight: 900;
-  color: #facc15;
-  background: rgba(250, 204, 21, 0.16);
-  padding: 2px 7px;
-  border-radius: 4px;
-  letter-spacing: 0.4px;
-}
-
-.nearby-bus-card .bus-dest-text {
-  font-size: 0.82rem;
-  color: #e2e8f0;
-  font-weight: 600;
-}
-
-.nearby-bus-card .bus-action-tag {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-weight: 600;
-}
-
-.nearby-bus-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
-  font-size: 0.74rem;
-  font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.nearby-bus-badge.badge-arriving {
-  background: rgba(239, 68, 68, 0.28);
-  border: 1px solid rgba(239, 68, 68, 0.65);
-  color: #fca5a5;
-  animation: pids-urgent-pulse 1.2s infinite ease-in-out;
-}
-.nearby-bus-badge.badge-soon {
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  color: #fcd34d;
-}
-.nearby-bus-badge.badge-normal {
-  background: rgba(16, 185, 129, 0.18);
-  border: 1px solid rgba(16, 185, 129, 0.38);
-  color: #6ee7b7;
 }
 
 .nearby-actions-group {
@@ -2352,7 +2270,7 @@ a.coord-tag:hover {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -2360,6 +2278,102 @@ a.coord-tag:hover {
   background: rgba(6, 182, 212, 0.4);
   border-color: #22d3ee;
   box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+}
+
+/* 全部公車動態晶片網格：彈性自適應換行 ‧ 所有公車一目了然完全不遮擋 */
+.nearby-bus-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nearby-bus-card {
+  flex: 1 1 calc(25% - 8px);
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+.nearby-bus-card:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(56, 189, 248, 0.6);
+  transform: translateY(-1px);
+}
+.nearby-bus-card.is-selected {
+  background: rgba(14, 116, 144, 0.4);
+  border-color: #06b6d4;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
+}
+
+.nearby-bus-card .bus-badge-num {
+  font-size: 0.96rem;
+  font-weight: 900;
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.16);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.nearby-bus-card .bus-dest-text {
+  font-size: 0.82rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nearby-bus-card .bus-action-tag {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.nearby-bus-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.nearby-bus-badge.badge-arriving {
+  background: rgba(239, 68, 68, 0.28);
+  border: 1px solid rgba(239, 68, 68, 0.65);
+  color: #fca5a5;
+  animation: pids-urgent-pulse 1.2s infinite ease-in-out;
+}
+.nearby-bus-badge.badge-soon {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+.nearby-bus-badge.badge-normal {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.38);
+  color: #6ee7b7;
 }
 
 /* 展開詳細抽屜面板 */
@@ -11926,17 +11940,29 @@ class TwinCityTransitMonitor {
 
     return `
       <div class="transit-nearby-wrapper ${this.isNearbyDetailOpen ? 'is-detail-expanded' : 'is-bar-compact'}">
-        <!-- 橫向超薄即時公車串流條 (長輩一眼看清) -->
-        <div class="transit-nearby-bar">
-          <!-- 1. 左側站牌資訊 -->
-          <div class="nearby-stop-pill" title="${hub.cityLabel} ${hub.district} 核心公共運輸站點">
-            <span class="pill-dot-live pulse-green"></span>
-            <span class="pill-city-tag">${hub.cityLabel}</span>
-            <strong class="pill-stop-name">${hub.stopName}</strong>
+        <!-- 附近公車站牌與即時路線全覽盒 (自適應彈性折行 ‧ 所有公車100%完整呈現絕不遮擋) -->
+        <div class="transit-nearby-card-box">
+          <!-- 1. 頂部站牌資訊與操作列 -->
+          <div class="nearby-top-nav-row">
+            <div class="nearby-stop-pill" title="${hub.cityLabel} ${hub.district} 核心公共運輸站點">
+              <span class="pill-dot-live pulse-green"></span>
+              <span class="pill-city-tag">${hub.cityLabel} ‧ ${hub.district}</span>
+              <strong class="pill-stop-name">${hub.stopName}</strong>
+            </div>
+
+            <div class="nearby-actions-group">
+              <button class="nearby-guide-btn ${this.isNearbyDetailOpen ? 'active' : ''}" 
+                      onclick="window.transitMonitor && window.transitMonitor.toggleNearbyDetail()" 
+                      title="${this.isNearbyDetailOpen ? '收合路線與站點指南' : '展開公車去向與沿途地標詳細指南'}">
+                <i class="fa-solid fa-signs-post"></i>
+                <span>${this.isNearbyDetailOpen ? '收合路線' : '公車去哪？詳細指南'}</span>
+                <i class="fa-solid ${this.isNearbyDetailOpen ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+              </button>
+            </div>
           </div>
 
-          <!-- 2. 中間各路線即時看板 (點擊公車晶片直接展開公車去哪) -->
-          <div class="nearby-chips-scroll" title="點擊公車路線卡牌查看公車開往哪裡與沿途站點">
+          <!-- 2. 全部公車動態晶片網格 (自適應彈性折行，後面的車全部看得見) -->
+          <div class="nearby-bus-grid" title="點擊公車路線卡牌查看公車開往哪裡與沿途地標">
             ${routes.map(r => {
               const waitSec = this.getNearbyRouteWaitSec(cityId, r.code);
               const isSelected = activeRoute && activeRoute.code === r.code;
@@ -11951,17 +11977,6 @@ class TwinCityTransitMonitor {
                 </div>
               `;
             }).join('')}
-          </div>
-
-          <!-- 3. 右側「公車去哪？」切換按鈕 -->
-          <div class="nearby-actions-group">
-            <button class="nearby-guide-btn ${this.isNearbyDetailOpen ? 'active' : ''}" 
-                    onclick="window.transitMonitor && window.transitMonitor.toggleNearbyDetail()" 
-                    title="${this.isNearbyDetailOpen ? '收合路線與站點指南' : '展開公車去向與沿途地標詳細指南'}">
-              <i class="fa-solid fa-signs-post"></i>
-              <span>${this.isNearbyDetailOpen ? '收合' : '公車去哪？'}</span>
-              <i class="fa-solid ${this.isNearbyDetailOpen ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
-            </button>
           </div>
         </div>
 
