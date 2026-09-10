@@ -1999,6 +1999,100 @@ a.coord-tag:hover {
   font-weight: 300;
 }
 
+/* 月台 PIDS 電子看板風格微型晶片卡 */
+.pids-stream-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 0.74rem;
+  line-height: 1.25;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.pids-stream-card:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+.pids-stream-card.pids-thsr {
+  border-color: rgba(255, 119, 0, 0.45);
+  box-shadow: 0 0 8px rgba(255, 119, 0, 0.15);
+}
+.pids-stream-card.pids-tymetro {
+  border-color: rgba(168, 85, 247, 0.45);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.15);
+}
+.pids-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.3px;
+}
+.pids-tag.thsr-tag {
+  color: #ff7700;
+}
+.pids-tag.tymetro-tag {
+  color: #a855f7;
+}
+.pids-dest {
+  color: #38bdf8;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.3px;
+}
+.pids-type-mini {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.pids-type-mini.express {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.22);
+  font-weight: 700;
+}
+.pids-time {
+  color: #ffffff;
+  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.pids-countdown-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
+  font-weight: 800;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.18);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.73rem;
+  letter-spacing: 0.4px;
+}
+.pids-countdown-chip.is-urgent {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.25);
+  animation: pids-urgent-pulse 1.2s infinite ease-in-out;
+}
+.pids-countdown-chip.is-muted {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.12);
+}
+@keyframes pids-urgent-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
 .transit-corridor-bar::before {
   content: '';
   position: absolute;
@@ -11238,6 +11332,21 @@ class TwinCityTransitMonitor {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
   }
 
+  // 月台 PIDS 電子看板倒數秒數格式化 (MM:SS 每秒跳秒，無括號，模擬真實車站月台看板)
+  formatPlatformCountdown(sec, isOutOfService = false) {
+    if (isOutOfService) {
+      return '<span class="pids-countdown-chip is-muted">明日首班</span>';
+    }
+    if (sec <= 0) {
+      return '<span class="pids-countdown-chip is-urgent pulse-live">即將發車</span>';
+    }
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    const timeStr = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    const urgentClass = sec <= 90 ? "is-urgent" : "";
+    return `<span class="pids-countdown-chip ${urgentClass}"><i class="fa-regular fa-clock"></i> ${timeStr}</span>`;
+  }
+
   // 增加分鐘數
   addMinutes(date, mins) {
     return new Date(date.getTime() + mins * 60000);
@@ -12515,15 +12624,28 @@ class TwinCityTransitMonitor {
     this._lastPlansSig = plansSig;
 
     if (isCollapsed) {
-      const thsrPill = mainSlot.querySelector('[data-c-thsr]');
-      const tymetroPill = mainSlot.querySelector('[data-c-tymetro]');
-      if (!thsrPill || !tymetroPill) return false;
+      const thsrCard = mainSlot.querySelector('[data-c-thsr]');
+      const tymetroCard = mainSlot.querySelector('[data-c-tymetro]');
+      if (!thsrCard || !tymetroCard) return false;
 
-      const thsrWait = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (${Math.ceil(thsr.waitSec / 60)}分後)` : '';
-      thsrPill.innerHTML = `<i class="fa-solid fa-bolt" style="color:#ff7700;"></i> 高鐵 <strong>${thsr.depTime}</strong>${thsrWait}`;
+      const isToQingpu = this.direction === 'to_qingpu';
+      const thsrDest = isToQingpu ? '往桃園' : '往板橋';
+      const tymetroDest = isToQingpu ? '往青埔' : '往新埔';
 
-      const tymetroWait = (tymetro.waitSec != null && tymetro.waitSec > 0) ? ` (${Math.ceil(tymetro.waitSec / 60)}分後)` : '';
-      tymetroPill.innerHTML = `<i class="fa-solid fa-route" style="color:#8b5cf6;"></i> 機捷 <strong>${tymetro.depTime}</strong>${tymetroWait}`;
+      thsrCard.innerHTML = `
+        <span class="pids-tag thsr-tag"><i class="fa-solid fa-bolt"></i> 高鐵</span>
+        <span class="pids-dest">${thsrDest}</span>
+        <strong class="pids-time">${thsr.depTime}</strong>
+        ${this.formatPlatformCountdown(thsr.waitSec, thsr.isOutOfService)}
+      `;
+
+      tymetroCard.innerHTML = `
+        <span class="pids-tag tymetro-tag"><i class="fa-solid fa-route"></i> 機捷</span>
+        <span class="pids-dest">${tymetroDest}</span>
+        <span class="pids-type-mini ${tymetro.isExpress ? 'express' : ''}">${tymetro.isExpress ? '直達' : '普通'}</span>
+        <strong class="pids-time">${tymetro.depTime}</strong>
+        ${this.formatPlatformCountdown(tymetro.waitSec, tymetro.isOutOfService)}
+      `;
 
       const brief = this.getCommuteBriefInfo();
       const gearEl = mainSlot.querySelector('[data-c-gear]');
@@ -12881,9 +13003,22 @@ class TwinCityTransitMonitor {
           <span class="stream-divider">│</span>
           <span class="stream-pill bike-pill" data-c-bike>${brief.bikePart}</span>
           <span class="stream-divider">│</span>
-          <span class="stream-pill thsr-pill" data-c-thsr><i class="fa-solid fa-bolt" style="color:#ff7700;"></i> 高鐵 <strong>${thsr.depTime}</strong>${thsrWait}</span>
+          <!-- 高鐵月台看板風格晶片 (標註往哪裡、發車時間、即時秒數跳動) -->
+          <div class="pids-stream-card pids-thsr" data-c-thsr title="高鐵：${isToQingpu ? '往桃園' : '往板橋'}，預計 ${thsr.depTime} 發車">
+            <span class="pids-tag thsr-tag"><i class="fa-solid fa-bolt"></i> 高鐵</span>
+            <span class="pids-dest">${isToQingpu ? '往桃園' : '往板橋'}</span>
+            <strong class="pids-time">${thsr.depTime}</strong>
+            ${this.formatPlatformCountdown(thsr.waitSec, thsr.isOutOfService)}
+          </div>
           <span class="stream-divider">│</span>
-          <span class="stream-pill tymetro-pill" data-c-tymetro><i class="fa-solid fa-route" style="color:#8b5cf6;"></i> 機捷 <strong>${tymetro.depTime}</strong>${tymetroWait}</span>
+          <!-- 機捷月台看板風格晶片 (標註往哪裡、車種、發車時間、即時秒數跳動) -->
+          <div class="pids-stream-card pids-tymetro" data-c-tymetro title="機捷：${isToQingpu ? '往青埔' : '往新埔'} (${tymetro.rawType})，預計 ${tymetro.depTime} 發車">
+            <span class="pids-tag tymetro-tag"><i class="fa-solid fa-route"></i> 機捷</span>
+            <span class="pids-dest">${isToQingpu ? '往青埔' : '往新埔'}</span>
+            <span class="pids-type-mini ${tymetro.isExpress ? 'express' : ''}">${tymetro.isExpress ? '直達' : '普通'}</span>
+            <strong class="pids-time">${tymetro.depTime}</strong>
+            ${this.formatPlatformCountdown(tymetro.waitSec, tymetro.isOutOfService)}
+          </div>
         </div>
 
         <!-- 3. 右側：時刻表按鈕 + 展開路網詳情按鈕 -->
