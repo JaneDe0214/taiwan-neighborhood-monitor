@@ -2849,7 +2849,7 @@ a.coord-tag:hover {
   color: #00f0ff;
 }
 
-/* YouBike 接駁車況速報橫條 */
+/* YouBike車況速報橫條 */
 .hub-youbike-strip {
   display: flex;
   align-items: center;
@@ -6739,14 +6739,14 @@ body.native-mobile-mode .parking-lot-chip {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 4px 12px;
-  width: 220px;
+  width: 100%; max-width: 360px;
   transition: all 0.25s ease;
 }
 .filter-search-wrap:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
   background: rgba(15, 23, 42, 0.9);
-  width: 260px;
+  width: 100%; max-width: 420px;
 }
 .filter-search-icon {
   color: #64748b;
@@ -6929,10 +6929,6 @@ body.native-mobile-mode .parking-lot-chip {
         <i class="fa-solid fa-plane-arrival"></i>
         <span>觀光</span>
       </button>
-            <button class="center-btn" data-center="favorites" title="我的最愛：自選專屬跨區即時視訊牆">
-        <i class="fa-solid fa-star"></i>
-        <span>收藏</span>
-      </button>
       <button class="center-btn" data-center="japan" title="日本精選：澀谷 ‧ 富士山4K ‧ 歌舞伎町 ‧ 道頓堀 ‧ 秋葉原 ‧ 東京鐵塔 ‧ 京都">
         <i class="fa-solid fa-torii-gate"></i>
         <span>日本</span>
@@ -6948,7 +6944,6 @@ body.native-mobile-mode .parking-lot-chip {
         <button class="grid-btn active" data-grid="grid-6" title="六重視角 (雙域模式：青埔3 + 新埔3各半均分)"><i class="fa-solid fa-table-cells"></i> 6格</button>
         <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙埔模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
         <button class="grid-btn" data-grid="grid-12" title="十二分割廣域監控"><i class="fa-solid fa-grip"></i> 12格</button>
-        <button class="grid-btn" data-grid="grid-16" title="十六分割全量掌握"><i class="fa-solid fa-grip-vertical"></i> 16格</button>
         <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
       </div>
 
@@ -7008,15 +7003,6 @@ body.native-mobile-mode .parking-lot-chip {
           <input type="text" id="cameraSearchInput" class="filter-search-input" placeholder="快速搜尋名稱、路段、景點..." autocomplete="off">
           <button class="filter-clear-btn" id="filterClearBtn" title="清除搜尋"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="filter-tags-scroll" id="filterTagsScroll">
-          <button class="filter-tag-pill active" data-tag="all">全部</button>
-          <button class="filter-tag-pill" data-tag="商圈">熱門商圈</button>
-          <button class="filter-tag-pill" data-tag="風景">自然名勝</button>
-          <button class="filter-tag-pill" data-tag="溫泉">溫泉名勝</button>
-          <button class="filter-tag-pill" data-tag="富士山">富士山</button>
-          <button class="filter-tag-pill" data-tag="交通">交通樞紐</button>
-          <button class="filter-tag-pill" data-tag="4K">4K極清</button>
-        </div>
       </div>
 
       <!-- 攝影機視訊卡片網格 -->
@@ -7028,7 +7014,7 @@ body.native-mobile-mode .parking-lot-chip {
     <!-- 右側即時環境與生活安全面板 -->
     <aside class="sidebar-section">
 
-      <!-- 區域 2：雙埔即時氣象面板 -->
+      <!-- 區域 2：雙埔氣象面板 -->
       <div class="widget-card" id="weatherWidgetCard">
         <div class="widget-title-row">
           <div class="widget-title">
@@ -9007,7 +8993,7 @@ class WeatherEnvironmentMonitor {
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
-          <i class="fa-solid fa-cloud-sun"></i> 雙埔即時氣象
+          <i class="fa-solid fa-cloud-sun"></i> 雙埔氣象
         </div>
         <div class="live-sync-badge">
           <span class="pulse-live-dot"></span>
@@ -12411,7 +12397,7 @@ class TwinCityTransitMonitor {
         arriveTime: this.formatTime(finalDestArr),
         totalDuration: `${totalDurationMins} 分鐘`,
         durationNum: totalDurationMins,
-        badge: '高鐵快線',
+        badge: '高鐵',
         badgeClass: 'badge-thsr',
         name: isToQingpu ? `板南線 ➔ 高鐵 ${t.trainNo}次` : `高鐵 ${t.trainNo}次 ➔ 板南線`,
         route: isToQingpu ? '新埔 ➔ 板橋 ➔ 桃園高鐵 ➔ 青埔' : '青埔 ➔ 桃園高鐵 ➔ 板橋 ➔ 新埔',
@@ -12625,7 +12611,7 @@ class TwinCityTransitMonitor {
         hubTymetroCountdown.innerHTML = this.getHubCountdownText(firstTymetroPlan, tymetro);
       }
 
-      // 即時 YouBike 接駁車況原地更新
+      // 即時 YouBike車況原地更新
       if (typeof window !== 'undefined' && window.weatherMonitor && typeof window.weatherMonitor.getDualCoreStations === 'function') {
         const stations = window.weatherMonitor.getDualCoreStations();
         if (stations && stations.length > 0) {
@@ -12789,7 +12775,7 @@ class TwinCityTransitMonitor {
 
     // 高鐵線大字快覽膠囊
     const thsrPillHtml = `
-      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵快線：點擊展開查看詳細路線">
+      <div class="compact-route-pill thsr-pill" onclick="window.transitMonitor.toggleCollapse()" title="高鐵：點擊展開查看詳細路線">
         <span class="pill-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
         <span class="pill-dep-time">${thsr.depTime} 發車</span>
         <span class="pill-status-chip ${thsrChipClass}" data-c-thsr-status>${thsr.platformStatus}</span>
@@ -12800,7 +12786,7 @@ class TwinCityTransitMonitor {
 
     // 機捷線大字快覽膠囊
     const tymetroPillHtml = `
-      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷路線：點擊展開查看詳細路線">
+      <div class="compact-route-pill tymetro-pill" onclick="window.transitMonitor.toggleCollapse()" title="機捷：點擊展開查看詳細路線">
         <span class="pill-badge"><i class="fa-solid fa-route"></i> 機捷</span>
         <span class="pill-dep-time">${tymetro.depTime} 發車</span>
         <span class="pill-status-chip ${tymetroChipClass}" data-c-tymetro-status>${tymetro.platformStatus}</span>
@@ -12824,16 +12810,16 @@ class TwinCityTransitMonitor {
             </span>
           ` : ''}
 
-          <!-- 高鐵快線大字快覽卡 -->
+          <!-- 高鐵大字快覽卡 -->
           ${thsrPillHtml}
 
-          <!-- 機捷路線大字快覽卡 -->
+          <!-- 機捷大字快覽卡 -->
           ${tymetroPillHtml}
         </div>
 
         <div class="compact-actions-group">
           <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看今日搭車時間表">
-            <i class="fa-regular fa-clock"></i> <span>班次時間表</span>
+            <i class="fa-regular fa-clock"></i> <span>時刻表</span>
           </button>
           <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開查看搭車指南與詳細路線">
             <span>路線詳情</span> <i class="fa-solid ${this.isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
@@ -12896,7 +12882,7 @@ class TwinCityTransitMonitor {
           <div class="pids-title-group">
             <span class="leg-dot thsr-dot"></span>
             <span class="leg-title">高鐵</span>
-            <span class="pids-train-pill thsr-train-pill"><i class="fa-solid fa-circle-check"></i> ${thsr.trainNo}次 (停靠桃園)</span>
+            <span class="pids-train-pill thsr-train-pill"><i class="fa-solid fa-circle-check"></i> ${thsr.trainNo}次</span>
           </div>
           <span class="pids-mini-pill thsr-pill-pids" data-f-thsr-status><i class="fa-solid fa-clock"></i> ${thsr.platformStatus}</span>
           ${thsrAlert ? 
@@ -13132,10 +13118,10 @@ class TwinCityTransitMonitor {
         </div>
 
         <div class="hub-options-grid">
-          <!-- 方案一：高鐵快線 (最速推薦) -->
+          <!-- 方案一：高鐵 (最速推薦) -->
           <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="查看今日全部高鐵班次表">
             <div class="plan-item-badge">
-              <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵最速首選</span>
+              <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵</span>
               <span class="badge-save-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</strong></span>
             </div>
 
@@ -13169,7 +13155,7 @@ class TwinCityTransitMonitor {
           <!-- 方案二：機捷直通 (捷運替代) -->
           <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="查看今日全部機捷班次表">
             <div class="plan-item-badge">
-              <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機捷直通替代</span>
+              <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機運</span>
               <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</strong></span>
             </div>
 
@@ -13201,11 +13187,11 @@ class TwinCityTransitMonitor {
           </div>
         </div>
 
-        <!-- YouBike 接駁車況速報橫條 (出發借車 + 下車借車，符合真實通勤生活動線) -->
+        <!-- YouBike車況速報橫條 (出發借車 + 下車借車，符合真實通勤生活動線) -->
         <div class="hub-youbike-strip">
           <div class="youbike-hub-label">
             <i class="fa-solid fa-bicycle"></i>
-            <span>YouBike 接駁車況</span>
+            <span>YouBike車況</span>
           </div>
           <div class="youbike-hub-metrics">
             <div class="youbike-metric-item" title="出發地週邊站點即時借車狀況">
@@ -13334,7 +13320,7 @@ class TwinCityTransitMonitor {
           </div>
 
           <button class="transit-plan-toggle-btn ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看完整搭車時間表">
-            <i class="fa-regular fa-clock"></i> <span>班次時間表</span>
+            <i class="fa-regular fa-clock"></i> <span>時刻表</span>
             <i class="fa-solid ${this.isScheduleExpanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
           </button>
 
@@ -13360,8 +13346,8 @@ class TwinCityTransitMonitor {
         <div class="transit-track-card track-thsr full-width-card">
           <div class="track-header">
             <div class="track-badge-group">
-              <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵快線</span>
-              <span class="thsr-safe-pill" title="此路廊保證停靠桃園高鐵站"><i class="fa-solid fa-circle-check"></i> 停靠桃園</span>
+              <span class="track-type-badge thsr-badge"><i class="fa-solid fa-bolt"></i> 高鐵</span>
+
               ${this.isDirectThsrApi ? '<span class="live-chip-badge live-thsr" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 高鐵' : '高鐵 ➔ 板南線'}</span>
             </div>
@@ -13380,12 +13366,12 @@ class TwinCityTransitMonitor {
         </div>
 
         <!-- ======================================================= -->
-        <!-- 路線二：機捷路線 (全寬長條 100% 貫穿) -->
+        <!-- 路線二：機捷 (全寬長條 100% 貫穿) -->
         <!-- ======================================================= -->
         <div class="transit-track-card track-tymetro full-width-card">
           <div class="track-header">
             <div class="track-badge-group">
-              <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷路線</span>
+              <span class="track-type-badge tymetro-badge"><i class="fa-solid fa-route"></i> 機捷</span>
               ${this.isDirectTymetroApi ? '<span class="live-chip-badge live-tymetro" title="官方原生直連即時動態"><span class="live-pulse-dot"></span>LIVE</span>' : ''}
               <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 機捷' : '機捷 ➔ 環狀線'}</span>
             </div>
@@ -13558,17 +13544,17 @@ class TwinCityTransitMonitor {
           <div class="schedule-drawer-title-group">
             <div class="schedule-drawer-title">
               <i class="fa-solid fa-calendar-days" style="color:#00f0ff;"></i> 
-              <strong>即時班車時間表</strong> 
+              <strong>即時時刻表</strong> 
               <span class="schedule-dir-note">(${routeText} ‧ ${hasTrains ? `今日剩餘 ${timetableList.length} 班` : '今日已收班'})</span>
             </div>
 
             <!-- 雙 TAB 頁籤切換器 (高鐵 / 機捷，預設顯示高鐵) -->
             <div class="schedule-tabs-container">
               <button class="schedule-tab-btn tab-thsr ${isThsrTab ? 'active' : ''}" onclick="window.transitMonitor && window.transitMonitor.switchScheduleTab('thsr')" title="檢視高鐵板橋與桃園當下及未來所有班次">
-                <i class="fa-solid fa-bolt"></i> 🚄 高鐵班次表 ${isThsrTab ? '<span class="tab-active-dot"></span>' : ''}
+                <i class="fa-solid fa-bolt"></i> 🚄 高鐵 ${isThsrTab ? '<span class="tab-active-dot"></span>' : ''}
               </button>
               <button class="schedule-tab-btn tab-tymetro ${!isThsrTab ? 'active' : ''}" onclick="window.transitMonitor && window.transitMonitor.switchScheduleTab('tymetro')" title="檢視機場捷運當下及未來所有直達與普通班次">
-                <i class="fa-solid fa-plane"></i> 🚇 機捷班次表 ${!isThsrTab ? '<span class="tab-active-dot"></span>' : ''}
+                <i class="fa-solid fa-plane"></i> 🚇 機捷 ${!isThsrTab ? '<span class="tab-active-dot"></span>' : ''}
               </button>
             </div>
           </div>
@@ -16213,48 +16199,111 @@ class MonitorApp {
   }
 
   // ===== 出門前 3 秒智慧出行快報膠囊 =====
+  // ===== 出門前 3 秒智慧出行快報膠囊 =====
   updateCommuteCapsule() {
     const capsuleEl = document.getElementById('smartCommuteCapsuleContent');
     if (!capsuleEl) return;
 
-    // 1. 天候資訊
+    // 1. 出門裝備速查：一眼即知要不要帶雨傘、要不要穿外套
+    let umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴朗無雨免帶傘</span>';
+    let outfitTip = '👕 舒適穿著';
     let weatherPart = '🌤️ 今日天候良好';
+
     if (this.weatherMonitor) {
-      if (this.weatherMonitor.currentWeatherData) {
-        const w = this.weatherMonitor.currentWeatherData;
-        const temp = w.temp != null ? `${Math.round(w.temp)}°C` : '';
-        const desc = w.condition || '舒適';
-        const rain = w.rainProb != null ? ` (降雨 ${w.rainProb}%)` : '';
-        weatherPart = `🌤️ ${temp} ${desc}${rain}`;
-      } else if (this.weatherMonitor.weatherDual && this.weatherMonitor.weatherDual.qp) {
-        const qp = this.weatherMonitor.weatherDual.qp;
-        const temp = qp.temp != null ? `${Math.round(qp.temp)}°C` : '';
-        const desc = qp.condition || '多雲';
-        weatherPart = `🌤️ 青埔 ${temp} ${desc}`;
+      const dual = this.weatherMonitor.currentDualData;
+      const single = this.weatherMonitor.currentData;
+      let cur = null;
+      let prob = 0;
+      let locationLabel = '雙埔';
+
+      if (dual) {
+        const qp = dual.qp || dual.qpData;
+        const bp = dual.bp || dual.bpData;
+        if (qp && qp.weather && qp.weather.current) {
+          cur = qp.weather.current;
+          const qpProb = Array.isArray(qp.weather.hourly?.precipitation_probability) ? qp.weather.hourly.precipitation_probability[0] : 0;
+          prob = qpProb || 0;
+
+          if (bp && bp.weather && bp.weather.current) {
+            const bpCur = bp.weather.current;
+            const bpProb = Array.isArray(bp.weather.hourly?.precipitation_probability) ? bp.weather.hourly.precipitation_probability[0] : 0;
+            if (bpProb > prob) {
+              prob = bpProb;
+            }
+            if ((bpCur.precipitation || 0) > (cur.precipitation || 0)) {
+              cur = bpCur;
+              locationLabel = '新埔';
+            } else {
+              locationLabel = '青埔';
+            }
+          }
+        }
+      } else if (single && single.weather && single.weather.current) {
+        cur = single.weather.current;
+        const sProb = Array.isArray(single.weather.hourly?.precipitation_probability) ? single.weather.hourly.precipitation_probability[0] : 0;
+        prob = sProb || 0;
+        locationLabel = this.currentCenterData?.name || '當地';
+      }
+
+      if (cur) {
+        const temp = cur.temperature_2m != null ? Math.round(cur.temperature_2m) : null;
+        const appTemp = cur.apparent_temperature != null ? Math.round(cur.apparent_temperature) : temp;
+        const rainProbVal = Math.round(prob);
+        const prec = (cur.precipitation || 0) + (cur.rain || 0);
+        const code = cur.weather_code != null ? cur.weather_code : -1;
+        const isRaining = prec > 0.1 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96].includes(code);
+
+        // 雨傘提醒
+        if (isRaining) {
+          umbrellaTip = '<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨中 必帶雨傘</span>';
+        } else if (rainProbVal >= 30) {
+          umbrellaTip = `<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨機率 ${rainProbVal}% 建議帶傘</span>`;
+        } else {
+          umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴朗無雨免帶傘</span>';
+        }
+
+        // 外套與穿著提醒
+        if (appTemp !== null) {
+          if (appTemp < 17) {
+            outfitTip = '🧥 氣溫偏低 添外套防寒';
+          } else if (appTemp <= 22) {
+            outfitTip = '🧥 稍有涼意 建議備薄外套';
+          } else if (appTemp >= 29) {
+            outfitTip = '☀️ 氣候炎熱 留意防曬補水';
+          } else {
+            outfitTip = '👕 舒適穿著';
+          }
+        }
+
+        const weatherCodeInfo = this.weatherMonitor.getWeatherCodeInfo ? this.weatherMonitor.getWeatherCodeInfo(code) : { text: '良好' };
+        const rainStr = rainProbVal > 0 ? ` (降雨 ${rainProbVal}%)` : '';
+        weatherPart = `🌤️ ${locationLabel} ${temp !== null ? `${temp}°C` : ''} ${weatherCodeInfo.text}${rainStr}`;
       }
     }
 
     // 2. YouBike 核心站點車況
-    let youbikePart = '🚲 站前 YouBike 車源充足';
+    let youbikePart = '🚲 站前車況充裕';
     if (this.weatherMonitor && Array.isArray(this.weatherMonitor.youbikeStations) && this.weatherMonitor.youbikeStations.length > 0) {
       const keyStation = this.weatherMonitor.youbikeStations.find(st => st.name && (st.name.includes('高鐵') || st.name.includes('新埔') || st.name.includes('站前'))) || this.weatherMonitor.youbikeStations[0];
       if (keyStation && typeof keyStation.bikes === 'number') {
-        const eText = keyStation.ebikes ? ` (含電輔車${keyStation.ebikes}台)` : '';
+        const eText = keyStation.ebikes ? ` (電輔車${keyStation.ebikes})` : '';
         youbikePart = `🚲 ${keyStation.name.replace(/YouBike2.0_/g, '')} 剩 ${keyStation.bikes} 台${eText}`;
       }
     }
 
-    // 3. 大眾運輸鐵道速報
-    let transitPart = '🚄 鐵道捷運運轉正常';
+    // 3. 大眾運輸速報
+    let transitPart = '🚄 鐵道正常運轉';
     if (this.transitMonitor) {
       const thsr = this.transitMonitor.getThsrNextTrain ? this.transitMonitor.getThsrNextTrain() : null;
       if (thsr && thsr.depTime) {
-        const minText = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (約 ${Math.ceil(thsr.waitSec / 60)} 分鐘後)` : '';
-        transitPart = `🚄 下班高鐵 ${thsr.depTime} 發車${minText}`;
+        const minText = (thsr.waitSec != null && thsr.waitSec > 0) ? ` (${Math.ceil(thsr.waitSec / 60)}分後)` : '';
+        transitPart = `🚄 高鐵 ${thsr.depTime} 發車${minText}`;
       }
     }
 
     capsuleEl.innerHTML = `
+      <span class="capsule-item capsule-gear">${umbrellaTip} ‧ ${outfitTip}</span>
+      <span class="capsule-divider">│</span>
       <span class="capsule-item">${weatherPart}</span>
       <span class="capsule-divider">│</span>
       <span class="capsule-item">${youbikePart}</span>
@@ -16272,16 +16321,29 @@ class MonitorApp {
     if (input) input.value = '';
     if (clearBtn) clearBtn.style.display = 'none';
 
-    document.querySelectorAll('#filterTagsScroll .filter-tag-pill').forEach(pill => {
-      if (pill.dataset.tag === 'all') pill.classList.add('active');
-      else pill.classList.remove('active');
-    });
 
     this.renderVideoMatrix();
   }
 
   // 綁定 UI 事件
   bindEvents() {
+    // 快速搜尋輸入框監聽 (即時響應)
+    const searchInput = document.getElementById('cameraSearchInput');
+    const clearBtn = document.getElementById('filterClearBtn');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.filterKeyword = (e.target.value || '').trim();
+        if (clearBtn) {
+          clearBtn.style.display = this.filterKeyword ? 'block' : 'none';
+        }
+        this.renderVideoMatrix();
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearFilters();
+      });
+    }
     // 中心切換按鈕
     document.querySelectorAll('.center-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -16549,6 +16611,17 @@ class MonitorApp {
       }
 
       this.currentCenterData = centerData || { name: '雙埔生活', id: centerId };
+
+      // 進到觀光和日本的時候，交通資訊自動隱藏
+      const transitBar = document.getElementById('transitTransitBar');
+      const commuteCapsule = document.getElementById('smartCommuteCapsule');
+      if (centerId === 'tourist' || centerId === 'japan') {
+        if (transitBar) transitBar.style.display = 'none';
+        if (commuteCapsule) commuteCapsule.style.display = 'none';
+      } else {
+        if (transitBar) transitBar.style.display = '';
+        if (commuteCapsule) commuteCapsule.style.display = '';
+      }
       this.currentCameras = cameras || [];
 
       // 原生 APK 環境下雙重確保臺北市交工處鏡頭為原生 HLS 直播
