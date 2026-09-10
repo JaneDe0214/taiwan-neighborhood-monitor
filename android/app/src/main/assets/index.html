@@ -3980,93 +3980,6 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   color: #f87171;
 }
 
-/* 抽屜內即時捷運到站看板 */
-.drawer-metro-live-section {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-.drawer-section-title {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #94a3b8;
-  margin-bottom: 5px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.drawer-metro-chips-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.drawer-metro-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-.drawer-metro-chip:hover {
-  transform: translateY(-1px);
-  background: rgba(22, 34, 58, 0.9);
-}
-.drawer-metro-chip.chip-bannan {
-  border-color: rgba(2, 132, 199, 0.45);
-}
-.drawer-metro-chip.chip-circular {
-  border-color: rgba(234, 179, 8, 0.45);
-}
-.dm-station {
-  font-weight: 700;
-  color: #f8fafc;
-  letter-spacing: 0.3px;
-}
-.dm-dest {
-  color: #cbd5e1;
-}
-.dm-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-}
-.dm-status.dm-counting {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border: 1px solid rgba(0, 240, 255, 0.3);
-}
-.dm-status.dm-arriving {
-  background: rgba(245, 158, 11, 0.22);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  animation: pulse-arriving-glow 1.2s ease-in-out infinite;
-}
-.dm-live-pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.pulse-count-glow {
-  background: #00f0ff;
-  box-shadow: 0 0 6px #00f0ff;
-  animation: count-heartbeat 1.5s ease-in-out infinite;
-}
-.pulse-arrive-glow {
-  background: #f59e0b;
-  box-shadow: 0 0 8px #f59e0b;
-  animation: arrive-flash 0.8s ease-in-out infinite;
-}
 @keyframes count-heartbeat {
   0%, 100% { opacity: 0.6; transform: scale(0.9); }
   50% { opacity: 1; transform: scale(1.15); }
@@ -13991,53 +13904,7 @@ class TwinCityTransitMonitor {
           </div>
         </div>
 
-        <!-- 捷運全向即時到站看板 (新埔站 / 新埔民生 / 板橋站 各方向即時倒數) -->
-        ${Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0 ? `
-          <div class="drawer-metro-live-section">
-            <div class="drawer-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-              <span>
-                <i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> 
-                捷運全向即時到站看板 (新埔 ‧ 新埔民生 ‧ 板橋)
-              </span>
-              <span class="pids-live-badge" style="font-size:0.75rem;opacity:0.9;font-weight:normal;color:#00f0ff;display:inline-flex;align-items:center;gap:4px;">
-                <span class="live-dot pulse-count" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00f0ff;"></span>
-                秒級動態倒數
-              </span>
-            </div>
-            <div class="drawer-metro-chips-row">
-              ${this.metroLiveData.map(item => {
-                let dynamicText = item.countdownText || '即將進站';
-                let isArriving = dynamicText.includes('進站');
-                if (item.targetTimestamp) {
-                  const now = Date.now();
-                  const diffSec = Math.floor((item.targetTimestamp - now) / 1000);
-                  if (diffSec <= 0) {
-                    dynamicText = '列車進站';
-                    isArriving = true;
-                  } else if (diffSec <= 35) {
-                    dynamicText = '即將進站';
-                    isArriving = true;
-                  } else {
-                    const m = Math.floor(diffSec / 60);
-                    const s = diffSec % 60;
-                    dynamicText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-                  }
-                }
-                return `
-                  <div class="drawer-metro-chip ${item.line === '環狀線' ? 'chip-circular' : 'chip-bannan'}" title="${item.station} 往 ${item.dest}：${dynamicText}">
-                    <span class="dm-station">${item.station}</span>
-                    <i class="fa-solid fa-arrow-right" style="font-size:0.6rem;opacity:0.6;"></i>
-                    <span class="dm-dest">${item.dest}</span>
-                    <span class="dm-status ${isArriving ? 'dm-arriving' : 'dm-counting'}">
-                      <span class="dm-live-pulse-dot ${isArriving ? 'pulse-arrive-glow' : 'pulse-count-glow'}"></span>
-                      ${dynamicText}
-                    </span>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        ` : ''}
+
       </div>
     `;
   }
