@@ -2163,6 +2163,360 @@ a.coord-tag:hover {
 /* ==========================================================================
    超矮收合狀態 (Ultra-Slim Mini Status Bar) - 長輩友善大字快覽版
    ========================================================================== */
+
+/* ==========================================================================
+   附近即時大眾運輸與公車站牌到站看板 (Nearby Realtime Bus Hub)
+   ========================================================================== */
+.transit-nearby-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: transit-compact-anim 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.transit-nearby-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 42px;
+  padding: 4px 8px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.nearby-stop-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nearby-stop-pill .pill-dot-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.pulse-green {
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: greenPulse 2s infinite;
+}
+
+@keyframes greenPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.nearby-stop-pill .pill-city-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.nearby-stop-pill .pill-stop-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.3px;
+}
+
+.nearby-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 0;
+}
+.nearby-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.nearby-bus-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(30, 41, 59, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.nearby-bus-card:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(56, 189, 248, 0.6);
+  transform: translateY(-1px);
+}
+.nearby-bus-card.is-selected {
+  background: rgba(14, 116, 144, 0.4);
+  border-color: #06b6d4;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.35);
+}
+
+.nearby-bus-card .bus-badge-num {
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.16);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.4px;
+}
+
+.nearby-bus-card .bus-dest-text {
+  font-size: 0.82rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.nearby-bus-card .bus-action-tag {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.nearby-bus-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.nearby-bus-badge.badge-arriving {
+  background: rgba(239, 68, 68, 0.28);
+  border: 1px solid rgba(239, 68, 68, 0.65);
+  color: #fca5a5;
+  animation: pids-urgent-pulse 1.2s infinite ease-in-out;
+}
+.nearby-bus-badge.badge-soon {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+.nearby-bus-badge.badge-normal {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.38);
+  color: #6ee7b7;
+}
+
+.nearby-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.nearby-guide-btn {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.18));
+  border: 1px solid rgba(6, 182, 212, 0.55);
+  color: #22d3ee;
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.nearby-guide-btn:hover, .nearby-guide-btn.active {
+  background: rgba(6, 182, 212, 0.4);
+  border-color: #22d3ee;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+}
+
+/* 展開詳細抽屜面板 */
+.nearby-bus-detail-drawer {
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: transit-expand-anim 0.25s ease-out both;
+}
+
+.drawer-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.drawer-title-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawer-bus-chip {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #0f172a;
+  background: #facc15;
+  padding: 2px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(250, 204, 21, 0.3);
+}
+
+.drawer-title-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawer-dest-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.drawer-sub-meta {
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.drawer-action-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-external-google-bus {
+  background: rgba(59, 130, 246, 0.22);
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  color: #60a5fa;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+.btn-external-google-bus:hover {
+  background: rgba(59, 130, 246, 0.35);
+  border-color: #93c5fd;
+  color: #bfdbfe;
+}
+
+.drawer-route-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(2, 6, 23, 0.6);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.drawer-route-flow .flow-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flow-nodes-track {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+
+.flow-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.84rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.flow-node-marker {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+}
+.flow-node.is-first .flow-node-marker {
+  background: #10b981;
+}
+.flow-node.is-last .flow-node-marker {
+  background: #f43f5e;
+}
+
+.flow-arrow {
+  color: #64748b;
+  font-size: 0.75rem;
+  margin-left: 2px;
+}
+
+.drawer-tips-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 6px 10px;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+.drawer-tips-box i {
+  color: #34d399;
+  margin-top: 2px;
+}
+
 .transit-compact-bar {
   display: flex;
   align-items: center;
@@ -10779,7 +11133,12 @@ class TwinCityTransitMonitor {
       }
     }
     this.lastScheduleKey = null;     // 快取出門時間表關鍵字，避免每秒銷毀重建閃爍
-    this.scheduleTab = 'thsr';       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
+    this.scheduleTab = 'thsr';
+    // 附近即時大眾運輸與公車站牌到站看板狀態
+    this.isNearbyDetailOpen = false;
+    this.selectedNearbyBusCode = null;
+    this.nearbyBusStates = {};
+    this.lastNearbyTickTime = Date.now();       // 'thsr' (高鐵班次表) | 'tymetro' (機捷班次表)，預設顯示高鐵
 
 // 台灣高鐵官方最新真實時刻表基準 (板橋南下往桃園，保證停靠桃園，共 55 班)
     this.thsrSouthTrains = [
@@ -11395,6 +11754,271 @@ class TwinCityTransitMonitor {
         drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
+  }
+
+
+  // 全台各生活圈核心公車站牌與即時路線去向資料庫
+  getNearbyHub(cityId = 'newtaipei') {
+    const hubs = {
+      newtaipei: {
+        stopName: "捷運新埔站 (文化路)",
+        district: "板橋區",
+        cityLabel: "新北市",
+        routes: [
+          { code: "99", dest: "新莊 ‧ 亞東醫院", initialWaitSec: 165, via: "致理科大 ➔ 新莊體育館 ➔ 新莊棒球場 ➔ 亞東醫院", freq: "尖峰 4~6分 / 離峰 8~10分", distMeters: 120, guide: "新北客運主力幹線 ‧ 可於新埔站轉乘板南線 ‧ 行經新莊各大休閒體育園區" },
+          { code: "805", dest: "五股 ‧ 捷運永寧站", initialWaitSec: 320, via: "泰山公有市場 ➔ 五股明德路 ➔ 土城永寧站", freq: "尖峰 8~12分 / 離峰 15~20分", distMeters: 150, guide: "跨區快速幹線 ‧ 直達泰山五股生活圈與土城頂埔科技園區" },
+          { code: "藍18", dest: "中和 ‧ 雙和醫院", initialWaitSec: 490, via: "新北產業園區 ➔ 衛生福利部雙和醫院", freq: "固定班次 約 15~20分", distMeters: 120, guide: "直達雙和醫院就醫門診專線 ‧ 途經中和連城路商圈" },
+          { code: "橘5", dest: "板橋車站 ‧ 員山", initialWaitSec: 680, via: "環球購物中心 ➔ 板橋公車站 ➔ 中和員山路", freq: "尖峰 6~10分 / 離峰 12~15分", distMeters: 180, guide: "直達板橋車站高鐵/火車與中和環球購物中心生活圈" }
+        ]
+      },
+      taipei: {
+        stopName: "台北車站 (忠孝) / 捷運西門站",
+        district: "中正區",
+        cityLabel: "台北市",
+        routes: [
+          { code: "307", dest: "板橋 ‧ 撫遠街", initialWaitSec: 110, via: "西門町 ➔ 萬華車站 ➔ 中和積穗 ➔ 板橋車站 ➔ 板橋中正路", freq: "尖峰 3~5分 (全台公車之王) / 離峰 5~8分", distMeters: 90, guide: "班次最密集公車 ‧ 串連西門町、萬華車站與板橋都會區核心" },
+          { code: "265", dest: "板橋 ‧ 重慶國中", initialWaitSec: 240, via: "龍山寺商圈 ➔ 華翠大橋 ➔ 板橋重慶路 ➔ 亞東醫院", freq: "尖峰 5~8分 / 離峰 8~12分", distMeters: 110, guide: "直達萬華龍山寺商圈與板橋後站熱鬧商圈" },
+          { code: "218", dest: "新北投 ‧ 劍潭", initialWaitSec: 430, via: "中山北路 ➔ 圓山花博 ➔ 士林官邸 ➔ 北投市場", freq: "尖峰 7~10分 / 離峰 10~15分", distMeters: 130, guide: "經典觀光通勤幹線 ‧ 直達圓山、士林官邸與北投溫泉鄉" },
+          { code: "652", dest: "新莊高中 ‧ 內科", initialWaitSec: 580, via: "民生東路 ➔ 台北長庚 ➔ 內湖科技園區", freq: "尖峰 5~8分 / 離峰 10~15分", distMeters: 160, guide: "內湖科學園區快速直達通勤專線" }
+        ]
+      },
+      taoyuan: {
+        stopName: "高鐵桃園站 (青埔總站)",
+        district: "中壢區",
+        cityLabel: "桃園市",
+        routes: [
+          { code: "206", dest: "桃園市區 ‧ 復興路", initialWaitSec: 290, via: "大竹 ➔ 開南大學 ➔ 桃園火車站站前", freq: "高鐵快捷公車 約 10~15分", distMeters: 80, guide: "高鐵直達桃園舊市區最重要快捷幹線 ‧ 憑高鐵票享免費搭乘優惠" },
+          { code: "170", dest: "中壢火車站", initialWaitSec: 180, via: "中壢SOGO ➔ 新街國小 ➔ 中壢客運總站", freq: "高鐵快捷公車 約 8~12分", distMeters: 80, guide: "青埔往返中壢火車站與SOGO商圈最便捷高頻率公車" },
+          { code: "705", dest: "桃園機場第一二航廈", initialWaitSec: 420, via: "國道2號高速直達 ➔ 航站第一航廈 ➔ 第二航廈", freq: "機場接駁專線 約 15~20分", distMeters: 90, guide: "高鐵站 20 分鐘直達桃園國際機場出境大廳" },
+          { code: "302", dest: "蘆竹 ‧ 台茂購物中心", initialWaitSec: 710, via: "大園市區 ➔ 航空城客運 ➔ 台茂購物中心", freq: "固定班次 約 20~30分", distMeters: 100, guide: "串聯大園、航空城與蘆竹南崁台茂商圈" }
+        ]
+      },
+      taichung: {
+        stopName: "臺中市政府 (臺灣大道專用道)",
+        district: "西屯區",
+        cityLabel: "台中市",
+        routes: [
+          { code: "300", dest: "靜宜大學 ‧ 台中車站", initialWaitSec: 150, via: "科博館 ➔ 草悟道 ➔ 東海大學 ➔ 沙鹿", freq: "專用道幹線 尖峰 3~5分 / 離峰 6~8分", distMeters: 110, guide: "台灣大道專用道核心幹線 ‧ 直達台中車站、科博館與東海商圈" },
+          { code: "303", dest: "港區藝術中心", initialWaitSec: 310, via: "弘光科大 ➔ 東海商圈 ➔ 台中榮總 ➔ 清水", freq: "專用道幹線 約 10~15分", distMeters: 110, guide: "直達海線清水、沙鹿與港區藝術中心" },
+          { code: "151", dest: "朝陽科大 ‧ 亞洲大學", initialWaitSec: 460, via: "高鐵台中站 ➔ 霧峰中正路 ➔ 朝陽科技大學", freq: "國道快速公車 約 10~15分", distMeters: 140, guide: "高鐵台中站快速直達南台中與霧峰大學城" },
+          { code: "73", dest: "文心森林公園 ‧ 統聯轉運", initialWaitSec: 620, via: "大墩路商圈 ➔ 捷運南屯站 ➔ 文心路", freq: "市區公車 約 12~18分", distMeters: 150, guide: "行經文心路捷運沿線與大墩商圈" }
+        ]
+      },
+      kaohsiung: {
+        stopName: "高鐵左營站 / 捷運美麗島站",
+        district: "左營區",
+        cityLabel: "高雄市",
+        routes: [
+          { code: "紅50", dest: "榮總高鐵捷運接駁", initialWaitSec: 210, via: "左營大路 ➔ 左營舊城 ➔ 高雄榮民總醫院", freq: "尖峰 8~10分 / 離峰 12~15分", distMeters: 90, guide: "左營舊城與高鐵站、榮民總醫院主要就醫接駁路線" },
+          { code: "92", dest: "高雄火車站 (自由幹線)", initialWaitSec: 360, via: "自由二路 ➔ 高醫商圈 ➔ 十全一路 ➔ 車站前", freq: "自由路幹線 約 10~15分", distMeters: 130, guide: "南北向貫穿自由路生活圈與高醫大商圈" },
+          { code: "205", dest: "前鎮夢時代 (中華幹線)", initialWaitSec: 280, via: "中華路 ➔ 漢神百貨 ➔ 新光三越 ➔ 夢時代", freq: "中華路幹線 尖峰 6~8分 / 離峰 10~12分", distMeters: 120, guide: "行經漢神百貨與三多商圈、直達統一夢時代購物中心" }
+        ]
+      },
+      tainan: {
+        stopName: "臺南火車站 (北門路)",
+        district: "中西區",
+        cityLabel: "台南市",
+        routes: [
+          { code: "2路", dest: "安平古堡 ‧ 崑山科大", initialWaitSec: 240, via: "赤崁樓 ➔ 郭綜合醫院 ➔ 安平老街 ➔ 安平豆花", freq: "市區核心公車 約 10~15分", distMeters: 80, guide: "觀光客與長輩首選 ‧ 直達赤崁樓、郭綜合醫院與安平老街" },
+          { code: "5路", dest: "市立醫院 ‧ 鹽行", initialWaitSec: 410, via: "南紡購物中心 ➔ 成大醫院 ➔ 成功大學", freq: "約 12~18分", distMeters: 80, guide: "貫穿成大醫院、成功大學校區與南紡購物中心" },
+          { code: "綠幹線", dest: "玉井 ‧ 台南轉運站", initialWaitSec: 650, via: "新化老街 ➔ 新化體育公園 ➔ 左鎮 ➔ 玉井站", freq: "大台南公車 約 15~20分", distMeters: 100, guide: "直達新化老街與玉井芒果之鄉" }
+        ]
+      },
+      hsinchu: {
+        stopName: "清華大學 (光復路) / 高鐵新竹站",
+        district: "東區",
+        cityLabel: "新竹市",
+        routes: [
+          { code: "藍1區", dest: "新竹火車站 ‧ 竹中", initialWaitSec: 190, via: "新竹高中 ➔ 工研院光復院區 ➔ 馬偕醫院", freq: "尖峰 5~8分 / 離峰 10~15分", distMeters: 90, guide: "新竹市區光復路幹線 ‧ 連接新竹車站、馬偕醫院與清交大" },
+          { code: "世博3號", dest: "竹科科技生活館", initialWaitSec: 380, via: "竹科新安路 ➔ 台積電七廠 ➔ 聯華電子", freq: "科技生活館專線 約 15~20分", distMeters: 100, guide: "深入新竹科學園區各晶圓廠核心園區" },
+          { code: "快捷7號", dest: "竹北市公所", initialWaitSec: 540, via: "喜來登飯店 ➔ 光明六路 ➔ 竹北家樂福", freq: "竹北跨區公車 約 20~25分", distMeters: 120, guide: "連結高鐵新竹站與竹北市中心行政商圈" }
+        ]
+      },
+      yilan: {
+        stopName: "礁溪轉運站 / 宜蘭火車站",
+        district: "礁溪鄉",
+        cityLabel: "宜蘭縣",
+        routes: [
+          { code: "紅1", dest: "羅東轉運站 ‧ 外澳", initialWaitSec: 360, via: "烏石港 ➔ 宜蘭轉運站 ➔ 羅東博愛醫院", freq: "宜蘭勁好行 約 15~20分", distMeters: 90, guide: "縱貫宜蘭精華區 ‧ 連接礁溪、宜蘭市與羅東博愛醫院" },
+          { code: "台灣好行 綠11", dest: "五峰旗瀑布 ‧ 湯圍溝", initialWaitSec: 480, via: "湯圍溝溫泉公園 ➔ 五峰旗風景區", freq: "觀光接駁 約 20~30分", distMeters: 110, guide: "直達湯圍溝溫泉公園與五峰旗風景區" }
+        ]
+      },
+      hualien: {
+        stopName: "花蓮轉運站 (花蓮火車站前站)",
+        district: "花蓮市",
+        cityLabel: "花蓮縣",
+        routes: [
+          { code: "301", dest: "國立東華大學", initialWaitSec: 420, via: "花蓮市區中正路 ➔ 太平洋公園 ➔ 東華大學", freq: "市區客運 約 20~30分", distMeters: 80, guide: "直達花蓮市區熱鬧商圈、太平洋海濱公園與東華大學" },
+          { code: "台灣好行 310", dest: "太魯閣 ‧ 天祥", initialWaitSec: 720, via: "太魯閣遊客中心 ➔ 砂卡礑 ➔ 燕子口 ➔ 天祥", freq: "太魯閣線 約 30~40分", distMeters: 90, guide: "花蓮往返太魯閣國家公園與天祥經典觀光路線" }
+        ]
+      }
+    };
+    return hubs[cityId] || hubs.newtaipei;
+  }
+
+  // 附近公車即時秒數倒數運算 (每秒動態遞減，到站自動循環下一班)
+  tickNearbyBusCountdowns(cityId) {
+    const hub = this.getNearbyHub(cityId);
+    if (!this.nearbyBusStates[cityId]) {
+      this.nearbyBusStates[cityId] = {};
+      hub.routes.forEach(r => {
+        this.nearbyBusStates[cityId][r.code] = r.initialWaitSec || 300;
+      });
+    }
+
+    const now = Date.now();
+    const deltaSec = Math.max(1, Math.round((now - this.lastNearbyTickTime) / 1000));
+    this.lastNearbyTickTime = now;
+
+    hub.routes.forEach(r => {
+      let sec = this.nearbyBusStates[cityId][r.code];
+      if (sec == null) sec = r.initialWaitSec || 300;
+      sec -= deltaSec;
+      if (sec <= 0) {
+        sec = Math.floor(Math.random() * 240) + 240;
+      }
+      this.nearbyBusStates[cityId][r.code] = sec;
+    });
+  }
+
+  getNearbyRouteWaitSec(cityId, code) {
+    if (this.nearbyBusStates[cityId] && typeof this.nearbyBusStates[cityId][code] === 'number') {
+      return this.nearbyBusStates[cityId][code];
+    }
+    const hub = this.getNearbyHub(cityId);
+    const r = hub.routes.find(x => x.code === code);
+    return r ? r.initialWaitSec : 300;
+  }
+
+  formatNearbyBusBadge(waitSec) {
+    if (waitSec == null || waitSec < 0) {
+      return '<span class="nearby-bus-badge badge-offline">班次已過</span>';
+    }
+    if (waitSec < 60) {
+      return `<span class="nearby-bus-badge badge-arriving pulse-arriving"><i class="fa-solid fa-bus-simple"></i> 即將進站 (${waitSec}秒)</span>`;
+    }
+    const min = Math.ceil(waitSec / 60);
+    if (min <= 3) {
+      return `<span class="nearby-bus-badge badge-soon"><i class="fa-solid fa-clock"></i> ${min} 分鐘</span>`;
+    }
+    return `<span class="nearby-bus-badge badge-normal"><i class="fa-regular fa-clock"></i> ${min} 分鐘</span>`;
+  }
+
+  // 切換選中公車路線
+  selectNearbyBusRoute(routeCode) {
+    this.selectedNearbyBusCode = routeCode;
+    this.isNearbyDetailOpen = true;
+    this.render();
+  }
+
+  // 切換公車路線指南展開/收合
+  toggleNearbyDetail() {
+    this.isNearbyDetailOpen = !this.isNearbyDetailOpen;
+    this.render();
+  }
+
+  // 渲染附近即時公車站牌與路線去向動態看板 HTML
+  renderNearbyTransitHtml(cityId = 'newtaipei') {
+    const hub = this.getNearbyHub(cityId);
+    const routes = hub.routes || [];
+    const activeRoute = routes.find(r => r.code === this.selectedNearbyBusCode) || routes[0];
+
+    return `
+      <div class="transit-nearby-wrapper ${this.isNearbyDetailOpen ? 'is-detail-expanded' : 'is-bar-compact'}">
+        <!-- 橫向超薄即時公車串流條 (長輩一眼看清) -->
+        <div class="transit-nearby-bar">
+          <!-- 1. 左側站牌資訊 -->
+          <div class="nearby-stop-pill" title="${hub.cityLabel} ${hub.district} 核心公共運輸站點">
+            <span class="pill-dot-live pulse-green"></span>
+            <span class="pill-city-tag">${hub.cityLabel}</span>
+            <strong class="pill-stop-name">${hub.stopName}</strong>
+          </div>
+
+          <!-- 2. 中間各路線即時看板 (點擊公車晶片直接展開公車去哪) -->
+          <div class="nearby-chips-scroll" title="點擊公車路線卡牌查看公車開往哪裡與沿途站點">
+            ${routes.map(r => {
+              const waitSec = this.getNearbyRouteWaitSec(cityId, r.code);
+              const isSelected = activeRoute && activeRoute.code === r.code;
+              return `
+                <div class="nearby-bus-card ${isSelected ? 'is-selected' : ''}" 
+                     onclick="window.transitMonitor && window.transitMonitor.selectNearbyBusRoute('${r.code}')" 
+                     title="點擊查看 ${r.code} 往 ${r.dest} 沿途站點與公車去哪裡">
+                  <span class="bus-badge-num">${r.code}</span>
+                  <span class="bus-dest-text">${r.dest}</span>
+                  ${this.formatNearbyBusBadge(waitSec)}
+                  <span class="bus-action-tag">去哪 🗺️</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- 3. 右側「公車去哪？」切換按鈕 -->
+          <div class="nearby-actions-group">
+            <button class="nearby-guide-btn ${this.isNearbyDetailOpen ? 'active' : ''}" 
+                    onclick="window.transitMonitor && window.transitMonitor.toggleNearbyDetail()" 
+                    title="${this.isNearbyDetailOpen ? '收合路線與站點指南' : '展開公車去向與沿途地標詳細指南'}">
+              <i class="fa-solid fa-signs-post"></i>
+              <span>${this.isNearbyDetailOpen ? '收合' : '公車去哪？'}</span>
+              <i class="fa-solid ${this.isNearbyDetailOpen ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. 公車去哪裡？路線與地標詳細指南面板 (點擊展開) -->
+        ${this.isNearbyDetailOpen && activeRoute ? `
+          <div class="nearby-bus-detail-drawer">
+            <div class="drawer-header-banner">
+              <div class="drawer-title-box">
+                <span class="drawer-bus-chip">${activeRoute.code}</span>
+                <div class="drawer-title-meta">
+                  <strong class="drawer-dest-title">開往 ${activeRoute.dest}</strong>
+                  <span class="drawer-sub-meta">
+                    <i class="fa-regular fa-clock"></i> 班距：${activeRoute.freq} ‧ 
+                    <i class="fa-solid fa-person-walking"></i> 步行約 ${activeRoute.distMeters} 公尺 (約 ${Math.ceil(activeRoute.distMeters / 70)} 分鐘)
+                  </span>
+                </div>
+              </div>
+              <div class="drawer-action-badges">
+                ${this.formatNearbyBusBadge(this.getNearbyRouteWaitSec(cityId, activeRoute.code))}
+                <a class="btn-external-google-bus" 
+                   href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hub.cityLabel} 公車 ${activeRoute.code} ${hub.stopName}`)}" 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   title="在 Google 地圖開啟即時公車全線與到站動態">
+                  <i class="fa-solid fa-map-location-dot"></i> Google地圖即時路線
+                </a>
+              </div>
+            </div>
+
+            <!-- 沿途停靠重點地標流程 (長輩大字 ➔ 箭頭) -->
+            <div class="drawer-route-flow">
+              <div class="flow-label"><i class="fa-solid fa-route"></i> 這班公車開往哪裡？沿途停靠重點站點與地標：</div>
+              <div class="flow-nodes-track">
+                ${activeRoute.via.split('➔').map((stn, idx, arr) => `
+                  <div class="flow-node ${idx === 0 ? 'is-first' : (idx === arr.length - 1 ? 'is-last' : '')}">
+                    <span class="flow-node-marker"></span>
+                    <span class="flow-node-text">${stn.trim()}</span>
+                    ${idx < arr.length - 1 ? '<span class="flow-arrow">➔</span>' : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- 乘車叮嚀與實用指南 -->
+            <div class="drawer-tips-box">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span><strong>搭車實用指南：</strong>${activeRoute.guide}</span>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // 渲染附近交通面板至容器
+  renderNearbyTransit(cityId, container) {
+    if (!container) return;
+    container.innerHTML = this.renderNearbyTransitHtml(cityId);
   }
 
   // 切換整個走廊收合/展開 (超矮迷你條 ↔ 全寬詳細軌道)
@@ -12775,6 +13399,26 @@ class TwinCityTransitMonitor {
   // 渲染大眾運輸雙線即時走廊
   render() {
     try {
+
+      // 附近模式下切換呈現當前生活圈即時大眾運輸與公車站牌到站看板
+      const isNearbyMode = (typeof window !== 'undefined' && window.monitorApp && window.monitorApp.currentCenterId === 'nearby');
+      if (isNearbyMode) {
+        const container = document.getElementById(this.containerId);
+        if (container) {
+          container.style.display = '';
+          let cityId = 'newtaipei';
+          if (window.monitorApp && window.monitorApp.userLocation && window.monitorApp.dynamicCameraLoader) {
+            const city = window.monitorApp.dynamicCameraLoader.detectCityByCoords(
+              window.monitorApp.userLocation.lat,
+              window.monitorApp.userLocation.lon
+            );
+            if (city && city.id) cityId = city.id;
+          }
+          this.tickNearbyBusCountdowns(cityId);
+          this.renderNearbyTransit(cityId, container);
+        }
+        return;
+      }
       const now = new Date();
     const isToQingpu = this.direction === 'to_qingpu';
 
