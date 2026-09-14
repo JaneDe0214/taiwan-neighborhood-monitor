@@ -1,0 +1,111 @@
+{
+  "updatedAt": "2026-09-14T21:40:00.000Z",
+  "category": "xizhi-tpe-corridor",
+  "title": "汐止保長長興街 ⇄ 台北車站 生活圈路網即時影像",
+  "cameras": [
+    {
+      "id": "TPE_001",
+      "ccdId": "346",
+      "name": "台北車站前站 ‧ 忠孝西路門戶 (機捷/北車雙鐵交會)",
+      "area": "taipei",
+      "authority": "台北市政府交通局",
+      "location": "忠孝西路一段與館前路口",
+      "lat": 25.0468,
+      "lon": 121.5158,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/346/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=346"
+    },
+    {
+      "id": "NTP_001",
+      "ccdId": "C000165",
+      "name": "汐止大動脈 ‧ 大同路一段與新台五路口 (南港汐止門戶)",
+      "area": "xizhi",
+      "authority": "新北市政府交通局",
+      "location": "汐止區大同路一段與新台五路一段口",
+      "lat": 25.0601,
+      "lon": 121.6425,
+      "type": "hls",
+      "streamUrl": "https://cctvatis2.ntpc.gov.tw/hls/C000165/live.m3u8",
+      "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000165"
+    },
+    {
+      "id": "TPE_002",
+      "ccdId": "338",
+      "name": "台北轉運站 ‧ 京站後站門戶 (市民大道與中山北路口)",
+      "area": "taipei",
+      "authority": "台北市政府交通局",
+      "location": "市民大道一段與中山北路一段口西北角",
+      "lat": 25.0494,
+      "lon": 121.5208,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/338/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=338"
+    },
+    {
+      "id": "TPE_003",
+      "ccdId": "166",
+      "name": "北門承恩門 ‧ 忠孝西路與中華路一段 (北門廣場)",
+      "area": "taipei",
+      "authority": "台北市政府交通局",
+      "location": "忠孝西路一段與中華路一段路口",
+      "lat": 25.0478,
+      "lon": 121.5110,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/166/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=166"
+    },
+    {
+      "id": "TPE_004",
+      "ccdId": "263",
+      "name": "市民高架中山門戶 ‧ 市民高架與中山北路口",
+      "area": "corridor",
+      "authority": "台北市政府交通局",
+      "location": "市民大道高架道與中山北路口",
+      "lat": 25.0492,
+      "lon": 121.5218,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/263/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=263"
+    },
+    {
+      "id": "TPE_005",
+      "ccdId": "292",
+      "name": "台北車站東側門戶 ‧ 中山北路與濟南路口",
+      "area": "taipei",
+      "authority": "台北市政府交通局",
+      "location": "中山北路一段與濟南路一段口",
+      "lat": 25.0445,
+      "lon": 121.5202,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/292/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=292"
+    },
+    {
+      "id": "TPE_006",
+      "ccdId": "028",
+      "name": "台北車站北門廣場綠廊 ‧ 忠孝西路一段",
+      "area": "taipei",
+      "authority": "台北市政府交通局",
+      "location": "忠孝西路一段與延平北路一段口",
+      "lat": 25.0485,
+      "lon": 121.5122,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/028/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=028"
+    },
+    {
+      "id": "TPE_007",
+      "ccdId": "347",
+      "name": "重慶北路與南京西路口 ‧ 台北車站西側大動脈",
+      "area": "taipei",
+      "authority": "台北市政府交通局",
+      "location": "重慶北路一段與南京西路口",
+      "lat": 25.0531,
+      "lon": 121.5135,
+      "type": "hls",
+      "streamUrl": "https://hls.bote.gov.taipei/stream/347/index.m3u8",
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=347"
+    }
+  ]
+}

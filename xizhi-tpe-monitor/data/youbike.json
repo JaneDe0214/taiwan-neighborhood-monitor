@@ -1,0 +1,22 @@
+{
+  "updatedAt": "2026-09-14T21:40:00.000Z",
+  "xizhi": [
+    { "sno": "500206001", "name": "長興街二段62號", "bikes": 4, "empty": 9, "lat": 25.0785, "lng": 121.6680, "district": "汐止區", "distFromBase": "步行1分鐘 (同街)" },
+    { "sno": "500206002", "name": "長興橋", "bikes": 10, "empty": 5, "lat": 25.0772, "lng": 121.6645, "district": "汐止區", "distFromBase": "步行3分鐘" },
+    { "sno": "500206003", "name": "五堵火車站", "bikes": 19, "empty": 47, "lat": 25.0768, "lng": 121.6609, "district": "汐止區", "distFromBase": "步行8分鐘 (五堵站前)" },
+    { "sno": "500206004", "name": "五堵車站(長安路)", "bikes": 8, "empty": 5, "lat": 25.0764, "lng": 121.6618, "district": "汐止區", "distFromBase": "步行8分鐘" },
+    { "sno": "500206005", "name": "保長公園", "bikes": 47, "empty": 17, "lat": 25.0745, "lng": 121.6698, "district": "汐止區", "distFromBase": "步行6分鐘" },
+    { "sno": "500206006", "name": "保長路51巷口", "bikes": 7, "empty": 14, "lat": 25.0758, "lng": 121.6712, "district": "汐止區", "distFromBase": "步行7分鐘" },
+    { "sno": "500206007", "name": "長安橋(吉祥街12巷)", "bikes": 26, "empty": 17, "lat": 25.0792, "lng": 121.6582, "district": "汐止區", "distFromBase": "步行9分鐘" },
+    { "sno": "500206008", "name": "長安街251巷", "bikes": 2, "empty": 14, "lat": 25.0805, "lng": 121.6620, "district": "汐止區", "distFromBase": "步行8分鐘" },
+    { "sno": "500206009", "name": "汐止火車站", "bikes": 23, "empty": 14, "lat": 25.0682, "lng": 121.6492, "district": "汐止區", "distFromBase": "車程4分鐘" }
+  ],
+  "taipei": [
+    { "sno": "500101101", "name": "捷運臺北車站(M2出口)", "bikes": 3, "empty": 15, "lat": 25.04821, "lng": 121.51903, "district": "中正區", "distFromBase": "北車M2出入口" },
+    { "sno": "500101102", "name": "忠孝西重慶南路口", "bikes": 4, "empty": 26, "lat": 25.04724, "lng": 121.51272, "district": "中正區", "distFromBase": "北車前站西側" },
+    { "sno": "500101103", "name": "中山青島路口", "bikes": 5, "empty": 35, "lat": 25.04503, "lng": 121.51968, "district": "中正區", "distFromBase": "北車東南側" },
+    { "sno": "500101104", "name": "玉泉公園(忠孝西路)", "bikes": 14, "empty": 7, "lat": 25.04888, "lng": 121.50745, "district": "中正區", "distFromBase": "北門站/北車西側" },
+    { "sno": "500101105", "name": "市民太原路口", "bikes": 8, "empty": 22, "lat": 25.0496, "lng": 121.5175, "district": "大同區", "distFromBase": "台北轉運站旁" },
+    { "sno": "500101106", "name": "重慶北路三段205巷口", "bikes": 7, "empty": 12, "lat": 25.06997, "lng": 121.51388, "district": "大同區", "distFromBase": "重慶北路軸線" }
+  ]
+}

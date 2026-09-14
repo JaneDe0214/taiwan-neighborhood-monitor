@@ -737,7 +737,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 2. 靜態檔案路由
+  // 2. 汐止保長 ⇄ 台北車站 獨立生活圈路由支援
+  if (pathname === '/xizhi' || pathname === '/xizhi/') {
+    res.writeHead(302, { 'Location': '/xizhi-tpe-monitor/' });
+    res.end();
+    return;
+  }
+
+  // 3. 靜態檔案路由
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403);
@@ -746,7 +753,13 @@ const server = http.createServer((req, res) => {
   }
 
   fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
+    if (err || stats.isDirectory()) {
+      if (pathname.startsWith('/xizhi-tpe-monitor')) {
+        filePath = path.join(PUBLIC_DIR, 'xizhi-tpe-monitor', 'index.html');
+      } else {
+        filePath = path.join(PUBLIC_DIR, 'index.html');
+      }
+    } else if (!stats.isFile()) {
       filePath = path.join(PUBLIC_DIR, 'index.html');
     }
 
@@ -787,6 +800,7 @@ if (require.main === module) {
     console.log(`[API 代理] 台北捷運 (即時看板): http://localhost:${PORT}/api/metro/liveboard`);
     console.log(`[API 代理] 捷運車廂擁擠度:     http://localhost:${PORT}/api/metro/carweight`);
     console.log(`[API 代理] 高鐵停車場即時車位: http://localhost:${PORT}/api/parking/thsr`);
+    console.log(`[生活圈站] 汐止保長 ⇄ 台北車站: http://localhost:${PORT}/xizhi`);
   });
 }
 
