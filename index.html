@@ -11087,30 +11087,39 @@ class NeighborhoodRadarMap {
       touchZoom: true
     }).setView([lat, lon], zoom);
 
-    // CartoDB DarkMatter 暗色系底圖（主）
-    // 若 CartoDB 在裝置網路環境被限制，自動降級至 OpenStreetMap
-    const cartoTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      crossOrigin: true
-    });
+    // ─── 底圖：Esri World Dark Gray（免費、無 API Key、Android WebView 相容）───
+    // CartoDB 在 Android WebView（file:// 協定）下會回傳「API KEY REQUIRED」圖磚圖片
+    // Esri 完全不需要 API Key，且支援所有平台
+    const esriDarkTile = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 16,
+        maxNativeZoom: 16,
+        crossOrigin: true,
+        errorTileUrl: ''  // 載入失敗時顯示空白（避免顯示錯誤文字圖磚）
+      }
+    );
 
-    const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      subdomains: 'abc',
-      crossOrigin: true
-    });
+    // 備援底圖：OpenStreetMap（若 Esri 無法連線）
+    const osmFallbackTile = L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        subdomains: 'abc',
+        crossOrigin: true,
+        errorTileUrl: ''
+      }
+    );
 
-    // 嘗試載入 CartoDB；若底圖圖磚錯誤則自動切換至 OSM 備援
-    cartoTile.on('tileerror', () => {
+    esriDarkTile.on('tileerror', () => {
       if (this.map && !this._osmFallbackApplied) {
         this._osmFallbackApplied = true;
-        cartoTile.remove();
-        osmTile.addTo(this.map);
-        console.warn('[地圖] CartoDB 底圖載入失敗，已切換至 OpenStreetMap 備援底圖');
+        esriDarkTile.remove();
+        osmFallbackTile.addTo(this.map);
+        console.warn('[地圖] Esri 底圖載入失敗，已切換至 OpenStreetMap 備援底圖');
       }
     });
-    cartoTile.addTo(this.map);
+    esriDarkTile.addTo(this.map);
 
     // 疊加 RainViewer 即時雷達圖層（免費、無 API Key 需求、全球覆蓋）
     this._addRainViewerRadarLayer();
@@ -11144,13 +11153,16 @@ class NeighborhoodRadarMap {
         this.radarLayer = null;
       }
 
-      // 使用色彩方案 4（藍綠紅漸層，清晰易讀），不透明度 0.6
+      // RainViewer 原生雷達圖磚最高支援 zoom 12
+      // 使用 maxNativeZoom:12 讓 Leaflet 在更高縮放時自動縮放 zoom12 圖磚（不請求不存在的圖磚，避免「ZOOM LEVEL NOT SUPPORTED」）
       const tileUrl = `https://tilecache.rainviewer.com${latestPath}/256/{z}/{x}/{y}/4/1_1.png`;
       this.radarLayer = L.tileLayer(tileUrl, {
         tileSize: 256,
-        opacity: 0.6,
-        maxZoom: 19,
+        opacity: 0.65,
+        maxNativeZoom: 12,  // RainViewer 原生最大支援 zoom
+        maxZoom: 19,        // Leaflet 仍可縮放至 zoom 19，但超過 12 時用 zoom12 圖磚放大顯示
         crossOrigin: true,
+        errorTileUrl: '',   // 發生錯誤時顯示空白（避免顯示錯誤文字圖磚）
         zIndex: 10
       });
       this.radarLayer.addTo(this.map);
