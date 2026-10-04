@@ -3362,6 +3362,11 @@ a.coord-tag:hover {
   align-items: center;
 }
 
+.track-corridor-pids {
+  margin: 6px 0 10px 0;
+  width: 100%;
+}
+
 /* 長輩白話極簡出門與抵達導引 */
 .plan-timeline-hint {
   display: flex;
@@ -9253,10 +9258,12 @@ class WeatherEnvironmentMonitor {
     const track = document.querySelector('.hourly-rain-scroll-track');
     if (track) {
       track.scrollBy({ left: offset, behavior: 'smooth' });
+      this._lastRainUserScrollTime = Date.now();
+      this._rainScrollPos = track.scrollLeft + offset;
     }
   }
 
-  // 綁定降雨走勢軌道之滑鼠拖曳滑動 (Grab & Drag) 與滾輪橫向捲動 (Wheel to Horizontal Scroll)
+  // 綁定降雨走勢軌道之滑鼠拖曳滑動 (Grab & Drag)、手機觸控滑動 (Touch Scroll) 與滾輪橫向捲動
   bindTrackInteractions(track) {
     if (!track || track._dragBound) return;
     track._dragBound = true;
@@ -9265,6 +9272,31 @@ class WeatherEnvironmentMonitor {
     let startX = 0;
     let scrollLeft = 0;
 
+    // 0. 監聽原生水平捲動事件，精確記憶最新位置與使用者操作時間
+    track.addEventListener('scroll', () => {
+      this._rainScrollPos = track.scrollLeft;
+      this._lastRainUserScrollTime = Date.now();
+    }, { passive: true });
+
+    // 手機觸控事件監聽，標記使用者觸摸狀態避免自動更新粗暴中斷檢視
+    track.addEventListener('touchstart', () => {
+      this._isRainUserTouching = true;
+      this._lastRainUserScrollTime = Date.now();
+    }, { passive: true });
+
+    track.addEventListener('touchmove', () => {
+      this._lastRainUserScrollTime = Date.now();
+    }, { passive: true });
+
+    track.addEventListener('touchend', () => {
+      this._isRainUserTouching = false;
+      this._lastRainUserScrollTime = Date.now();
+    }, { passive: true });
+
+    track.addEventListener('touchcancel', () => {
+      this._isRainUserTouching = false;
+    }, { passive: true });
+
     // 1. 滑鼠左鍵按住拖曳支援
     track.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return; // 僅響應滑鼠主鍵 (左鍵)
@@ -9272,12 +9304,14 @@ class WeatherEnvironmentMonitor {
       track.classList.add('is-dragging');
       startX = e.pageX - track.offsetLeft;
       scrollLeft = track.scrollLeft;
+      this._lastRainUserScrollTime = Date.now();
     });
 
     const stopDrag = () => {
       if (isDown) {
         isDown = false;
         track.classList.remove('is-dragging');
+        this._lastRainUserScrollTime = Date.now();
       }
     };
 
@@ -9304,6 +9338,7 @@ class WeatherEnvironmentMonitor {
       const x = e.pageX - track.offsetLeft;
       const walk = (x - startX) * 1.5; // 1.5 倍移動靈敏度，滑動更流暢省力
       track.scrollLeft = scrollLeft - walk;
+      this._lastRainUserScrollTime = Date.now();
     });
 
     // 2. 滑鼠滾輪橫向滑動支援 (滑鼠懸停於降雨圖表時，滾輪直接轉化為水平滑動)
@@ -9312,6 +9347,7 @@ class WeatherEnvironmentMonitor {
       if (delta !== 0) {
         e.preventDefault();
         track.scrollLeft += delta;
+        this._lastRainUserScrollTime = Date.now();
       }
     }, { passive: false });
   }
@@ -9586,9 +9622,27 @@ class WeatherEnvironmentMonitor {
     const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=Asia%2FTaipei`;
 
     try {
-      const [wRes, aRes] = await Promise.all([fetch(weatherUrl), fetch(aqiUrl)]);
-      const weather = await wRes.json();
-      const airQuality = await aRes.json();
+      let weather = null;
+      let airQuality = null;
+
+      // 原生 Android 橋接直通優先 (免除 WebView 網路延遲與 SSL 限制，極速連線池直取)
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.fetchHttp === 'function') {
+        try {
+          const [wRaw, aRaw] = await Promise.all([
+            Promise.resolve().then(() => window.AndroidBridge.fetchHttp(weatherUrl, 4500)),
+            Promise.resolve().then(() => window.AndroidBridge.fetchHttp(aqiUrl, 4500))
+          ]);
+          if (wRaw && wRaw.startsWith('{')) weather = JSON.parse(wRaw);
+          if (aRaw && aRaw.startsWith('{')) airQuality = JSON.parse(aRaw);
+        } catch (_bErr) {}
+      }
+
+      if (!weather || !airQuality) {
+        const [wRes, aRes] = await Promise.all([fetch(weatherUrl), fetch(aqiUrl)]);
+        weather = weather || await wRes.json();
+        airQuality = airQuality || await aRes.json();
+      }
+
       const syncTime = new Date();
       return { weather, airQuality, syncTime };
     } catch (e) {
@@ -9888,6 +9942,18 @@ class WeatherEnvironmentMonitor {
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !qpHourly?.precipitation_probability || !bpHourly?.precipitation_probability) return;
 
+    // 智慧記憶捲動位置：若使用者正在滑動瀏覽未來時段，避免粗暴彈回當下
+    const existingTrack = document.getElementById('dualHourlyRainTrack');
+    const prevScrollLeft = (existingTrack && existingTrack.scrollLeft > 0)
+      ? existingTrack.scrollLeft
+      : (this._rainScrollPos || 0);
+
+    // 防干擾保護：若使用者正在觸控操作或剛手動滑動檢視 (10秒內)，且現有內容已呈現，暫緩粗暴重組
+    const isUserBrowsing = this._isRainUserTouching || (this._lastRainUserScrollTime && (Date.now() - this._lastRainUserScrollTime < 10000));
+    if (isUserBrowsing && existingTrack && existingTrack.children.length > 0) {
+      return;
+    }
+
     const timeList = qpHourly.time || bpHourly.time || [];
     const startIdx = this.getFutureStartIndex(timeList);
 
@@ -9966,6 +10032,12 @@ class WeatherEnvironmentMonitor {
     const dualTrack = document.getElementById('dualHourlyRainTrack');
     if (dualTrack) {
       this.bindTrackInteractions(dualTrack);
+      if (prevScrollLeft > 0) {
+        dualTrack.scrollLeft = prevScrollLeft;
+        requestAnimationFrame(() => {
+          if (dualTrack) dualTrack.scrollLeft = prevScrollLeft;
+        });
+      }
     }
   }
 
@@ -10177,6 +10249,18 @@ class WeatherEnvironmentMonitor {
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !hourly?.precipitation_probability) return;
 
+    // 智慧記憶捲動位置：若使用者正在滑動瀏覽未來時段，避免粗暴彈回當下
+    const existingTrack = document.getElementById('singleHourlyRainTrack');
+    const prevScrollLeft = (existingTrack && existingTrack.scrollLeft > 0)
+      ? existingTrack.scrollLeft
+      : (this._rainScrollPos || 0);
+
+    // 防干擾保護：若使用者正在觸控操作或剛手動滑動檢視 (10秒內)，且現有內容已呈現，暫緩粗暴重組
+    const isUserBrowsing = this._isRainUserTouching || (this._lastRainUserScrollTime && (Date.now() - this._lastRainUserScrollTime < 10000));
+    if (isUserBrowsing && existingTrack && existingTrack.children.length > 0) {
+      return;
+    }
+
     const timeList = hourly.time || [];
     const startIdx = this.getFutureStartIndex(timeList);
 
@@ -10245,6 +10329,12 @@ class WeatherEnvironmentMonitor {
     const singleTrack = document.getElementById('singleHourlyRainTrack');
     if (singleTrack) {
       this.bindTrackInteractions(singleTrack);
+      if (prevScrollLeft > 0) {
+        singleTrack.scrollLeft = prevScrollLeft;
+        requestAnimationFrame(() => {
+          if (singleTrack) singleTrack.scrollLeft = prevScrollLeft;
+        });
+      }
     }
   }
 
@@ -13323,6 +13413,32 @@ class TwinCityTransitMonitor {
     };
   }
 
+  // 取得班次真實目的地 (同現場車站與月台 PID 看板顯示，避免現場旅客混淆)
+  getTrainDestination(typeKey, trainNo, isToQingpu) {
+    if (typeKey === 'thsr') {
+      if (isToQingpu) {
+        // 板橋南下：05xx, 15xx 車次終點站為台中；其餘停靠桃園班次 (06xx, 08xx, 16xx) 終點站為左營
+        const cleanNo = String(trainNo || '').replace(/[^0-9]/g, '');
+        if (cleanNo.startsWith('05') || cleanNo.startsWith('5') || cleanNo.startsWith('15')) {
+          return '往 台中';
+        }
+        return '往 左營';
+      } else {
+        // 桃園北上：高鐵北上班次月台 PID 看板全數顯示往南港
+        return '往 南港';
+      }
+    } else if (typeKey === 'tymetro') {
+      if (isToQingpu) {
+        // 機捷南下 (A3 新北產業園區發車)：月台 PID 看板全數顯示往老街溪
+        return '往 老街溪';
+      } else {
+        // 機捷北上 (A18 桃園高鐵發車)：月台 PID 看板全數顯示往台北車站
+        return '往 台北車站';
+      }
+    }
+    return isToQingpu ? '往青埔' : '往新埔';
+  }
+
   // 取得高鐵或機捷當下與未來所有可搭乘班次表 (專門針對在車站或出門的旅客即時呈現)
   getTimetableList(typeKey, now = new Date()) {
     const isToQingpu = this.direction === 'to_qingpu';
@@ -13382,7 +13498,7 @@ class TwinCityTransitMonitor {
       }
 
       const originStation = isToQingpu ? (isThsr ? '板橋站' : '新北產園(A3)') : (isThsr ? '桃園高鐵' : '高鐵桃園(A18)');
-      const destStation = isToQingpu ? (isThsr ? '桃園高鐵' : '高鐵桃園(A18)') : (isThsr ? '板橋站' : '新北產園(A3)');
+      const destStation = this.getTrainDestination(typeKey, t.trainNo, isToQingpu).replace('往 ', '');
       const typeText = isThsr ? (t.isExpress ? '12分特快' : '13分直達') : (t.isExpress ? '28分直達' : '38分普通');
 
       return {
@@ -13603,8 +13719,8 @@ class TwinCityTransitMonitor {
       if (!thsrCard || !tymetroCard) return false;
 
       const isToQingpu = this.direction === 'to_qingpu';
-      const thsrDest = isToQingpu ? '往桃園' : '往板橋';
-      const tymetroDest = isToQingpu ? '往青埔' : '往新埔';
+      const thsrDest = this.getTrainDestination('thsr', thsr.trainNo, isToQingpu);
+      const tymetroDest = this.getTrainDestination('tymetro', tymetro.trainNo, isToQingpu);
 
       thsrCard.innerHTML = `
         <span class="pids-tag thsr-tag"><i class="fa-solid fa-bolt"></i> 高鐵</span>
@@ -13643,12 +13759,24 @@ class TwinCityTransitMonitor {
       return true;
     } else {
       // 展開模式定向局部修補
-      const thsrPids = mainSlot.querySelector('[data-f-thsr-pids]');
-      const tymetroPids = mainSlot.querySelector('[data-f-tymetro-pids]');
-      if (!thsrPids || !tymetroPids) return false;
+      const isToQingpu = this.direction === 'to_qingpu';
+      const thsrDest = this.getTrainDestination('thsr', thsr.trainNo, isToQingpu);
+      const tymetroDest = this.getTrainDestination('tymetro', tymetro.trainNo, isToQingpu);
 
-      // 1. 高鐵 Header 與軌道
-      thsrPids.innerHTML = `<i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 ‧ ${thsr.platformStatus} (${thsr.depTime}發)`;
+      // 1. 下方高鐵月台 PID 看板風格車次局部修補 (同上方出門搭車建議)
+      const thsrDestEl = mainSlot.querySelector('[data-f-thsr-dest]');
+      if (thsrDestEl) thsrDestEl.textContent = thsrDest;
+      const thsrTrainEl = mainSlot.querySelector('[data-f-thsr-train]');
+      if (thsrTrainEl) thsrTrainEl.textContent = `高鐵 ${thsr.trainNo}次`;
+      const thsrTimeEl = mainSlot.querySelector('[data-f-thsr-time]');
+      if (thsrTimeEl) thsrTimeEl.textContent = thsr.depTime;
+      const thsrCountdownEl = mainSlot.querySelector('[data-f-thsr-countdown]');
+      if (thsrCountdownEl) thsrCountdownEl.innerHTML = this.formatPlatformCountdown(thsr.waitSec, thsr.isOutOfService);
+
+      const thsrPids = mainSlot.querySelector('[data-f-thsr-pids]');
+      if (thsrPids) {
+        thsrPids.innerHTML = `<i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 ‧ ${thsr.platformStatus} (${thsr.depTime}發)`;
+      }
 
       const thsrTotal = mainSlot.querySelector('[data-f-thsr-total]');
       if (thsrTotal) {
@@ -13693,8 +13821,24 @@ class TwinCityTransitMonitor {
         bannanBeacon.title = `${bannan.lineName} (${bannan.trainNo} ${bannan.runStatusText})`;
       }
 
-      // 3. 機捷 Header 與軌道
-      tymetroPids.innerHTML = `<i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)`;
+      // 3. 下方機捷月台 PID 看板風格車次局部修補 (同上方出門搭車建議)
+      const tymetroDestEl = mainSlot.querySelector('[data-f-tymetro-dest]');
+      if (tymetroDestEl) tymetroDestEl.textContent = tymetroDest;
+      const tymetroTypeEl = mainSlot.querySelector('[data-f-tymetro-type]');
+      if (tymetroTypeEl) {
+        tymetroTypeEl.textContent = tymetro.type || (tymetro.isExpress ? '尖峰直達' : '普通車');
+        if (tymetro.isExpress) tymetroTypeEl.classList.add('express');
+        else tymetroTypeEl.classList.remove('express');
+      }
+      const tymetroTimeEl = mainSlot.querySelector('[data-f-tymetro-time]');
+      if (tymetroTimeEl) tymetroTimeEl.textContent = tymetro.depTime;
+      const tymetroCountdownEl = mainSlot.querySelector('[data-f-tymetro-countdown]');
+      if (tymetroCountdownEl) tymetroCountdownEl.innerHTML = this.formatPlatformCountdown(tymetro.waitSec, tymetro.isOutOfService);
+
+      const tymetroPids = mainSlot.querySelector('[data-f-tymetro-pids]');
+      if (tymetroPids) {
+        tymetroPids.innerHTML = `<i class="fa-solid fa-plane"></i> ${tymetro.type} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)`;
+      }
 
       const tymetroTotal = mainSlot.querySelector('[data-f-tymetro-total]');
       if (tymetroTotal) {
@@ -14021,6 +14165,8 @@ class TwinCityTransitMonitor {
   // 渲染雙埔出行速報與即時路網整合橫條 HTML (超薄 34px ‧ 高度極致節省 ‧ 直覺清晰易懂)
   renderCollapsedBarHtml(directionLabel, bannan, thsr, tymetro, circular) {
     const isToQingpu = this.direction === 'to_qingpu';
+    const thsrDest = this.getTrainDestination('thsr', thsr.trainNo, isToQingpu);
+    const tymetroDest = this.getTrainDestination('tymetro', tymetro.trainNo, isToQingpu);
     const activeAlert = this.alerts.find(a => a.active !== false);
 
     const brief = this.getCommuteBriefInfo();
@@ -14053,17 +14199,17 @@ class TwinCityTransitMonitor {
           ` : ''}
           <span class="stream-divider">│</span>
           <!-- 高鐵月台看板風格晶片 (標註往哪裡、發車時間、即時秒數跳動) -->
-          <div class="pids-stream-card pids-thsr" data-c-thsr title="高鐵：${isToQingpu ? '往桃園' : '往板橋'}，預計 ${thsr.depTime} 發車">
+          <div class="pids-stream-card pids-thsr" data-c-thsr title="高鐵：${thsrDest}，預計 ${thsr.depTime} 發車">
             <span class="pids-tag thsr-tag"><i class="fa-solid fa-bolt"></i> 高鐵</span>
-            <span class="pids-dest">${isToQingpu ? '往桃園' : '往板橋'}</span>
+            <span class="pids-dest">${thsrDest}</span>
             <strong class="pids-time">${thsr.depTime}</strong>
             ${this.formatPlatformCountdown(thsr.waitSec, thsr.isOutOfService)}
           </div>
           <span class="stream-divider">│</span>
           <!-- 機捷月台看板風格晶片 (標註往哪裡、車種、發車時間、即時秒數跳動) -->
-          <div class="pids-stream-card pids-tymetro" data-c-tymetro title="機捷：${isToQingpu ? '往青埔' : '往新埔'} (${tymetro.rawType})，預計 ${tymetro.depTime} 發車">
+          <div class="pids-stream-card pids-tymetro" data-c-tymetro title="機捷：${tymetroDest} (${tymetro.rawType || tymetro.type})，預計 ${tymetro.depTime} 發車">
             <span class="pids-tag tymetro-tag"><i class="fa-solid fa-route"></i> 機捷</span>
-            <span class="pids-dest">${isToQingpu ? '往青埔' : '往新埔'}</span>
+            <span class="pids-dest">${tymetroDest}</span>
             <span class="pids-type-mini ${tymetro.isExpress ? 'express' : ''}">${tymetro.isExpress ? '直達' : '普通'}</span>
             <strong class="pids-time">${tymetro.depTime}</strong>
             ${this.formatPlatformCountdown(tymetro.waitSec, tymetro.isOutOfService)}
@@ -14414,7 +14560,7 @@ class TwinCityTransitMonitor {
             : thsr.waitSec;
           const thsrDepTime = firstThsrPlan ? firstThsrPlan.boardTrainTime : thsr.depTime;
           const thsrTrainNo = firstThsrPlan ? `${firstThsrPlan.trainNo}次` : `${thsr.trainNo}次`;
-          const thsrDest = isToQingpu ? '往桃園' : '往板橋';
+          const thsrDest = this.getTrainDestination('thsr', firstThsrPlan ? firstThsrPlan.trainNo : thsr.trainNo, isToQingpu);
 
           let leaveTipThsr = '建議及早出門';
           if (firstThsrPlan && firstThsrPlan.leaveTimeMs) {
@@ -14435,7 +14581,7 @@ class TwinCityTransitMonitor {
           const tymetroDepTime = firstTymetroPlan ? firstTymetroPlan.boardTrainTime : tymetro.depTime;
           const isExpress = firstTymetroPlan ? firstTymetroPlan.isExpress : tymetro.isExpress;
           const tymetroTypeTag = isExpress ? '直達' : '普通';
-          const tymetroDest = isToQingpu ? '往青埔' : '往新埔';
+          const tymetroDest = this.getTrainDestination('tymetro', firstTymetroPlan ? firstTymetroPlan.trainNo : tymetro.trainNo, isToQingpu);
 
           let leaveTipTymetro = '建議及早出門';
           if (firstTymetroPlan && firstTymetroPlan.leaveTimeMs) {
@@ -14674,10 +14820,19 @@ class TwinCityTransitMonitor {
               <span class="track-mode-hint">${isToQingpu ? '板南線 ➔ 高鐵' : '高鐵 ➔ 板南線'}</span>
             </div>
             <div class="track-eta-group">
-              <span class="pids-countdown-badge thsr-pids" data-f-thsr-pids>
-                <i class="fa-solid fa-train"></i> 高鐵 ${thsr.trainNo}次 ‧ ${thsr.platformStatus} (${thsr.depTime}發)
-              </span>
               <span class="track-total-time" data-f-thsr-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : (plans && plans[0] ? plans[0].totalDuration : '38分')}</strong></span>
+            </div>
+          </div>
+
+          <!-- 月台等車 PIDS 看板 (同上方出門搭車建議月台看板風格，符合車站現場 PID 與閱讀邏輯) -->
+          <div class="hub-pids-card pids-thsr-hub track-corridor-pids" data-f-thsr-pids-card>
+            <div class="hub-pids-main">
+              <span class="hub-pids-dest" data-f-thsr-dest>${this.getTrainDestination('thsr', thsr.trainNo, isToQingpu)}</span>
+              <span class="hub-pids-train" data-f-thsr-train>高鐵 ${thsr.trainNo}次</span>
+              <strong class="hub-pids-time" data-f-thsr-time>${thsr.depTime}</strong>
+            </div>
+            <div class="hub-pids-countdown" data-f-thsr-countdown>
+              ${this.formatPlatformCountdown(thsr.waitSec, thsr.isOutOfService)}
             </div>
           </div>
 
@@ -14698,10 +14853,19 @@ class TwinCityTransitMonitor {
               <span class="track-mode-hint">${isToQingpu ? '環狀線 ➔ 機捷' : '機捷 ➔ 環狀線'}</span>
             </div>
             <div class="track-eta-group">
-              <span class="pids-countdown-badge ${tymetro.isExpress ? 'tymetro-pids-express' : 'tymetro-pids-commuter'}" data-f-tymetro-pids>
-                <i class="fa-solid fa-plane"></i> ${tymetro.type || ''} ‧ ${tymetro.platformStatus} (${tymetro.depTime}發)
-              </span>
               <span class="track-total-time" data-f-tymetro-total><i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : (plans && plans[0] ? plans[0].totalDuration : '64分')}</strong></span>
+            </div>
+          </div>
+
+          <!-- 月台等車 PIDS 看板 (同上方出門搭車建議月台看板風格，符合車站現場 PID 與閱讀邏輯) -->
+          <div class="hub-pids-card pids-tymetro-hub track-corridor-pids" data-f-tymetro-pids-card>
+            <div class="hub-pids-main">
+              <span class="hub-pids-dest" data-f-tymetro-dest>${this.getTrainDestination('tymetro', tymetro.trainNo, isToQingpu)}</span>
+              <span class="hub-pids-type ${tymetro.isExpress ? 'express' : ''}" data-f-tymetro-type>${tymetro.type || (tymetro.isExpress ? '尖峰直達' : '普通車')}</span>
+              <strong class="hub-pids-time" data-f-tymetro-time>${tymetro.depTime}</strong>
+            </div>
+            <div class="hub-pids-countdown" data-f-tymetro-countdown>
+              ${this.formatPlatformCountdown(tymetro.waitSec, tymetro.isOutOfService)}
             </div>
           </div>
 

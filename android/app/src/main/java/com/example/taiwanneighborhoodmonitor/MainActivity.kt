@@ -295,7 +295,7 @@ class MainActivity : ComponentActivity() {
                     } else if (url.contains("raw.githubusercontent.com") || url.contains("janede0214.github.io") ||
                         url.contains("opendata.vip") || url.contains("tdx") || url.contains("data.ntpc.gov.tw") ||
                         url.contains("opendata.tycg.gov.tw") || url.contains("cwa.gov.tw") || url.contains("thsrc.com.tw") ||
-                        url.contains("earthquake.usgs.gov")
+                        url.contains("earthquake.usgs.gov") || url.contains("open-meteo.com")
                     ) {
                         try {
                             val nativeRes = fetchNativeUrl(url)
@@ -655,21 +655,38 @@ class AndroidNativeBridge(
      */
     private fun notifyDataUpdated(dataType: String) {
         activity.runOnUiThread {
-            webView.evaluateJavascript("""
-                (function() {
-                    if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
-                        window.transitMonitor.forceRefreshAll();
-                    }
-                    if (window.weatherMonitor) {
-                        if (typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
+            val js = when (dataType) {
+                "youbike" -> """
+                    (function() {
+                        if (window.weatherMonitor && typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
                             window.weatherMonitor.fetchRealtimeYouBike(true);
                         }
-                        if (typeof window.weatherMonitor.triggerAutoRefresh === 'function') {
-                            window.weatherMonitor.triggerAutoRefresh();
+                    })();
+                """.trimIndent()
+                "metro-live", "parking", "thsr", "tymetro" -> """
+                    (function() {
+                        if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
+                            window.transitMonitor.forceRefreshAll();
                         }
-                    }
-                })();
-            """.trimIndent(), null)
+                    })();
+                """.trimIndent()
+                else -> """
+                    (function() {
+                        if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
+                            window.transitMonitor.forceRefreshAll();
+                        }
+                        if (window.weatherMonitor) {
+                            if (typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
+                                window.weatherMonitor.fetchRealtimeYouBike(true);
+                            }
+                            if (typeof window.weatherMonitor.triggerAutoRefresh === 'function') {
+                                window.weatherMonitor.triggerAutoRefresh();
+                            }
+                        }
+                    })();
+                """.trimIndent()
+            }
+            webView.evaluateJavascript(js, null)
         }
     }
 
