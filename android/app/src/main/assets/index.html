@@ -3066,6 +3066,47 @@ a.coord-tag:hover {
   gap: 1px;
 }
 
+.dir-auto-gps-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dir-auto-gps-btn:hover {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.dir-auto-gps-btn.active {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  color: #34d399;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+
+.compact-dir-dist-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
 .dir-toggle-btn {
   background: transparent;
   border: 1px solid transparent;
@@ -6681,9 +6722,18 @@ body {
     gap: 4px !important;
   }
 
+  .transit-dir-switcher {
+    flex-wrap: wrap !important;
+  }
+
   .dir-toggle-btn {
     padding: 3px 6px !important;
     font-size: 0.74rem !important;
+  }
+
+  .dir-auto-gps-btn {
+    padding: 3px 6px !important;
+    font-size: 0.72rem !important;
   }
 
   .transit-plan-toggle-btn,
@@ -7910,7 +7960,10 @@ body.native-mobile-mode .parking-lot-chip {
           <div class="widget-title">
             <i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達
           </div>
-          <span class="widget-badge">500m/1km 安全圈</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span id="radarMapTimeBadge" class="widget-badge" style="font-size:0.7rem;">⛈️ 載入雷達中…</span>
+            <span class="widget-badge">500m/1km 安全圈</span>
+          </div>
         </div>
         <div id="leafletMap"></div>
       </div>
@@ -11008,6 +11061,8 @@ class NeighborhoodRadarMap {
     this.map = null;
     this.centerMarker = null;
     this.cameraMarkers = [];
+    this.radarLayer = null;        // RainViewer 即時雷達疊加圖層
+    this.radarRefreshTimer = null; // 10 分鐘自動更新計時器
   }
 
   // 初始化地圖 (行動端防滾動陷阱，雙指縮放)
@@ -11019,6 +11074,7 @@ class NeighborhoodRadarMap {
     if (this.map) {
       this.map.remove();
       this.map = null;
+      this.radarLayer = null;
     }
 
     // 建立 Leaflet 地圖實例，使用高對比暗色科技圖資
@@ -11031,11 +11087,83 @@ class NeighborhoodRadarMap {
       touchZoom: true
     }).setView([lat, lon], zoom);
 
-    // CartoDB DarkMatter 暗色系底圖
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // CartoDB DarkMatter 暗色系底圖（主）
+    // 若 CartoDB 在裝置網路環境被限制，自動降級至 OpenStreetMap
+    const cartoTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
-      subdomains: 'abcd'
-    }).addTo(this.map);
+      subdomains: 'abcd',
+      crossOrigin: true
+    });
+
+    const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      subdomains: 'abc',
+      crossOrigin: true
+    });
+
+    // 嘗試載入 CartoDB；若底圖圖磚錯誤則自動切換至 OSM 備援
+    cartoTile.on('tileerror', () => {
+      if (this.map && !this._osmFallbackApplied) {
+        this._osmFallbackApplied = true;
+        cartoTile.remove();
+        osmTile.addTo(this.map);
+        console.warn('[地圖] CartoDB 底圖載入失敗，已切換至 OpenStreetMap 備援底圖');
+      }
+    });
+    cartoTile.addTo(this.map);
+
+    // 疊加 RainViewer 即時雷達圖層（免費、無 API Key 需求、全球覆蓋）
+    this._addRainViewerRadarLayer();
+
+    // 每 10 分鐘自動更新雷達圖層（對應 RainViewer 更新頻率）
+    if (this.radarRefreshTimer) clearInterval(this.radarRefreshTimer);
+    this.radarRefreshTimer = setInterval(() => {
+      this._addRainViewerRadarLayer();
+    }, 600000);
+  }
+
+  // 非同步取得 RainViewer 最新雷達路徑並疊加圖層
+  async _addRainViewerRadarLayer() {
+    if (!this.map) return;
+    try {
+      const resp = await fetch('https://api.rainviewer.com/public/weather-maps.json', {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(5000)
+      });
+      if (!resp.ok) throw new Error('RainViewer API 回應失敗');
+      const data = await resp.json();
+      const pastFrames = data.radar && data.radar.past;
+      if (!Array.isArray(pastFrames) || pastFrames.length === 0) throw new Error('無雷達資料');
+
+      // 取最新一筆（陣列最後一個元素）
+      const latestPath = pastFrames[pastFrames.length - 1].path;
+
+      // 移除舊圖層
+      if (this.radarLayer && this.map.hasLayer(this.radarLayer)) {
+        this.map.removeLayer(this.radarLayer);
+        this.radarLayer = null;
+      }
+
+      // 使用色彩方案 4（藍綠紅漸層，清晰易讀），不透明度 0.6
+      const tileUrl = `https://tilecache.rainviewer.com${latestPath}/256/{z}/{x}/{y}/4/1_1.png`;
+      this.radarLayer = L.tileLayer(tileUrl, {
+        tileSize: 256,
+        opacity: 0.6,
+        maxZoom: 19,
+        crossOrigin: true,
+        zIndex: 10
+      });
+      this.radarLayer.addTo(this.map);
+
+      // 更新雷達時間標籤
+      const dt = new Date(pastFrames[pastFrames.length - 1].time * 1000);
+      const timeStr = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+      const badge = typeof document !== 'undefined' ? document.getElementById('radarMapTimeBadge') : null;
+      if (badge) badge.textContent = `⛈️ 降雨雷達 ${timeStr}`;
+
+    } catch (err) {
+      console.warn('[RainViewer] 雷達圖層載入失敗，地圖仍可正常使用：', err.message);
+    }
   }
 
   // 設置中心點與周邊攝影機標記
@@ -11455,6 +11583,14 @@ class TwinCityTransitMonitor {
     this.direction = 'to_qingpu'; // 'to_qingpu' (新埔->青埔) | 'to_xinpu' (青埔->新埔)
     this.timerId = null;
     this.isScheduleExpanded = false; // 出門時刻表面板是否展開
+
+    // 自動定位使用者位置相關狀態
+    this.userCoords = null;           // 使用者經緯度座標 { lat, lon }
+    this.locationStatusText = '';     // 定位狀態摘要 (如 '距青埔 1.2km' 或 '距新埔 0.8km')
+    this.isLocating = false;          // 是否正在進行 GPS 定位
+    this.isAutoLocationActive = true; // 預設處於依目前位置自動判斷方向模式
+    this.watchPositionId = null;      // 移動位移監聽識別碼
+
     // 手機版或原生 APP 模式預設展開交通走廊，出門即時掌握搭車/騎車班況；TV 或桌機大螢幕預設收合以不遮蔽主監控影像
     const isMobileViewport = typeof window !== 'undefined' && (
       window.innerWidth <= 900 || 
@@ -11463,16 +11599,31 @@ class TwinCityTransitMonitor {
     );
     this.isCollapsed = !isMobileViewport; // 手機/APP 預設展開，桌面/TV 預設收合
     
-    // 持久化記憶：優先維持使用者上次的收合動作與通勤方向
+    // 持久化記憶與位置快取：優先檢查歷史經緯度快取以 0 毫秒極速判定出發方向
     if (typeof localStorage !== 'undefined') {
       try {
         const savedCollapsed = localStorage.getItem('dpu_transit_collapsed');
         if (savedCollapsed !== null) {
           this.isCollapsed = (savedCollapsed === 'true');
         }
+        const cachedCoords = localStorage.getItem('dpu_last_coords');
+        if (cachedCoords) {
+          const parsed = JSON.parse(cachedCoords);
+          if (typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
+            this.userCoords = { lat: parsed.lat, lon: parsed.lon };
+            const locResult = this.determineDirectionByCoords(parsed.lat, parsed.lon);
+            if (locResult) {
+              this.direction = locResult.suggestedDir;
+              this.locationStatusText = `距${locResult.closerName} ${locResult.closerDist}km`;
+              this.isAutoLocationActive = true;
+            }
+          }
+        }
         const savedDir = localStorage.getItem('dpu_transit_direction');
-        if (savedDir === 'to_qingpu' || savedDir === 'to_xinpu') {
+        // 若使用者曾明確手動切換且無有效定位快取，才採用手動紀錄
+        if ((savedDir === 'to_qingpu' || savedDir === 'to_xinpu') && !this.userCoords) {
           this.direction = savedDir;
+          this.isAutoLocationActive = false;
         }
       } catch (e) {
         console.warn('讀取雙埔路網收合偏好失敗:', e);
