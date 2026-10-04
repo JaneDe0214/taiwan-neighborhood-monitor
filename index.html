@@ -12198,8 +12198,147 @@ class TwinCityTransitMonitor {
     return new Date(date.getTime() + mins * 60000);
   }
 
-  // 切換來回方向
+  // =====================================================================
+  // 自動定位：依經緯度計算離青埔／新埔哪邊較近，並建議通勤方向
+  // 回傳 { suggestedDir, closerName, closerDist, fartherName, fartherDist }
+  // 青埔中心：桃園高鐵站附近 (25.0127, 121.2135)
+  // 新埔中心：捷運新埔站附近 (25.0225, 121.4683)
+  // =====================================================================
+  determineDirectionByCoords(lat, lon) {
+    const QINGPU = { name: '青埔', lat: 25.0127, lon: 121.2135, dir: 'to_xinpu' };
+    const XINPU  = { name: '新埔', lat: 25.0225, lon: 121.4683, dir: 'to_qingpu' };
+
+    const distTo = (center) => {
+      const R = 6371;
+      const dLat = (center.lat - lat) * Math.PI / 180;
+      const dLon = (center.lon - lon) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat * Math.PI/180) * Math.cos(center.lat * Math.PI/180) * Math.sin(dLon/2)**2;
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 10) / 10;
+    };
+
+    const dQp = distTo(QINGPU);
+    const dXp = distTo(XINPU);
+    const closer = dQp <= dXp ? QINGPU : XINPU;
+    const farther = dQp <= dXp ? XINPU : QINGPU;
+    const closerDist = dQp <= dXp ? dQp : dXp;
+    const fartherDist = dQp <= dXp ? dXp : dQp;
+
+    return {
+      suggestedDir: closer.dir,         // 身在哪裡，往對面出發
+      closerName: closer.name,
+      closerDist,
+      fartherName: farther.name,
+      fartherDist
+    };
+  }
+
+  // 啟動 GPS watchPosition 持續監聽（移動時自動重新判斷方向）
+  startAutoLocationWatch() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return;
+    if (this.watchPositionId !== null) return; // 避免重複啟動
+
+    this.isLocating = true;
+    this.isAutoLocationActive = true;
+    this.lastStructureSignature = null; // 強制重繪 UI
+
+    this.watchPositionId = navigator.geolocation.watchPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        this.userCoords = { lat, lon };
+        this.isLocating = false;
+
+        // 快取座標供下次冷啟動極速復原
+        if (typeof localStorage !== 'undefined') {
+          try { localStorage.setItem('dpu_last_coords', JSON.stringify({ lat, lon })); } catch(_) {}
+        }
+
+        const result = this.determineDirectionByCoords(lat, lon);
+        if (result) {
+          this.applyLocationResult(result);
+        }
+      },
+      (err) => {
+        console.warn('[雙埔路網 GPS] 定位失敗:', err.message);
+        this.isLocating = false;
+        this.lastStructureSignature = null;
+        this.render();
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  }
+
+  // 停止 GPS 監聽並切換回手動模式
+  stopAutoLocationWatch() {
+    if (this.watchPositionId !== null && typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.clearWatch(this.watchPositionId);
+      this.watchPositionId = null;
+    }
+    this.isAutoLocationActive = false;
+    this.isLocating = false;
+  }
+
+  // 套用定位結果（方向切換 + UI 狀態更新）
+  applyLocationResult(result) {
+    this.locationStatusText = `📍 距${result.closerName} ${result.closerDist}km`;
+    const newDir = result.suggestedDir;
+    const dirChanged = this.direction !== newDir;
+    this.direction = newDir;
+    this.lastStructureSignature = null;
+    if (dirChanged) {
+      this.lastScheduleKey = null;
+    }
+    this.render();
+    if (dirChanged) this.triggerViewportResize();
+  }
+
+  // 使用者手動點擊「定位」按鈕時觸發（一次性定位 + 啟動持續監聽）
+  triggerAutoLocation() {
+    if (this.isLocating) return; // 防重複觸發
+    this.isLocating = true;
+    this.isAutoLocationActive = true;
+    this.stopAutoLocationWatch(); // 先清掉舊的 watch
+    this.lastStructureSignature = null;
+    this.render();
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      alert('您的瀏覽器或裝置不支援 GPS 定位功能。');
+      this.isLocating = false;
+      return;
+    }
+
+    // 先做一次精確定位（回應快），再啟動持續監聽
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        this.userCoords = { lat, lon };
+        this.isLocating = false;
+        if (typeof localStorage !== 'undefined') {
+          try { localStorage.setItem('dpu_last_coords', JSON.stringify({ lat, lon })); } catch(_) {}
+        }
+        const result = this.determineDirectionByCoords(lat, lon);
+        if (result) {
+          this.applyLocationResult(result);
+        }
+        // 接著啟動持續監聽（移動中自動更新）
+        this.startAutoLocationWatch();
+      },
+      (err) => {
+        console.warn('[雙埔路網] 一次性定位失敗:', err.message);
+        this.isLocating = false;
+        this.lastStructureSignature = null;
+        this.render();
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+  }
+
+  // 切換來回方向（手動切換時停用自動定位模式）
   toggleDirection() {
+    this.stopAutoLocationWatch();          // 手動切換 → 停用自動定位
+    this.isAutoLocationActive = false;
+    this.locationStatusText = '';
     this.direction = this.direction === 'to_qingpu' ? 'to_xinpu' : 'to_qingpu';
     if (typeof localStorage !== 'undefined') {
       try { localStorage.setItem('dpu_transit_direction', this.direction); } catch(e) {}
@@ -12209,9 +12348,12 @@ class TwinCityTransitMonitor {
     this.triggerViewportResize();
   }
 
-  // 設定特定方向
+  // 設定特定方向（手動切換時停用自動定位模式）
   setDirection(dir) {
     if (this.direction !== dir) {
+      this.stopAutoLocationWatch();        // 手動切換 → 停用自動定位
+      this.isAutoLocationActive = false;
+      this.locationStatusText = '';
       this.direction = dir;
       if (typeof localStorage !== 'undefined') {
         try { localStorage.setItem('dpu_transit_direction', this.direction); } catch(e) {}
@@ -14327,10 +14469,16 @@ class TwinCityTransitMonitor {
 
     return `
       <div class="transit-compact-bar integrated-commute-bar">
-        <!-- 1. 左側：醒目通勤方向翻轉按鈕 -->
+        <!-- 1. 左側：醒目通勤方向翻轉按鈕（含定位狀態標籤） -->
         <button class="compact-badge-dir-btn" onclick="window.transitMonitor.toggleDirection()" title="點擊切換通勤方向 (目前：${directionLabel})">
           <span>${directionLabel}</span>
+          ${this.isAutoLocationActive && this.locationStatusText ? `<span class="compact-dir-dist-tag">${this.locationStatusText}</span>` : ''}
           <i class="fa-solid fa-repeat dir-swap-icon"></i>
+        </button>
+        <button class="dir-auto-gps-btn ${this.isAutoLocationActive ? 'active' : ''}" style="margin-left:2px;"
+          onclick="window.transitMonitor.triggerAutoLocation()"
+          title="${this.isLocating ? '定位中…' : (this.isAutoLocationActive ? '自動定位中，點擊重新定位' : '點擊自動判斷出發方向')}">
+          <i class="fa-solid ${this.isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}"></i>
         </button>
 
         ${activeAlert ? `
@@ -14936,6 +15084,12 @@ class TwinCityTransitMonitor {
             <button class="dir-toggle-btn ${!isToQingpu ? 'active' : ''}" onclick="window.transitMonitor.setDirection('to_xinpu')" title="青埔出發前往新埔">
               往新埔 (青埔出發) <i class="fa-solid fa-arrow-left"></i>
             </button>
+            <button class="dir-auto-gps-btn ${this.isAutoLocationActive ? 'active' : ''}"
+              onclick="window.transitMonitor.triggerAutoLocation()"
+              title="${this.isLocating ? '定位中…' : (this.isAutoLocationActive ? '自動定位中，點擊重新定位' : '點擊依目前位置自動判斷出發方向')}">
+              <i class="fa-solid ${this.isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}"></i>
+              ${this.isLocating ? '定位中…' : (this.locationStatusText || '自動定位')}
+            </button>
           </div>
 
           <button class="transit-plan-toggle-btn ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看完整搭車時間表">
@@ -15404,14 +15558,22 @@ class TwinCityTransitMonitor {
     this.timerId = setInterval(() => {
       this.render();
     }, 1000);
+
+    // 啟動 APP 時自動執行一次 GPS 定位，判斷使用者目前身在青埔還是新埔
+    // 若已有快取座標（constructor 已套用），仍啟動 watchPosition 持續監聽移動更新
+    if (this.isAutoLocationActive) {
+      // 延遲 800ms，讓首次 render 先完成再要求 GPS 權限（改善 UX）
+      setTimeout(() => this.triggerAutoLocation(), 800);
+    }
   }
 
-  // 停止定時器
+  // 停止定時器（同時清除 GPS 位移監聽，避免記憶體洩漏）
   stop() {
     if (this.timerId) {
       clearInterval(this.timerId);
       this.timerId = null;
     }
+    this.stopAutoLocationWatch();
   }
 }
 
