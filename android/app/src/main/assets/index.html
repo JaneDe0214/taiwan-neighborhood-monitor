@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>雙埔生活</title>
   
   <!-- 雙埔生活專屬網頁頁籤與 Web App 圖標 (Favicon & Touch Icon，輕量化極速秒載) -->
@@ -8782,6 +8783,27 @@ e.exports=function(){"use strict";function e(e){var t=typeof e;return null!==e&&
 
 /* 視訊播放引擎模組 */
 /**
+ * 共用 YouTube 直播嵌入網址產生器 (附上 origin 與嚴格 Referrer 相容參數，防止 Android WebView 錯誤 153)
+ */
+window.buildYoutubeEmbedUrl = function buildYoutubeEmbedUrl(videoId) {
+  const base = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(String(videoId || '').trim())}`;
+  const params = new URLSearchParams({
+    autoplay: '1',
+    mute: '1',
+    playsinline: '1',
+    controls: '1',
+    modestbranding: '1',
+    rel: '0',
+    hl: 'zh-TW'
+  });
+  if (typeof window !== 'undefined' && window.location && window.location.origin && /^https?:\/\//i.test(window.location.origin)) {
+    params.set('enablejsapi', '1');
+    params.set('origin', window.location.origin);
+  }
+  return `${base}?${params.toString()}`;
+};
+
+/**
  * 區域環境即時影像監控系統 - 全能自適應視訊播放引擎 (HLS + FLV + MJPEG)
  */
 
@@ -9174,6 +9196,14 @@ class CameraPlayerEngine {
       });
     } catch(e) {}
 
+    // 釋放內嵌 iframe 媒體解碼與連線資源
+    try {
+      const frames = document.querySelectorAll('iframe.cam-feed');
+      frames.forEach(f => {
+        try { f.src = 'about:blank'; } catch (e) {}
+      });
+    } catch (e) {}
+
     // 清理 MJPEG 計時器
     this.mjpegTimers.forEach(t => clearInterval(t));
     this.mjpegTimers.clear();
@@ -9215,13 +9245,15 @@ class CameraPlayerEngine {
         </div>
       `;
     } else if (cam.type === 'youtube') {
-      // 臺北市/新北市政府官方 24H 4K 觀光即時串流 (YouTube Live 官方無廣告嵌入)
-      const ytUrl = `https://www.youtube-nocookie.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&controls=1&modestbranding=1&rel=0`;
+      // 官方 24H 4K 觀光即時串流 (附帶標準 Referer 政策與前 6 格即時秒開、超過 6 格視口按需載入)
+      const ytUrl = window.buildYoutubeEmbedUrl(cam.videoId);
+      const deferLoad = index >= 6;
       mediaHtml = `
         <div class="video-wrapper" ondblclick="window.monitorApp.openFullscreen('${cam.id}')" title="按兩下開啟全螢幕檢視">
-          <iframe id="yt-${cam.id}" class="cam-feed" src="${ytUrl}" title="${cam.name}" 
+          <iframe id="yt-${cam.id}" class="cam-feed" ${deferLoad ? `data-src="${ytUrl}"` : `src="${ytUrl}"`} title="${cam.name}" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            allowfullscreen loading="lazy" scrolling="no" frameborder="0" 
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen scrolling="no" frameborder="0" 
             style="width:100%;height:100%;border:none;background:#000;"></iframe>
         </div>
       `;
@@ -9327,7 +9359,8 @@ class CameraPlayerEngine {
     if (!cam) return;
     const videoEl = document.getElementById(`video-${cam.id}`);
     const imgEl = document.getElementById(`feed-${cam.id}`);
-    if (!videoEl && !imgEl) return;
+    const frameEl = document.getElementById(`yt-${cam.id}`) || document.getElementById(`iframe-${cam.id}`);
+    if (!videoEl && !imgEl && !frameEl) return;
 
     if (cam.type === 'hls') {
       this.initHlsPlayer(cam);
@@ -9337,11 +9370,15 @@ class CameraPlayerEngine {
       this.initMjpegKeeper(cam);
       this.startLiveClock(cam.id);
     } else if (cam.type === 'youtube' || cam.type === 'iframe') {
-      const frameEl = document.getElementById(`yt-${cam.id}`) || document.getElementById(`iframe-${cam.id}`);
-      const wrapEl = frameEl ? frameEl.closest('.video-wrapper') : null;
-      if (wrapEl) {
-        frameEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
-        setTimeout(() => wrapEl.classList.add('is-ready'), 500);
+      if (frameEl) {
+        const wrapEl = frameEl.closest('.video-wrapper');
+        if (wrapEl) {
+          frameEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
+          setTimeout(() => wrapEl.classList.add('is-ready'), 700);
+        }
+        if (!frameEl.getAttribute('src') && frameEl.dataset && frameEl.dataset.src) {
+          frameEl.src = frameEl.dataset.src;
+        }
       }
       this.startLiveClock(cam.id);
     } else if (imgEl) {
@@ -21659,12 +21696,13 @@ class MonitorApp {
       return;
     }
 
-    // 臺北市/新北市政府官方 24H 4K 觀光即時串流 (YouTube Live)
+    // 官方 24H 4K 觀光即時串流 (YouTube Live)
     if (cam.type === 'youtube') {
-      const ytUrl = `https://www.youtube-nocookie.com/embed/${cam.videoId}?autoplay=1&mute=1&playsinline=1&controls=1&modestbranding=1&rel=0`;
+      const ytUrl = window.buildYoutubeEmbedUrl(cam.videoId);
       modalBody.innerHTML = `
         <div style="width: 100%; height: 75vh; background: #000; display: flex; align-items: center; justify-content: center;">
           <iframe src="${ytUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            referrerpolicy="strict-origin-when-cross-origin"
             allowfullscreen style="width: 100%; height: 100%; border: none; background: #000;" frameborder="0"></iframe>
         </div>
       `;

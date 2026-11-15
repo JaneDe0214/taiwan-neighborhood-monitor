@@ -97,8 +97,8 @@ class MainActivity : ComponentActivity() {
         // 4. 背景立即非同步平行預熱所有大眾運輸與 YouBike 即時數據 (0 阻塞、秒開無白屏)
         nativeBridge.prewarmAllData()
 
-        // 5. 載入本機資產庫內建之全功能監控應用程式
-        webView.loadUrl("file:///android_asset/index.html")
+        // 5. 透過官方建議的 HTTPS 虛擬網域載入本機資產應用程式（確保 YouTube/外部嵌入接收合法 HTTPS Referer，徹底消除錯誤 153）
+        webView.loadUrl("https://appassets.androidplatform.net/index.html")
     }
 
     /**
@@ -147,6 +147,13 @@ class MainActivity : ComponentActivity() {
 
         // 啟用地理定位支援 (附近即時生活圈)
         s.setGeolocationEnabled(true)
+
+        // 啟用 Cookie 與第三方 Cookie，確保 YouTube 等內嵌官方直播於 HTTPS 虛擬來源下正常驗證播放
+        try {
+            val cookieManager = android.webkit.CookieManager.getInstance()
+            cookieManager.setAcceptCookie(true)
+            cookieManager.setAcceptThirdPartyCookies(wv, true)
+        } catch (_: Exception) {}
 
         // 注入原生 JS 橋接器
         nativeBridge = AndroidNativeBridge(this, isTvDevice, wv)
@@ -284,7 +291,13 @@ class MainActivity : ComponentActivity() {
                 view: WebView?,
                 request: WebResourceRequest?
             ): WebResourceResponse? {
-                val url = request?.url?.toString() ?: return null
+                val uri = request?.url ?: return null
+                val url = uri.toString()
+                if (uri.scheme.equals("https", ignoreCase = true) &&
+                    uri.host.equals("appassets.androidplatform.net", ignoreCase = true)
+                ) {
+                    return serveBundledAsset(uri)
+                }
                 if (url.startsWith("http://") || url.startsWith("https://")) {
                     // 針對臺北市交工處 HLS 串流與即時視訊資源進行原生代抓 (精準注入 Referer 與 CORS 標頭，徹底消除 403 與 iframe 破圖)
                     if (url.contains("hls.bote.gov.taipei")) {
@@ -316,12 +329,47 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * 自 APK assets 目錄直讀靜態檔案並以標準 HTTPS 虛擬來源回應（支援 Referrer-Policy 與二進位編碼隔離）
+     */
+    private fun serveBundledAsset(uri: Uri): WebResourceResponse {
+        val relPath = WebAssetRouting.resolveAssetPath(uri.path)
+            ?: return WebResourceResponse(
+                "text/plain",
+                "utf-8",
+                403,
+                "Forbidden",
+                mapOf("Cache-Control" to "no-store"),
+                ByteArrayInputStream(ByteArray(0))
+            )
+
+        val spec = WebAssetRouting.assetContentSpec(relPath)
+
+        return try {
+            val stream = assets.open(relPath)
+            WebResourceResponse(
+                spec.mimeType,
+                if (spec.isBinary) null else "utf-8",
+                200,
+                "OK",
+                spec.headers,
+                stream
+            )
+        } catch (_: Exception) {
+            WebResourceResponse(
+                "text/plain",
+                "utf-8",
+                404,
+                "Not Found",
+                mapOf("Cache-Control" to "no-store"),
+                ByteArrayInputStream(ByteArray(0))
+            )
+        }
+    }
+
     private val boteCookies = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.ConcurrentHashMap<String, String>>()
 
-    private fun extractBoteCamKey(urlString: String): String {
-        val m = Regex("/(?:hls/|streamapi_)([0-9A-Za-z_-]+)").find(urlString)
-        return m?.groupValues?.getOrNull(1) ?: "global"
-    }
+    private fun extractBoteCamKey(urlString: String): String = WebAssetRouting.extractBoteCamKey(urlString)
 
     /**
      * 臺北市交通管制工程處 (hls.bote.gov.taipei) 專屬原生高速代理直透實作
@@ -1471,5 +1519,66 @@ class AndroidNativeBridge(
             refreshThsrAsync(force = true)
             refreshTymetroAsync(force = true)
         }
+    }
+}
+
+internal data class AssetContentSpec(
+    val mimeType: String,
+    val isBinary: Boolean,
+    val headers: Map<String, String>
+)
+
+/**
+ * 靜態資源路徑解析、MIME 編碼判斷與 BOTE 攝影機隔離鍵工具（純 Kotlin 邏輯，供 MainActivity 與單元測試共用）
+ */
+internal object WebAssetRouting {
+    private val boteCamKeyRegex = Regex("/(?:hls/|streamapi_)([0-9A-Za-z_-]+)")
+
+    fun resolveAssetPath(rawPath: String?): String? {
+        var relPath = (rawPath ?: "/").trimStart('/')
+        if (relPath.isEmpty() || relPath == "/") relPath = "index.html"
+        if (relPath.startsWith("assets/")) relPath = relPath.removePrefix("assets/")
+        if (relPath.isEmpty()) relPath = "index.html"
+        if (relPath.contains("..")) return null
+        return relPath
+    }
+
+    fun assetContentSpec(relPath: String): AssetContentSpec {
+        val lower = relPath.lowercase(Locale.US)
+        val isBinary = lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") ||
+            lower.endsWith(".webp") || lower.endsWith(".ico") || lower.endsWith(".gif") ||
+            lower.endsWith(".woff2") || lower.endsWith(".woff") || lower.endsWith(".ttf")
+
+        val mimeType = when {
+            lower.endsWith(".html") || lower.endsWith(".htm") -> "text/html"
+            lower.endsWith(".js") -> "application/javascript"
+            lower.endsWith(".css") -> "text/css"
+            lower.endsWith(".json") -> "application/json"
+            lower.endsWith(".svg") -> "image/svg+xml"
+            lower.endsWith(".png") -> "image/png"
+            lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
+            lower.endsWith(".webp") -> "image/webp"
+            lower.endsWith(".ico") -> "image/x-icon"
+            else -> "application/octet-stream"
+        }
+
+        val headers = mutableMapOf(
+            "Access-Control-Allow-Origin" to "*",
+            "Cache-Control" to if (lower.endsWith(".json")) "no-store" else "public, max-age=3600"
+        )
+        if (lower.endsWith(".html") || lower.endsWith(".htm")) {
+            headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        }
+
+        return AssetContentSpec(
+            mimeType = mimeType,
+            isBinary = isBinary,
+            headers = headers
+        )
+    }
+
+    fun extractBoteCamKey(urlString: String): String {
+        val m = boteCamKeyRegex.find(urlString)
+        return m?.groupValues?.getOrNull(1) ?: "global"
     }
 }
