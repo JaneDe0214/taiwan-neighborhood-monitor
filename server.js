@@ -26,7 +26,8 @@ const cache = {
   tymetroNorth: { data: null, expireAt: 0 },
   metroLive: { data: null, expireAt: 0 },
   metroCarWeight: { data: null, expireAt: 0 },
-  parkingThsr: { data: null, expireAt: 0 }
+  parkingThsr: { data: null, expireAt: 0 },
+  weatherMap: new Map()
 };
 
 // 內部抓取遠端 JSON 函式
@@ -693,12 +694,86 @@ async function handleParkingThsrProxy(req, res) {
   }
 }
 
+// 抓取單一 JSON 並附帶一次重試機制 (因應 Open-Meteo 偶發連線重置)
+async function fetchJsonWithRetry(url, retries = 1) {
+  let lastErr;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      const raw = await fetchRemoteJson(url);
+      return JSON.parse(raw);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
+// 氣象與空氣品質代理 (Open-Meteo 雙端點並發查詢 + 120 秒記憶體快取與過期容錯)
+async function handleWeatherProxy(req, res, latRaw, lonRaw) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  const lat = parseFloat(latRaw);
+  const lon = parseFloat(lonRaw);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度參數' }));
+    return;
+  }
+
+  const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  const now = Date.now();
+  const cached = cache.weatherMap.get(key);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.payload);
+    return;
+  }
+
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=Asia%2FTaipei`;
+  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=Asia%2FTaipei`;
+
+  try {
+    const [weather, airQuality] = await Promise.all([
+      fetchJsonWithRetry(weatherUrl, 1),
+      fetchJsonWithRetry(aqiUrl, 1)
+    ]);
+    const payload = JSON.stringify({
+      success: true,
+      weather,
+      airQuality,
+      fetchedAt: new Date().toISOString()
+    });
+    cache.weatherMap.set(key, { payload, expireAt: now + 120000 });
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    if (cached && cached.payload) {
+      res.writeHead(200);
+      res.end(cached.payload);
+      return;
+    }
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得氣象與空氣品質資料', detail: err.message }));
+  }
+}
+
 // 建立 HTTP 伺服器
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = parsedUrl.pathname;
 
   // 1. API 路由
+  if (pathname === '/api/health') {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.writeHead(200);
+    res.end(JSON.stringify({ ok: true, uptimeSec: Math.round(process.uptime()) }));
+    return;
+  }
+  if (pathname === '/api/weather') {
+    handleWeatherProxy(req, res, parsedUrl.searchParams.get('lat'), parsedUrl.searchParams.get('lon'));
+    return;
+  }
   if (pathname === '/api/youbike/ntpc') {
     handleYouBikeProxy(req, res, 'ntpc', NTPC_URL);
     return;

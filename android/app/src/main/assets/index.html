@@ -27,42 +27,57 @@
   <link rel="preconnect" href="https://hls.bote.gov.taipei" crossorigin>
   <link rel="dns-prefetch" href="https://cctv1.freeway.gov.tw">
   <link rel="preconnect" href="https://cctv1.freeway.gov.tw" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Leaflet 地圖樣式庫 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <!-- 科技監控儀表板主樣式 -->
+  <!-- 雙埔生活 ‧ Obsidian Telemetry 主設計系統 -->
   <style>
-/* 雙埔生活資訊監控系統 - 現代暗黑科技指揮中心樣式 */
+/* 雙埔生活資訊監控系統 - Editorial Obsidian Telemetry 設計系統 */
 
 :root {
-  --bg-main: #0a0e17;
-  --bg-card: rgba(16, 24, 40, 0.85);
-  --bg-card-hover: rgba(22, 34, 58, 0.95);
-  --border-color: rgba(45, 70, 110, 0.4);
-  --border-glow: rgba(0, 240, 255, 0.4);
-  
-  --color-primary: #00f0ff;
-  --color-primary-dim: rgba(0, 240, 255, 0.15);
+  --bg-void: #05080f;
+  --bg-main: #060a13;
+  --bg-surface: rgba(12, 18, 32, 0.80);
+  --bg-card: rgba(12, 18, 32, 0.84);
+  --bg-card-hover: rgba(17, 26, 45, 0.94);
+  --bg-elevated: rgba(20, 30, 52, 0.92);
+
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+  --border-color: rgba(148, 163, 184, 0.16);
+  --border-glow: rgba(34, 211, 238, 0.42);
+  --specular-top: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+
+  /* 中心動態環境光譜 (--ambient-accent 由 JS switchCenter 動態更新) */
+  --ambient-accent: 34, 211, 238;
+  --ambient-secondary: 167, 139, 250;
+
+  --color-primary: #22d3ee;
+  --color-primary-dim: rgba(34, 211, 238, 0.14);
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
-  --color-purple: #8b5cf6;
-  
+  --color-purple: #a78bfa;
+
   /* 交通運具語意化色彩 */
-  --color-thsr: #ff7700;
-  --color-thsr-light: #ff9900;
+  --color-thsr: #f97316;
+  --color-thsr-light: #fb923c;
   --color-tymetro-express: #a855f7;
-  --color-tymetro-commuter: #0284c7;
+  --color-tymetro-commuter: #38bdf8;
   --color-bannan: #38bdf8;
   --color-circular: #facc15;
-  
-  --text-main: #f1f5f9;
+
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  --text-dim: #8b9bb5; /* 提升至 5.1:1 對比度，符合 WCAG 2.1 AA 無障礙標準 */
-  
-  /* 標準化 Design Tokens (間距、圓角與觸控目標) */
+  --text-dim: #7c8da6; /* 維持 >= 4.8:1 對比度 */
+
+  /* 標準化 Design Tokens */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 12px;
@@ -71,11 +86,26 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-xl: 18px;
   --touch-target-min: 44px;
-  
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang TC", "Microsoft JhengHei", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-display: "Space Grotesk", "Plus Jakarta Sans", "Noto Sans TC", sans-serif;
+  --font-family: "Plus Jakarta Sans", "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: var(--font-family);
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+/* 中心氛圍色盤切換 */
+body[data-theme-center="dual"]     { --ambient-accent: 34, 211, 238;  --ambient-secondary: 167, 139, 250; }
+body[data-theme-center="qingpu"]   { --ambient-accent: 6, 182, 212;   --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="banqiao"]  { --ambient-accent: 167, 139, 250; --ambient-secondary: 99, 102, 241; }
+body[data-theme-center="nearby"]   { --ambient-accent: 16, 185, 129;  --ambient-secondary: 34, 211, 238; }
+body[data-theme-center="tourist"]  { --ambient-accent: 245, 158, 11;  --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="japan"]    { --ambient-accent: 244, 63, 94;   --ambient-secondary: 245, 158, 11; }
+body[data-theme-center="favorites"]{ --ambient-accent: 251, 191, 36;  --ambient-secondary: 249, 115, 22; }
 
 /* 前庭覺障礙無障礙保護與低功耗偏好 */
 @media (prefers-reduced-motion: reduce) {
@@ -92,45 +122,82 @@
   padding: 0;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-void);
+  background-image:
+    radial-gradient(ellipse 75% 45% at 18% -5%, rgba(var(--ambient-accent), 0.13) 0%, transparent 68%),
+    radial-gradient(ellipse 65% 45% at 88% 8%, rgba(var(--ambient-secondary), 0.10) 0%, transparent 70%),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.028) 1px, transparent 0);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
+  background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-family);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  transition: background-image 0.8s var(--ease-expo);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
 }
 
-/* 自訂捲軸 */
+/* 所有數值欄位一律等寬鎖定，杜絕每秒跳字視覺抖動 */
+.clock-time,
+.pids-time,
+.pids-countdown-chip,
+.dual-temp-val,
+.temp-huge,
+.dual-aqi-num,
+.aqi-number,
+.stat-num,
+.distance-pill,
+.format-res-badge,
+.cam-time-badge,
+.rain-col-prob {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* 自訂細緻捲軸 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(10, 14, 23, 0.8);
+  background: rgba(6, 10, 19, 0.85);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(45, 70, 110, 0.6);
-  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: rgba(var(--ambient-accent), 0.6);
 }
 
-/* 頂部科技指揮導航列 (流光動態底線) */
+/* 頂部指揮導航列 (Architectural Obsidian Command Bar) */
 .top-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px;
-  background: rgba(11, 17, 30, 0.94);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(6, 10, 19, 0.86);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid var(--hairline);
   position: sticky;
   top: 0;
-  z-index: 100;
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6);
+  z-index: 120;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), var(--specular-top);
+  min-width: 0;
 }
 
 .top-nav::after {
@@ -140,91 +207,95 @@ body {
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.8), rgba(16, 185, 129, 0.8), transparent);
-  background-size: 200% 100%;
-  animation: cyber-glow-sweep 6s linear infinite;
+  background: linear-gradient(90deg, transparent 5%, rgba(var(--ambient-accent), 0.55) 35%, rgba(var(--ambient-secondary), 0.45) 65%, transparent 95%);
+  opacity: 0.75;
   pointer-events: none;
-}
-
-@keyframes cyber-glow-sweep {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .brand-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(16, 185, 129, 0.2));
-  border: 1px solid var(--color-primary);
-  border-radius: 10px;
-  color: var(--color-primary);
-  font-size: 20px;
-  box-shadow: 0 0 15px var(--color-primary-dim);
-  transition: all 0.3s ease;
-  position: relative;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(145deg, rgba(var(--ambient-accent), 0.18), rgba(var(--ambient-secondary), 0.12));
+  border: 1px solid rgba(var(--ambient-accent), 0.45);
+  border-radius: 9px;
+  color: rgb(var(--ambient-accent));
+  font-size: 14px;
+  box-shadow: 0 0 18px rgba(var(--ambient-accent), 0.16), var(--specular-top);
+  transition: transform 0.35s var(--ease-spring), border-color 0.35s ease;
+  flex-shrink: 0;
 }
 
 .brand-badge:hover {
-  transform: rotate(10deg) scale(1.08);
-  box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+  transform: rotate(8deg) scale(1.06);
+  border-color: rgba(var(--ambient-accent), 0.8);
 }
 
 .brand-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  background: linear-gradient(90deg, #ffffff, #a5f3fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #f8fafc;
+  white-space: nowrap;
 }
 
 .brand-subtitle {
-  font-size: 0.75rem;
-  color: var(--color-primary);
-  letter-spacing: 1px;
+  font-size: 0.68rem;
+  color: rgba(var(--ambient-accent), 0.9);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-/* 中心切換選擇器 (雙埔、青埔、新埔、觀光) */
+/* 中心切換選擇器 (附近 / 雙埔 / 青埔 / 新埔 / 觀光 / 日本 / 收藏) */
 .center-switch-group {
-  display: flex;
-  background: rgba(16, 24, 40, 0.9);
-  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(12, 18, 32, 0.92);
+  padding: 2px;
   border-radius: 10px;
-  border: 1px solid var(--border-color);
-  gap: 4px;
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  gap: 2px;
+  min-width: 0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.center-switch-group::-webkit-scrollbar { display: none; }
 
 .center-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
-  padding: 8px 16px;
-  font-size: 0.88rem;
+  padding: 5px 8px;
+  font-size: 0.76rem;
   font-weight: 600;
-  border-radius: 7px;
+  font-family: var(--font-family);
+  border-radius: 8px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.2s ease, background 0.25s var(--ease-expo), border-color 0.25s ease, transform 0.15s ease;
   position: relative;
-  overflow: hidden;
 }
 
 .center-btn:hover {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .center-btn:active {
@@ -232,32 +303,61 @@ body {
 }
 
 .center-btn.active {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(0, 150, 255, 0.25));
-  color: var(--color-primary);
-  border: 1px solid rgba(0, 240, 255, 0.5);
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.3);
+  background: linear-gradient(135deg, rgba(var(--ambient-accent), 0.18), rgba(var(--ambient-secondary), 0.14));
+  color: #ffffff;
+  border-color: rgba(var(--ambient-accent), 0.48);
+  box-shadow: 0 2px 10px rgba(var(--ambient-accent), 0.18), var(--specular-top);
 }
 
 .center-btn.active i {
-  animation: icon-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: rgb(var(--ambient-accent));
+  animation: icon-pop 0.35s var(--ease-spring);
+}
+
+.center-btn[data-center="favorites"].active i {
+  color: #fbbf24;
+}
+
+.fav-count-pill {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: rgba(251, 191, 36, 0.22);
+  color: #fbbf24;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.fav-count-pill.is-visible:not(.is-empty) {
+  display: inline-flex;
+}
+
+.fav-count-pill.is-empty {
+  display: none;
 }
 
 @keyframes icon-pop {
-  0% { transform: scale(0.7); }
-  50% { transform: scale(1.25); }
+  0% { transform: scale(0.75); }
+  55% { transform: scale(1.22); }
   100% { transform: scale(1); }
 }
 
-/* 附近生活圈按鈕定位中旋轉呼吸燈效果 */
+/* 附近生活圈按鈕定位中旋轉 */
 .center-btn[data-center="nearby"].locating i {
-  animation: locating-spin 1s linear infinite !important;
-  color: var(--color-warning) !important;
+  animation: locating-spin 1s linear infinite;
+  color: var(--color-warning);
 }
 
 @keyframes locating-spin {
-  0% { transform: rotate(0deg) scale(1.1); }
-  50% { transform: rotate(180deg) scale(1.25); }
-  100% { transform: rotate(360deg) scale(1.1); }
+  0% { transform: rotate(0deg) scale(1.08); }
+  50% { transform: rotate(180deg) scale(1.18); }
+  100% { transform: rotate(360deg) scale(1.08); }
 }
 
 /* 距離膠囊標籤 (由近到遠精準空間大圓距離) */
@@ -265,53 +365,65 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: rgba(16, 185, 129, 0.22);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.45);
-  padding: 1px 7px;
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.34);
+  padding: 1px 6px;
   border-radius: 9999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   font-family: var(--font-mono);
-  letter-spacing: 0.3px;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
   white-space: nowrap;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 .distance-pill i {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: #34d399;
 }
 
-/* 網格切換與工具區 */
+/* 網格切換與工具區 (Obsidian Precision Controls) */
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .grid-selector {
-  display: flex;
-  background: rgba(16, 24, 40, 0.9);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  display: inline-flex;
+  align-items: center;
+  background: rgba(10, 14, 24, 0.72);
+  padding: 2px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .grid-btn {
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   color: var(--text-muted);
-  padding: 6px 11px;
-  font-size: 0.8rem;
+  padding: 4px 7px;
+  font-size: 0.73rem;
   font-weight: 600;
-  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  border-radius: 7px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.grid-btn i {
+  font-size: 0.66rem;
+  opacity: 0.75;
 }
 
 .grid-btn:hover {
@@ -320,38 +432,39 @@ body {
 }
 
 .grid-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 
 .grid-btn.active {
-  background: var(--color-primary);
-  color: #06101e;
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.42);
+  color: #f8fafc;
   font-weight: 700;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 10px rgba(56, 189, 248, 0.14);
 }
 
-/* 模式切換按鈕 (一屏呈現、當地資訊) 專屬動態樣式 */
+/* 模式切換按鈕與 ⌘K 指令面板觸發鈕 */
 .mode-toggle-btn {
-  background: rgba(16, 24, 40, 0.85);
-  border: 1px solid var(--border-color);
+  background: rgba(15, 21, 34, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   color: var(--text-muted);
-  padding: 6px 14px;
-  font-size: 0.8rem;
+  padding: 5px 8px;
+  font-size: 0.73rem;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  gap: 5px;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  overflow: hidden;
+  white-space: nowrap;
 }
 
 .mode-toggle-btn:hover {
   color: var(--text-main);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 14px rgba(0, 240, 255, 0.25);
+  border-color: rgba(56, 189, 248, 0.38);
+  background: rgba(22, 31, 48, 0.92);
   transform: translateY(-1px);
 }
 
@@ -360,40 +473,68 @@ body {
 }
 
 .mode-toggle-btn.active {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.22), rgba(16, 185, 129, 0.22));
-  border-color: var(--color-primary);
-  color: #ffffff;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
-  animation: btn-active-glow 3s infinite alternate ease-in-out;
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 12px rgba(56, 189, 248, 0.15);
 }
 
-@keyframes btn-active-glow {
-  0% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); }
-  100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), inset 0 0 8px rgba(0, 240, 255, 0.2); }
+.cmd-palette-trigger {
+  background: rgba(10, 14, 24, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.18s ease, color 0.18s ease, background-color 0.18s ease;
+  white-space: nowrap;
 }
 
-/* 頂部導航列整合操作控制列 (模式切換 + 快捷圖示按鈕) */
+.cmd-palette-trigger:hover {
+  color: var(--text-main);
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(18, 25, 40, 0.92);
+}
+
+.cmd-kbd {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--color-primary);
+  letter-spacing: 0.3px;
+}
+
+/* 頂部導航列整合操作控制列 */
 .nav-control-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .mode-toggles-wrapper {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav-icon-tools {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav-tool-btn {
-  width: 40px !important;
-  height: 40px !important;
+  width: 30px !important;
+  height: 30px !important;
   border-radius: 8px !important;
   display: flex !important;
   align-items: center !important;
@@ -401,21 +542,19 @@ body {
   flex-shrink: 0 !important;
 }
 
-/* 當地資訊按鈕內的圖示旋轉與脈衝 */
 #btnToggleSidebar i {
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
 }
 
 #btnToggleSidebar:hover i {
-  transform: scale(1.2) rotate(15deg);
+  transform: scale(1.12) rotate(10deg);
 }
 
 #btnToggleSidebar.active i {
   color: var(--color-primary);
-  filter: drop-shadow(0 0 6px var(--color-primary));
 }
 
-/* 全局按鈕觸控反饋與微互動 (流暢物理按壓質感) */
+/* 全局按鈕物理微反饋 */
 .center-btn:active,
 .grid-btn:active,
 .mode-toggle-btn:active,
@@ -424,42 +563,49 @@ body {
 .transit-plan-toggle-btn:active,
 .transit-collapse-btn:active,
 .radar-layer-btn:active {
-  transform: scale(0.94) !important;
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transform: scale(0.94);
+  transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .clock-widget {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font-family: monospace;
+  padding-left: 7px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .clock-time {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--color-primary);
-  letter-spacing: 1px;
+  color: #f8fafc;
+  letter-spacing: 0.4px;
+  line-height: 1.15;
 }
 
 .clock-date {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   color: var(--text-dim);
+  line-height: 1.15;
 }
 
-/* 主佈局工作區 (主網格 + 資訊側邊欄 - 支援科技平滑過渡) */
+/* 主佈局工作區 (Obsidian Bento Workspace) */
 .dashboard-container {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) 392px;
   gap: 16px;
-  padding: 16px 24px;
+  padding: 16px 22px 28px;
   flex: 1;
   min-width: 0;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
-  transition: grid-template-columns 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-              gap 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: grid-template-columns;
+  transition: grid-template-columns 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+              gap 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 監視器影像陣列區 */
@@ -470,7 +616,7 @@ body {
   min-width: 0;
   max-width: 100%;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .section-header-bar {
@@ -500,47 +646,48 @@ body {
   color: var(--color-success);
 }
 
-/* 影像多分割網格佈局 (全自動自適應視窗與零切角保護) */
+/* 影像多分割網格佈局 (嚴格 minmax(0, 1fr) 防溢位保護) */
 .camera-grid {
   display: grid;
-  gap: 8px;
-  min-height: 480px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 10px;
+  min-height: 460px;
+  transition: gap 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
+  min-width: 0;
 }
 
-/* 網格分割模式基礎定義 (完整支援 1格 至 16格及全開) */
+/* 網格分割模式基礎定義 (全數使用 minmax(0, 1fr) 防止長標題撑爆軌道) */
 .camera-grid.grid-1 {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 .camera-grid.grid-4 {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .camera-grid.grid-6 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .camera-grid.grid-9 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .camera-grid.grid-10 {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .camera-grid.grid-12 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .camera-grid.grid-16 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .camera-grid.grid-all {
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
 /* 一屏自適應模式：智慧計算現有視窗，無捲動最大化完整展示 */
 .adaptive-fit {
-  height: calc(100vh - 66px) !important;
-  max-height: calc(100vh - 66px) !important;
+  height: calc(100vh - 60px) !important;
+  max-height: calc(100vh - 60px) !important;
   overflow: hidden !important;
-  padding: 8px 16px !important;
+  padding: 10px 16px !important;
 }
 
 .adaptive-fit .matrix-section {
@@ -552,7 +699,7 @@ body {
   overflow: hidden !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
+  gap: 8px !important;
 }
 
 .adaptive-fit .section-header-bar {
@@ -565,36 +712,36 @@ body {
   flex: 1 !important;
   min-height: 0 !important;
   height: 100% !important;
-  gap: 6px !important;
+  gap: 8px !important;
 }
 
 /* 各宮格在一屏自適應下的黃金行列劃分 */
 .adaptive-fit .camera-grid.grid-1 {
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 .adaptive-fit .camera-grid.grid-4 {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 .adaptive-fit .camera-grid.grid-6 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 .adaptive-fit .camera-grid.grid-9 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 .adaptive-fit .camera-grid.grid-10 {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
 }
 .adaptive-fit .camera-grid.grid-12 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-rows: repeat(3, minmax(0, 1fr));
 }
 .adaptive-fit .camera-grid.grid-16 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-rows: repeat(4, minmax(0, 1fr));
 }
 .adaptive-fit .camera-grid.grid-all {
@@ -607,7 +754,7 @@ body {
 .adaptive-fit .cam-card {
   height: 100% !important;
   min-height: 0 !important;
-  border-radius: 4px !important;
+  border-radius: 8px !important;
 }
 
 .adaptive-fit .video-wrapper {
@@ -623,33 +770,33 @@ body {
 .adaptive-fit .camera-grid.grid-10 .cam-card-header,
 .adaptive-fit .camera-grid.grid-12 .cam-card-header,
 .adaptive-fit .camera-grid.grid-16 .cam-card-header {
-  padding: 2px 6px !important;
+  padding: 3px 8px !important;
   font-size: 0.72rem !important;
 }
 
 .adaptive-fit .camera-grid.grid-10 .cam-card-footer,
 .adaptive-fit .camera-grid.grid-12 .cam-card-footer,
 .adaptive-fit .camera-grid.grid-16 .cam-card-footer {
-  padding: 2px 6px !important;
-  font-size: 0.75rem !important;
+  padding: 3px 8px !important;
+  font-size: 0.72rem !important;
 }
 
 .adaptive-fit .camera-grid.grid-10 .cam-map-tag,
 .adaptive-fit .camera-grid.grid-12 .cam-map-tag,
 .adaptive-fit .camera-grid.grid-16 .cam-map-tag {
   padding: 2px 5px !important;
-  font-size: 0.72rem !important;
+  font-size: 0.7rem !important;
 }
 
 .adaptive-fit .camera-grid.grid-10 .tool-icon-btn,
 .adaptive-fit .camera-grid.grid-12 .tool-icon-btn,
 .adaptive-fit .camera-grid.grid-16 .tool-icon-btn {
-  width: 32px !important;
-  height: 32px !important;
-  font-size: 0.78rem !important;
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 0.74rem !important;
 }
 
-/* 側邊欄收合/展開酷炫動畫模式 (全寬視訊戰情牆平滑轉換) */
+/* 側邊欄收合/展開平滑轉換 */
 .dashboard-container.sidebar-collapsed {
   grid-template-columns: minmax(0, 1fr) 0px !important;
   gap: 0 !important;
@@ -661,48 +808,167 @@ body {
   padding: 0 !important;
   margin: 0 !important;
   overflow: hidden !important;
-  transform: translateX(40px) scale(0.96);
+  transform: translateX(32px) scale(0.98);
   opacity: 0;
-  filter: blur(8px);
   pointer-events: none;
   visibility: hidden;
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.28s ease,
-              filter 0.3s ease,
-              width 0.38s cubic-bezier(0.16, 1, 0.3, 1),
-              visibility 0.38s;
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease,
+              width 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.36s;
 }
 
 /* 雙埔區域專屬標籤 */
 .area-tag {
-  font-size: 0.74rem;
-  font-weight: 800;
+  font-size: 0.68rem;
+  font-weight: 700;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 5px;
   white-space: nowrap;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
 }
 
 .area-tag.tag-qp {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border: 1px solid rgba(0, 240, 255, 0.4);
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.32);
 }
 
 .area-tag.tag-bp {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.15);
+  background: rgba(167, 139, 250, 0.14);
+  color: #c4b5fd;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+}
+
+/* 即時篩選與搜尋指令列 (#cameraFilterBar) */
+.camera-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(14, 19, 31, 0.72);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.filter-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 210px;
+  min-width: 160px;
+  max-width: 340px;
+}
+
+.filter-search-box i {
+  position: absolute;
+  left: 10px;
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.filter-search-input {
+  width: 100%;
+  background: rgba(8, 12, 22, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  padding: 6px 28px 6px 30px;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.filter-search-input::placeholder {
+  color: var(--text-dim);
+}
+
+.filter-search-input:focus {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(10, 16, 28, 0.95);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.filter-clear-btn {
+  position: absolute;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.filter-clear-btn:hover {
+  background: rgba(244, 63, 94, 0.22);
+  color: #fda4af;
+}
+
+.filter-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.filter-tag-pill {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  padding: 4px 9px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.filter-tag-pill:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.filter-tag-pill.active {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #e0f2fe;
+}
+
+.filter-count-meta {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 /* 鍵盤無障礙焦點指示器 */
 .center-btn:focus-visible,
 .grid-btn:focus-visible,
 .mode-toggle-btn:focus-visible,
+.cmd-palette-trigger:focus-visible,
 .compact-btn:focus-visible,
 .tool-icon-btn:focus-visible,
+.fav-star-btn:focus-visible,
 .radar-layer-btn:focus-visible,
 .compact-badge-dir-btn:focus-visible,
 .dir-toggle-btn:focus-visible,
@@ -710,7 +976,7 @@ body {
 .schedule-tab-btn:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
 }
 
 /* 確保任何視訊內部絕對零標籤遮擋 */
@@ -719,27 +985,52 @@ body {
   display: none !important;
 }
 
-/* 攝影機視訊卡片 (量子矩陣入場動效與 Cyberpunk 懸停流光) */
+/* 攝影機視訊卡片 (Obsidian Telemetry Hairline Surface + Cursor Spotlight) */
 .cam-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(19, 25, 39, 0.94) 0%, rgba(12, 17, 28, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1),
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  animation: card-matrix-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: transform, box-shadow;
+  min-width: 0;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease,
+              box-shadow 0.28s ease;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: card-matrix-in 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.cam-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    360px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(56, 189, 248, 0.11),
+    transparent 62%
+  );
+  transition: opacity 0.25s ease;
+  z-index: 2;
+}
+
+.cam-card:hover::after {
+  opacity: 1;
+}
+
+.cam-card.is-highlighted {
+  border-color: rgba(56, 189, 248, 0.72) !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.26), 0 16px 36px rgba(56, 189, 248, 0.2) !important;
 }
 
 @keyframes card-matrix-in {
   0% {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
+    transform: translateY(8px) scale(0.985);
   }
   100% {
     opacity: 1;
@@ -748,36 +1039,40 @@ body {
 }
 
 .cam-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--color-primary);
-  box-shadow: 0 8px 25px rgba(0, 240, 255, 0.22), 0 0 10px rgba(0, 240, 255, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(56, 189, 248, 0.34);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(56, 189, 248, 0.14);
 }
 
-/* 即時訊號連線綠點 (純淨沉穩指示燈，已全數移除波紋擴散動畫) */
+/* 即時訊號連線綠點 */
 .live-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background-color: var(--color-success);
   border-radius: 50%;
   display: inline-block;
   position: relative;
   flex-shrink: 0;
-  animation: gentle-live-pulse 2.5s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.55);
+  animation: gentle-live-pulse 2.6s ease-in-out infinite;
 }
 
 @keyframes gentle-live-pulse {
-  0%, 100% { opacity: 0.7; }
+  0%, 100% { opacity: 0.68; }
   50% { opacity: 1; }
 }
 
+/* 頂部標題列大幅讓渡空間給完整路名 (右方僅保留 ★ 收藏 與 ⤢ 放大) */
 .cam-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
-  background: rgba(13, 20, 36, 0.95);
-  border-bottom: 1px solid rgba(45, 70, 110, 0.3);
-  font-size: 0.8rem;
+  gap: 8px;
+  padding: 7px 10px;
+  background: rgba(11, 15, 25, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.79rem;
+  min-width: 0;
 }
 
 .cam-title-group {
@@ -790,87 +1085,87 @@ body {
 }
 
 .cam-distance-tag {
-  background: linear-gradient(135deg, #059669, #10b981);
-  color: #ffffff;
-  font-size: 0.72rem;
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.36);
+  font-size: 0.68rem;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 4px;
+  padding: 1px 6px;
+  border-radius: 5px;
   white-space: nowrap;
-  letter-spacing: 0.3px;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
   flex-shrink: 0;
 }
 
 .cam-distance-tag.far {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.36);
+  color: #93c5fd;
 }
 
-/* 點地圖街景專屬紅色標籤 */
+/* 輔助外部連結/街景膠囊 */
 .cam-map-tag {
-  background: rgba(148, 163, 184, 0.12);
+  background: rgba(255, 255, 255, 0.04);
   color: #cbd5e1 !important;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 600;
   padding: 2px 7px;
-  border-radius: 4px;
+  border-radius: 6px;
   white-space: nowrap;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   display: inline-flex;
   align-items: center;
   gap: 3px;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: none;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   flex-shrink: 0;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cam-map-tag:hover {
-  background: rgba(148, 163, 184, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  filter: brightness(1.15);
-  color: #cbd5e1 !important;
-  border-color: rgba(203, 213, 225, 0.5);
+  background: rgba(56, 189, 248, 0.14);
+  color: #ffffff !important;
+  border-color: rgba(56, 189, 248, 0.36);
 }
 
 .cam-map-tag i {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 .cam-name-text {
   font-weight: 600;
-  color: var(--text-main);
+  color: #f1f5f9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-  min-width: 40px;
+  min-width: 0;
+  letter-spacing: -0.01em;
 }
 
 .cam-card-tools {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
 .tool-icon-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   color: var(--text-muted);
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  display: flex;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.75rem;
-  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  font-size: 0.72rem;
+  text-decoration: none;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.16s ease;
   position: relative;
+  flex-shrink: 0;
 }
 
 .tool-icon-btn::after {
@@ -878,21 +1173,34 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   transform: translate(-50%, -50%);
 }
 
 .tool-icon-btn:hover {
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(0, 150, 255, 0.3));
-  border-color: var(--color-primary);
-  transform: translateY(-2px) scale(1.1);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.45);
+  transform: translateY(-1px);
 }
 
 .tool-icon-btn:active {
   transform: scale(0.92);
+}
+
+.cam-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cam-footer-actions .tool-icon-btn {
+  width: 25px;
+  height: 25px;
+  border-radius: 6px;
+  font-size: 0.68rem;
 }
 
 /* 視訊畫面本體容器 */
@@ -900,24 +1208,23 @@ body {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #040810;
+  background: #03050a;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
-/* 視訊載入緩衝科技感置中光環 Spinner (提升起播與連線感知度) */
 .video-wrapper::before {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 32px;
-  height: 32px;
-  margin: -16px 0 0 -16px;
-  border: 2px solid rgba(0, 240, 255, 0.15);
-  border-top-color: #00f0ff;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 2px solid rgba(56, 189, 248, 0.14);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: video-spin-glow 0.85s linear infinite;
   pointer-events: none;
@@ -929,6 +1236,17 @@ body {
 .video-wrapper.is-ready::before {
   opacity: 0;
   visibility: hidden;
+}
+
+/* 移除縮圖監視器卡上瀏覽器原生 video 緩衝黑圈與多餘內建覆蓋層（全螢幕檢視仍保留完整控制列） */
+.cam-card .video-wrapper video.cam-feed::-webkit-media-controls,
+.cam-card .video-wrapper video.cam-feed::-webkit-media-controls-enclosure,
+.cam-card .video-wrapper video.cam-feed::-webkit-media-controls-overlay-enclosure,
+.cam-card .video-wrapper video.cam-feed::-webkit-media-controls-overlay-play-button,
+.cam-card .video-wrapper video.cam-feed::-internal-media-controls-loading-panel {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 @keyframes video-spin-glow {
@@ -943,21 +1261,20 @@ body {
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain !important; /* 預設優先：完整原始畫面比例呈現，四角時間與路口資訊絕不切角 */
+  object-fit: contain !important;
   background-color: #000000;
   display: block;
-  border-radius: 0 !important; /* 視訊本體直角保護，杜絕任何圓角裁切 */
+  border-radius: 0 !important;
   transition: opacity 0.3s ease;
   border: none;
-  /* GPU 硬體解碼直通與頂級抗鋸齒平滑高畫質渲染 (禁用最近鄰採樣防止像素方塊化與鋸齒) */
   image-rendering: auto;
   image-rendering: -webkit-optimize-contrast;
   transform: translateZ(0);
   backface-visibility: hidden;
-  filter: none; /* 杜絕 CSS 濾鏡破壞硬體視訊 YUV 覆蓋層與顯卡超解析度 */
+  filter: none;
 }
 
-/* 原生全螢幕 / 全畫面超清晰高畫質渲染 (點擊影片內部全畫面直接享受極致清晰度) */
+/* 原生全螢幕 / 全畫面渲染 */
 .video-wrapper img.cam-feed:fullscreen,
 .video-wrapper video.cam-feed:fullscreen,
 .video-wrapper iframe.cam-feed:fullscreen,
@@ -977,10 +1294,7 @@ body {
   background: #000000 !important;
 }
 
-
-
-
-/* 狀態徽章 (Live 閃爍圓點) */
+/* 狀態徽章 */
 .live-badge {
   position: absolute;
   top: 10px;
@@ -1015,7 +1329,7 @@ body {
   backdrop-filter: blur(4px);
   color: #94a3b8;
   font-size: 0.74rem;
-  font-family: monospace;
+  font-family: var(--font-mono);
   padding: 2px 6px;
   border-radius: 4px;
   pointer-events: none;
@@ -1023,13 +1337,14 @@ body {
 }
 
 .cam-card-footer {
-  padding: 5px 10px;
-  background: rgba(13, 20, 36, 0.96);
+  padding: 6px 10px;
+  background: rgba(10, 14, 24, 0.94);
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  border-top: 1px solid rgba(45, 70, 110, 0.25);
+  gap: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .cam-footer-row {
@@ -1038,14 +1353,15 @@ body {
   justify-content: space-between;
   width: 100%;
   gap: 6px;
-  font-size: 0.71rem;
+  font-size: 0.7rem;
   line-height: 1.3;
   overflow: hidden;
+  min-width: 0;
 }
 
 .authority-tag {
   color: var(--text-muted);
-  font-size: 0.71rem;
+  font-size: 0.69rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1057,24 +1373,30 @@ body {
 }
 
 .format-res-badge {
-  color: #38bdf8;
-  font-weight: 700;
-  font-size: 0.74rem;
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  padding: 1px 6px;
-  border-radius: 4px;
+  color: #bae6fd;
+  font-weight: 600;
+  font-size: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  padding: 1px 5px;
+  border-radius: 5px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-shrink: 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.format-res-badge i {
+  color: var(--color-primary);
+  font-size: 0.6rem;
 }
 
 .feed-status-tag {
   color: var(--text-dim);
-  font-size: 0.74rem;
+  font-size: 0.68rem;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -1086,14 +1408,15 @@ body {
 }
 
 .cam-time-badge {
-  color: #10b981;
+  color: #34d399;
   font-weight: 600;
-  font-size: 0.74rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: rgba(16, 185, 129, 0.1);
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  background: rgba(16, 185, 129, 0.09);
   border: 1px solid rgba(16, 185, 129, 0.22);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 5px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -1108,95 +1431,285 @@ body {
 .coord-tag {
   color: var(--text-dim);
   text-decoration: none;
-  font-family: monospace;
-  font-size: 0.7rem;
-  transition: all 0.2s;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  transition: color 0.18s ease;
 }
 
 a.coord-tag:hover {
-  color: #00f0ff;
+  color: var(--color-primary);
   text-decoration: underline;
 }
 
-/* 右側：即時環境與生活監控面板 (立體滑動與戰情全息動效) */
+/* ⌘K 快速指令面板 (Obsidian Command Palette) */
+.cmd-palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  background: rgba(3, 6, 12, 0.72);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: min(12vh, 110px) 16px 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cmd-palette-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cmd-palette-dialog {
+  width: 100%;
+  max-width: 620px;
+  border-radius: 16px;
+  background: rgba(14, 19, 31, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(56, 189, 248, 0.12);
+  overflow: hidden;
+  transform: translateY(-8px) scale(0.975);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cmd-palette-overlay.active .cmd-palette-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.cmd-palette-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cmd-palette-input-row i {
+  color: var(--color-primary);
+  font-size: 0.95rem;
+}
+
+.cmd-palette-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-family: var(--font-sans);
+  font-size: 0.96rem;
+}
+
+.cmd-palette-input::placeholder {
+  color: var(--text-dim);
+}
+
+.cmd-palette-esc {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cmd-palette-results {
+  max-height: 390px;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cmd-palette-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.6px;
+  padding: 6px 10px 3px;
+}
+
+.cmd-palette-item {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-main);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+.cmd-palette-item:hover,
+.cmd-palette-item.selected {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.34);
+}
+
+.cmd-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cmd-item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.cmd-item-title {
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd-item-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cmd-item-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cmd-palette-footer {
+  padding: 8px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 12, 20, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* 右側：即時環境與生活監控面板 (Obsidian Telemetry Sidebar) */
 .sidebar-section {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: 380px;
-  min-width: 380px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   transform-origin: right center;
   position: relative;
-  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.35s ease,
-              filter 0.35s ease,
-              width 0.42s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity, width;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s ease,
+              width 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 展開時觸發的全息掃描光束 */
 .sidebar-section::before {
   content: '';
   position: absolute;
-  top: -10px;
-  left: -8px;
-  right: -8px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #00f0ff, #38bdf8, #10b981, transparent);
-  box-shadow: 0 0 16px #00f0ff, 0 0 30px #38bdf8;
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.7), rgba(16, 185, 129, 0.6), transparent);
   opacity: 0;
   pointer-events: none;
   z-index: 20;
 }
 
 .dashboard-container:not(.sidebar-collapsed) .sidebar-section::before {
-  animation: sidebar-scan-beam 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: sidebar-scan-beam 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes sidebar-scan-beam {
-  0% { top: 0%; opacity: 0; transform: scaleX(0.4); }
-  20% { opacity: 1; transform: scaleX(1); }
-  85% { opacity: 0.8; transform: scaleX(1); }
-  100% { top: 100%; opacity: 0; transform: scaleX(0.6); }
+  0% { top: 0%; opacity: 0; transform: scaleX(0.45); }
+  25% { opacity: 0.9; transform: scaleX(1); }
+  80% { opacity: 0.55; transform: scaleX(1); }
+  100% { top: 100%; opacity: 0; transform: scaleX(0.65); }
 }
 
 .widget-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
+  background: linear-gradient(180deg, rgba(19, 25, 39, 0.86) 0%, rgba(12, 17, 29, 0.92) 100%);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 15px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
-  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1),
-              box-shadow 0.3s ease,
-              border-color 0.3s ease;
-  will-change: transform, box-shadow;
+  gap: 11px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s ease,
+              border-color 0.25s ease;
+}
+
+.widget-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(56, 189, 248, 0.09),
+    transparent 62%
+  );
+  transition: opacity 0.25s ease;
 }
 
 .widget-card:hover {
   transform: translateY(-2px);
-  border-color: var(--border-glow);
-  box-shadow: 0 6px 20px rgba(0, 240, 255, 0.18);
+  border-color: rgba(56, 189, 248, 0.28);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(56, 189, 248, 0.1);
 }
 
-/* 當展開時，各 widget 依序微延遲立體滑入 */
+.widget-card:hover::after {
+  opacity: 1;
+}
+
 .dashboard-container:not(.sidebar-collapsed) .sidebar-section .widget-card:nth-child(1) {
-  animation: widget-stagger-in 0.45s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: widget-stagger-in 0.42s 0.04s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .dashboard-container:not(.sidebar-collapsed) .sidebar-section .widget-card:nth-child(2) {
-  animation: widget-stagger-in 0.45s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: widget-stagger-in 0.42s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .dashboard-container:not(.sidebar-collapsed) .sidebar-section .widget-card:nth-child(3) {
-  animation: widget-stagger-in 0.45s 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: widget-stagger-in 0.42s 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes widget-stagger-in {
   0% {
     opacity: 0;
-    transform: translateX(36px) scale(0.97);
+    transform: translateX(24px) scale(0.985);
   }
   100% {
     opacity: 1;
@@ -1208,24 +1721,33 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(45, 70, 110, 0.3);
-  padding-bottom: 8px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 9px;
 }
 
 .widget-title {
-  font-size: 0.92rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #f8fafc;
+}
+
+.widget-title i {
   color: var(--color-primary);
 }
 
 .widget-badge {
-  font-size: 0.72rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.69rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
 }
 
@@ -1234,160 +1756,338 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .temp-huge {
-  font-size: 2.5rem;
+  font-family: var(--font-display);
+  font-size: 2.55rem;
   font-weight: 800;
-  color: #ffffff;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #ffffff 15%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   line-height: 1;
 }
 
 .temp-unit {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--color-primary);
-  font-weight: 400;
+  font-weight: 600;
+  margin-left: 2px;
 }
 
 .weather-desc-group {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  gap: 2px;
 }
 
 .weather-condition {
-  font-size: 1.1rem;
+  font-size: 1.02rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #f8fafc;
 }
 
 .weather-apparent {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .weather-grid-metrics {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .metric-box {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(45, 70, 110, 0.2);
-  border-radius: 8px;
-  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 8px 11px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
+  min-width: 0;
 }
 
 .metric-icon {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .metric-label {
-  font-size: 0.72rem;
+  font-size: 0.69rem;
   color: var(--text-dim);
 }
 
 .metric-val {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   color: var(--text-main);
 }
 
-/* 空氣品質 AQI 面板 */
+/* 日照 Solar Arc SVG 軌跡圖表 */
+.solar-arc-box {
+  background: rgba(8, 12, 22, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 8px 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.solar-arc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.solar-arc-head > span {
+  white-space: nowrap;
+}
+
+.solar-arc-phase {
+  color: #fbbf24;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.solar-arc-svg {
+  width: 100%;
+  max-width: 100%;
+  height: 48px;
+  display: block;
+  overflow: visible;
+}
+
+.solar-arc-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+/* 空氣品質 AQI SVG 環形儀表與微長條圖 */
 .aqi-summary-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.09);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.aqi-radial-wrap {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aqi-radial-wrap svg {
+  width: 58px;
+  height: 58px;
+  transform: rotate(-90deg);
+}
+
+.aqi-radial-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .aqi-number {
-  font-size: 1.6rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: var(--color-success);
+  line-height: 1;
+}
+
+.aqi-radial-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  color: var(--text-dim);
+  margin-top: 2px;
 }
 
 .aqi-level-title {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #f8fafc;
 }
 
 .aqi-subtext {
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   color: var(--text-muted);
+}
+
+.aqi-bar-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.aqi-bar-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 6px 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aqi-bar-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.aqi-bar-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.aqi-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pollutant-chips {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
 .chip-item {
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
   padding: 6px;
   text-align: center;
 }
 
 .chip-name {
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
 }
 
 .chip-val {
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-main);
 }
 
-/* 中央氣象署雷達回波圖 */
+/* 互動 SVG 降雨曲線圖舞台 */
+.rain-chart-stage {
+  background: rgba(8, 12, 22, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rain-chart-readout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.rain-chart-readout strong {
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.rain-svg-layer {
+  width: 100%;
+  height: 62px;
+  display: block;
+}
+
+/* 中央氣象署雷達回波圖 (HUD 取景框) */
 .radar-preview-box {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #020617;
-  border-radius: 8px;
+  background: #03060d;
+  border-radius: 10px;
   overflow: hidden;
   position: relative;
   cursor: pointer;
-  border: 1px solid rgba(45, 70, 110, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .radar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .radar-preview-box:hover .radar-img {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .radar-overlay-badge {
   position: absolute;
   bottom: 8px;
   left: 8px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(6, 10, 18, 0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
   padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  color: var(--color-primary);
+  border-radius: 6px;
+  font-size: 0.69rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: #bae6fd;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* 智慧生活安全管家建議 - 直覺精簡排版 */
+/* 智慧生活安全管家建議 */
 .life-assistant-list {
   display: flex;
   flex-direction: column;
@@ -1398,21 +2098,22 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 8px;
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 6px 9px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-left: 3px solid var(--color-primary);
-  border-radius: 6px;
-  transition: transform 0.15s ease;
+  border-radius: 8px;
+  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
 .assistant-item:hover {
   transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.045);
 }
 
 .assistant-item.warning {
   border-left-color: var(--color-warning, #f59e0b);
-  background: rgba(245, 158, 11, 0.08);
+  background: rgba(245, 158, 11, 0.07);
 }
 .assistant-item.success {
   border-left-color: var(--color-success, #10b981);
@@ -1420,7 +2121,7 @@ a.coord-tag:hover {
 }
 .assistant-item.danger {
   border-left-color: var(--color-danger, #ef4444);
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.08);
 }
 .assistant-item.normal {
   border-left-color: var(--color-primary, #38bdf8);
@@ -1447,94 +2148,98 @@ a.coord-tag:hover {
   flex-wrap: wrap;
 }
 
-/* 雙埔生活資訊卡片專用樣式 */
+/* 雙埔生活資訊卡片 (頂部細紋焦點邊框，乾淨對稱) */
 .dual-weather-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   overflow: hidden;
 }
 
 .dual-city-box {
-  border-radius: 8px;
-  padding: 8px 8px;
+  border-radius: 10px;
+  padding: 9px 9px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
   overflow: hidden;
   min-width: 0;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dual-city-box.qp {
-  background: rgba(0, 240, 255, 0.04);
-  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-top: 2px solid rgba(56, 189, 248, 0.72);
 }
 
 .dual-city-box.bp {
-  background: rgba(168, 85, 247, 0.04);
-  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-top: 2px solid rgba(167, 139, 250, 0.72);
 }
 
 .dual-city-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 4px;
 }
 
 .dual-city-tag {
-  font-size: 0.7rem;
-  font-weight: 800;
+  font-size: 0.68rem;
+  font-weight: 700;
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .dual-city-tag.qp {
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.28);
 }
 
 .dual-city-tag.bp {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: rgba(167, 139, 250, 0.14);
+  color: #c4b5fd;
+  border: 1px solid rgba(167, 139, 250, 0.28);
 }
 
 .dual-temp-row {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 3px;
 }
 
 .dual-temp-val {
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-size: 1.72rem;
   font-weight: 800;
-  color: #ffffff;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #f8fafc;
   line-height: 1;
 }
 
 .dual-temp-unit {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-dim);
 }
 
 .dual-condition {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-/* 雙埔詳細氣象指標：採用單欄左右分散對齊，徹底杜絕省略號 (...) 截斷 */
+/* 雙埔詳細氣象指標 */
 .dual-metrics-mini {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   padding-top: 5px;
   margin-top: 2px;
   min-width: 0;
@@ -1554,7 +2259,7 @@ a.coord-tag:hover {
   align-items: center;
   gap: 4px;
   color: var(--text-dim);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   flex-shrink: 0;
 }
 
@@ -1564,14 +2269,13 @@ a.coord-tag:hover {
 }
 
 .dual-metric-row .metric-val {
-  color: #f1f5f9;
+  color: #e2e8f0;
   font-weight: 600;
-  font-size: 0.74rem;
-  font-feature-settings: "tnum";
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
-  letter-spacing: 0.1px;
 }
 
 .dual-metrics-mini span {
@@ -1583,39 +2287,46 @@ a.coord-tag:hover {
 /* 雙埔 AQI 對照網格 */
 .dual-aqi-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
 }
 
 .dual-aqi-card {
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dual-aqi-card.qp {
-  background: rgba(0, 240, 255, 0.04);
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-top: 2px solid rgba(56, 189, 248, 0.7);
 }
 
 .dual-aqi-card.bp {
-  background: rgba(168, 85, 247, 0.04);
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-top: 2px solid rgba(167, 139, 250, 0.7);
 }
 
 .dual-aqi-num {
-  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
 .dual-aqi-meta {
-  font-size: 0.74rem;
+  font-size: 0.71rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   color: var(--text-muted);
   display: flex;
   justify-content: space-between;
+  gap: 4px;
 }
 
 /* 雙埔走勢分組 */
@@ -1635,7 +2346,7 @@ a.coord-tag:hover {
 }
 
 .assistant-icon {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .assistant-content {
@@ -1644,40 +2355,39 @@ a.coord-tag:hover {
 }
 
 .assistant-title {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-main);
 }
 
-/* 即時氣象與空氣品質遙測時效徽章 (Cyberpunk 暗黑戰情室微光動效) */
+/* 即時氣象與空氣品質遙測時效徽章 */
 .weather-telemetry-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.74rem;
+  gap: 5px;
+  font-size: 0.71rem;
 }
 
 .rate-secure-badge {
   background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 5px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   white-space: nowrap;
 }
-
-
 
 .data-time-pill {
   background: rgba(255, 255, 255, 0.04);
   color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   padding: 1px 6px;
-  border-radius: 4px;
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.74rem;
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1685,20 +2395,22 @@ a.coord-tag:hover {
 }
 
 .data-time-pill i {
-  color: #38bdf8;
+  color: var(--color-primary);
 }
 
 .data-time-subrow {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.74rem;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.025);
   padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  margin-top: -4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: -3px;
 }
 
 .data-time-subrow .time-item {
@@ -1709,7 +2421,7 @@ a.coord-tag:hover {
 }
 
 .data-time-subrow .time-item i {
-  color: #38bdf8;
+  color: var(--color-primary);
 }
 
 .data-time-subrow .time-sep {
@@ -1717,46 +2429,48 @@ a.coord-tag:hover {
 }
 
 .data-obs-time {
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   color: #cbd5e1;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.32);
   padding: 1px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   display: inline-flex;
   align-items: center;
   gap: 4px;
   white-space: nowrap;
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .data-obs-time i {
-  color: #38bdf8;
-  font-size: 0.74rem;
+  color: var(--color-primary);
+  font-size: 0.7rem;
 }
 
 /* 互動地圖雷達抽屜區 */
 .radar-map-card {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 #leafletMap {
   width: 100%;
-  height: 220px;
-  border-radius: 8px;
-  background: #090d16;
-  border: 1px solid var(--border-color);
+  height: 224px;
+  border-radius: 10px;
+  background: #070b14;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 全螢幕大圖彈窗 Modal (全息 Pop-in 展開動效) */
+/* 全螢幕大圖彈窗 Modal (Obsidian Pop-in) */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(4, 8, 16, 0.88);
-  backdrop-filter: blur(14px);
+  background: rgba(3, 6, 12, 0.86);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -1764,8 +2478,7 @@ a.coord-tag:hover {
   padding: 24px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              backdrop-filter 0.3s ease;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-overlay.active {
@@ -1774,20 +2487,20 @@ a.coord-tag:hover {
 }
 
 .modal-content {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glow);
-  border-radius: 14px;
+  background: rgba(14, 19, 31, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
   width: 90%;
-  max-width: 1000px;
+  max-width: 1040px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.25);
-  transform: scale(0.86) translateY(24px);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(56, 189, 248, 0.14);
+  transform: scale(0.92) translateY(16px);
   opacity: 0;
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.22s ease;
 }
 
 .modal-overlay.active .modal-content {
@@ -1797,30 +2510,39 @@ a.coord-tag:hover {
 
 .modal-header {
   padding: 12px 18px;
-  background: rgba(13, 20, 36, 0.95);
-  border-bottom: 1px solid var(--border-color);
+  background: rgba(10, 14, 24, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .modal-title {
-  font-size: 1.1rem;
+  font-family: var(--font-display);
+  font-size: 1.04rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #f8fafc;
 }
 
 .modal-close-btn {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text-muted);
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: color 0.2s;
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
 .modal-close-btn:hover {
   color: #ffffff;
+  background: rgba(244, 63, 94, 0.22);
+  border-color: rgba(244, 63, 94, 0.45);
 }
 
 .modal-body {
@@ -1828,13 +2550,13 @@ a.coord-tag:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #020617;
+  background: #02050b;
   overflow: hidden;
 }
 
 .modal-body img, .modal-body iframe {
   width: 100%;
-  max-height: 70vh;
+  max-height: 72vh;
   object-fit: contain;
   border: none;
 }
@@ -1842,7 +2564,7 @@ a.coord-tag:hover {
 /* 響應式調整 */
 @media (max-width: 1200px) {
   .dashboard-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1974,11 +2696,13 @@ a.coord-tag:hover {
    ========================================================================== */
 
 .transit-corridor-bar {
-  background: linear-gradient(135deg, rgba(8, 16, 30, 0.96), rgba(12, 24, 44, 0.96));
-  border: 1px solid rgba(0, 240, 255, 0.22);
-  border-radius: 8px;
-  padding: 6px 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, rgba(16, 22, 36, 0.92), rgba(10, 15, 26, 0.94));
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 7px 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   margin-bottom: 4px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
@@ -1993,14 +2717,15 @@ a.coord-tag:hover {
 }
 
 .transit-corridor-bar.is-collapsed-bar {
-  padding: 3px 8px;
-  min-height: 34px;
+  padding: 5px 10px;
+  min-height: 36px;
 }
 .integrated-commute-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
+  min-width: 0;
 }
 .compact-info-stream {
   flex: 1 1 auto;
@@ -2008,14 +2733,16 @@ a.coord-tag:hover {
   max-width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px 10px 2px 2px;
   contain: layout;
   box-sizing: border-box;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 10px), transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 10px), transparent 100%);
 }
 .compact-info-stream::-webkit-scrollbar {
   display: none;
@@ -2023,105 +2750,111 @@ a.coord-tag:hover {
 .stream-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.77rem;
+  gap: 3px;
+  font-size: 0.71rem;
   color: #e2e8f0;
   white-space: nowrap;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.1px;
+  flex-shrink: 0;
 }
 .stream-pill strong {
-  color: #38bdf8;
+  color: var(--color-primary);
   font-weight: 700;
 }
 .stream-divider {
-  color: rgba(255, 255, 255, 0.18);
-  font-size: 0.75rem;
-  font-weight: 300;
+  width: 1px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 0;
+  color: transparent;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 /* 月台 PIDS 電子看板風格微型晶片卡 */
 .pids-stream-card {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(15, 23, 42, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  gap: 3px;
+  background: rgba(11, 16, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  padding: 1px 6px;
-  font-size: 0.74rem;
+  padding: 2px 5px;
+  font-size: 0.69rem;
   line-height: 1.25;
-  transition: all 0.2s ease;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
   user-select: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .pids-stream-card:hover {
-  background: rgba(30, 41, 59, 0.95);
+  background: rgba(24, 34, 52, 0.95);
 }
 .pids-stream-card.pids-thsr {
-  border-color: rgba(255, 119, 0, 0.45);
-  box-shadow: 0 0 8px rgba(255, 119, 0, 0.15);
+  border-color: rgba(249, 115, 22, 0.36);
 }
 .pids-stream-card.pids-tymetro {
-  border-color: rgba(168, 85, 247, 0.45);
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.15);
+  border-color: rgba(167, 139, 250, 0.36);
 }
 .pids-tag {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-weight: 800;
-  font-size: 0.72rem;
-  letter-spacing: 0.3px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.2px;
 }
 .pids-tag.thsr-tag {
-  color: #ff7700;
+  color: #fb923c;
 }
 .pids-tag.tymetro-tag {
-  color: #a855f7;
+  color: #c4b5fd;
 }
 .pids-dest {
-  color: #38bdf8;
+  color: #7dd3fc;
   font-weight: 700;
   background: rgba(56, 189, 248, 0.12);
   padding: 1px 5px;
   border-radius: 4px;
-  font-size: 0.72rem;
-  letter-spacing: 0.3px;
+  font-size: 0.69rem;
+  letter-spacing: 0.2px;
 }
 .pids-type-mini {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 .pids-type-mini.express {
-  color: #c084fc;
-  background: rgba(168, 85, 247, 0.22);
+  color: #d8b4fe;
+  background: rgba(167, 139, 250, 0.2);
   font-weight: 700;
 }
 .pids-time {
-  color: #ffffff;
-  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
-  font-size: 0.76rem;
+  color: #f8fafc;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.73rem;
   font-weight: 700;
 }
 .pids-countdown-chip {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-family: "SF Mono", "Roboto Mono", "Cascadia Code", monospace;
-  font-weight: 800;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
   color: #34d399;
-  background: rgba(16, 185, 129, 0.18);
+  background: rgba(16, 185, 129, 0.15);
   padding: 1px 5px;
   border-radius: 4px;
-  font-size: 0.73rem;
-  letter-spacing: 0.4px;
+  font-size: 0.71rem;
+  letter-spacing: 0.2px;
 }
 .pids-countdown-chip.is-urgent {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.22);
   animation: pids-urgent-pulse 1.2s infinite ease-in-out;
 }
 .pids-countdown-chip.is-muted {
@@ -2139,9 +2872,9 @@ a.coord-tag:hover {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #ff7700 0%, #00f0ff 50%, #a855f7 100%);
-  opacity: 0.85;
+  height: 1.5px;
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.78) 0%, rgba(56, 189, 248, 0.72) 50%, rgba(167, 139, 250, 0.78) 100%);
+  opacity: 0.75;
 }
 
 .transit-corridor-inner {
@@ -4454,7 +5187,6 @@ a.corridor-youbike-loc:hover .youbike-loc-external-icon {
   white-space: nowrap;
   flex-shrink: 0;
 }
-}
 .parking-lot-chip.lot-available {
   background: rgba(16, 185, 129, 0.16);
   border: 1px solid rgba(16, 185, 129, 0.4);
@@ -6069,19 +6801,19 @@ a.youbike-station-loc:hover .youbike-loc-external-icon {
 .disaster-compact-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 4px 11px;
+  gap: 5px;
+  padding: 3px 9px;
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.28);
   border-radius: 9999px;
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   color: #a7f3d0;
   white-space: nowrap;
   transition: all 0.3s ease;
   user-select: none;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
   cursor: default;
-  margin-left: 6px;
+  margin-left: 2px;
 }
 
 .disaster-compact-pill:hover {
@@ -6377,12 +7109,69 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   中大型筆電與高 DPI 桌機微調 (1025px ~ 1380px，確保導航列與側邊欄絕不裁切)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1480px) {
+  .grid-btn i {
+    display: none;
+  }
+  .grid-btn {
+    padding: 4px 7px;
+  }
+  .center-btn i {
+    font-size: 0.7rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .compact-info-stream {
+    padding: 2px 4px 2px 2px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1360px) {
+  .top-nav {
+    padding: 7px 12px;
+    gap: 6px;
+  }
+  .disaster-compact-pill {
+    display: none;
+  }
+  .cmd-palette-trigger .cmd-trigger-label {
+    display: none;
+  }
+  .dashboard-container {
+    grid-template-columns: minmax(0, 1fr) 352px;
+    padding: 12px 14px 24px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 1220px) {
+  .top-nav {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .center-switch-group {
+    order: 2;
+    max-width: 100%;
+  }
+  .nav-actions {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* --------------------------------------------------------------------------
    平板與中型螢幕自適應 (max-width: 1024px)
    -------------------------------------------------------------------------- */
 @media (max-width: 1024px) {
   .dashboard-container {
-    grid-template-columns: 1fr !important;
-    padding: 12px 16px !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding: 12px 14px !important;
     gap: 14px !important;
   }
 
@@ -6393,7 +7182,7 @@ body {
   }
 
   .dashboard-container.sidebar-collapsed {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 0 !important;
   }
 
@@ -6406,7 +7195,6 @@ body {
    智慧型手機標準直向與窄螢幕 (max-width: 768px)
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
-  /* 頂部科技指揮導航列：多層次排列，空間利用最大化 */
   .top-nav {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -6423,51 +7211,54 @@ body {
   }
 
   .disaster-compact-pill {
-    font-size: 0.74rem !important;
+    display: inline-flex !important;
+    font-size: 0.7rem !important;
     padding: 2px 8px !important;
-    margin-left: 0 !important;
+    margin-left: auto !important;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .brand-badge {
-    width: 34px !important;
-    height: 34px !important;
-    font-size: 16px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 15px !important;
   }
 
   .brand-title {
-    font-size: 1.05rem !important;
+    font-size: 1.02rem !important;
   }
 
   .brand-subtitle {
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
 
-  /* 監控中心切換選擇器：支援手指平滑水平滑動 */
+  /* 監控中心切換選擇器：平滑水平滑動 + 漸層邊緣指示 */
   .center-switch-group {
     width: 100% !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     white-space: nowrap !important;
-    padding: 3px !important;
+    padding: 3px 18px 3px 3px !important;
     scrollbar-width: none;
     box-sizing: border-box !important;
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 18px), transparent 100%);
   }
   .center-switch-group::-webkit-scrollbar {
     display: none;
   }
 
   .center-btn {
-    padding: 6px 12px !important;
-    font-size: 0.8rem !important;
+    padding: 6px 11px !important;
+    font-size: 0.78rem !important;
     flex-shrink: 0 !important;
     gap: 5px !important;
   }
 
-  /* 網格切換與控制動作列整齊自適應 (分層流動、單行滿版零空格) */
+  /* 網格切換與控制動作列 */
   .nav-actions {
     width: 100% !important;
     display: flex !important;
@@ -6498,7 +7289,6 @@ body {
     flex-shrink: 0 !important;
   }
 
-  /* 模式按鈕 + 刷新/全螢幕按鈕滿版橫排，零空隙跑版 */
   .nav-control-group {
     width: 100% !important;
     display: flex !important;
@@ -6513,45 +7303,72 @@ body {
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
+    min-width: 0 !important;
   }
 
   .mode-toggle-btn {
     flex: 1 !important;
     justify-content: center !important;
     text-align: center !important;
-    padding: 6px 10px !important;
-    font-size: 0.76rem !important;
+    padding: 6px 8px !important;
+    font-size: 0.75rem !important;
     white-space: nowrap !important;
   }
 
   .nav-icon-tools {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     flex-shrink: 0 !important;
   }
 
   .nav-tool-btn {
     width: 34px !important;
     height: 34px !important;
-    font-size: 0.9rem !important;
+    font-size: 0.88rem !important;
     border-radius: 8px !important;
     flex-shrink: 0 !important;
   }
 
-  .clock-widget {
-    display: none !important; /* 手機頂部已有系統狀態列時鐘，隱藏以省下垂直視野 */
+  .cmd-palette-trigger .cmd-trigger-label,
+  .cmd-palette-trigger .cmd-kbd {
+    display: none !important;
   }
 
-  /* 主工作區緊湊安全邊距 */
+  .clock-widget {
+    display: none !important;
+  }
+
   .dashboard-container {
-    padding: 8px !important;
+    padding: 8px 10px 20px !important;
     gap: 10px !important;
   }
 
-  /* 攝影機網格在手機直向下的黃金雙欄比例 (清晰可見且無縫滑動) */
+  /* 手機版搜尋與標籤篩選列 */
+  .camera-filter-bar {
+    padding: 7px 9px !important;
+    gap: 7px !important;
+  }
+  .filter-search-box {
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  .filter-pills-row {
+    width: 100% !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+    padding-right: 18px !important;
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 18px), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 18px), transparent 100%);
+  }
+  .filter-pills-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 攝影機網格在手機直向下使用嚴格 minmax(0, 1fr) 雙欄，徹底杜絕水平溢出 */
   .camera-grid.grid-1 {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 
   .camera-grid.grid-4,
@@ -6560,33 +7377,40 @@ body {
   .camera-grid.grid-10,
   .camera-grid.grid-12,
   .camera-grid.grid-16 {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 6px !important;
     min-height: 0 !important;
   }
 
   .camera-grid.grid-all {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
     gap: 6px !important;
   }
 
   .cam-card-header {
-    padding: 4px 6px !important;
+    padding: 5px 7px !important;
     font-size: 0.72rem !important;
+    gap: 4px !important;
   }
 
   .cam-card-footer {
-    padding: 4px 6px !important;
-    font-size: 0.7rem !important;
+    padding: 5px 7px !important;
+    font-size: 0.68rem !important;
   }
 
   .cam-name-text {
     font-size: 0.72rem !important;
   }
 
-  /* 大眾運輸通勤走廊手機專屬配置：收合狀態維持單行超矮、橫向自適應滑動，絕不超出版面 */
+  .tool-icon-btn {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.68rem !important;
+  }
+
+  /* 大眾運輸通勤走廊手機配置 */
   .transit-corridor-bar.is-collapsed-bar {
-    padding: 3px 6px !important;
+    padding: 4px 6px !important;
     min-height: 34px !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
@@ -6612,13 +7436,13 @@ body {
   .compact-badge-dir-btn {
     flex-shrink: 0 !important;
     padding: 3px 6px !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
     gap: 4px !important;
     white-space: nowrap !important;
     letter-spacing: 0 !important;
   }
   .compact-badge-dir-btn .dir-swap-icon {
-    font-size: 0.72rem !important;
+    font-size: 0.7rem !important;
   }
 
   .compact-info-stream {
@@ -6627,56 +7451,56 @@ body {
     max-width: 100% !important;
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     white-space: nowrap !important;
     scrollbar-width: none !important;
-    padding: 1px 2px !important;
+    padding: 1px 12px 1px 2px !important;
     box-sizing: border-box !important;
-    -webkit-mask-image: linear-gradient(to right, black calc(100% - 16px), transparent 100%);
-    mask-image: linear-gradient(to right, black calc(100% - 16px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 14px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 14px), transparent 100%);
   }
   .compact-info-stream::-webkit-scrollbar {
     display: none !important;
   }
 
   .stream-pill {
-    font-size: 0.70rem !important;
+    font-size: 0.69rem !important;
     gap: 3px !important;
     flex-shrink: 0 !important;
     white-space: nowrap !important;
   }
 
   .stream-divider {
-    font-size: 0.68rem !important;
+    font-size: 0.66rem !important;
     margin: 0 1px !important;
     flex-shrink: 0 !important;
   }
 
   .pids-stream-card {
-    padding: 1px 4px !important;
-    font-size: 0.68rem !important;
+    padding: 1px 5px !important;
+    font-size: 0.67rem !important;
     gap: 3px !important;
     flex-shrink: 0 !important;
     white-space: nowrap !important;
   }
 
   .pids-tag {
-    font-size: 0.66rem !important;
+    font-size: 0.65rem !important;
   }
 
   .pids-dest {
-    font-size: 0.66rem !important;
+    font-size: 0.64rem !important;
     padding: 0 3px !important;
   }
 
   .pids-time {
-    font-size: 0.70rem !important;
+    font-size: 0.69rem !important;
   }
 
   .pids-countdown-chip {
-    font-size: 0.68rem !important;
+    font-size: 0.66rem !important;
     padding: 0 3px !important;
   }
 
@@ -6693,21 +7517,11 @@ body {
     justify-content: center !important;
     text-align: center !important;
     padding: 3px 6px !important;
-    font-size: 0.70rem !important;
+    font-size: 0.69rem !important;
     gap: 2px !important;
     white-space: nowrap !important;
   }
 
-  @media (max-width: 400px) {
-    .compact-actions-group .btn-expand-main span {
-      display: none !important;
-    }
-    .compact-badge-dir-btn span {
-      font-size: 0.70rem !important;
-    }
-  }
-
-  /* 展開狀態標題與控制列 */
   .transit-header-row {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -6728,31 +7542,28 @@ body {
 
   .dir-toggle-btn {
     padding: 3px 6px !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
 
   .dir-auto-gps-btn {
     padding: 3px 6px !important;
-    font-size: 0.72rem !important;
+    font-size: 0.7rem !important;
   }
 
   .transit-plan-toggle-btn,
   .transit-collapse-btn {
     padding: 3px 6px !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
 
-  /* 手機端徹底釋放 16 站 Hover 氣泡，根除 GPU 瓦片 RenderLayer 超載與黑塊撕裂 */
   .station-hover-tooltip {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
   }
 
-  /* 手機端 GPU 動畫減負：縮短過渡、去除持續傾斜呼吸動畫，確保展開瞬間 100% 流暢零卡頓 */
   .track-progress-glow {
     transition: width 0.3s ease !important;
-    box-shadow: 0 0 3px currentColor !important;
   }
   .track-train-beacon {
     transition: left 0.3s ease !important;
@@ -6764,7 +7575,6 @@ body {
     animation: none !important;
   }
 
-  /* 軌道車站文字與版面極限防擠壓、防溢出加固 */
   .transit-tracks-container.full-length-corridor,
   .transit-track-card.full-width-card,
   .multi-rail-corridor.full-span-rail {
@@ -6784,7 +7594,6 @@ body {
     overflow: visible !important;
   }
 
-  /* 所有運具頂部圖例列手機端嚴格單行鎖定：車程時間絕不折行，各運具卡片高度 100% 齊平 */
   .segment-legend {
     display: flex !important;
     align-items: center !important;
@@ -6795,14 +7604,14 @@ body {
     max-width: 100% !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
-    font-size: 0.72rem !important;
+    font-size: 0.71rem !important;
   }
 
   .segment-legend .leg-info {
     flex-shrink: 0 !important;
     white-space: nowrap !important;
     margin-left: auto !important;
-    font-size: 0.70rem !important;
+    font-size: 0.69rem !important;
     color: var(--text-dim) !important;
   }
 
@@ -6818,7 +7627,7 @@ body {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
-    font-size: 0.70rem !important;
+    font-size: 0.69rem !important;
     padding: 0 3px !important;
     max-width: 155px !important;
   }
@@ -6830,17 +7639,16 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
     padding: 1px 2px !important;
   }
 
   .station-label {
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
 
-  /* 板南線車廂擁擠度在手機螢幕改為上下兩列結構：上方標題，下方6車廂等分網格，100%容納且絕不溢出 */
   .bannan-car-crowd-row {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -6852,29 +7660,28 @@ body {
 
   .crowd-station-badge {
     width: 100% !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
 
   .crowd-cars-strip {
     width: 100% !important;
     display: grid !important;
-    grid-template-columns: repeat(6, 1fr) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     gap: 2px !important;
     justify-content: stretch !important;
   }
 
   .crowd-car-box {
     padding: 2px 3px !important;
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
     justify-content: center !important;
     min-width: 0 !important;
   }
 
   .crowd-car-box span {
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
 
-  /* 桃園高鐵停車場微型條在手機螢幕自動折行與自適應 */
   .thsr-parking-status-bar {
     display: flex !important;
     flex-wrap: wrap !important;
@@ -6885,7 +7692,7 @@ body {
   }
 
   .parking-title-tag {
-    font-size: 0.74rem !important;
+    font-size: 0.72rem !important;
   }
 
   .parking-lots-strip {
@@ -6897,40 +7704,37 @@ body {
   }
 
   .parking-lot-chip {
-    font-size: 0.74rem !important;
-    padding: 1px 2px !important;
+    font-size: 0.72rem !important;
+    padding: 1px 3px !important;
   }
 
-  /* 出門時間表抽屜卡片手機寬度 */
   .plan-card {
     flex: 0 0 240px !important;
     min-width: 240px !important;
   }
 
-  /* YouBike 看板在手機直向下的優化：高度充裕舒適，字體完整呈現 */
   .youbike-station-list {
-    max-height: 540px !important;
-    min-height: 380px !important;
+    max-height: 520px !important;
+    min-height: 360px !important;
   }
 
   .youbike-station-item {
-    min-height: 60px !important;
+    min-height: 58px !important;
     padding: 8px 10px !important;
     overflow: visible !important;
   }
 
   .youbike-station-name {
-    font-size: 0.8rem !important;
+    font-size: 0.78rem !important;
     line-height: 1.4 !important;
   }
 
   .youbike-metric-pill {
     padding: 2px 6px !important;
-    font-size: 0.72rem !important;
+    font-size: 0.71rem !important;
     line-height: 1.35 !important;
   }
 
-  /* 彈窗在手機上的滿版適配 */
   .modal-overlay {
     padding: 8px !important;
   }
@@ -6941,9 +7745,9 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   極窄小型手機強化 (max-width: 420px)
+   極窄小型手機強化 (max-width: 440px，修正原巢狀 @media 語法錯誤)
    -------------------------------------------------------------------------- */
-@media (max-width: 420px) {
+@media (max-width: 440px) {
   .top-nav {
     padding: 6px 8px !important;
   }
@@ -6954,8 +7758,16 @@ body {
   .camera-grid.grid-10,
   .camera-grid.grid-12,
   .camera-grid.grid-16 {
-    grid-template-columns: 1fr !important; /* 極小螢幕直向單欄流動，畫面最大最清晰 */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 8px !important;
+  }
+
+  .compact-actions-group .btn-expand-main span {
+    display: none !important;
+  }
+
+  .compact-badge-dir-btn span {
+    font-size: 0.69rem !important;
   }
 
   .nav-actions {
@@ -6993,8 +7805,8 @@ body {
   }
 
   .compact-btn {
-    font-size: 0.74rem !important;
-    padding: 3px 4px !important;
+    font-size: 0.71rem !important;
+    padding: 3px 5px !important;
   }
 }
 
@@ -7336,84 +8148,82 @@ body.native-mobile-mode .parking-lot-chip {
 }
 
 
-/* ===== 體驗升級：我的最愛、出行快報、快搜標籤、TV遙控器焦點 ===== */
+/* ===== 體驗升級：我的最愛、出行快報與 TV 遙控器焦點 (Obsidian Precision) ===== */
 
 /* 我的最愛收藏星號按鈕樣式 */
 .fav-star-btn {
   color: rgba(255, 255, 255, 0.45);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .fav-star-btn:hover {
   color: #fbbf24 !important;
-  border-color: rgba(251, 191, 36, 0.5) !important;
-  background: rgba(251, 191, 36, 0.15) !important;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4) !important;
+  border-color: rgba(251, 191, 36, 0.48) !important;
+  background: rgba(251, 191, 36, 0.14) !important;
 }
 .fav-star-btn.active {
   color: #fbbf24 !important;
-  border-color: rgba(251, 191, 36, 0.7) !important;
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.15)) !important;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.5) !important;
-  animation: fav-star-bounce 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  border-color: rgba(251, 191, 36, 0.62) !important;
+  background: rgba(251, 191, 36, 0.18) !important;
+  animation: fav-star-bounce 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes fav-star-bounce {
   0% { transform: scale(1); }
-  45% { transform: scale(1.35) rotate(15deg); }
+  45% { transform: scale(1.28) rotate(12deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
 
-/* 收藏空狀態引導卡 */
+/* 收藏與空搜尋引導卡 */
 .fav-empty-placeholder {
   grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px dashed rgba(251, 191, 36, 0.4);
+  padding: 52px 24px;
+  background: rgba(14, 19, 31, 0.78);
+  border: 1px dashed rgba(251, 191, 36, 0.34);
   border-radius: 16px;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
   text-align: center;
-  margin: 30px auto;
-  max-width: 540px;
-  width: 90%;
-  animation: fadeIn 0.4s ease-out;
+  margin: 24px auto;
+  max-width: 520px;
+  width: 92%;
+  animation: fadeIn 0.35s ease-out;
 }
 .fav-empty-icon {
-  font-size: 3.2rem;
+  font-size: 2.8rem;
   color: #fbbf24;
-  margin-bottom: 16px;
-  filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.6));
-  animation: gentle-live-pulse 2.2s infinite ease-in-out;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.42));
 }
 .fav-empty-title {
-  font-size: 1.18rem;
+  font-family: var(--font-display);
+  font-size: 1.12rem;
   font-weight: 700;
   color: #f8fafc;
   margin-bottom: 8px;
 }
 .fav-empty-desc {
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   color: #94a3b8;
-  line-height: 1.6;
-  margin-bottom: 22px;
+  line-height: 1.65;
+  margin-bottom: 20px;
 }
 .fav-quick-add-btn {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #ffffff;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 9px 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.28);
 }
 .fav-quick-add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.55);
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.4);
 }
 
 /* 出門前 3 秒智慧出行快報膠囊 */
@@ -7421,43 +8231,41 @@ body.native-mobile-mode .parking-lot-chip {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: linear-gradient(90deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.18));
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: 30px;
-  padding: 6px 16px;
-  margin-bottom: 10px;
+  background: rgba(14, 19, 31, 0.78);
+  border: 1px solid rgba(56, 189, 248, 0.26);
+  border-radius: 12px;
+  padding: 7px 14px;
+  margin-bottom: 8px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
   user-select: none;
   overflow: hidden;
 }
 .smart-commute-capsule:hover {
-  background: linear-gradient(90deg, rgba(14, 165, 233, 0.25), rgba(99, 102, 241, 0.28));
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
+  background: rgba(20, 29, 46, 0.9);
+  border-color: rgba(56, 189, 248, 0.5);
   transform: translateY(-1px);
 }
 .capsule-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 3px 9px;
-  border-radius: 20px;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #7dd3fc;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
   white-space: nowrap;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.4);
+  letter-spacing: 0.3px;
 }
 .capsule-text-wrap {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.8rem;
+  gap: 10px;
+  font-size: 0.78rem;
   color: #e2e8f0;
   white-space: nowrap;
   overflow-x: auto;
@@ -7472,135 +8280,45 @@ body.native-mobile-mode .parking-lot-chip {
   gap: 5px;
 }
 .capsule-item i {
-  color: #38bdf8;
-  font-size: 0.85rem;
+  color: var(--color-primary);
+  font-size: 0.82rem;
 }
 .capsule-divider {
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.18);
   font-weight: 300;
 }
 .capsule-arrow {
   color: #94a3b8;
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
+  font-size: 0.74rem;
+  transition: transform 0.2s ease, color 0.2s ease;
   margin-left: auto;
 }
 .smart-commute-capsule:hover .capsule-arrow {
   transform: translateX(3px);
-  color: #38bdf8;
-}
-
-/* 鏡頭快搜與標籤篩選列 */
-.camera-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  padding: 2px 2px;
-  flex-wrap: wrap;
-}
-.filter-search-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  padding: 4px 12px;
-  width: 100%; max-width: 360px;
-  transition: all 0.25s ease;
-}
-.filter-search-wrap:focus-within {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
-  background: rgba(15, 23, 42, 0.9);
-  width: 100%; max-width: 420px;
-}
-.filter-search-icon {
-  color: #64748b;
-  font-size: 0.75rem;
-}
-.filter-search-input {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #f8fafc;
-  font-size: 0.76rem;
-  width: 100%;
-}
-.filter-search-input::placeholder {
-  color: #64748b;
-}
-.filter-clear-btn {
-  background: transparent;
-  border: none;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0;
-  display: none;
-  font-size: 0.75rem;
-  transition: color 0.15s ease;
-}
-.filter-clear-btn:hover {
-  color: #f8fafc;
-}
-.filter-tags-scroll {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 2px 0;
-  flex: 1;
-}
-.filter-tags-scroll::-webkit-scrollbar {
-  display: none;
-}
-.filter-tag-pill {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  padding: 3px 10px;
-  border-radius: 14px;
-  font-size: 0.72rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-.filter-tag-pill:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.25);
-}
-.filter-tag-pill.active {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(0, 150, 255, 0.2));
-  border-color: var(--color-primary);
   color: var(--color-primary);
-  font-weight: 700;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
 }
 
-/* Android TV 遙控器焦點發光環與鍵盤導航 */
+/* 鏡頭篩選隱藏輔助 */
+.filter-clear-btn[hidden],
+.filter-clear-btn:not(.is-visible) {
+  display: none;
+}
+
+/* Android TV 遙控器焦點與鍵盤導航 */
 .cam-card {
   outline: none;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.25s ease, 
-              border-color 0.25s ease,
-              outline 0.2s ease;
 }
 .cam-card:focus,
 .cam-card:focus-visible {
-  outline: 3px solid var(--color-primary) !important;
-  outline-offset: 3px !important;
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 26px rgba(0, 240, 255, 0.85), inset 0 0 15px rgba(0, 240, 255, 0.25) !important;
-  transform: scale(1.025);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.22), 0 18px 38px rgba(0, 0, 0, 0.52) !important;
   z-index: 25;
 }
 .cam-card:focus .cam-card-header,
 .cam-card:focus-visible .cam-card-header {
-  background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(15, 23, 42, 0.8)) !important;
+  background: rgba(18, 28, 44, 0.98) !important;
 }
 
 </style>
@@ -7705,6 +8423,11 @@ body.native-mobile-mode .parking-lot-chip {
         <i class="fa-solid fa-torii-gate"></i>
         <span>日本</span>
       </button>
+      <button class="center-btn" data-center="favorites" title="我的最愛：自選跨區跨國專屬監視器收藏牆">
+        <i class="fa-solid fa-star" style="color:#fbbf24;"></i>
+        <span>收藏</span>
+        <span id="favCountBadge" class="fav-count-pill is-empty"></span>
+      </button>
     </div>
 
     <!-- 網格與控制列 (完整支援 1/4/6/9/12/16/全部) -->
@@ -7731,8 +8454,13 @@ body.native-mobile-mode .parking-lot-chip {
           </button>
         </div>
 
-        <!-- 功能圖示按鈕組 (刷新、全螢幕) -->
+        <!-- 功能圖示按鈕組 (指令搜尋、刷新、全螢幕) -->
         <div class="nav-icon-tools">
+          <button id="btnCommandPalette" class="cmd-palette-trigger" type="button" aria-label="開啟快速指令面板 (Ctrl+K)" title="快速搜尋鏡頭、站點與區域切換 (⌘K / Ctrl+K)">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <span class="cmd-trigger-label">快搜</span>
+            <kbd class="cmd-kbd">⌘K</kbd>
+          </button>
           <button id="btnRefreshAll" class="tool-icon-btn nav-tool-btn" aria-label="立即重新整理全部資料" title="立即刷新全部視訊與資訊">
             <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
           </button>
@@ -7758,6 +8486,26 @@ body.native-mobile-mode .parking-lot-chip {
       <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
       <!-- 雙埔出行速報與即時路網 (收合時為超薄整合膠囊列，展開時為詳細軌道走廊) -->
       <div id="transitTransitBar" class="transit-corridor-bar is-collapsed-bar"></div>
+
+      <!-- 即時鏡頭快搜與類型標籤列 -->
+      <div id="cameraFilterBar" class="camera-filter-bar">
+        <div class="filter-search-box">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input id="cameraSearchInput" class="filter-search-input" type="search" placeholder="快搜路名、交流道、富士山、4K 或捷運周邊..." aria-label="快搜即時攝影機" />
+          <button id="cameraFilterClearBtn" class="filter-clear-btn" type="button" aria-label="清除搜尋條件" title="清除搜尋">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="filter-pills-row">
+          <button class="filter-tag-pill active" data-filter-tag="all" type="button">全部</button>
+          <button class="filter-tag-pill" data-filter-tag="交通" type="button">交通路況</button>
+          <button class="filter-tag-pill" data-filter-tag="風景" type="button">風景地標</button>
+          <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
+          <button class="filter-tag-pill" data-filter-tag="4k" type="button">4K 超清</button>
+          <button class="filter-tag-pill" data-filter-tag="富士山" type="button">富士山</button>
+        </div>
+        <span id="cameraFilterCount" class="filter-count-meta">載入鏡頭中</span>
+      </div>
 
       <!-- 攝影機視訊卡片網格 -->
       <div id="cameraGrid" class="camera-grid grid-6">
@@ -7980,6 +8728,22 @@ body.native-mobile-mode .parking-lot-chip {
       </div>
       <div id="modalBody" class="modal-body">
         <!-- 動態置入大圖或 iframe -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ⌘K 快速指令與鏡頭搜尋面板 (Obsidian Command Palette) -->
+  <div id="commandPaletteOverlay" class="cmd-palette-overlay" role="dialog" aria-modal="true" aria-label="快速指令面板">
+    <div class="cmd-palette-dialog">
+      <div class="cmd-palette-input-row">
+        <i class="fa-solid fa-terminal" aria-hidden="true"></i>
+        <input id="commandPaletteInput" class="cmd-palette-input" type="text" placeholder="搜尋任意監視器路名、切換地區中心、調整格數或快速操作..." autocomplete="off" />
+        <span class="cmd-palette-esc">ESC</span>
+      </div>
+      <div id="commandPaletteResults" class="cmd-palette-results"></div>
+      <div class="cmd-palette-footer">
+        <span><i class="fa-solid fa-arrows-up-down"></i> ↑↓ 選擇 ‧ Enter 立即定位或執行</span>
+        <span>快捷鍵：Ctrl / ⌘ + K 或 /</span>
       </div>
     </div>
   </div>
@@ -8427,17 +9191,17 @@ class CameraPlayerEngine {
     // 依串流類型生成內容 (畫面上完全零標籤遮擋)
     let mediaHtml = '';
     if (cam.type === 'hls') {
-      // 桃園市交控中心官方原生 HLS 直播串流 (連續動態最高畫質，支援原生全螢幕與按兩下放大)
+      // 桃園市交控中心官方原生 HLS 直播串流 (連續動態最高畫質，小格零遮擋，全螢幕保留完整控制列)
       mediaHtml = `
         <div class="video-wrapper" ondblclick="window.monitorApp.openFullscreen('${cam.id}')" title="按兩下開啟全螢幕檢視">
-          <video id="video-${cam.id}" class="cam-feed" autoplay muted playsinline controls ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${cam.id}')"></video>
+          <video id="video-${cam.id}" class="cam-feed" autoplay muted playsinline preload="auto" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${cam.id}')"></video>
         </div>
       `;
     } else if (cam.type === 'flv') {
-      // 新北市路口監視器：使用 flv.js 原生 HTML5 Video 播放最高畫質串流 (支援原生全螢幕與按兩下放大)
+      // 新北市路口監視器：使用 flv.js 原生 HTML5 Video 播放最高畫質串流 (小格移除原生 controls 徹底杜絕中央黑圈緩衝圖示遮擋)
       mediaHtml = `
         <div class="video-wrapper" ondblclick="window.monitorApp.openFullscreen('${cam.id}')" title="按兩下開啟全螢幕檢視">
-          <video id="video-${cam.id}" class="cam-feed" autoplay muted playsinline controls ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${cam.id}')"></video>
+          <video id="video-${cam.id}" class="cam-feed" autoplay muted playsinline preload="auto" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${cam.id}')"></video>
         </div>
       `;
     } else if (cam.type === 'youtube') {
@@ -8484,6 +9248,9 @@ class CameraPlayerEngine {
     }
 
     const streetViewUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${cam.lat},${cam.lon}`;
+    const isFav = (window.monitorApp && typeof window.monitorApp.isFavorite === 'function')
+      ? window.monitorApp.isFavorite(cam.id)
+      : false;
 
     let statusDotColor = '#10b981'; // 預設綠色(HLS/MJPEG串流正常)
     let statusDotTitle = '串流正常';
@@ -8495,39 +9262,50 @@ class CameraPlayerEngine {
       statusDotTitle = '官方直出';
     }
 
+    const shortAuthority = String(cam.authority || '')
+      .replace(/^桃園市政府交通局.*/, '桃園交控')
+      .replace(/^新北市政府交通局.*/, '新北交控')
+      .replace(/^臺北市政府交通管制工程處.*/, '北市交工')
+      .replace(/\s*(官方\s*4K\s*實況|官方實況|官方頻道|直播)$/i, '');
+
     card.innerHTML = `
       <div class="cam-card-header">
         <div class="cam-title-group">
-          <span class="live-dot" id="wm-${cam.id}" title="即時連線中"></span>
+          <span class="live-dot" id="wm-${cam.id}" title="${statusDotTitle}"></span>
           ${cam.areaTag ? `<span class="area-tag ${cam.areaTag === '青埔' ? 'tag-qp' : 'tag-bp'}">${cam.areaTag}</span>` : ''}
           ${(window.monitorApp && window.monitorApp.currentCenterId === 'nearby' && typeof cam.distanceKm === 'number') ? `<span class="distance-pill" title="距離您的目前位置約 ${cam.distanceKm} 公里"><i class="fa-solid fa-location-arrow"></i> ${cam.distanceKm} km</span>` : ''}
           <span class="cam-name-text" title="${cam.name}">#${index + 1} ${cam.name}</span>
         </div>
         <div class="cam-card-tools">
-          ${cam.type === 'iframe' ? `
-            <a class="tool-icon-btn" href="${cam.sourceUrl || cam.streamUrl}" target="_blank" rel="noopener noreferrer" title="在新分頁開啟官方即時視訊">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            </a>
-          ` : ''}
-          <a class="tool-icon-btn" href="${streetViewUrl}" target="_blank" rel="noopener noreferrer" title="開啟 Google 街景視角 (360度實景全景)">
-            <i class="fa-solid fa-street-view"></i>
-          </a>
+          <button class="tool-icon-btn fav-star-btn ${isFav ? 'active' : ''}" data-cam-id="${cam.id}" title="${isFav ? '已在我的最愛 (點擊取消收藏)' : '加入我的最愛 (自選專屬視訊牆)'}" onclick="event.stopPropagation(); window.monitorApp.toggleCamFavorite('${cam.id}', this)">
+            <i class="fa-${isFav ? 'solid' : 'regular'} fa-star"></i>
+          </button>
           <button class="tool-icon-btn" title="單格放大檢視" onclick="window.monitorApp.openFullscreen('${cam.id}')">
             <i class="fa-solid fa-expand"></i>
-          </button>
-          <button class="tool-icon-btn" title="立即刷新畫面" onclick="window.monitorApp.refreshSingleCamera('${cam.id}')">
-            <i class="fa-solid fa-rotate"></i>
-          </button>
-          <button class="tool-icon-btn" title="下載當前快照" onclick="window.monitorApp.captureCamera('${cam.id}')">
-            <i class="fa-solid fa-camera"></i>
           </button>
         </div>
       </div>
       ${mediaHtml}
       <div class="cam-card-footer">
         <div class="cam-footer-row">
-          <span class="authority-tag" title="${cam.authority}"><i class="fa-solid fa-shield-halved"></i> ${cam.authority}</span>
+          <span class="authority-tag" title="${cam.authority}"><i class="fa-solid fa-shield-halved"></i> ${shortAuthority}</span>
           <span class="format-res-badge" id="res-${cam.id}"><i class="fa-solid fa-video"></i> ${this.getInitialFormatText(cam)}</span>
+          <div class="cam-footer-actions">
+            ${cam.type === 'iframe' ? `
+              <a class="tool-icon-btn" href="${cam.sourceUrl || cam.streamUrl}" target="_blank" rel="noopener noreferrer" title="在新分頁開啟官方即時視訊">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+            ` : ''}
+            <a class="tool-icon-btn" href="${streetViewUrl}" target="_blank" rel="noopener noreferrer" title="開啟 Google 街景視角 (360度實景全景)">
+              <i class="fa-solid fa-street-view"></i>
+            </a>
+            <button class="tool-icon-btn" title="立即刷新畫面" onclick="window.monitorApp.refreshSingleCamera('${cam.id}')">
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+            <button class="tool-icon-btn" title="下載當前快照" onclick="window.monitorApp.captureCamera('${cam.id}')">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -8558,7 +9336,19 @@ class CameraPlayerEngine {
           this.initMjpegKeeper(cam);
           this.startLiveClock(cam.id);
         } else if (cam.type === 'youtube' || cam.type === 'iframe') {
+          const frameEl = document.getElementById(`yt-${cam.id}`) || document.getElementById(`iframe-${cam.id}`);
+          const wrapEl = frameEl ? frameEl.closest('.video-wrapper') : null;
+          if (wrapEl) {
+            frameEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
+            setTimeout(() => wrapEl.classList.add('is-ready'), 1400);
+          }
           this.startLiveClock(cam.id);
+        } else if (imgEl) {
+          const wrapEl = imgEl.closest('.video-wrapper');
+          if (wrapEl) {
+            if (imgEl.complete) wrapEl.classList.add('is-ready');
+            else imgEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
+          }
         }
       }, delay);
       this.staggerTimers.push(timer);
@@ -8987,6 +9777,9 @@ class CameraPlayerEngine {
           }
         };
 
+        videoEl.addEventListener('canplay', () => {
+          onStreamStarted();
+        });
         videoEl.addEventListener('playing', () => {
           clearStallWatchdog();
           onStreamStarted();
@@ -9068,11 +9861,17 @@ class CameraPlayerEngine {
     this.startLiveClock(cam.id);
 
     img.onload = () => {
+      const wrapper = img.closest('.video-wrapper');
+      if (wrapper) wrapper.classList.add('is-ready');
       const resEl = document.getElementById(`res-${cam.id}`);
       if (resEl && img.naturalWidth > 0 && img.naturalHeight > 0) {
         resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${img.naturalWidth}×${img.naturalHeight} ‧ MJPEG`;
       }
     };
+    if (img.complete && img.naturalWidth > 0) {
+      const wrapper = img.closest('.video-wrapper');
+      if (wrapper) wrapper.classList.add('is-ready');
+    }
 
     img.onerror = () => {
       setTimeout(() => {
@@ -9669,16 +10468,206 @@ class WeatherEnvironmentMonitor {
     };
   }
 
-  // 取得單一座標資料底層方法
+  // 日照軌跡 SVG 弦弧計算與繪製
+  renderSolarArcSvg(sunriseIso, sunsetIso, compact = false) {
+    const srText = this.formatApiTime(sunriseIso);
+    const ssText = this.formatApiTime(sunsetIso);
+    const now = Date.now();
+    const srMs = sunriseIso ? Date.parse(sunriseIso) : NaN;
+    const ssMs = sunsetIso ? Date.parse(sunsetIso) : NaN;
+    let progress = 0.5;
+    let phaseLabel = '日照監測';
+    let isDaylight = true;
+
+    if (!Number.isNaN(srMs) && !Number.isNaN(ssMs) && ssMs > srMs) {
+      if (now < srMs) {
+        progress = 0;
+        isDaylight = false;
+        const mins = Math.max(1, Math.round((srMs - now) / 60000));
+        phaseLabel = mins < 90 ? `距晨曦 ${mins} 分` : '黎明前夜';
+      } else if (now > ssMs) {
+        progress = 1;
+        isDaylight = false;
+        const minsAfter = Math.max(1, Math.round((now - ssMs) / 60000));
+        phaseLabel = minsAfter < 90 ? `日落已 ${minsAfter} 分` : '夜間時段';
+      } else {
+        progress = Math.max(0.02, Math.min(0.98, (now - srMs) / (ssMs - srMs)));
+        const remMins = Math.max(1, Math.round((ssMs - now) / 60000));
+        const h = Math.floor(remMins / 60);
+        const m = remMins % 60;
+        phaseLabel = h > 0 ? `距日落 ${h}h${String(m).padStart(2, '0')}m` : `距日落 ${m}m`;
+      }
+    }
+
+    // 二次貝茲曲線：P0=(14,44), P1=(110,-6), P2=(206,44) -> 頂點 y=19
+    const t = progress;
+    const omt = 1 - t;
+    const sunX = +(omt * omt * 14 + 2 * omt * t * 110 + t * t * 206).toFixed(1);
+    const sunY = +(omt * omt * 44 + 2 * omt * t * -6 + t * t * 44).toFixed(1);
+    const dashLen = 216;
+    const filledLen = +(dashLen * t).toFixed(1);
+    const hPx = compact ? '38px' : '50px';
+
+    return `
+      <div class="solar-arc-box">
+        <div class="solar-arc-head">
+          <span class="solar-arc-phase">
+            <i class="fa-solid ${isDaylight ? 'fa-sun' : 'fa-moon'}" style="color:${isDaylight ? '#fbbf24' : '#818cf8'};"></i>
+            ${phaseLabel}
+          </span>
+          <span>${isDaylight ? `已過 ${Math.round(progress * 100)}%` : '夜間弧'}</span>
+        </div>
+        <svg class="solar-arc-svg" viewBox="0 0 220 52" style="height:${hPx};" aria-hidden="true">
+          <line x1="8" y1="44" x2="212" y2="44" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 3" />
+          <path d="M 14 44 Q 110 -6 206 44" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2" stroke-linecap="round" />
+          <path d="M 14 44 Q 110 -6 206 44" fill="none" stroke="${isDaylight ? '#fbbf24' : '#818cf8'}" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${filledLen} ${dashLen}" />
+          ${isDaylight
+            ? `<circle cx="${sunX}" cy="${sunY}" r="7.5" fill="rgba(251,191,36,0.22)" />
+               <circle cx="${sunX}" cy="${sunY}" r="4.2" fill="#fde047" stroke="#f59e0b" stroke-width="1.2" />`
+            : `<circle cx="${progress >= 1 ? 206 : 14}" cy="44" r="4" fill="#818cf8" />`
+          }
+        </svg>
+        <div class="solar-arc-labels">
+          <span>☀ ${srText}</span>
+          <span>☾ ${ssText}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // AQI 環形向量儀表 SVG
+  renderAqiRadialGaugeSvg(aqiVal, color, size = 58) {
+    const num = Math.max(0, Number(aqiVal) || 0);
+    const ratio = Math.max(0.04, Math.min(1, num / 200));
+    const r = 24;
+    const c = +(2 * Math.PI * r).toFixed(2);
+    const offset = +(c * (1 - ratio)).toFixed(2);
+    return `
+      <div class="aqi-radial-wrap" style="width:${size}px;height:${size}px;">
+        <svg viewBox="0 0 60 60" style="width:${size}px;height:${size}px;" aria-hidden="true">
+          <circle cx="30" cy="30" r="${r}" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="5.5" />
+          <circle cx="30" cy="30" r="${r}" fill="none" stroke="${color}" stroke-width="5.5"
+            stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}" />
+        </svg>
+        <div class="aqi-radial-center">
+          <span class="aqi-number" style="color:${color}; font-size:${size < 52 ? '1.05rem' : '1.22rem'};">${num || '--'}</span>
+          <span class="aqi-radial-lbl">AQI</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // 互動 SVG 24H 降雨機率趨勢曲線與區域面積圖
+  renderRainSvgChartHtml(rawTimes, probsA, probsB = null, stageId = 'rainStageSingle') {
+    const count = Math.min(24, rawTimes.length, probsA.length);
+    if (count < 2) return '';
+    const w = 320;
+    const h = 58;
+    const padX = 8;
+    const padY = 8;
+    const innerW = w - padX * 2;
+    const innerH = h - padY * 2;
+
+    const toPts = (arr) => Array.from({ length: count }, (_, i) => {
+      const p = Math.max(0, Math.min(100, Number(arr[i]) || 0));
+      const x = +(padX + (i / (count - 1)) * innerW).toFixed(1);
+      const y = +(padY + innerH - (p / 100) * innerH).toFixed(1);
+      return { x, y, p, t: rawTimes[i] };
+    });
+
+    const ptsA = toPts(probsA);
+    const linePathA = ptsA.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
+    const areaPathA = `${linePathA} L ${ptsA[ptsA.length - 1].x} ${h - 4} L ${ptsA[0].x} ${h - 4} Z`;
+
+    let linePathB = '';
+    if (Array.isArray(probsB)) {
+      const ptsB = toPts(probsB);
+      linePathB = ptsB.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
+    }
+
+    const peakVal = Math.max(...ptsA.map(pt => pt.p), ...(Array.isArray(probsB) ? probsB.slice(0, count).map(v => Number(v) || 0) : [0]));
+    const firstP = ptsA[0].p;
+    const gradId = `rainAreaGrad_${stageId}`;
+
+    return `
+      <div class="rain-chart-stage" id="${stageId}">
+        <div class="rain-chart-readout">
+          <span id="${stageId}_label">24H 曲線預測 ‧ 目前 <strong>${firstP}%</strong></span>
+          <span>波峰 <strong>${peakVal}%</strong></span>
+        </div>
+        <svg class="rain-svg-layer" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.34" />
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.02" />
+            </linearGradient>
+          </defs>
+          <line x1="${padX}" y1="${padY + innerH * 0.5}" x2="${w - padX}" y2="${padY + innerH * 0.5}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3 3" />
+          <path d="${areaPathA}" fill="url(#${gradId})" />
+          ${linePathB ? `<path d="${linePathB}" fill="none" stroke="#c4b5fd" stroke-width="1.8" stroke-dasharray="3 2" stroke-linecap="round" stroke-linejoin="round" />` : ''}
+          <path d="${linePathA}" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          ${ptsA.filter((_, i) => i % 4 === 0 || i === count - 1).map(pt => `<circle cx="${pt.x}" cy="${pt.y}" r="2.3" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1" />`).join('')}
+        </svg>
+      </div>
+    `;
+  }
+
+  // 更新降雨趨勢預覽文字 (Hover / Click 時即時回饋)
+  previewRainPoint(stageId, labelText) {
+    const el = typeof document !== 'undefined' ? document.getElementById(`${stageId}_label`) : null;
+    if (el) el.innerHTML = labelText;
+  }
+
+  // 取得單一座標資料底層方法 (含單次重試、本地 Proxy Fallback 與 localStorage SWR 快取)
   async fetchLocationData(lat, lon) {
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=Asia%2FTaipei`;
     const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=Asia%2FTaipei`;
+    const cacheKey = `dpu_weather_cache_${Number(lat).toFixed(2)}_${Number(lon).toFixed(2)}`;
+
+    const readCached = () => {
+      try {
+        if (typeof localStorage === 'undefined') return null;
+        const raw = localStorage.getItem(cacheKey);
+        return raw ? JSON.parse(raw) : null;
+      } catch (_e) {
+        return null;
+      }
+    };
+
+    const writeCached = (weather, airQuality) => {
+      try {
+        if (typeof localStorage !== 'undefined' && weather && airQuality) {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            weather,
+            airQuality,
+            ts: Date.now()
+          }));
+        }
+      } catch (_e) {}
+    };
+
+    const fetchWithRetry = async (url, retries = 1) => {
+      let lastErr;
+      for (let i = 0; i <= retries; i++) {
+        try {
+          const opts = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+            ? { signal: AbortSignal.timeout(5500), cache: 'no-store' }
+            : { cache: 'no-store' };
+          const res = await fetch(url, opts);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      throw lastErr;
+    };
 
     try {
       let weather = null;
       let airQuality = null;
 
-      // 原生 Android 橋接直通優先 (免除 WebView 網路延遲與 SSL 限制，極速連線池直取)
+      // 原生 Android 橋接直通優先 (免除 WebView 網路延遲與 SSL 限制)
       if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.fetchHttp === 'function') {
         try {
           const [wRaw, aRaw] = await Promise.all([
@@ -9691,27 +10680,55 @@ class WeatherEnvironmentMonitor {
       }
 
       if (!weather || !airQuality) {
-        const [wRes, aRes] = await Promise.all([fetch(weatherUrl), fetch(aqiUrl)]);
-        weather = weather || await wRes.json();
-        airQuality = airQuality || await aRes.json();
+        const [wJson, aJson] = await Promise.all([
+          weather ? Promise.resolve(weather) : fetchWithRetry(weatherUrl, 1),
+          airQuality ? Promise.resolve(airQuality) : fetchWithRetry(aqiUrl, 1)
+        ]);
+        weather = wJson;
+        airQuality = aJson;
       }
 
-      const syncTime = new Date();
-      return { weather, airQuality, syncTime };
-    } catch (e) {
-      try {
-        const localRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
-        const localJson = await localRes.json();
-        const syncTime = new Date();
-        return { weather: localJson.weather, airQuality: localJson.airQuality, syncTime };
-      } catch (err) {
-        return { weather: null, airQuality: null, syncTime: new Date() };
+      if (weather && airQuality && weather.current) {
+        writeCached(weather, airQuality);
       }
+
+      return { weather, airQuality, syncTime: new Date(), isStale: false };
+    } catch (_directErr) {
+      const canUseHttpProxy = typeof window !== 'undefined' && window.location &&
+        (window.location.protocol === 'http:' || window.location.protocol === 'https:');
+      if (canUseHttpProxy) {
+        try {
+          const proxyOpts = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+            ? { signal: AbortSignal.timeout(5500) }
+            : {};
+          const localRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}`, proxyOpts);
+          if (localRes.ok) {
+            const localJson = await localRes.json();
+            if (localJson && localJson.weather && localJson.airQuality) {
+              writeCached(localJson.weather, localJson.airQuality);
+              return { weather: localJson.weather, airQuality: localJson.airQuality, syncTime: new Date(), isStale: false };
+            }
+          }
+        } catch (_proxyErr) {}
+      }
+
+      const stale = readCached();
+      if (stale && stale.weather && stale.airQuality) {
+        return {
+          weather: stale.weather,
+          airQuality: stale.airQuality,
+          syncTime: new Date(stale.ts || Date.now()),
+          isStale: true
+        };
+      }
+      return { weather: null, airQuality: null, syncTime: new Date(), isStale: true };
     }
   }
 
   // 1. 單一中心載入環境資訊
   async fetchEnvironment(lat, lon, locationName = '當地環境', isAuto = false) {
+    const safeLat = Number.isFinite(Number(lat)) ? Number(lat) : 25.0153;
+    const safeLon = Number.isFinite(Number(lon)) ? Number(lon) : 121.2213;
     const now = Date.now();
     if (!isAuto && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
       console.log('[防刷保護] 距離上次更新不足 2 秒，已略過頻繁請求');
@@ -9720,10 +10737,10 @@ class WeatherEnvironmentMonitor {
     this.lastFetchTimestamp = now;
     this.isDualMode = false;
     this.activeMode = 'single';
-    this.activeSingleParams = { lat, lon, locationName };
+    this.activeSingleParams = { lat: safeLat, lon: safeLon, locationName };
 
     try {
-      const data = await this.fetchLocationData(lat, lon);
+      const data = await this.fetchLocationData(safeLat, safeLon);
       this.currentData = data;
       this.renderSingleWeather(this.currentData, locationName);
       this.renderSingleAqi(this.currentData);
@@ -9778,7 +10795,7 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 渲染雙埔氣象對照卡片 (保留即時秒數倒數器與脈衝呼吸燈)
+  // 渲染雙埔氣象對照卡片 (搭配 Solar Arc 日照弧與即時倒數計時)
   renderDualWeather(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
     const card = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
@@ -9800,13 +10817,17 @@ class WeatherEnvironmentMonitor {
     const qpVis = this.getVisibilityInfo(qpCur.visibility);
     const bpVis = this.getVisibilityInfo(bpCur.visibility);
 
-    const qpSunrise = this.formatApiTime(qpData.weather?.daily?.sunrise?.[0]);
-    const qpSunset = this.formatApiTime(qpData.weather?.daily?.sunset?.[0]);
-    const bpSunrise = this.formatApiTime(bpData.weather?.daily?.sunrise?.[0]);
-    const bpSunset = this.formatApiTime(bpData.weather?.daily?.sunset?.[0]);
+    const qpSunriseIso = qpData.weather?.daily?.sunrise?.[0];
+    const qpSunsetIso = qpData.weather?.daily?.sunset?.[0];
+    const bpSunriseIso = bpData.weather?.daily?.sunrise?.[0];
+    const bpSunsetIso = bpData.weather?.daily?.sunset?.[0];
 
     const qpObsTime = this.formatApiTime(qpCur.time);
     const bpObsTime = this.formatApiTime(bpCur.time);
+
+    const qpApparent = Number(qpCur.apparent_temperature ?? qpCur.temperature_2m ?? 0).toFixed(1);
+    const bpApparent = Number(bpCur.apparent_temperature ?? bpCur.temperature_2m ?? 0).toFixed(1);
+    const syncLabel = (qpData.isStale || bpData.isStale) ? '快取備援' : '即時同步';
 
     card.innerHTML = `
       <div class="widget-title-row">
@@ -9815,7 +10836,7 @@ class WeatherEnvironmentMonitor {
         </div>
         <div class="live-sync-badge">
           <span class="pulse-live-dot"></span>
-          <span>即時同步 (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
+          <span>${syncLabel} (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
         </div>
       </div>
 
@@ -9824,24 +10845,24 @@ class WeatherEnvironmentMonitor {
         <div class="dual-city-box qp">
           <div class="dual-city-header">
             <span class="dual-city-tag qp"><i class="fa-solid fa-location-dot"></i> 青埔</span>
-            <span class="data-obs-time" title="氣象模型即時觀測時間"><i class="fa-regular fa-clock"></i> 觀測 ${qpObsTime}</span>
+            <span class="data-obs-time" title="氣象模型即時觀測時間"><i class="fa-regular fa-clock"></i> ${qpObsTime}</span>
           </div>
           <div class="dual-temp-row">
-            <span class="dual-temp-val">${Math.round(qpCur.temperature_2m)}</span>
+            <span class="dual-temp-val">${Math.round(qpCur.temperature_2m ?? 0)}</span>
             <span class="dual-temp-unit">°C</span>
-            <span style="font-size: 0.75rem; color: var(--text-dim); margin-left: auto;">體感 ${qpCur.apparent_temperature.toFixed(1)}°C</span>
+            <span style="font-size: 0.72rem; color: var(--text-dim); margin-left: auto;">體感 ${qpApparent}°C</span>
           </div>
           <div class="dual-condition" style="color: ${qpW.color};">
             <i class="fa-solid ${qpW.icon}"></i> ${qpW.text}
           </div>
           <div class="dual-metrics-mini">
             <div class="dual-metric-row">
-              <span class="metric-lbl"><i class="fa-solid fa-droplet" style="color:#00f0ff;"></i> 濕度</span>
-              <span class="metric-val">${qpCur.relative_humidity_2m}%</span>
+              <span class="metric-lbl"><i class="fa-solid fa-droplet" style="color:#38bdf8;"></i> 濕度</span>
+              <span class="metric-val">${qpCur.relative_humidity_2m ?? '--'}%</span>
             </div>
             <div class="dual-metric-row">
               <span class="metric-lbl"><i class="fa-solid fa-wind" style="color:#38bdf8;"></i> 風速</span>
-              <span class="metric-val">${Math.round(qpCur.wind_speed_10m)} 公里/時</span>
+              <span class="metric-val">${Math.round(qpCur.wind_speed_10m ?? 0)} 公里/時</span>
             </div>
             <div class="dual-metric-row">
               <span class="metric-lbl"><i class="fa-solid fa-fan" style="color:#38bdf8;"></i> 陣風</span>
@@ -9856,41 +10877,38 @@ class WeatherEnvironmentMonitor {
               <span class="metric-val">${qpVis.km}公里</span>
             </div>
             <div class="dual-metric-row">
-              <span class="metric-lbl"><i class="fa-solid fa-cloud-rain" style="color:#0284c7;"></i> 雨量</span>
-              <span class="metric-val">${qpCur.precipitation}毫米</span>
+              <span class="metric-lbl"><i class="fa-solid fa-cloud-rain" style="color:#38bdf8;"></i> 雨量</span>
+              <span class="metric-val">${qpCur.precipitation ?? 0}毫米</span>
             </div>
           </div>
-          <div class="dual-sun-row" style="display:flex; justify-content:space-between; font-size:0.64rem; color:var(--text-dim); border-top:1px solid rgba(255,255,255,0.06); padding-top:4px; margin-top:2px;">
-            <span><i class="fa-regular fa-sun" style="color:#f59e0b;"></i> 晨曦 ${qpSunrise}</span>
-            <span><i class="fa-solid fa-moon" style="color:#818cf8;"></i> 暮色 ${qpSunset}</span>
-          </div>
+          ${this.renderSolarArcSvg(qpSunriseIso, qpSunsetIso, true)}
         </div>
 
         <!-- 新埔 -->
         <div class="dual-city-box bp">
           <div class="dual-city-header">
             <span class="dual-city-tag bp"><i class="fa-solid fa-location-dot"></i> 新埔</span>
-            <span class="data-obs-time" title="氣象模型即時觀測時間"><i class="fa-regular fa-clock"></i> 觀測 ${bpObsTime}</span>
+            <span class="data-obs-time" title="氣象模型即時觀測時間"><i class="fa-regular fa-clock"></i> ${bpObsTime}</span>
           </div>
           <div class="dual-temp-row">
-            <span class="dual-temp-val">${Math.round(bpCur.temperature_2m)}</span>
+            <span class="dual-temp-val">${Math.round(bpCur.temperature_2m ?? 0)}</span>
             <span class="dual-temp-unit">°C</span>
-            <span style="font-size: 0.75rem; color: var(--text-dim); margin-left: auto;">體感 ${bpCur.apparent_temperature.toFixed(1)}°C</span>
+            <span style="font-size: 0.72rem; color: var(--text-dim); margin-left: auto;">體感 ${bpApparent}°C</span>
           </div>
           <div class="dual-condition" style="color: ${bpW.color};">
             <i class="fa-solid ${bpW.icon}"></i> ${bpW.text}
           </div>
           <div class="dual-metrics-mini">
             <div class="dual-metric-row">
-              <span class="metric-lbl"><i class="fa-solid fa-droplet" style="color:#c084fc;"></i> 濕度</span>
-              <span class="metric-val">${bpCur.relative_humidity_2m}%</span>
+              <span class="metric-lbl"><i class="fa-solid fa-droplet" style="color:#c4b5fd;"></i> 濕度</span>
+              <span class="metric-val">${bpCur.relative_humidity_2m ?? '--'}%</span>
             </div>
             <div class="dual-metric-row">
-              <span class="metric-lbl"><i class="fa-solid fa-wind" style="color:#a855f7;"></i> 風速</span>
-              <span class="metric-val">${Math.round(bpCur.wind_speed_10m)} 公里/時</span>
+              <span class="metric-lbl"><i class="fa-solid fa-wind" style="color:#a78bfa;"></i> 風速</span>
+              <span class="metric-val">${Math.round(bpCur.wind_speed_10m ?? 0)} 公里/時</span>
             </div>
             <div class="dual-metric-row">
-              <span class="metric-lbl"><i class="fa-solid fa-fan" style="color:#a855f7;"></i> 陣風</span>
+              <span class="metric-lbl"><i class="fa-solid fa-fan" style="color:#a78bfa;"></i> 陣風</span>
               <span class="metric-val">${bpGust.speed}k (${bpGust.level}級)</span>
             </div>
             <div class="dual-metric-row">
@@ -9903,19 +10921,16 @@ class WeatherEnvironmentMonitor {
             </div>
             <div class="dual-metric-row">
               <span class="metric-lbl"><i class="fa-solid fa-cloud-rain" style="color:#818cf8;"></i> 雨量</span>
-              <span class="metric-val">${bpCur.precipitation}毫米</span>
+              <span class="metric-val">${bpCur.precipitation ?? 0}毫米</span>
             </div>
           </div>
-          <div class="dual-sun-row" style="display:flex; justify-content:space-between; font-size:0.64rem; color:var(--text-dim); border-top:1px solid rgba(255,255,255,0.06); padding-top:4px; margin-top:2px;">
-            <span><i class="fa-regular fa-sun" style="color:#f59e0b;"></i> 晨曦 ${bpSunrise}</span>
-            <span><i class="fa-solid fa-moon" style="color:#818cf8;"></i> 暮色 ${bpSunset}</span>
-          </div>
+          ${this.renderSolarArcSvg(bpSunriseIso, bpSunsetIso, true)}
         </div>
       </div>
     `;
   }
 
-  // 渲染雙埔空氣品質對照卡片
+  // 渲染雙埔空氣品質對照卡片 (SVG 環形儀表與微長條)
   renderDualAqi(qpData, bpData, qpInfo, bpInfo) {
     if (typeof document === 'undefined') return;
     const card = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
@@ -9946,62 +10961,60 @@ class WeatherEnvironmentMonitor {
 
       <div class="dual-aqi-grid">
         <!-- 青埔 AQI -->
-        <div class="dual-aqi-card qp" style="border-left: 3px solid ${qpL.color};">
+        <div class="dual-aqi-card qp">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span class="dual-city-tag qp">青埔</span>
-            <span class="data-obs-time" title="周邊測站實際發布時間"><i class="fa-regular fa-clock"></i> 測站 ${qpAqiTime}</span>
+            <span class="data-obs-time" title="周邊測站發布時間"><i class="fa-regular fa-clock"></i> ${qpAqiTime}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:2px;">
-            <span style="font-size:0.75rem; font-weight:700; color:${qpL.color};">${qpL.level}</span>
-            <div style="display:flex; align-items:baseline; gap:4px;">
-              <span class="dual-aqi-num" style="color:${qpL.color};">${qpNum}</span>
-              <span style="font-size:0.65rem; color:var(--text-dim);">空氣指標</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:2px;">
+            ${this.renderAqiRadialGaugeSvg(qpNum, qpL.color, 48)}
+            <div style="text-align:right; min-width:0;">
+              <div style="font-size:0.8rem; font-weight:700; color:${qpL.color};">${qpL.level}</div>
+              <div style="font-size:0.66rem; color:var(--text-dim);">US AQI</div>
             </div>
           </div>
-          <div class="dual-aqi-meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px; font-size:0.65rem; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:4px; margin-top:2px;">
-            <span>細懸浮: ${qpAqi.pm2_5 ? qpAqi.pm2_5.toFixed(1) : '--'}</span>
-            <span>懸浮物: ${qpAqi.pm10 ? qpAqi.pm10.toFixed(1) : '--'}</span>
-            <span>臭氧O3: ${qpAqi.ozone ? Math.round(qpAqi.ozone) : '--'}</span>
-            <span>廢氣NO2: ${qpAqi.nitrogen_dioxide ? qpAqi.nitrogen_dioxide.toFixed(1) : '--'}</span>
+          <div class="dual-aqi-meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px 4px; font-size:0.62rem; white-space:nowrap; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:5px;">
+            <span>PM2.5 ${qpAqi.pm2_5 ? qpAqi.pm2_5.toFixed(1) : '--'}</span>
+            <span>PM10 ${qpAqi.pm10 ? qpAqi.pm10.toFixed(1) : '--'}</span>
+            <span>O3 ${qpAqi.ozone ? Math.round(qpAqi.ozone) : '--'}</span>
+            <span>NO2 ${qpAqi.nitrogen_dioxide ? qpAqi.nitrogen_dioxide.toFixed(1) : '--'}</span>
           </div>
         </div>
 
         <!-- 新埔 AQI -->
-        <div class="dual-aqi-card bp" style="border-left: 3px solid ${bpL.color};">
+        <div class="dual-aqi-card bp">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span class="dual-city-tag bp">新埔</span>
-            <span class="data-obs-time" title="周邊測站實際發布時間"><i class="fa-regular fa-clock"></i> 測站 ${bpAqiTime}</span>
+            <span class="data-obs-time" title="周邊測站發布時間"><i class="fa-regular fa-clock"></i> ${bpAqiTime}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:2px;">
-            <span style="font-size:0.75rem; font-weight:700; color:${bpL.color};">${bpL.level}</span>
-            <div style="display:flex; align-items:baseline; gap:4px;">
-              <span class="dual-aqi-num" style="color:${bpL.color};">${bpNum}</span>
-              <span style="font-size:0.65rem; color:var(--text-dim);">空氣指標</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:2px;">
+            ${this.renderAqiRadialGaugeSvg(bpNum, bpL.color, 48)}
+            <div style="text-align:right; min-width:0;">
+              <div style="font-size:0.8rem; font-weight:700; color:${bpL.color};">${bpL.level}</div>
+              <div style="font-size:0.66rem; color:var(--text-dim);">US AQI</div>
             </div>
           </div>
-          <div class="dual-aqi-meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px; font-size:0.65rem; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:4px; margin-top:2px;">
-            <span>細懸浮: ${bpAqi.pm2_5 ? bpAqi.pm2_5.toFixed(1) : '--'}</span>
-            <span>懸浮物: ${bpAqi.pm10 ? bpAqi.pm10.toFixed(1) : '--'}</span>
-            <span>臭氧O3: ${bpAqi.ozone ? Math.round(bpAqi.ozone) : '--'}</span>
-            <span>廢氣NO2: ${bpAqi.nitrogen_dioxide ? bpAqi.nitrogen_dioxide.toFixed(1) : '--'}</span>
+          <div class="dual-aqi-meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px 4px; font-size:0.62rem; white-space:nowrap; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:5px;">
+            <span>PM2.5 ${bpAqi.pm2_5 ? bpAqi.pm2_5.toFixed(1) : '--'}</span>
+            <span>PM10 ${bpAqi.pm10 ? bpAqi.pm10.toFixed(1) : '--'}</span>
+            <span>O3 ${bpAqi.ozone ? Math.round(bpAqi.ozone) : '--'}</span>
+            <span>NO2 ${bpAqi.nitrogen_dioxide ? bpAqi.nitrogen_dioxide.toFixed(1) : '--'}</span>
           </div>
         </div>
       </div>
     `;
   }
 
-  // 渲染雙埔降雨走勢 (支援橫向滑動查看最長未來 7 日 / 168 小時即時預測)
+  // 渲染雙埔降雨走勢 (混合互動 SVG 24H 面積曲線 + 7 日可捲動柱狀列)
   renderDualHourly(qpHourly, bpHourly) {
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !qpHourly?.precipitation_probability || !bpHourly?.precipitation_probability) return;
 
-    // 智慧記憶捲動位置：若使用者正在滑動瀏覽未來時段，避免粗暴彈回當下
     const existingTrack = document.getElementById('dualHourlyRainTrack');
     const prevScrollLeft = (existingTrack && existingTrack.scrollLeft > 0)
       ? existingTrack.scrollLeft
       : (this._rainScrollPos || 0);
 
-    // 防干擾保護：若使用者正在觸控操作或剛手動滑動檢視 (10秒內)，且現有內容已呈現，暫緩粗暴重組
     const isUserBrowsing = this._isRainUserTouching || (this._lastRainUserScrollTime && (Date.now() - this._lastRainUserScrollTime < 10000));
     if (isUserBrowsing && existingTrack && existingTrack.children.length > 0) {
       return;
@@ -10016,6 +11029,7 @@ class WeatherEnvironmentMonitor {
     const rawTimes = timeList.slice(startIdx);
     const qpProbs = qpAllProbs.slice(startIdx);
     const bpProbs = bpAllProbs.slice(startIdx);
+    const svgChartHtml = this.renderRainSvgChartHtml(rawTimes, qpProbs, bpProbs, 'rainStageDual');
 
     card.innerHTML = `
       <div class="widget-title-row">
@@ -10023,8 +11037,8 @@ class WeatherEnvironmentMonitor {
           <i class="fa-solid fa-umbrella"></i> 雙埔降雨走勢
         </div>
         <div class="rain-header-controls">
-          <span class="rain-legend-tag"><span class="rain-legend-dot" style="background:#00f0ff;"></span>青埔</span>
-          <span class="rain-legend-tag"><span class="rain-legend-dot" style="background:#c084fc;"></span>新埔</span>
+          <span class="rain-legend-tag"><span class="rain-legend-dot" style="background:#38bdf8;"></span>青埔</span>
+          <span class="rain-legend-tag"><span class="rain-legend-dot" style="background:#c4b5fd;"></span>新埔</span>
           <button class="rain-nav-btn" onclick="window.weatherMonitor?.scrollRainChart(-200)" title="向左檢視近時預測">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
@@ -10034,14 +11048,16 @@ class WeatherEnvironmentMonitor {
         </div>
       </div>
 
+      ${svgChartHtml}
+
       <div class="hourly-rain-scroll-wrapper">
         <div class="hourly-rain-scroll-track" id="dualHourlyRainTrack">
           ${rawTimes.map((timeStr, idx) => {
             const qp = qpProbs[idx] ?? 0;
             const bp = bpProbs[idx] ?? 0;
             const maxP = Math.max(qp, bp);
-            const qpHeight = Math.max(4, Math.round(qp * 0.46));
-            const bpHeight = Math.max(4, Math.round(bp * 0.46));
+            const qpHeight = Math.max(4, Math.round(qp * 0.44));
+            const bpHeight = Math.max(4, Math.round(bp * 0.44));
 
             const d = new Date(timeStr);
             const h = d.getHours();
@@ -10054,7 +11070,7 @@ class WeatherEnvironmentMonitor {
             let timeHtml = `${h}時`;
             let dateBadge = '';
             if (isNow) {
-              timeHtml = `<span style="color: #00f0ff; font-weight: 800;">現在</span>`;
+              timeHtml = `<span style="color: #38bdf8; font-weight: 800;">現在</span>`;
               dateBadge = `<span class="rain-col-date-tag">${month}/${date}</span>`;
             } else if (isMidnight) {
               timeHtml = `<span style="color: #f59e0b; font-weight: 700;">0時</span>`;
@@ -10065,13 +11081,16 @@ class WeatherEnvironmentMonitor {
 
             const pColor = maxP >= 70 ? '#ef4444' : maxP >= 40 ? '#38bdf8' : maxP === 0 ? '#64748b' : '#94a3b8';
             const colTitle = `【${month}月${date}日 週${dayOfWeek} ${h}:00】\n青埔降雨機率: ${qp}%\n新埔降雨機率: ${bp}%`;
+            const readoutText = `${month}/${date} ${h}:00 ‧ 青埔 <strong>${qp}%</strong> ‧ 新埔 <strong>${bp}%</strong>`;
 
             return `
-              <div class="hourly-rain-col ${isMidnight ? 'is-new-day' : ''}" title="${colTitle}">
+              <div class="hourly-rain-col ${isMidnight ? 'is-new-day' : ''}" title="${colTitle}"
+                   onmouseenter="window.weatherMonitor?.previewRainPoint('rainStageDual', '${readoutText}')"
+                   onclick="window.weatherMonitor?.previewRainPoint('rainStageDual', '${readoutText}')">
                 <span class="rain-col-prob" style="color: ${pColor}; font-weight: ${maxP >= 40 ? '700' : 'normal'};">${maxP}%</span>
                 <div class="rain-bars-container">
-                  <div class="rain-bar bar-qp" style="height: ${qpHeight}px; background: ${qp >= 40 ? '#00f0ff' : 'rgba(0,240,255,0.45)'};" title="青埔 ${qp}%"></div>
-                  <div class="rain-bar bar-bp" style="height: ${bpHeight}px; background: ${bp >= 40 ? '#c084fc' : 'rgba(192,132,252,0.45)'};" title="新埔 ${bp}%"></div>
+                  <div class="rain-bar bar-qp" style="height: ${qpHeight}px; background: ${qp >= 40 ? '#38bdf8' : 'rgba(56,189,248,0.45)'};" title="青埔 ${qp}%"></div>
+                  <div class="rain-bar bar-bp" style="height: ${bpHeight}px; background: ${bp >= 40 ? '#c4b5fd' : 'rgba(196,181,253,0.45)'};" title="新埔 ${bp}%"></div>
                 </div>
                 ${dateBadge ? `<div class="rain-date-wrapper">${dateBadge}</div>` : ''}
                 <span class="rain-col-time">${timeHtml}</span>
@@ -10134,7 +11153,7 @@ class WeatherEnvironmentMonitor {
     `).join('');
   }
 
-  // 單一中心視圖：氣象渲染 (保留秒數倒數器與即時脈衝燈)
+  // 單一中心視圖：氣象渲染 (搭配 Solar Arc 日照弦弧與即時倒數)
   renderSingleWeather(data, locationName) {
     if (typeof document === 'undefined') return;
     const card = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
@@ -10147,9 +11166,10 @@ class WeatherEnvironmentMonitor {
     const gustInfo = this.getWindGustInfo(cur.wind_gusts_10m);
     const visInfo = this.getVisibilityInfo(cur.visibility);
 
-    const sunriseTime = this.formatApiTime(data.weather?.daily?.sunrise?.[0]);
-    const sunsetTime = this.formatApiTime(data.weather?.daily?.sunset?.[0]);
-    const daylight = this.getDaylightStatus(data.weather?.daily?.sunrise?.[0], data.weather?.daily?.sunset?.[0]);
+    const sunriseIso = data.weather?.daily?.sunrise?.[0];
+    const sunsetIso = data.weather?.daily?.sunset?.[0];
+    const apparentVal = Number(cur.apparent_temperature ?? cur.temperature_2m ?? 0).toFixed(1);
+    const syncLabel = data.isStale ? '快取備援' : '即時同步';
 
     card.innerHTML = `
       <div class="widget-title-row">
@@ -10158,13 +11178,13 @@ class WeatherEnvironmentMonitor {
         </div>
         <div class="live-sync-badge">
           <span class="pulse-live-dot"></span>
-          <span>即時同步 (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
+          <span>${syncLabel} (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
         </div>
       </div>
 
       <div class="weather-hero">
         <div>
-          <span class="temp-huge">${Math.round(cur.temperature_2m)}</span>
+          <span class="temp-huge">${Math.round(cur.temperature_2m ?? 0)}</span>
           <span class="temp-unit">°C</span>
         </div>
         <div class="weather-desc-group">
@@ -10172,24 +11192,24 @@ class WeatherEnvironmentMonitor {
             <i class="fa-solid ${weatherInfo.icon}"></i> ${weatherInfo.text}
           </div>
           <div class="weather-apparent">
-            體感溫度 <span>${cur.apparent_temperature.toFixed(1)}°C</span>
+            體感溫度 <span>${apparentVal}°C</span>
           </div>
         </div>
       </div>
 
-      <div class="weather-grid-metrics" style="grid-template-columns: repeat(2, 1fr); gap: 6px;">
+      <div class="weather-grid-metrics" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;">
         <div class="metric-box">
           <i class="fa-solid fa-droplet metric-icon"></i>
           <div>
             <div class="metric-label">相對濕度</div>
-            <div class="metric-val">${cur.relative_humidity_2m}%</div>
+            <div class="metric-val">${cur.relative_humidity_2m ?? '--'}%</div>
           </div>
         </div>
         <div class="metric-box">
           <i class="fa-solid fa-wind metric-icon"></i>
           <div>
             <div class="metric-label">即時風速</div>
-            <div class="metric-val">${Math.round(cur.wind_speed_10m)} 公里/時</div>
+            <div class="metric-val">${Math.round(cur.wind_speed_10m ?? 0)} 公里/時</div>
             <div style="font-size: 0.65rem; color: #38bdf8;">陣風 ${gustInfo.speed}k (${gustInfo.level}級)</div>
           </div>
         </div>
@@ -10197,7 +11217,7 @@ class WeatherEnvironmentMonitor {
           <i class="fa-solid fa-cloud-rain metric-icon"></i>
           <div>
             <div class="metric-label">降雨量</div>
-            <div class="metric-val">${cur.precipitation} 毫米</div>
+            <div class="metric-val">${cur.precipitation ?? 0} 毫米</div>
           </div>
         </div>
         <div class="metric-box">
@@ -10225,15 +11245,11 @@ class WeatherEnvironmentMonitor {
         </div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border-radius:6px; padding:6px 10px; font-size:0.75rem; color:var(--text-muted); border:1px solid rgba(45,70,110,0.2); margin-top:2px;">
-        <span><i class="fa-regular fa-sun" style="color:#f59e0b;"></i> 晨曦 ${sunriseTime}</span>
-        <span><i class="fa-solid ${daylight.icon}" style="color:${daylight.color};"></i> ${daylight.text}</span>
-        <span><i class="fa-solid fa-moon" style="color:#818cf8;"></i> 暮色 ${sunsetTime}</span>
-      </div>
+      ${this.renderSolarArcSvg(sunriseIso, sunsetIso, false)}
     `;
   }
 
-  // 單一中心視圖：AQI 渲染
+  // 單一中心視圖：AQI 渲染 (環形儀表與污染物濃度比例條)
   renderSingleAqi(data) {
     if (typeof document === 'undefined') return;
     const card = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
@@ -10244,6 +11260,12 @@ class WeatherEnvironmentMonitor {
 
     const aqiNum = curAqi.us_aqi || 45;
     const aqiInfo = this.getAqiLevel(aqiNum);
+    const pm25 = Number(curAqi.pm2_5) || 0;
+    const pm10 = Number(curAqi.pm10) || 0;
+    const o3 = Number(curAqi.ozone) || 0;
+    const pm25Pct = Math.min(100, Math.round((pm25 / 75) * 100));
+    const pm10Pct = Math.min(100, Math.round((pm10 / 150) * 100));
+    const o3Pct = Math.min(100, Math.round((o3 / 180) * 100));
 
     card.innerHTML = `
       <div class="widget-title-row">
@@ -10256,30 +11278,39 @@ class WeatherEnvironmentMonitor {
         </div>
       </div>
 
-      <div class="aqi-summary-bar">
-        <div>
-          <div style="font-size: 0.7rem; color: var(--text-dim);">空氣指標</div>
-          <div class="aqi-number" style="color: ${aqiInfo.color};">${aqiNum}</div>
-        </div>
-        <div style="text-align: right;">
-          <div class="aqi-level-title">${aqiInfo.level}</div>
+      <div class="aqi-summary-bar" style="border-color: ${aqiInfo.color}44; background: ${aqiInfo.color}14;">
+        ${this.renderAqiRadialGaugeSvg(aqiNum, aqiInfo.color, 58)}
+        <div style="text-align: right; min-width: 0; flex: 1;">
+          <div class="aqi-level-title" style="color: ${aqiInfo.color};">${aqiInfo.level}</div>
           <div class="aqi-subtext">${aqiInfo.advice}</div>
         </div>
       </div>
 
-      <div class="pollutant-chips" style="grid-template-columns: repeat(3, 1fr); gap: 6px;">
-        <div class="chip-item">
-          <div class="chip-name">細懸浮 (PM2.5)</div>
-          <div class="chip-val">${curAqi.pm2_5 ? curAqi.pm2_5.toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
+      <div class="aqi-bar-list">
+        <div class="aqi-bar-item">
+          <div class="aqi-bar-top">
+            <span class="chip-name">PM2.5</span>
+            <span class="chip-val">${curAqi.pm2_5 ? curAqi.pm2_5.toFixed(1) : '--'}</span>
+          </div>
+          <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${pm25Pct}%; background:${aqiInfo.color};"></div></div>
         </div>
-        <div class="chip-item">
-          <div class="chip-name">懸浮物 (PM10)</div>
-          <div class="chip-val">${curAqi.pm10 ? curAqi.pm10.toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
+        <div class="aqi-bar-item">
+          <div class="aqi-bar-top">
+            <span class="chip-name">PM10</span>
+            <span class="chip-val">${curAqi.pm10 ? curAqi.pm10.toFixed(1) : '--'}</span>
+          </div>
+          <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${pm10Pct}%; background:#38bdf8;"></div></div>
         </div>
-        <div class="chip-item">
-          <div class="chip-name">臭氧濃度 (O3)</div>
-          <div class="chip-val">${curAqi.ozone ? Math.round(curAqi.ozone) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
+        <div class="aqi-bar-item">
+          <div class="aqi-bar-top">
+            <span class="chip-name">臭氧 O3</span>
+            <span class="chip-val">${curAqi.ozone ? Math.round(curAqi.ozone) : '--'}</span>
+          </div>
+          <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${o3Pct}%; background:#a78bfa;"></div></div>
         </div>
+      </div>
+
+      <div class="pollutant-chips" style="grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;">
         <div class="chip-item">
           <div class="chip-name">交通廢氣 (NO2)</div>
           <div class="chip-val">${curAqi.nitrogen_dioxide ? curAqi.nitrogen_dioxide.toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
@@ -10296,19 +11327,17 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // 單一中心視圖：降雨長條圖
+  // 單一中心視圖：降雨走勢 (混合互動 SVG 24H 面積曲線 + 7 日柱狀列)
   renderSingleHourly(hourly) {
     if (typeof document === 'undefined') return;
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
     if (!card || !hourly?.precipitation_probability) return;
 
-    // 智慧記憶捲動位置：若使用者正在滑動瀏覽未來時段，避免粗暴彈回當下
     const existingTrack = document.getElementById('singleHourlyRainTrack');
     const prevScrollLeft = (existingTrack && existingTrack.scrollLeft > 0)
       ? existingTrack.scrollLeft
       : (this._rainScrollPos || 0);
 
-    // 防干擾保護：若使用者正在觸控操作或剛手動滑動檢視 (10秒內)，且現有內容已呈現，暫緩粗暴重組
     const isUserBrowsing = this._isRainUserTouching || (this._lastRainUserScrollTime && (Date.now() - this._lastRainUserScrollTime < 10000));
     if (isUserBrowsing && existingTrack && existingTrack.children.length > 0) {
       return;
@@ -10319,6 +11348,7 @@ class WeatherEnvironmentMonitor {
 
     const probs = (hourly.precipitation_probability || []).slice(startIdx);
     const rawTimes = timeList.slice(startIdx);
+    const svgChartHtml = this.renderRainSvgChartHtml(rawTimes, probs, null, 'rainStageSingle');
 
     card.innerHTML = `
       <div class="widget-title-row">
@@ -10335,11 +11365,13 @@ class WeatherEnvironmentMonitor {
         </div>
       </div>
 
+      ${svgChartHtml}
+
       <div class="hourly-rain-scroll-wrapper">
         <div class="hourly-rain-scroll-track" id="singleHourlyRainTrack">
           ${probs.map((p, idx) => {
-            const barHeight = Math.max(4, Math.round(p * 0.46));
-            const barColor = p >= 70 ? '#ef4444' : p >= 40 ? '#38bdf8' : 'rgba(0, 240, 255, 0.45)';
+            const barHeight = Math.max(4, Math.round(p * 0.44));
+            const barColor = p >= 70 ? '#ef4444' : p >= 40 ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
 
             const d = new Date(rawTimes[idx]);
             const h = d.getHours();
@@ -10363,9 +11395,12 @@ class WeatherEnvironmentMonitor {
 
             const pColor = p >= 70 ? '#ef4444' : p >= 40 ? '#38bdf8' : p === 0 ? '#64748b' : '#94a3b8';
             const colTitle = `【${month}月${date}日 週${dayOfWeek} ${h}:00】降雨機率: ${p}%`;
+            const readoutText = `${month}/${date} ${h}:00 ‧ 降雨機率 <strong>${p}%</strong>`;
 
             return `
-              <div class="hourly-rain-col ${isMidnight ? 'is-new-day' : ''}" title="${colTitle}">
+              <div class="hourly-rain-col ${isMidnight ? 'is-new-day' : ''}" title="${colTitle}"
+                   onmouseenter="window.weatherMonitor?.previewRainPoint('rainStageSingle', '${readoutText}')"
+                   onclick="window.weatherMonitor?.previewRainPoint('rainStageSingle', '${readoutText}')">
                 <span class="rain-col-prob" style="color: ${pColor}; font-weight: ${p >= 40 ? '700' : 'normal'};">${p}%</span>
                 <div class="rain-bars-container">
                   <div class="rain-bar" style="width: 12px; height: ${barHeight}px; background: ${barColor};" title="降雨機率 ${p}%"></div>
@@ -11153,17 +12188,26 @@ class NeighborhoodRadarMap {
         this.radarLayer = null;
       }
 
-      // RainViewer 原生雷達圖磚最高支援 zoom 12
-      // 使用 maxNativeZoom:12 讓 Leaflet 在更高縮放時自動縮放 zoom12 圖磚（不請求不存在的圖磚，避免「ZOOM LEVEL NOT SUPPORTED」）
+      // RainViewer 公開免費氣象雷達圖磚原生最高支援 zoom 7（zoom >= 8 會回傳 ZOOM LEVEL NOT SUPPORTED 灰字圖磚）
+      // 設定 maxNativeZoom: 7 讓 Leaflet 在 z=8..19 自動安全拉伸 z=7 雷達圖磚，徹底消除失效請求
       const tileUrl = `https://tilecache.rainviewer.com${latestPath}/256/{z}/{x}/{y}/4/1_1.png`;
+      let radarTileErrors = 0;
       this.radarLayer = L.tileLayer(tileUrl, {
         tileSize: 256,
-        opacity: 0.65,
-        maxNativeZoom: 12,  // RainViewer 原生最大支援 zoom
-        maxZoom: 19,        // Leaflet 仍可縮放至 zoom 19，但超過 12 時用 zoom12 圖磚放大顯示
+        opacity: 0.62,
+        maxNativeZoom: 7,
+        maxZoom: 19,
         crossOrigin: true,
-        errorTileUrl: '',   // 發生錯誤時顯示空白（避免顯示錯誤文字圖磚）
+        errorTileUrl: '',
         zIndex: 10
+      });
+      this.radarLayer.on('tileerror', () => {
+        radarTileErrors++;
+        if (radarTileErrors > 6 && this.radarLayer && this.map && this.map.hasLayer(this.radarLayer)) {
+          this.map.removeLayer(this.radarLayer);
+          const badgeEl = typeof document !== 'undefined' ? document.getElementById('radarMapTimeBadge') : null;
+          if (badgeEl) badgeEl.textContent = '⛈️ 雷達圖磚維護中';
+        }
       });
       this.radarLayer.addTo(this.map);
 
@@ -11184,10 +12228,22 @@ class NeighborhoodRadarMap {
       console.warn('Leaflet 地圖庫尚未載入');
       return;
     }
-    const isTourist = centerInfo.id === 'tourist';
-    const isJapan = centerInfo.id === 'japan';
-    const initialZoom = isJapan ? 5 : (isTourist ? 10 : 14);
-    const centerPos = isJapan ? [35.6895, 139.6917] : (isTourist ? [25.045, 121.55] : [centerInfo.lat, centerInfo.lon]);
+    const safeCenter = centerInfo || {};
+    const validCamList = Array.isArray(cameras)
+      ? cameras.filter(c => Number.isFinite(Number(c?.lat)) && Number.isFinite(Number(c?.lon)))
+      : [];
+    const centerLat = Number.isFinite(Number(safeCenter.lat))
+      ? Number(safeCenter.lat)
+      : (validCamList.length > 0 ? Number(validCamList[0].lat) : 25.0193);
+    const centerLon = Number.isFinite(Number(safeCenter.lon))
+      ? Number(safeCenter.lon)
+      : (validCamList.length > 0 ? Number(validCamList[0].lon) : 121.3450);
+
+    const isTourist = safeCenter.id === 'tourist';
+    const isJapan = safeCenter.id === 'japan';
+    const isFavorites = safeCenter.id === 'favorites';
+    const initialZoom = isJapan ? 5 : (isTourist ? 10 : (isFavorites ? 12 : 14));
+    const centerPos = isJapan ? [35.6895, 139.6917] : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
 
     if (!this.map) {
       this.init(centerPos[0], centerPos[1], initialZoom);
@@ -11254,16 +12310,16 @@ class NeighborhoodRadarMap {
       });
     } else {
       // 單一中心模式
-      this.centerMarker = L.marker([centerInfo.lat, centerInfo.lon], { icon: makeCenterIcon('#ef4444') })
+      this.centerMarker = L.marker([centerLat, centerLon], { icon: makeCenterIcon('#ef4444') })
         .addTo(this.map)
         .bindPopup(`
           <div style="color: #0f172a; font-family: sans-serif; font-size: 0.85rem; line-height: 1.5;">
             <b style="color: #ef4444;"><i class="fa-solid fa-location-dot"></i> 監控區域</b><br/>
-            <b>${centerInfo.name}</b>
+            <b>${safeCenter.name || '監控中心'}</b>
           </div>
         `);
 
-      const c500 = L.circle([centerInfo.lat, centerInfo.lon], {
+      const c500 = L.circle([centerLat, centerLon], {
         radius: 500,
         color: '#00f0ff',
         weight: 1,
@@ -11272,7 +12328,7 @@ class NeighborhoodRadarMap {
         dashArray: '4, 6'
       }).addTo(this.map);
 
-      const c1000 = L.circle([centerInfo.lat, centerInfo.lon], {
+      const c1000 = L.circle([centerLat, centerLon], {
         radius: 1000,
         color: '#3b82f6',
         weight: 1,
@@ -11284,7 +12340,7 @@ class NeighborhoodRadarMap {
     }
 
     // 繪製周邊攝影機標記
-    cameras.forEach((cam, idx) => {
+    validCamList.forEach((cam, idx) => {
       const isVeryClose = cam.distanceMeters <= 500;
       const markerColor = isVeryClose ? '#10b981' : (cam.distanceMeters <= 1200 ? '#38bdf8' : '#818cf8');
       
@@ -11320,9 +12376,9 @@ class NeighborhoodRadarMap {
       this.cameraMarkers.push(marker);
     });
 
-    // 若為雙埔模式，自動調整地圖視野囊括雙埔居所與全部攝影機
-    if (isDual && this.cameraMarkers.length > 0) {
-      const allMarkers = [...this.centerMarkers, ...this.cameraMarkers];
+    // 若為雙埔或跨區收藏模式，自動調整地圖視野囊括中心與全部攝影機
+    if ((isDual || (isFavorites && this.cameraMarkers.length > 1)) && this.cameraMarkers.length > 0) {
+      const allMarkers = isDual ? [...this.centerMarkers, ...this.cameraMarkers] : [...this.cameraMarkers];
       const group = L.featureGroup(allMarkers);
       this.map.fitBounds(group.getBounds().pad(0.15));
     }
@@ -14401,21 +15457,21 @@ class TwinCityTransitMonitor {
         const isRaining = prec > 0.1 || [51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96].includes(code);
 
         if (isRaining) {
-          umbrellaTip = '<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨中 必帶傘</span>';
+          umbrellaTip = '<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 必帶傘</span>';
         } else if (rainProbVal >= 30) {
-          umbrellaTip = `<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 降雨 ${rainProbVal}% 備傘</span>`;
+          umbrellaTip = `<span style="color:#60a5fa; font-weight:700;"><i class="fa-solid fa-umbrella"></i> 傘${rainProbVal}%</span>`;
         } else {
-          umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 晴免帶傘</span>';
+          umbrellaTip = '<span style="color:#34d399;"><i class="fa-solid fa-umbrella"></i> 免帶傘</span>';
         }
 
         if (appTemp !== null) {
-          if (appTemp < 17) outfitTip = '🧥 添外套防寒';
-          else if (appTemp <= 22) outfitTip = '🧥 備薄外套';
-          else if (appTemp >= 29) outfitTip = '☀️ 留意防曬';
-          else outfitTip = '👕 舒適穿著';
+          if (appTemp < 17) outfitTip = '🧥 添外套';
+          else if (appTemp <= 22) outfitTip = '🧥 薄外套';
+          else if (appTemp >= 29) outfitTip = '☀️ 防曬';
+          else outfitTip = '👕 舒適';
         }
 
-        weatherPart = `🌤️ ${locationLabel} ${temp !== null ? `${temp}°C` : ''}`;
+        weatherPart = `🌤️ ${temp !== null ? `${temp}°C` : ''}`;
       }
     }
 
@@ -14529,11 +15585,11 @@ class TwinCityTransitMonitor {
 
         <!-- 3. 右側：時刻表按鈕 + 展開路網詳情按鈕 -->
         <div class="compact-actions-group">
-          <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看今日搭車時間表">
+          <button class="compact-btn btn-plan-toggle ${this.isScheduleExpanded ? 'active' : ''}" onclick="window.transitMonitor.toggleSchedule()" title="查看今日搭車時間表" style="padding:3px 7px;font-size:0.71rem;">
             <i class="fa-regular fa-clock"></i> <span>時刻表</span>
           </button>
-          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開雙埔路網詳細路線與動線">
-            <span>路網詳情</span> <i class="fa-solid ${this.isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
+          <button class="compact-btn btn-expand-main" onclick="window.transitMonitor.toggleCollapse()" title="展開雙埔路網詳細路線與動線" style="padding:3px 7px;font-size:0.71rem;">
+            <span>詳情</span> <i class="fa-solid ${this.isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
           </button>
         </div>
       </div>
@@ -17925,6 +18981,9 @@ class MonitorApp {
 
     this.initClock();
     this.bindEvents();
+    this.updateFavBadge();
+    this.initCommandPalette();
+    this.initSpotlightGlow();
 
     // 啟動首頁：預設雙埔
     await this.switchCenter(this.currentCenterId);
@@ -17982,6 +19041,22 @@ class MonitorApp {
     try {
       localStorage.setItem('neighborhood_monitor_favorites', JSON.stringify(list));
     } catch(e) {}
+    this.updateFavBadge();
+  }
+
+  updateFavBadge() {
+    const badge = document.getElementById('favCountBadge');
+    if (!badge) return;
+    const count = this.getFavorites().length;
+    if (count > 0) {
+      badge.textContent = String(count);
+      badge.classList.remove('is-empty');
+      badge.classList.add('is-visible');
+    } else {
+      badge.textContent = '';
+      badge.classList.add('is-empty');
+      badge.classList.remove('is-visible');
+    }
   }
 
   isFavorite(camId) {
@@ -18050,7 +19125,221 @@ class MonitorApp {
   clearFilters() {
     this.filterKeyword = '';
     this.filterTag = 'all';
+    const inputEl = document.getElementById('cameraSearchInput');
+    const clearBtn = document.getElementById('cameraFilterClearBtn');
+    if (inputEl) inputEl.value = '';
+    if (clearBtn) clearBtn.classList.remove('is-visible');
+    document.querySelectorAll('.filter-tag-pill').forEach(pill => {
+      pill.classList.toggle('active', pill.dataset.filterTag === 'all');
+    });
     this.renderVideoMatrix();
+  }
+
+  // ===== Obsidian 滑鼠追蹤聚光微光效應 (桌機指標專屬) =====
+  initSpotlightGlow() {
+    if (typeof window === 'undefined' || !window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+    let rafPending = false;
+    let lastTarget = null;
+    let clientX = 0;
+    let clientY = 0;
+
+    document.addEventListener('pointermove', (e) => {
+      const card = e.target && e.target.closest ? e.target.closest('.cam-card, .widget-card') : null;
+      if (!card) return;
+      lastTarget = card;
+      clientX = e.clientX;
+      clientY = e.clientY;
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        if (!lastTarget) return;
+        const rect = lastTarget.getBoundingClientRect();
+        lastTarget.style.setProperty('--mx', `${(clientX - rect.left).toFixed(1)}px`);
+        lastTarget.style.setProperty('--my', `${(clientY - rect.top).toFixed(1)}px`);
+      });
+    }, { passive: true });
+  }
+
+  // ===== ⌘K 快速指令與鏡頭搜尋面板 =====
+  initCommandPalette() {
+    const overlay = document.getElementById('commandPaletteOverlay');
+    const input = document.getElementById('commandPaletteInput');
+    if (!overlay || !input) return;
+
+    this._cpSelectedIndex = 0;
+    this._cpActions = [];
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) this.closeCommandPalette();
+    });
+
+    input.addEventListener('input', () => {
+      this._cpSelectedIndex = 0;
+      this.renderCommandPaletteResults(input.value.trim());
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (this._cpActions.length > 0) {
+          this._cpSelectedIndex = (this._cpSelectedIndex + 1) % this._cpActions.length;
+          this.updateCommandPaletteSelection();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (this._cpActions.length > 0) {
+          this._cpSelectedIndex = (this._cpSelectedIndex - 1 + this._cpActions.length) % this._cpActions.length;
+          this.updateCommandPaletteSelection();
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const item = this._cpActions[this._cpSelectedIndex];
+        if (item && typeof item.run === 'function') {
+          this.closeCommandPalette();
+          item.run();
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        this.closeCommandPalette();
+      }
+    });
+  }
+
+  openCommandPalette() {
+    const overlay = document.getElementById('commandPaletteOverlay');
+    const input = document.getElementById('commandPaletteInput');
+    if (!overlay || !input) return;
+    overlay.classList.add('active');
+    input.value = '';
+    this._cpSelectedIndex = 0;
+    this.renderCommandPaletteResults('');
+    requestAnimationFrame(() => input.focus());
+  }
+
+  closeCommandPalette() {
+    const overlay = document.getElementById('commandPaletteOverlay');
+    if (overlay) overlay.classList.remove('active');
+  }
+
+  updateCommandPaletteSelection() {
+    const container = document.getElementById('commandPaletteResults');
+    if (!container) return;
+    container.querySelectorAll('.cmd-palette-item').forEach((el, idx) => {
+      const isSel = idx === this._cpSelectedIndex;
+      el.classList.toggle('selected', isSel);
+      if (isSel) el.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  renderCommandPaletteResults(rawQuery = '') {
+    const container = document.getElementById('commandPaletteResults');
+    if (!container) return;
+    const q = rawQuery.toLowerCase();
+
+    const centerItems = [
+      { title: '切換至「附近」生活圈', sub: 'GPS 自動距離排序鄰近監視器', badge: '區域中心', icon: 'fa-location-crosshairs', run: () => this.switchCenter('nearby') },
+      { title: '切換至「雙埔」生活模式', sub: '青埔 × 新埔雙核心聯防與軌道走廊', badge: '區域中心', icon: 'fa-layer-group', run: () => this.switchCenter('dual') },
+      { title: '切換至「青埔」高鐵特區', sub: '高鐵桃園站、A18/A19 與周邊路口', badge: '區域中心', icon: 'fa-building-user', run: () => this.switchCenter('qingpu') },
+      { title: '切換至「新埔」板橋商圈', sub: '新埔站、文化路與台64沿線', badge: '區域中心', icon: 'fa-house-signal', run: () => this.switchCenter('banqiao') },
+      { title: '切換至「觀光」精選實況', sub: '九份、西門町、大稻埕、淡水', badge: '區域中心', icon: 'fa-plane-arrival', run: () => this.switchCenter('tourist') },
+      { title: '切換至「日本」4K 跨國視角', sub: '澀谷、富士山 4K、道頓堀、京都', badge: '區域中心', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
+      { title: '切換至「收藏」專屬視訊牆', sub: '自選常看跨區跨國攝影機 (${this.getFavorites().length})', badge: '收藏牆', icon: 'fa-star', run: () => this.switchCenter('favorites') }
+    ].map(item => ({
+      ...item,
+      sub: item.sub.replace('${this.getFavorites().length}', String(this.getFavorites().length))
+    }));
+
+    const quickOps = [
+      { title: '一屏呈現免捲動模式切換', sub: '自動計算可視區域高度填滿視訊網格', badge: '版面控制', icon: 'fa-expand', run: () => document.getElementById('btnToggleAdaptive')?.click() },
+      { title: '展開／收合右側在地資訊面板', sub: '氣象、空氣品質、降雨走勢與 YouBike', badge: '版面控制', icon: 'fa-circle-info', run: () => document.getElementById('btnToggleSidebar')?.click() },
+      { title: '立即刷新全部視訊與即時遙測', sub: '同步台鐵、高鐵、機捷與 Open-Meteo', badge: '系統操作', icon: 'fa-arrows-rotate', run: () => document.getElementById('btnRefreshAll')?.click() },
+      { title: '切換「12 格」廣域矩陣檢視', sub: '同時監看最多 12 台攝影機畫面', badge: '網格模式', icon: 'fa-grip', run: () => this.setGridMode('grid-12') },
+      { title: '切換「6 格」黃金標準分割', sub: '預設均衡雙排視角', badge: '網格模式', icon: 'fa-table-cells', run: () => this.setGridMode('grid-6') }
+    ];
+
+    const centerMap = window.CAMERAS_DATA?.cameras || {};
+    const allCamEntries = [];
+    const seenIds = new Set();
+    Object.keys(centerMap).forEach(cid => {
+      const list = centerMap[cid];
+      if (!Array.isArray(list)) return;
+      list.forEach(c => {
+        if (seenIds.has(c.id)) return;
+        seenIds.add(c.id);
+        allCamEntries.push({ cam: c, cid });
+      });
+    });
+
+    const matchedCenters = centerItems.filter(it => !q || (`${it.title} ${it.sub}`).toLowerCase().includes(q));
+    const matchedOps = quickOps.filter(it => !q || (`${it.title} ${it.sub}`).toLowerCase().includes(q));
+    const matchedCams = allCamEntries
+      .filter(({ cam }) => !q || (`${cam.name} ${cam.authority || ''} ${cam.areaTag || ''} ${cam.tag || ''}`).toLowerCase().includes(q))
+      .slice(0, q ? 14 : 6)
+      .map(({ cam, cid }) => ({
+        title: cam.name,
+        sub: `${cam.authority || '即時監控'} ‧ 定位並聚焦此鏡頭`,
+        badge: cam.areaTag || cid.toUpperCase(),
+        icon: 'fa-video',
+        run: async () => {
+          if (this.currentCenterId !== cid) {
+            await this.switchCenter(cid);
+          }
+          if (this.currentGridMode === 'grid-1') {
+            this.focusedCamId = cam.id;
+            this.renderVideoMatrix();
+          }
+          setTimeout(() => this.scrollToCamera(cam.id), 120);
+        }
+      }));
+
+    this._cpActions = [...matchedCams, ...matchedCenters, ...matchedOps];
+    if (this._cpActions.length === 0) {
+      container.innerHTML = `<div style="padding:24px; text-align:center; color:var(--text-dim); font-size:0.84rem;">查無相符鏡頭或指令，請嘗試輸入「文化路」、「富士山」、「高鐵」或「雙埔」。</div>`;
+      return;
+    }
+
+    const renderGroup = (heading, items, startIdx) => {
+      if (!items.length) return '';
+      return `
+        <div class="cmd-palette-section-title">${heading}</div>
+        ${items.map((it, offset) => {
+          const globalIdx = startIdx + offset;
+          return `
+            <button type="button" class="cmd-palette-item ${globalIdx === this._cpSelectedIndex ? 'selected' : ''}" data-cp-idx="${globalIdx}">
+              <span class="cmd-item-left">
+                <span class="cmd-item-icon"><i class="fa-solid ${it.icon}"></i></span>
+                <span style="min-width:0; display:flex; flex-direction:column;">
+                  <span class="cmd-item-title">${it.title}</span>
+                  <span class="cmd-item-sub">${it.sub}</span>
+                </span>
+              </span>
+              <span class="cmd-item-badge">${it.badge}</span>
+            </button>
+          `;
+        }).join('')}
+      `;
+    };
+
+    const camStart = 0;
+    const ctrStart = matchedCams.length;
+    const opsStart = ctrStart + matchedCenters.length;
+    container.innerHTML = [
+      renderGroup(q ? '相符監視器鏡頭' : '精選即時鏡頭快跳', matchedCams, camStart),
+      renderGroup('生活圈與視角切換', matchedCenters, ctrStart),
+      renderGroup('快速版面與系統指令', matchedOps, opsStart)
+    ].join('');
+
+    container.querySelectorAll('.cmd-palette-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.cpIdx);
+        const target = this._cpActions[idx];
+        if (target && typeof target.run === 'function') {
+          this.closeCommandPalette();
+          target.run();
+        }
+      });
+    });
   }
 
   // 綁定 UI 事件
@@ -18214,9 +19503,61 @@ class MonitorApp {
       this.applyAdaptiveViewportFit();
     });
 
-    // 鍵盤 ESC 關閉 Modal
+    // 即時鏡頭快搜與標籤篩選列事件
+    const filterInput = document.getElementById('cameraSearchInput');
+    const filterClearBtn = document.getElementById('cameraFilterClearBtn');
+    if (filterInput) {
+      filterInput.addEventListener('input', () => {
+        this.filterKeyword = filterInput.value.trim();
+        if (filterClearBtn) {
+          filterClearBtn.classList.toggle('is-visible', this.filterKeyword.length > 0);
+        }
+        this.renderVideoMatrix();
+        this.applyAdaptiveViewportFit();
+      });
+    }
+    if (filterClearBtn) {
+      filterClearBtn.addEventListener('click', () => {
+        this.clearFilters();
+        this.applyAdaptiveViewportFit();
+      });
+    }
+    document.querySelectorAll('.filter-tag-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const tag = pill.dataset.filterTag || 'all';
+        this.filterTag = tag;
+        document.querySelectorAll('.filter-tag-pill').forEach(p => p.classList.toggle('active', p === pill));
+        this.renderVideoMatrix();
+        this.applyAdaptiveViewportFit();
+      });
+    });
+
+    // ⌘K 快速指令面板按鈕與全域鍵盤快捷鍵
+    const btnCmdPalette = document.getElementById('btnCommandPalette');
+    if (btnCmdPalette) {
+      btnCmdPalette.addEventListener('click', () => this.openCommandPalette());
+    }
+
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.closeModal();
+      const cpOverlay = document.getElementById('commandPaletteOverlay');
+      const isCpActive = cpOverlay && cpOverlay.classList.contains('active');
+      const isInputFocused = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (isCpActive) this.closeCommandPalette();
+        else this.openCommandPalette();
+        return;
+      }
+      if (e.key === '/' && !isInputFocused && !isCpActive) {
+        e.preventDefault();
+        this.openCommandPalette();
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (isCpActive) this.closeCommandPalette();
+        else this.closeModal();
+      }
     });
 
     // Modal 關閉按鈕與遮罩 (支援 modalCloseBtn 與 modalClose 雙向相容)
@@ -18269,11 +19610,13 @@ class MonitorApp {
     const sectionHeader = document.querySelector('.section-header-bar');
     const secHeaderHeight = sectionHeader && sectionHeader.offsetHeight > 0 && window.getComputedStyle(sectionHeader).display !== 'none' ? sectionHeader.offsetHeight : 0;
     const transitBar = document.getElementById('transitTransitBar');
-    const transitHeight = transitBar && transitBar.offsetHeight > 0 && window.getComputedStyle(transitBar).display !== 'none' ? transitBar.offsetHeight + 12 : 0;
+    const transitHeight = transitBar && transitBar.offsetHeight > 0 && window.getComputedStyle(transitBar).display !== 'none' ? transitBar.offsetHeight + 10 : 0;
+    const filterBar = document.getElementById('cameraFilterBar');
+    const filterHeight = filterBar && filterBar.offsetHeight > 0 && window.getComputedStyle(filterBar).display !== 'none' ? filterBar.offsetHeight + 10 : 0;
 
-    // 計算可用高度 (納入雙埔大眾運輸即時走廊高度，確保一屏免垂直捲動零切角)
-    const paddingOffset = 16;
-    const availableHeight = Math.max(300, window.innerHeight - headerHeight - secHeaderHeight - transitHeight - paddingOffset);
+    // 計算可用高度 (納入大眾運輸走廊與篩選列高度，確保一屏免捲動零切角)
+    const paddingOffset = 18;
+    const availableHeight = Math.max(280, window.innerHeight - headerHeight - secHeaderHeight - transitHeight - filterHeight - paddingOffset);
 
     if (this.currentGridMode === 'grid-all') {
       grid.style.height = 'auto';
@@ -18474,6 +19817,18 @@ class MonitorApp {
   // 切換監控中心 (dual vs qingpu vs banqiao vs tourist)
   async switchCenter(centerId) {
     this.currentCenterId = centerId;
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.dataset.themeCenter = centerId;
+    }
+    this.filterKeyword = '';
+    this.filterTag = 'all';
+    const filterInputEl = document.getElementById('cameraSearchInput');
+    const filterClearEl = document.getElementById('cameraFilterClearBtn');
+    if (filterInputEl) filterInputEl.value = '';
+    if (filterClearEl) filterClearEl.classList.remove('is-visible');
+    document.querySelectorAll('.filter-tag-pill').forEach(pill => {
+      pill.classList.toggle('active', pill.dataset.filterTag === 'all');
+    });
     this.playerEngine.destroyAllPlayers();
 
     if (centerId === 'nearby') {
@@ -18486,13 +19841,16 @@ class MonitorApp {
       if (centerId === 'favorites') {
         const favIds = this.getFavorites();
         const allCams = this.getAllUniqueCameras();
+        cameras = favIds.map(id => allCams.find(c => c.id === id)).filter(Boolean);
+        const geoCam = cameras.find(c => Number.isFinite(Number(c.lat)) && Number.isFinite(Number(c.lon)));
         centerData = {
           id: 'favorites',
-          name: '收藏',
+          name: geoCam ? `收藏 (${geoCam.areaTag || '關注生活圈'})` : '收藏',
           address: '個人化專屬視訊牆',
+          lat: geoCam ? Number(geoCam.lat) : 25.0193,
+          lon: geoCam ? Number(geoCam.lon) : 121.3450,
           description: '自選專屬跨區即時視訊牆 (點擊各畫面右上角星號 ★ 即可加入/移除收藏)'
         };
-        cameras = favIds.map(id => allCams.find(c => c.id === id)).filter(Boolean);
       } else if (window.CAMERAS_DATA) {
         centerData = window.CAMERAS_DATA.centers.find(c => c.id === centerId);
         cameras = window.CAMERAS_DATA.cameras[centerId] || [];
@@ -18745,7 +20103,9 @@ class MonitorApp {
       }
 
       // 收藏空狀態檢查
+      const filterCountEl = document.getElementById('cameraFilterCount');
       if (this.currentCenterId === 'favorites' && this.getFavorites().length === 0) {
+        if (filterCountEl) filterCountEl.textContent = '0 處收藏';
         gridContainer.innerHTML = `
           <div class="fav-empty-placeholder">
             <i class="fa-solid fa-star fav-empty-icon"></i>
@@ -18761,11 +20121,13 @@ class MonitorApp {
 
       // 搜尋無結果檢查
       if (filteredList.length === 0) {
+        if (filterCountEl) filterCountEl.textContent = `0 / ${this.currentCameras.length} 處`;
+        const escQuery = String(this.filterKeyword || this.filterTag || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         gridContainer.innerHTML = `
           <div class="fav-empty-placeholder" style="border-color: rgba(56, 189, 248, 0.4);">
             <i class="fa-solid fa-magnifying-glass fav-empty-icon" style="color: #38bdf8; filter: drop-shadow(0 0 10px rgba(56,189,248,0.5));"></i>
             <div class="fav-empty-title">查無符合條件的即時視訊</div>
-            <div class="fav-empty-desc">找不到與「${this.filterKeyword || this.filterTag}」相符的畫面<br>請嘗試其他關鍵字或點擊「全部」標籤。</div>
+            <div class="fav-empty-desc">找不到與「${escQuery}」相符的畫面<br>請嘗試其他關鍵字或點擊「全部」標籤。</div>
             <button class="fav-quick-add-btn" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);" onclick="window.monitorApp.clearFilters()">
               <i class="fa-solid fa-rotate-left"></i> 重設篩選條件
             </button>
@@ -18794,6 +20156,15 @@ class MonitorApp {
       } else {
         visibleCams = filteredList.slice(0, maxDisplay);
       }
+
+      if (filterCountEl) {
+        filterCountEl.textContent = `顯示 ${visibleCams.length} / ${filteredList.length} 處`;
+      }
+    }
+
+    const filterCountSingle = document.getElementById('cameraFilterCount');
+    if (this.currentGridMode === 'grid-1' && filterCountSingle) {
+      filterCountSingle.textContent = `聚焦 1 / ${this.currentCameras.length} 處`;
     }
 
     visibleCams.forEach((cam, index) => {
@@ -19148,25 +20519,24 @@ class MonitorApp {
     if (modalBody) modalBody.innerHTML = '';
   }
 
-  // 地圖跳轉捲動至特定攝影機
+  // 地圖或指令面板跳轉捲動並突顯特定攝影機
   scrollToCamera(camId) {
+    const highlightCard = (targetEl) => {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetEl.classList.add('is-highlighted');
+      setTimeout(() => {
+        targetEl.classList.remove('is-highlighted');
+      }, 2400);
+    };
+
     const el = document.getElementById(`cam-card-${camId}`);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.style.border = '2px solid #00f0ff';
-      el.style.boxShadow = '0 0 25px rgba(0, 240, 255, 0.5)';
-      setTimeout(() => {
-        el.style.border = '';
-        el.style.boxShadow = '';
-      }, 2500);
+      highlightCard(el);
     } else {
       this.setGridMode('grid-all');
       setTimeout(() => {
         const target = document.getElementById(`cam-card-${camId}`);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          target.style.border = '2px solid #00f0ff';
-        }
+        if (target) highlightCard(target);
       }, 200);
     }
   }
