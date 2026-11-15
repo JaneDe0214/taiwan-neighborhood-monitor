@@ -8388,7 +8388,7 @@ body.native-mobile-mode .parking-lot-chip {
         <i class="fa-solid fa-satellite-dish"></i>
       </div>
       <div>
-        <h1 class="brand-title">雙埔生活</h1>
+        <h1 id="brandTitle" class="brand-title">雙埔生活</h1>
       </div>
       <!-- 極簡即時環境安全與特報監測膠囊 (整合原側邊欄卡牌，節省空間) -->
       <div id="disasterAlertBanner" class="disaster-compact-pill" title="雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中">
@@ -8419,7 +8419,7 @@ body.native-mobile-mode .parking-lot-chip {
         <i class="fa-solid fa-plane-arrival"></i>
         <span>觀光</span>
       </button>
-      <button class="center-btn" data-center="japan" title="日本精選 27 處：澀谷 ‧ 富士山4K ‧ 道頓堀 ‧ 歌舞伎町 ‧ 晴空塔 ‧ 上高地 ‧ 草津溫泉 ‧ 函館">
+      <button class="center-btn" data-center="japan" title="日本全境 80 處：澀谷 ‧ 富士山4K ‧ 道頓堀 ‧ 晴空塔 ‧ 京都嵐山 ‧ 上高地 ‧ 北海道 ‧ 沖繩">
         <i class="fa-solid fa-torii-gate"></i>
         <span>日本</span>
       </button>
@@ -8503,6 +8503,7 @@ body.native-mobile-mode .parking-lot-chip {
           <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
           <button class="filter-tag-pill" data-filter-tag="4k" type="button">4K 超清</button>
           <button class="filter-tag-pill" data-filter-tag="富士山" type="button">富士山</button>
+          <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" type="button" style="display:none;">溫泉名勝</button>
         </div>
         <span id="cameraFilterCount" class="filter-count-meta">載入鏡頭中</span>
       </div>
@@ -8678,7 +8679,7 @@ body.native-mobile-mode .parking-lot-chip {
       </div>
 
       <!-- 區域 5：中央氣象署雷達回波圖 (支援 4 種官方高解析圖層切換) -->
-      <div class="widget-card">
+      <div id="cwaRadarWidgetCard" class="widget-card">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-radar"></i> 氣象署雷達回波
@@ -8705,12 +8706,12 @@ body.native-mobile-mode .parking-lot-chip {
       <!-- 區域 7：周遭地理雷達地圖 -->
       <div class="widget-card radar-map-card">
         <div class="widget-title-row">
-          <div class="widget-title">
+          <div id="radarMapTitle" class="widget-title">
             <i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
             <span id="radarMapTimeBadge" class="widget-badge" style="font-size:0.7rem;">⛈️ 載入雷達中…</span>
-            <span class="widget-badge">500m/1km 安全圈</span>
+            <span id="radarScopeBadge" class="widget-badge">500m/1km 安全圈</span>
           </div>
         </div>
         <div id="leafletMap"></div>
@@ -10286,12 +10287,15 @@ class WeatherEnvironmentMonitor {
     this.countdownSec = this.refreshIntervalSec;
     this.updateCountdownDisplay();
 
-    // 週期觸發 YouBike 2.0 即時動態同步 (內建防抖保護)
-    this.fetchRealtimeYouBike();
+    const isJapanMode = typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan';
+    if (!isJapanMode) {
+      // 週期觸發 YouBike 2.0 即時動態同步 (內建防抖保護)
+      this.fetchRealtimeYouBike();
 
-    // 聯動觸發大眾運輸 (捷運看板/擁擠度、高鐵、機捷、高鐵停車位) 全面最高頻率同步更新
-    if (typeof window !== 'undefined' && window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
-      window.transitMonitor.forceRefreshAll();
+      // 聯動觸發大眾運輸 (捷運看板/擁擠度、高鐵、機捷、高鐵停車位) 全面最高頻率同步更新
+      if (typeof window !== 'undefined' && window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
+        window.transitMonitor.forceRefreshAll();
+      }
     }
 
     if (this.activeMode === 'dual' && this.activeDualParams) {
@@ -11464,7 +11468,7 @@ class WeatherEnvironmentMonitor {
     }
 
     if (gustInfo.level >= 5) {
-      tips.push({ text: `強風提醒 ‧ 最大 ${gustInfo.speed} km/h (${gustInfo.level}級風)`, detail: `騎車行經空曠路段請穩握龍頭。`, icon: 'fa-fan', level: 'warning' });
+      tips.push({ text: `強風提醒 ‧ 最大 ${gustInfo.speed} km/h (${gustInfo.level}級風)`, detail: `戶外強風吹拂，行經橋樑與空曠路段請留意側風。`, icon: 'fa-fan', level: 'warning' });
     }
 
     if (visInfo.text === '薄霧輕霾' || visInfo.text === '濃霧警示') {
@@ -11599,6 +11603,8 @@ class WeatherEnvironmentMonitor {
       return;
     }
 
+    const isJapan = typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan';
+    const areaTitle = isJapan ? '日本實況' : '雙埔生活';
     const gust = curWeather?.wind_gusts_10m || 0;
     const rain = (curWeather?.precipitation || 0) + (curWeather?.rain || 0);
     const code = curWeather?.weather_code || 0;
@@ -11612,7 +11618,7 @@ class WeatherEnvironmentMonitor {
     if (isThunder) {
       banner.classList.add('has-warning', 'active');
       textEl.innerHTML = `<i class="fa-solid fa-bolt" style="color:#eab308; margin-right:2px;"></i> 雷雨特報 ‧ 慎防驟雨`;
-      banner.title = '【雷雨特報】雙埔生活偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！';
+      banner.title = `【雷雨特報】${areaTitle}偵測到雷陣雨雲系發展，外出請慎防雷擊與驟雨積水！`;
     } else if (isHeavyRain) {
       banner.classList.add('has-warning', 'active');
       textEl.innerHTML = `<i class="fa-solid fa-cloud-showers-water" style="color:#38bdf8; margin-right:2px;"></i> 強降雨警示 ‧ 路面濕滑`;
@@ -11620,15 +11626,20 @@ class WeatherEnvironmentMonitor {
     } else if (isStrongWind) {
       banner.classList.add('has-warning', 'active');
       textEl.innerHTML = `<i class="fa-solid fa-wind" style="color:#f59e0b; margin-right:2px;"></i> 強風警示 ‧ 陣風 ${Math.round(gust)}km/h`;
-      banner.title = `【強風警示】瞬間最大陣風達 ${Math.round(gust)} 公里/時 (7級風)，機車與高架行駛請注意側風！`;
+      banner.title = `【強風警示】瞬間最大陣風達 ${Math.round(gust)} 公里/時 (7級風)，高架與空曠處行進請注意側風！`;
     } else if (isBadAqi) {
       banner.classList.add('has-warning', 'active');
       textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#f97316; margin-right:2px;"></i> 空品提醒 ‧ AQI ${aqi}`;
       banner.title = `【空品提醒】周邊空氣品質指標達 ${aqi}，敏感族群建議佩戴口罩並緊閉門窗。`;
     } else {
       banner.classList.remove('has-warning', 'active');
-      textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全`;
-      banner.title = '雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中';
+      if (isJapan) {
+        textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 日本全域安全`;
+        banner.title = '日本列島即時監測中 ‧ 當地氣象與強震即時監測正常';
+      } else {
+        textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全`;
+        banner.title = '雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中';
+      }
     }
   }
 
@@ -11912,6 +11923,12 @@ class WeatherEnvironmentMonitor {
   renderYouBikeStatus(centerId = 'dual') {
     if (typeof document === 'undefined') return;
     this.currentCenterId = centerId;
+    const youbikeCard = document.getElementById('youbikeWidgetCard');
+    if (centerId === 'japan' || (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan')) {
+      if (youbikeCard) youbikeCard.style.display = 'none';
+      return;
+    }
+    if (youbikeCard) youbikeCard.style.display = '';
     const container = document.getElementById('youbikeStationList');
     if (!container) return;
 
@@ -12039,6 +12056,7 @@ class WeatherEnvironmentMonitor {
   // 刷新中央氣象署雷達圖 (對齊氣象署 10 分鐘產圖間隔，大幅減少頻寬浪費並確保命中快取)
   refreshRadar() {
     if (typeof document === 'undefined') return;
+    if (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan') return;
     const radarImg = document.getElementById('radarImg');
     if (radarImg) {
       const radarBucket = Math.floor(Date.now() / 600000) * 600000;
@@ -12243,7 +12261,7 @@ class NeighborhoodRadarMap {
     const isJapan = safeCenter.id === 'japan';
     const isFavorites = safeCenter.id === 'favorites';
     const initialZoom = isJapan ? 5 : (isTourist ? 10 : (isFavorites ? 12 : 14));
-    const centerPos = isJapan ? [35.6895, 139.6917] : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
+    const centerPos = isJapan ? [36.2, 137.8] : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
 
     if (!this.map) {
       this.init(centerPos[0], centerPos[1], initialZoom);
@@ -12308,8 +12326,8 @@ class NeighborhoodRadarMap {
         }).addTo(this.map);
         this.centerCircles.push(c500);
       });
-    } else {
-      // 單一中心模式
+    } else if (!isJapan) {
+      // 單一中心模式 (台灣本地才顯示預設位置標記與 500m / 1km 防護圈)
       this.centerMarker = L.marker([centerLat, centerLon], { icon: makeCenterIcon('#ef4444') })
         .addTo(this.map)
         .bindPopup(`
@@ -12401,12 +12419,40 @@ class EarthquakeEmergencyMonitor {
     this.timerId = null;
     this.audioCtx = null;
     this.dismissedIds = new Set();
+    this.regionMode = 'taiwan';
   }
 
   init() {
     this.fetchEarthquakeData();
     this.startPolling();
     this.bindBannerInteraction();
+  }
+
+  // 切換地震監測區域 ('taiwan' | 'japan')
+  setRegion(mode = 'taiwan') {
+    const nextMode = mode === 'japan' ? 'japan' : 'taiwan';
+    if (this.regionMode === nextMode) return;
+    this.regionMode = nextMode;
+    this.latestEarthquake = null;
+    this.isAlertActive = false;
+    this.resetDisasterBanner();
+    this.fetchEarthquakeData();
+  }
+
+  // 重設頂部安全膠囊為區域預設文字
+  resetDisasterBanner() {
+    if (typeof document === 'undefined') return;
+    const banner = document.getElementById('disasterAlertBanner');
+    const textEl = document.getElementById('disasterAlertText');
+    if (!banner || !textEl) return;
+    banner.classList.remove('has-warning', 'active');
+    if (this.regionMode === 'japan') {
+      textEl.innerHTML = '<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 日本全域安全';
+      banner.title = '日本列島地震即時監測中 ‧ 30 分鐘內無顯著強震通報';
+    } else {
+      textEl.innerHTML = '<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全';
+      banner.title = '雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中';
+    }
   }
 
   // 綁定頂部安全膠囊點擊互動
@@ -12420,7 +12466,10 @@ class EarthquakeEmergencyMonitor {
           this.showOverlay(this.latestEarthquake);
         } else {
           if (window.monitorApp && typeof window.monitorApp.showToast === 'function') {
-            window.monitorApp.showToast('雙埔生活全域安全 ‧ 30分鐘內無顯著有感地震', 'info');
+            const msg = this.regionMode === 'japan'
+              ? '日本列島全域安全 ‧ 30 分鐘內無顯著強震通報'
+              : '雙埔生活全域安全 ‧ 30分鐘內無顯著有感地震';
+            window.monitorApp.showToast(msg, 'info');
           }
         }
       });
@@ -12439,27 +12488,35 @@ class EarthquakeEmergencyMonitor {
     if (this.timerId) clearInterval(this.timerId);
   }
 
-  // 非同步抓取最新地震資訊 (USGS 台灣網格高可用端點 + CWA 擴充)
+  // 非同步抓取最新地震資訊 (依區域模式查詢 USGS 台灣或日本網格)
   async fetchEarthquakeData() {
+    const reqRegion = this.regionMode;
     try {
-      const usgsUrl = 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=21.5&maxlatitude=26.0&minlongitude=119.5&maxlongitude=123.0&minmagnitude=3.0&limit=3';
+      const usgsUrl = reqRegion === 'japan'
+        ? 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=24.0&maxlatitude=46.0&minlongitude=122.0&maxlongitude=148.0&minmagnitude=4.5&limit=3'
+        : 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=21.5&maxlatitude=26.0&minlongitude=119.5&maxlongitude=123.0&minmagnitude=3.0&limit=3';
       const res = await fetch(usgsUrl, { signal: AbortSignal.timeout(4000) });
       if (!res.ok) return;
       const data = await res.json();
-      if (!data || !Array.isArray(data.features) || data.features.length === 0) return;
+      if (reqRegion !== this.regionMode) return;
+      if (!data || !Array.isArray(data.features) || data.features.length === 0) {
+        this.latestEarthquake = null;
+        this.resetDisasterBanner();
+        return;
+      }
 
       const latestFeature = data.features[0];
       const props = latestFeature.properties;
-      const coords = latestFeature.geometry?.coordinates || [121.5, 24.0, 10];
+      const coords = latestFeature.geometry?.coordinates || (reqRegion === 'japan' ? [139.7, 35.7, 15] : [121.5, 24.0, 10]);
       const eventTime = props.time;
       const now = Date.now();
       const ageMinutes = (now - eventTime) / (60 * 1000);
 
-      // 地名中文化翻譯（USGS 台灣區域地點解析）
-      const parsedPlace = this.translatePlace(props.place, coords[1], coords[0]);
-      
-      // 估算雙埔地區受影響之震度 (依震源距離與規模進行衰減簡化估算)
-      const estIntensity = this.estimateLocalIntensity(props.mag, coords[1], coords[0], coords[2]);
+      // 地名中文化翻譯（USGS 區域地點解析）
+      const parsedPlace = this.translatePlace(props.place, coords[1], coords[0], reqRegion);
+
+      // 估算參考中心受影響震度 (依震源距離與規模進行衰減簡化估算)
+      const estIntensity = this.estimateLocalIntensity(props.mag, coords[1], coords[0], coords[2], reqRegion);
 
       const eqObj = {
         id: latestFeature.id || `eq-${eventTime}`,
@@ -12469,16 +12526,21 @@ class EarthquakeEmergencyMonitor {
         time: new Date(eventTime),
         ageMinutes: Math.round(ageMinutes),
         url: props.url || '#',
-        estIntensity: estIntensity
+        estIntensity: estIntensity,
+        regionMode: reqRegion,
+        regionLabel: reqRegion === 'japan' ? '日本當地' : '雙埔'
       };
 
       // 檢查是否為 30 分鐘內之近期有感地震
       if (ageMinutes <= 30) {
         this.latestEarthquake = eqObj;
         this.updateDisasterPill(eqObj);
-        
-        // 顯著強震 (規模 >= 4.5 或雙埔估計震度 >= 3 級)：且使用者尚未手動關閉過該事件 -> 喚醒全螢幕通知
-        if ((parseFloat(eqObj.mag) >= 4.5 || estIntensity >= 3) && !this.dismissedIds.has(eqObj.id)) {
+
+        // 顯著強震 (台灣規模 >= 4.5 或震度 >= 3；日本規模 >= 5.0 或東京估計震度 >= 3)
+        const triggerThreshold = reqRegion === 'japan'
+          ? (parseFloat(eqObj.mag) >= 5.0 || estIntensity >= 3)
+          : (parseFloat(eqObj.mag) >= 4.5 || estIntensity >= 3);
+        if (triggerThreshold && !this.dismissedIds.has(eqObj.id)) {
           this.showOverlay(eqObj);
           this.playAlertSound();
           this.triggerVibrate();
@@ -12486,16 +12548,19 @@ class EarthquakeEmergencyMonitor {
       } else {
         // 超過 30 分鐘，不觸發強彈窗干擾
         this.latestEarthquake = null;
+        this.resetDisasterBanner();
       }
     } catch (err) {
       // 靜默容錯
     }
   }
 
-  // 估算雙埔受影響震度 (青埔/新埔大致在北緯 25.0, 東經 121.3)
-  estimateLocalIntensity(mag, lat, lon, depth = 10) {
-    const dLat = (lat - 25.0) * 110.574;
-    const dLon = (lon - 121.3) * 100.86;
+  // 估算參考中心受影響震度 (雙埔 25.0,121.3 / 日本關東 35.69,139.69)
+  estimateLocalIntensity(mag, lat, lon, depth = 10, regionMode = this.regionMode) {
+    const refLat = regionMode === 'japan' ? 35.6895 : 25.0;
+    const refLon = regionMode === 'japan' ? 139.6917 : 121.3;
+    const dLat = (lat - refLat) * 110.574;
+    const dLon = (lon - refLon) * (regionMode === 'japan' ? 90.2 : 100.86);
     const epicentralDist = Math.sqrt(dLat * dLat + dLon * dLon);
     const hypoDist = Math.sqrt(epicentralDist * epicentralDist + depth * depth);
     let localPga = Math.pow(10, 0.0056 * Math.pow(mag, 2) + 0.17 * mag - 1.25 * Math.log10(hypoDist + 0.006 * Math.pow(10, 0.5 * mag)) - 0.0016 * hypoDist + 0.85);
@@ -12508,8 +12573,18 @@ class EarthquakeEmergencyMonitor {
     return 1;
   }
 
-  // 翻譯 USGS 英文地點為親民台灣地理名稱
-  translatePlace(placeStr = '', lat = 0, lon = 0) {
+  // 翻譯 USGS 英文地點為繁體中文地理名稱
+  translatePlace(placeStr = '', lat = 0, lon = 0, regionMode = this.regionMode) {
+    if (regionMode === 'japan') {
+      if (!placeStr) return '日本近海';
+      if (placeStr.includes('Hokkaido') || placeStr.includes('Kuril')) return '北海道周邊海域';
+      if (placeStr.includes('Tokyo') || placeStr.includes('Chiba') || placeStr.includes('Ibaraki')) return '關東首都圈近郊';
+      if (placeStr.includes('Fukushima') || placeStr.includes('Miyagi') || placeStr.includes('Iwate')) return '日本東北外海';
+      if (placeStr.includes('Izu') || placeStr.includes('Bonin') || placeStr.includes('Ogasawara')) return '伊豆・小笠原群島海域';
+      if (placeStr.includes('Kyushu') || placeStr.includes('Kagoshima') || placeStr.includes('Kumamoto')) return '九州地方近海';
+      if (placeStr.includes('Okinawa') || placeStr.includes('Ryukyu')) return '沖繩・琉球海域';
+      return placeStr.replace(/,\s*Japan/i, ' (日本)');
+    }
     if (!placeStr) return '台灣近海';
     let place = placeStr;
     if (place.includes('Hualien')) return '花蓮縣近海';
@@ -12532,9 +12607,10 @@ class EarthquakeEmergencyMonitor {
     const textEl = document.getElementById('disasterAlertText');
     if (!banner || !textEl) return;
 
+    const areaPrefix = eq.regionLabel || '雙埔';
     banner.classList.add('has-warning', 'active');
     textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:2px;"></i> 有感地震 ‧ 規模 ${eq.mag} (震度 ${eq.estIntensity}級)`;
-    banner.title = `【有感地震速報】震央：${eq.place}，規模 ${eq.mag}，雙埔預估震度約 ${eq.estIntensity} 級，點擊查看避難引導！`;
+    banner.title = `【有感地震速報】震央：${eq.place}，規模 ${eq.mag}，${areaPrefix}預估震度約 ${eq.estIntensity} 級，點擊查看避難引導！`;
   }
 
   // 顯示全螢幕緊急避難通知
@@ -12549,13 +12625,14 @@ class EarthquakeEmergencyMonitor {
     const depthEl = document.getElementById('eqDepthText');
     const timeEl = document.getElementById('eqTimeText');
     const linkEl = document.getElementById('eqDetailLink');
+    const isJapan = (eq.regionMode || this.regionMode) === 'japan';
 
     if (numEl) numEl.textContent = eq.estIntensity || 4;
-    if (placeEl) placeEl.textContent = eq.place || '台灣東部近海';
+    if (placeEl) placeEl.textContent = eq.place || (isJapan ? '日本近海' : '台灣東部近海');
     if (magEl) magEl.textContent = eq.mag || '5.8';
     if (depthEl) depthEl.textContent = `${eq.depth || 15}km`;
     if (timeEl) timeEl.textContent = `${eq.ageMinutes <= 1 ? '剛剛' : eq.ageMinutes + '分鐘前'} 發震 (${eq.time.toLocaleTimeString('zh-TW', { hour12: false })})`;
-    if (linkEl) linkEl.href = eq.url || 'https://www.cwa.gov.tw/V8/C/E/index.html';
+    if (linkEl) linkEl.href = eq.url || (isJapan ? 'https://www.jma.go.jp/bosai/map.html#contents=earthquake_map' : 'https://www.cwa.gov.tw/V8/C/E/index.html');
 
     overlay.classList.add('active');
     this.isAlertActive = true;
@@ -16713,7 +16790,7 @@ window.CAMERAS_DATA = {
       "address": "日本各都道府縣精選即時實況",
       "lat": 35.6895,
       "lon": 139.6917,
-      "description": "澀谷 ‧ 富士山4K ‧ 道頓堀 ‧ 歌舞伎町 ‧ 晴空塔 ‧ 東京鐵塔 ‧ 上高地 ‧ 草津溫泉 ‧ 函館"
+      "description": "日本全境 80 處精選：東京澀谷 ‧ 富士山 4K ‧ 京都大阪 ‧ 立山高山 ‧ 北海道 ‧ 九州 ‧ 沖繩"
     }
   ],
   "cameras": {
@@ -18536,7 +18613,7 @@ window.CAMERAS_DATA = {
       },
       {
         "id": "jp-10-kyoto",
-        "cctvCode": "JP-KYOTO",
+        "cctvCode": "JP-KYOTO-KIYOMIZU",
         "name": "京都東山 ‧ 清水寺清水坂古都街景 (Kyoto Kiyomizu-zaka)",
         "authority": "京都観光混雑状況Live 官方實況",
         "type": "youtube",
@@ -18552,7 +18629,41 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-11-asakusa",
+        "id": "jp-11-arashiyama",
+        "cctvCode": "JP-ARASHIYAMA",
+        "name": "京都嵐山 ‧ 嵯峨嵐山渡月橋北詰河岸景觀 (Arashiyama Bridge)",
+        "authority": "京都市観光協会 官方實況",
+        "type": "youtube",
+        "videoId": "2WB7nCKjijg",
+        "lat": 35.0136,
+        "lon": 135.6777,
+        "streamUrl": "https://www.youtube.com/watch?v=2WB7nCKjijg",
+        "sourceUrl": "https://www.youtube.com/watch?v=2WB7nCKjijg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "京都嵐山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-12-gion",
+        "cctvCode": "JP-KYOTO-GION",
+        "name": "京都祇園 ‧ 花見小路古韻老街散策街景 (Kyoto Gion Hanamikoji)",
+        "authority": "京都市観光協会 官方實況",
+        "type": "youtube",
+        "videoId": "J3xHBUgWRqc",
+        "lat": 35.0028,
+        "lon": 135.775,
+        "streamUrl": "https://www.youtube.com/watch?v=J3xHBUgWRqc",
+        "sourceUrl": "https://www.youtube.com/watch?v=J3xHBUgWRqc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "京都祇園",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-13-asakusa",
         "cctvCode": "JP-ASAKUSA",
         "name": "東京淺草 ‧ 淺草寺五重塔與寶藏門參道街景 (Asakusa Sensoji)",
         "authority": "浅草中屋チャンネル 官方實況",
@@ -18569,7 +18680,24 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-12-tokyo-station",
+        "id": "jp-14-harajuku",
+        "cctvCode": "JP-HARAJUKU-4K",
+        "name": "東京原宿 ‧ 表參道口與明治神宮林蔭大道 4K (Harajuku 4K)",
+        "authority": "原宿表参道 ライブ 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "st2p8BQAJhE",
+        "lat": 35.6702,
+        "lon": 139.7027,
+        "streamUrl": "https://www.youtube.com/watch?v=st2p8BQAJhE",
+        "sourceUrl": "https://www.youtube.com/watch?v=st2p8BQAJhE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "原宿表參道",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-15-tokyo-station",
         "cctvCode": "JP-TOKYO-STN",
         "name": "東京丸之內 ‧ 東京車站百年紅磚驛舍廣場 (Tokyo Station)",
         "authority": "大丸有協議会 官方實況",
@@ -18586,41 +18714,7 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-13-kusatsu",
-        "cctvCode": "JP-KUSATSU",
-        "name": "群馬草津溫泉 ‧ 湯畑湯滝湧泉街景 (Kusatsu Onsen Yubatake)",
-        "authority": "草津町公式YouTubeチャンネル",
-        "type": "youtube",
-        "videoId": "caahuMvVxsw",
-        "lat": 36.6207,
-        "lon": 138.5961,
-        "streamUrl": "https://www.youtube.com/watch?v=caahuMvVxsw",
-        "sourceUrl": "https://www.youtube.com/watch?v=caahuMvVxsw",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "草津溫泉",
-        "distanceMeters": 0,
-        "distanceKm": 0
-      },
-      {
-        "id": "jp-14-hakodate",
-        "cctvCode": "JP-HAKODATE",
-        "name": "北海道函館 ‧ 函館山百萬夜景海灣展望 (Mt. Hakodate View)",
-        "authority": "FMいるか 官方實況",
-        "type": "youtube",
-        "videoId": "s--MDmshT3I",
-        "lat": 41.7591,
-        "lon": 140.7034,
-        "streamUrl": "https://www.youtube.com/watch?v=s--MDmshT3I",
-        "sourceUrl": "https://www.youtube.com/watch?v=s--MDmshT3I",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "函館山",
-        "distanceMeters": 0,
-        "distanceKm": 0
-      },
-      {
-        "id": "jp-15-akihabara",
+        "id": "jp-16-akihabara",
         "cctvCode": "JP-AKIHABARA",
         "name": "東京秋葉原 ‧ 電器街中央通り十字路口商圈 (Akihabara)",
         "authority": "Cerevo live camera 官方實況",
@@ -18637,7 +18731,109 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-16-oshino",
+        "id": "jp-17-tokyo-bay",
+        "cctvCode": "JP-TOKYO-BAY-4K",
+        "name": "東京灣晴海 ‧ 豐洲大橋與都市天際線 4K (Tokyo Bay 4K)",
+        "authority": "Tokyo Views LIVE 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "_k-5U7IeK8g",
+        "lat": 35.6475,
+        "lon": 139.7824,
+        "streamUrl": "https://www.youtube.com/watch?v=_k-5U7IeK8g",
+        "sourceUrl": "https://www.youtube.com/watch?v=_k-5U7IeK8g",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "東京灣",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-18-shibuya-center",
+        "cctvCode": "JP-SHIBUYA-GAI",
+        "name": "東京澀谷 ‧ 中心街霓虹商店街拱門 (Shibuya Center-Gai)",
+        "authority": "渋谷センター商店街 官方實況",
+        "type": "youtube",
+        "videoId": "d1JuNg7knNo",
+        "lat": 35.6601,
+        "lon": 139.6996,
+        "streamUrl": "https://www.youtube.com/watch?v=d1JuNg7knNo",
+        "sourceUrl": "https://www.youtube.com/watch?v=d1JuNg7knNo",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "澀谷商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-19-ikebukuro",
+        "cctvCode": "JP-IKEBUKURO",
+        "name": "東京池袋 ‧ 陽光 60 通繁華商業街景 (Ikebukuro Sunshine 60)",
+        "authority": "サンシャイン60通り 官方實況",
+        "type": "youtube",
+        "videoId": "0HCO9fncu_4",
+        "lat": 35.7294,
+        "lon": 139.7155,
+        "streamUrl": "https://www.youtube.com/watch?v=0HCO9fncu_4",
+        "sourceUrl": "https://www.youtube.com/watch?v=0HCO9fncu_4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "池袋商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-20-shinjuku-rail",
+        "cctvCode": "JP-SHINJUKU-JR",
+        "name": "東京新宿 ‧ JR 大ガード鐵道與回憶橫丁街景 (Shinjuku Rail)",
+        "authority": "新宿鉄道ライブ 官方實況",
+        "type": "youtube",
+        "videoId": "GLQhbRGv5qU",
+        "lat": 35.6933,
+        "lon": 139.6996,
+        "streamUrl": "https://www.youtube.com/watch?v=GLQhbRGv5qU",
+        "sourceUrl": "https://www.youtube.com/watch?v=GLQhbRGv5qU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新宿車站",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-21-satta-fuji",
+        "cctvCode": "JP-SATTA-FUJI",
+        "name": "靜岡薩埵峠 ‧ 東海道廣重富士山與駿河灣 (Satta Pass Fuji)",
+        "authority": "静岡市さった峠 官方實況",
+        "type": "youtube",
+        "videoId": "GsD9QQEKSzQ",
+        "lat": 35.0706,
+        "lon": 138.5419,
+        "streamUrl": "https://www.youtube.com/watch?v=GsD9QQEKSzQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=GsD9QQEKSzQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-22-kusatsu",
+        "cctvCode": "JP-KUSATSU",
+        "name": "群馬草津溫泉 ‧ 湯畑湯滝湧泉街景 (Kusatsu Onsen Yubatake)",
+        "authority": "草津町公式YouTubeチャンネル",
+        "type": "youtube",
+        "videoId": "caahuMvVxsw",
+        "lat": 36.6207,
+        "lon": 138.5961,
+        "streamUrl": "https://www.youtube.com/watch?v=caahuMvVxsw",
+        "sourceUrl": "https://www.youtube.com/watch?v=caahuMvVxsw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "草津溫泉",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-23-oshino",
         "cctvCode": "JP-OSHINO-4K",
         "name": "山梨忍野八海 ‧ 世界遺產富士山 4K (Oshino Hakkai Mt. Fuji 4K)",
         "authority": "FujiyamaTV 官方 4K 實況",
@@ -18654,9 +18850,9 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-17-hakone",
+        "id": "jp-24-hakone",
         "cctvCode": "JP-HAKONE",
-        "name": "神奈川箱根 ‧ 大觀山蘆之湖與富士山展望 (Hakone Lake Ashi)",
+        "name": "神奈川箱根 ‧ 大觀山蘆之湖溫泉鄉與富士山 (Hakone Lake Ashi)",
         "authority": "箱根ターンパイク株式会社 官方實況",
         "type": "youtube",
         "videoId": "maMMEh-2Bsk",
@@ -18666,14 +18862,14 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=maMMEh-2Bsk",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "箱根富士山",
+        "tag": "箱根溫泉",
         "distanceMeters": 0,
         "distanceKm": 0
       },
       {
-        "id": "jp-18-enoshima",
+        "id": "jp-25-enoshima-fuji",
         "cctvCode": "JP-ENOSHIMA-4K",
-        "name": "神奈川湘南 ‧ 葉山江之島海灣與富士山 4K (Enoshima & Mt. Fuji 4K)",
+        "name": "神奈川湘南 ‧ 葉山江之島海灣與富士山 4K (Enoshima & Fuji 4K)",
         "authority": "【KTV】河口湖CATV 官方 4K 實況",
         "type": "youtube",
         "videoId": "tuNC0ot0j9I",
@@ -18683,80 +18879,29 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=tuNC0ot0j9I",
         "status": "ONLINE",
         "fps": 30,
+        "tag": "江之島富士山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-26-enoshima-beach",
+        "cctvCode": "JP-ENOSHIMA",
+        "name": "神奈川鎌倉湘南 ‧ 江之島燈塔與片瀨海岸 (Enoshima Coast)",
+        "authority": "FlyingSuika 湘南官方實況",
+        "type": "youtube",
+        "videoId": "ywXRfMLuw78",
+        "lat": 35.3082,
+        "lon": 139.4876,
+        "streamUrl": "https://www.youtube.com/watch?v=ywXRfMLuw78",
+        "sourceUrl": "https://www.youtube.com/watch?v=ywXRfMLuw78",
+        "status": "ONLINE",
+        "fps": 30,
         "tag": "江之島",
         "distanceMeters": 0,
         "distanceKm": 0
       },
       {
-        "id": "jp-19-sapporo-susukino",
-        "cctvCode": "JP-SUSUKINO",
-        "name": "北海道札幌 ‧ 薄野霓虹十字路口商圈街景 (Sapporo Susukino)",
-        "authority": "SODANEチャンネル 官方實況",
-        "type": "youtube",
-        "videoId": "wRYonRnKsKw",
-        "lat": 43.0554,
-        "lon": 141.3533,
-        "streamUrl": "https://www.youtube.com/watch?v=wRYonRnKsKw",
-        "sourceUrl": "https://www.youtube.com/watch?v=wRYonRnKsKw",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "札幌薄野",
-        "distanceMeters": 0,
-        "distanceKm": 0
-      },
-      {
-        "id": "jp-20-kobe",
-        "cctvCode": "JP-KOBE-PORT",
-        "name": "兵庫神戶 ‧ 美利堅公園與神戶港塔海灣 (Kobe Waterfront)",
-        "authority": "神戸ウォーターフロント開発機構 官方實況",
-        "type": "youtube",
-        "videoId": "AU_2zfM4m68",
-        "lat": 34.6824,
-        "lon": 135.1886,
-        "streamUrl": "https://www.youtube.com/watch?v=AU_2zfM4m68",
-        "sourceUrl": "https://www.youtube.com/watch?v=AU_2zfM4m68",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "神戶港灣",
-        "distanceMeters": 0,
-        "distanceKm": 0
-      },
-      {
-        "id": "jp-21-shinsaibashi",
-        "cctvCode": "JP-SHINSAIBASHI",
-        "name": "大阪心齋橋 ‧ 大丸與霓虹商店街商圈 (Osaka Shinsaibashi)",
-        "authority": "F.S.T. NET 大阪 官方實況",
-        "type": "youtube",
-        "videoId": "YZMZSqz9fx8",
-        "lat": 34.6716,
-        "lon": 135.5011,
-        "streamUrl": "https://www.youtube.com/watch?v=YZMZSqz9fx8",
-        "sourceUrl": "https://www.youtube.com/watch?v=YZMZSqz9fx8",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "大阪心齋橋",
-        "distanceMeters": 0,
-        "distanceKm": 0
-      },
-      {
-        "id": "jp-22-kanazawa",
-        "cctvCode": "JP-KANAZAWA",
-        "name": "石川金澤 ‧ 日本三大名園兼六園實況 (Kanazawa Kenrokuen)",
-        "authority": "テレビ金沢NEWS 官方實況",
-        "type": "youtube",
-        "videoId": "ZpzNv_hNxPE",
-        "lat": 36.5621,
-        "lon": 136.6627,
-        "streamUrl": "https://www.youtube.com/watch?v=ZpzNv_hNxPE",
-        "sourceUrl": "https://www.youtube.com/watch?v=ZpzNv_hNxPE",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "金澤兼六園",
-        "distanceMeters": 0,
-        "distanceKm": 0
-      },
-      {
-        "id": "jp-23-yamanakako",
+        "id": "jp-27-yamanakako",
         "cctvCode": "JP-YAMANAKAKO",
         "name": "山梨山中湖 ‧ 山中湖畔富士山絕景 (Lake Yamanakako Mt. Fuji)",
         "authority": "【KTV】河口湖CATV 官方實況",
@@ -18773,9 +18918,723 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-24-okinawa",
-        "cctvCode": "JP-OKINAWA",
-        "name": "沖繩恩納村 ‧ 部瀨名蔚藍海灘海景 (Okinawa Busena Beach)",
+        "id": "jp-28-shojiko",
+        "cctvCode": "JP-SHOJIKO",
+        "name": "山梨精進湖 ‧ 他手合浜逆富士湖光山色 (Lake Shojiko Mt. Fuji)",
+        "authority": "【KTV】河口湖CATV 官方實況",
+        "type": "youtube",
+        "videoId": "so_3HK9HIdg",
+        "lat": 35.492,
+        "lon": 138.6064,
+        "streamUrl": "https://www.youtube.com/watch?v=so_3HK9HIdg",
+        "sourceUrl": "https://www.youtube.com/watch?v=so_3HK9HIdg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-29-nihondaira",
+        "cctvCode": "JP-NIHONDAIRA-4K",
+        "name": "靜岡日本平夢露台 ‧ 清水港與富士山 4K (Nihondaira 4K Fuji)",
+        "authority": "日本平夢テラス 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "VQB6sYDXQpo",
+        "lat": 34.9742,
+        "lon": 138.4648,
+        "streamUrl": "https://www.youtube.com/watch?v=VQB6sYDXQpo",
+        "sourceUrl": "https://www.youtube.com/watch?v=VQB6sYDXQpo",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "富士山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-30-atami",
+        "cctvCode": "JP-ATAMI",
+        "name": "靜岡熱海溫泉 ‧ 熱海車站前街景與廣場 (Atami Onsen Station)",
+        "authority": "熱海市道路状況公式チャンネル",
+        "type": "youtube",
+        "videoId": "EGbjDf5nVGQ",
+        "lat": 35.1037,
+        "lon": 139.0777,
+        "streamUrl": "https://www.youtube.com/watch?v=EGbjDf5nVGQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=EGbjDf5nVGQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "熱海溫泉",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-31-nikko-shinkyo",
+        "cctvCode": "JP-NIKKO-BRIDGE",
+        "name": "栃木日光 ‧ 二荒山神社朱紅神橋溪谷 (Nikko Shinkyo Bridge)",
+        "authority": "日光二荒山神社 官方實況",
+        "type": "youtube",
+        "videoId": "augCXu3BkhM",
+        "lat": 36.7533,
+        "lon": 139.6039,
+        "streamUrl": "https://www.youtube.com/watch?v=augCXu3BkhM",
+        "sourceUrl": "https://www.youtube.com/watch?v=augCXu3BkhM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "日光神橋",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-32-nikko-chuzenji",
+        "cctvCode": "JP-NIKKO-LAKE",
+        "name": "栃木奧日光 ‧ 中禪寺湖與男體山湖畔全景 (Nikko Lake Chuzenji)",
+        "authority": "ZEN RESORT NIKKO 官方實況",
+        "type": "youtube",
+        "videoId": "MwJ4uQX1UjY",
+        "lat": 36.7388,
+        "lon": 139.4882,
+        "streamUrl": "https://www.youtube.com/watch?v=MwJ4uQX1UjY",
+        "sourceUrl": "https://www.youtube.com/watch?v=MwJ4uQX1UjY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "奧日光",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-33-tateyama",
+        "cctvCode": "JP-TATEYAMA",
+        "name": "富山北阿爾卑斯 ‧ 立山黑部室堂高山雪景 (Tateyama Murodo)",
+        "authority": "チューリップテレビ 官方實況",
+        "type": "youtube",
+        "videoId": "rWO9PXZwahM",
+        "lat": 36.5772,
+        "lon": 137.5955,
+        "streamUrl": "https://www.youtube.com/watch?v=rWO9PXZwahM",
+        "sourceUrl": "https://www.youtube.com/watch?v=rWO9PXZwahM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "立山黑部",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-34-amaharashi",
+        "cctvCode": "JP-AMAHARASHI",
+        "name": "富山雨晴海岸 ‧ 海上女岩與立山連峰絕景 (Amaharashi Coast)",
+        "authority": "高岡ケーブルネットワーク 官方實況",
+        "type": "youtube",
+        "videoId": "vOFQt1JWSgE",
+        "lat": 36.8148,
+        "lon": 137.0405,
+        "streamUrl": "https://www.youtube.com/watch?v=vOFQt1JWSgE",
+        "sourceUrl": "https://www.youtube.com/watch?v=vOFQt1JWSgE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "雨晴海岸",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-35-takayama",
+        "cctvCode": "JP-TAKAYAMA",
+        "name": "岐阜飛驒高山 ‧ 朱紅中橋與老街宮川風情 (Hida Takayama)",
+        "authority": "飛騨・高山観光協会 官方實況",
+        "type": "youtube",
+        "videoId": "rRJo8uVlAGo",
+        "lat": 36.1407,
+        "lon": 137.2584,
+        "streamUrl": "https://www.youtube.com/watch?v=rRJo8uVlAGo",
+        "sourceUrl": "https://www.youtube.com/watch?v=rRJo8uVlAGo",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "飛驒高山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-36-matsumoto",
+        "cctvCode": "JP-MATSUMOTO",
+        "name": "長野松本 ‧ 國寶松本城黑門天守閣名城 (Matsumoto Castle)",
+        "authority": "国宝松本城 官方實況",
+        "type": "youtube",
+        "videoId": "w1x2kIMp5OQ",
+        "lat": 36.2387,
+        "lon": 137.9689,
+        "streamUrl": "https://www.youtube.com/watch?v=w1x2kIMp5OQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=w1x2kIMp5OQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "松本城",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-37-zenkoji",
+        "cctvCode": "JP-ZENKOJI",
+        "name": "長野善光寺 ‧ 千年古剎本堂參道實況 (Nagano Zenkoji Temple)",
+        "authority": "INC長野ケーブルテレビ 官方實況",
+        "type": "youtube",
+        "videoId": "HvJdPF46kak",
+        "lat": 36.6616,
+        "lon": 138.1877,
+        "streamUrl": "https://www.youtube.com/watch?v=HvJdPF46kak",
+        "sourceUrl": "https://www.youtube.com/watch?v=HvJdPF46kak",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "長野善光寺",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-38-karuizawa-birds",
+        "cctvCode": "JP-KARUIZAWA-WILD",
+        "name": "長野輕井澤 ‧ 森之野鳥與松鼠治癒生態 (Karuizawa Forest)",
+        "authority": "輕井澤森之實況",
+        "type": "youtube",
+        "videoId": "HXp5x6llMo4",
+        "lat": 36.3482,
+        "lon": 138.597,
+        "streamUrl": "https://www.youtube.com/watch?v=HXp5x6llMo4",
+        "sourceUrl": "https://www.youtube.com/watch?v=HXp5x6llMo4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "輕井澤",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-39-karuizawa-pond",
+        "cctvCode": "JP-KARUIZAWA-POND",
+        "name": "長野輕井澤 ‧ 雲場池紅葉樹林湖光倒影 (Karuizawa Kumoba Pond)",
+        "authority": "長野県軽井沢町 官方實況",
+        "type": "youtube",
+        "videoId": "q-81YL3MAZI",
+        "lat": 36.3522,
+        "lon": 138.6186,
+        "streamUrl": "https://www.youtube.com/watch?v=q-81YL3MAZI",
+        "sourceUrl": "https://www.youtube.com/watch?v=q-81YL3MAZI",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "輕井澤",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-40-kanazawa",
+        "cctvCode": "JP-KANAZAWA",
+        "name": "石川金澤 ‧ 日本三大名園兼六園實況 (Kanazawa Kenrokuen)",
+        "authority": "テレビ金沢NEWS 官方實況",
+        "type": "youtube",
+        "videoId": "ZpzNv_hNxPE",
+        "lat": 36.5621,
+        "lon": 136.6627,
+        "streamUrl": "https://www.youtube.com/watch?v=ZpzNv_hNxPE",
+        "sourceUrl": "https://www.youtube.com/watch?v=ZpzNv_hNxPE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "金澤兼六園",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-41-arashiyama-bamboo",
+        "cctvCode": "JP-BAMBOO-GROVE",
+        "name": "京都嵐山 ‧ 嵯峨野竹林小徑清幽步道 (Arashiyama Bamboo)",
+        "authority": "京都市観光協会 官方實況",
+        "type": "youtube",
+        "videoId": "JLlY6Cg17cc",
+        "lat": 35.0168,
+        "lon": 135.6713,
+        "streamUrl": "https://www.youtube.com/watch?v=JLlY6Cg17cc",
+        "sourceUrl": "https://www.youtube.com/watch?v=JLlY6Cg17cc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "京都嵐山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-42-kifune",
+        "cctvCode": "JP-KYOTO-KIFUNE",
+        "name": "京都鞍馬貴船 ‧ 貴船神社鳥居與山林清流 (Kyoto Kifune Shrine)",
+        "authority": "京都観光混雑状況Live 官方實況",
+        "type": "youtube",
+        "videoId": "eJAqPCdS1cY",
+        "lat": 35.1216,
+        "lon": 135.7629,
+        "streamUrl": "https://www.youtube.com/watch?v=eJAqPCdS1cY",
+        "sourceUrl": "https://www.youtube.com/watch?v=eJAqPCdS1cY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "京都貴船",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-43-amanohashidate",
+        "cctvCode": "JP-AMANOHASHIDATE",
+        "name": "京都丹後 ‧ 日本三景天橋立傘松公園海灣沙洲 (Amanohashidate)",
+        "authority": "傘松チャンネル 官方實況",
+        "type": "youtube",
+        "videoId": "J85hAwoxylg",
+        "lat": 35.5819,
+        "lon": 135.1885,
+        "streamUrl": "https://www.youtube.com/watch?v=J85hAwoxylg",
+        "sourceUrl": "https://www.youtube.com/watch?v=J85hAwoxylg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "天橋立",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-44-shinsaibashi",
+        "cctvCode": "JP-SHINSAIBASHI",
+        "name": "大阪心齋橋 ‧ 大丸與霓虹商店街商圈 (Osaka Shinsaibashi)",
+        "authority": "F.S.T. NET 大阪 官方實況",
+        "type": "youtube",
+        "videoId": "YZMZSqz9fx8",
+        "lat": 34.6716,
+        "lon": 135.5011,
+        "streamUrl": "https://www.youtube.com/watch?v=YZMZSqz9fx8",
+        "sourceUrl": "https://www.youtube.com/watch?v=YZMZSqz9fx8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "大阪心齋橋",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-45-osaka-city",
+        "cctvCode": "JP-OSAKA-4K",
+        "name": "大阪都會圈 ‧ 大阪環狀線與城市天際線夜景 4K (Osaka City 4K)",
+        "authority": "大阪環状線 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "R6cWQHTQq-c",
+        "lat": 34.6937,
+        "lon": 135.5023,
+        "streamUrl": "https://www.youtube.com/watch?v=R6cWQHTQq-c",
+        "sourceUrl": "https://www.youtube.com/watch?v=R6cWQHTQq-c",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "大阪都會",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-46-kobe",
+        "cctvCode": "JP-KOBE-PORT",
+        "name": "兵庫神戶 ‧ 美利堅公園與神戶港塔海灣 (Kobe Waterfront)",
+        "authority": "神戸ウォーターフロント開発機構 官方實況",
+        "type": "youtube",
+        "videoId": "AU_2zfM4m68",
+        "lat": 34.6824,
+        "lon": 135.1886,
+        "streamUrl": "https://www.youtube.com/watch?v=AU_2zfM4m68",
+        "sourceUrl": "https://www.youtube.com/watch?v=AU_2zfM4m68",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "神戶港灣",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-47-akashi-bridge",
+        "cctvCode": "JP-AKASHI-BRIDGE",
+        "name": "兵庫神戶舞子 ‧ 明石海峽大橋跨海吊橋景觀 (Akashi Bridge)",
+        "authority": "舞子ビラ神戸 官方實況",
+        "type": "youtube",
+        "videoId": "W5iKrSNyJhQ",
+        "lat": 34.6295,
+        "lon": 135.0352,
+        "streamUrl": "https://www.youtube.com/watch?v=W5iKrSNyJhQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=W5iKrSNyJhQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "明石大橋",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-48-biwako",
+        "cctvCode": "JP-LAKE-BIWA-4K",
+        "name": "滋賀大津 ‧ 琵琶湖大津港湖面花噴水 4K (Lake Biwa 4K)",
+        "authority": "BANTV 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "zGhdCnB-IYY",
+        "lat": 35.0108,
+        "lon": 135.8648,
+        "streamUrl": "https://www.youtube.com/watch?v=zGhdCnB-IYY",
+        "sourceUrl": "https://www.youtube.com/watch?v=zGhdCnB-IYY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "琵琶湖",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-49-shirahama",
+        "cctvCode": "JP-SHIRAHAMA-4K",
+        "name": "和歌山南紀白濱 ‧ 白良濱白沙蔚藍海灣 4K (Shirahama 4K)",
+        "authority": "共同通信Live 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "1raX4KS2_sA",
+        "lat": 33.6817,
+        "lon": 135.3435,
+        "streamUrl": "https://www.youtube.com/watch?v=1raX4KS2_sA",
+        "sourceUrl": "https://www.youtube.com/watch?v=1raX4KS2_sA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "白濱溫泉",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-50-awaji-monkey",
+        "cctvCode": "JP-AWAJI-MONKEY",
+        "name": "兵庫淡路島 ‧ 淡路島猴子中心山林自然生態 (Awaji Island)",
+        "authority": "淡路島モンキーセンター 官方實況",
+        "type": "youtube",
+        "videoId": "lsxYH2XQQCg",
+        "lat": 34.2367,
+        "lon": 134.8808,
+        "streamUrl": "https://www.youtube.com/watch?v=lsxYH2XQQCg",
+        "sourceUrl": "https://www.youtube.com/watch?v=lsxYH2XQQCg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "淡路島",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-51-miyajima",
+        "cctvCode": "JP-MIYAJIMA",
+        "name": "廣島宮島 ‧ 世界遺產嚴島神社入口參道實況 (Miyajima)",
+        "authority": "宮島観光協会 官方實況",
+        "type": "youtube",
+        "videoId": "Pk8Q-69MWSU",
+        "lat": 34.2981,
+        "lon": 132.3208,
+        "streamUrl": "https://www.youtube.com/watch?v=Pk8Q-69MWSU",
+        "sourceUrl": "https://www.youtube.com/watch?v=Pk8Q-69MWSU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宮島嚴島神社",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-52-onomichi",
+        "cctvCode": "JP-ONOMICHI-4K",
+        "name": "廣島尾道 ‧ 千光寺山纜車與瀨戶內海 4K (Onomichi 4K)",
+        "authority": "千光寺山ロープウェイ 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "ju3n3bvYlRw",
+        "lat": 34.4106,
+        "lon": 133.1993,
+        "streamUrl": "https://www.youtube.com/watch?v=ju3n3bvYlRw",
+        "sourceUrl": "https://www.youtube.com/watch?v=ju3n3bvYlRw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "廣島尾道",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-53-hiroshima",
+        "cctvCode": "JP-HIROSHIMA",
+        "name": "廣島市中心 ‧ 本通商店街十字路口 (Hiroshima Hondori)",
+        "authority": "HOME広島ニュース 官方實況",
+        "type": "youtube",
+        "videoId": "oW2Gb8YoGAg",
+        "lat": 34.3935,
+        "lon": 132.4561,
+        "streamUrl": "https://www.youtube.com/watch?v=oW2Gb8YoGAg",
+        "sourceUrl": "https://www.youtube.com/watch?v=oW2Gb8YoGAg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "廣島商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-54-seto-ohashi",
+        "cctvCode": "JP-SETO-OHASHI",
+        "name": "香川岡山 ‧ 橫跨瀨戶內海壯麗瀨戶大橋 (Seto Ohashi Bridge)",
+        "authority": "KBN 官方實況",
+        "type": "youtube",
+        "videoId": "xrb4L3p1eHY",
+        "lat": 34.391,
+        "lon": 133.8108,
+        "streamUrl": "https://www.youtube.com/watch?v=xrb4L3p1eHY",
+        "sourceUrl": "https://www.youtube.com/watch?v=xrb4L3p1eHY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "瀨戶大橋",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-55-ouchi-juku",
+        "cctvCode": "JP-OUCHIJUKU",
+        "name": "福島南會津 ‧ 江戶宿場町大內宿茅草屋街景 (Ouchi-juku)",
+        "authority": "福島県下郷町 官方實況",
+        "type": "youtube",
+        "videoId": "TR0ZBrVbDio",
+        "lat": 37.334,
+        "lon": 139.8608,
+        "streamUrl": "https://www.youtube.com/watch?v=TR0ZBrVbDio",
+        "sourceUrl": "https://www.youtube.com/watch?v=TR0ZBrVbDio",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "大內宿",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-56-matsushima",
+        "cctvCode": "JP-MATSUSHIMA",
+        "name": "宮城松島 ‧ 日本三景松島灣海灣群島全景 (Matsushima Bay)",
+        "authority": "ホテル松島大観荘 官方實況",
+        "type": "youtube",
+        "videoId": "-t_6V7iJjGA",
+        "lat": 38.3688,
+        "lon": 141.0598,
+        "streamUrl": "https://www.youtube.com/watch?v=-t_6V7iJjGA",
+        "sourceUrl": "https://www.youtube.com/watch?v=-t_6V7iJjGA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "松島灣",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-57-sendai",
+        "cctvCode": "JP-SENDAI",
+        "name": "宮城仙台 ‧ JR 仙台車站西口街景廣場 (Sendai Station)",
+        "authority": "khb東日本放送 官方實況",
+        "type": "youtube",
+        "videoId": "AinAZQgQp_s",
+        "lat": 38.2601,
+        "lon": 140.8824,
+        "streamUrl": "https://www.youtube.com/watch?v=AinAZQgQp_s",
+        "sourceUrl": "https://www.youtube.com/watch?v=AinAZQgQp_s",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "仙台",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-58-nara",
+        "cctvCode": "JP-NARA-TANZAN",
+        "name": "奈良談山神社 ‧ 古都山林十三重塔紅葉名勝 (Nara Shrine)",
+        "authority": "奈良テレビ放送 官方實況",
+        "type": "youtube",
+        "videoId": "zppA64fWxfE",
+        "lat": 34.466,
+        "lon": 135.8622,
+        "streamUrl": "https://www.youtube.com/watch?v=zppA64fWxfE",
+        "sourceUrl": "https://www.youtube.com/watch?v=zppA64fWxfE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "奈良",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-59-hakodate",
+        "cctvCode": "JP-HAKODATE",
+        "name": "北海道函館 ‧ 函館山百萬夜景海灣展望 (Mt. Hakodate View)",
+        "authority": "FMいるか 官方實況",
+        "type": "youtube",
+        "videoId": "s--MDmshT3I",
+        "lat": 41.7591,
+        "lon": 140.7034,
+        "streamUrl": "https://www.youtube.com/watch?v=s--MDmshT3I",
+        "sourceUrl": "https://www.youtube.com/watch?v=s--MDmshT3I",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "函館山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-60-sapporo-susukino",
+        "cctvCode": "JP-SUSUKINO",
+        "name": "北海道札幌 ‧ 薄野霓虹十字路口商圈街景 (Sapporo Susukino)",
+        "authority": "SODANEチャンネル 官方實況",
+        "type": "youtube",
+        "videoId": "wRYonRnKsKw",
+        "lat": 43.0554,
+        "lon": 141.3533,
+        "streamUrl": "https://www.youtube.com/watch?v=wRYonRnKsKw",
+        "sourceUrl": "https://www.youtube.com/watch?v=wRYonRnKsKw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "札幌薄野",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-61-sapporo-odori",
+        "cctvCode": "JP-SAPPORO-TV",
+        "name": "北海道札幌 ‧ 創世廣場與大通電視塔街景 (Sapporo TV Tower)",
+        "authority": "SODANEチャンネル 官方實況",
+        "type": "youtube",
+        "videoId": "kfIQBC0hrII",
+        "lat": 43.0623,
+        "lon": 141.3551,
+        "streamUrl": "https://www.youtube.com/watch?v=kfIQBC0hrII",
+        "sourceUrl": "https://www.youtube.com/watch?v=kfIQBC0hrII",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "札幌大通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-62-otaru",
+        "cctvCode": "JP-OTARU",
+        "name": "北海道小樽 ‧ 天狗山纜車山頂俯瞰小樽港灣 (Otaru View)",
+        "authority": "小樽天狗山ロープウエイ 官方實況",
+        "type": "youtube",
+        "videoId": "4SW9YQI4lXQ",
+        "lat": 43.1753,
+        "lon": 140.9675,
+        "streamUrl": "https://www.youtube.com/watch?v=4SW9YQI4lXQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=4SW9YQI4lXQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "小樽",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-63-niseko",
+        "cctvCode": "JP-NISEKO",
+        "name": "北海道二世古 ‧ 羊蹄山積雪渡假山景 (Niseko Mt. Yotei)",
+        "authority": "本田珈琲店 官方實況",
+        "type": "youtube",
+        "videoId": "dk3B2lvPSIk",
+        "lat": 42.8594,
+        "lon": 140.6978,
+        "streamUrl": "https://www.youtube.com/watch?v=dk3B2lvPSIk",
+        "sourceUrl": "https://www.youtube.com/watch?v=dk3B2lvPSIk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "北海道二世古",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-64-aso",
+        "cctvCode": "JP-ASO-4K",
+        "name": "熊本阿蘇 ‧ 阿蘇中岳活火山口與草千里草原 4K (Mt. Aso 4K)",
+        "authority": "自然公園財団 阿蘇支部 4K 實況",
+        "type": "youtube",
+        "videoId": "-DDn7lAxR-8",
+        "lat": 32.8837,
+        "lon": 131.0525,
+        "streamUrl": "https://www.youtube.com/watch?v=-DDn7lAxR-8",
+        "sourceUrl": "https://www.youtube.com/watch?v=-DDn7lAxR-8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "阿蘇火山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-65-sakurajima",
+        "cctvCode": "JP-SAKURAJIMA",
+        "name": "鹿兒島錦江灣 ‧ 櫻島活火山噴煙近景 (Sakurajima Volcano)",
+        "authority": "財宝公式チャンネル 2K 實況",
+        "type": "youtube",
+        "videoId": "PeElJClXtzE",
+        "lat": 31.5453,
+        "lon": 130.697,
+        "streamUrl": "https://www.youtube.com/watch?v=PeElJClXtzE",
+        "sourceUrl": "https://www.youtube.com/watch?v=PeElJClXtzE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "櫻島火山",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-66-mojiko",
+        "cctvCode": "JP-MOJIKO",
+        "name": "福岡北九州 ‧ 門司港與關門海峽大橋生音海景 (Mojiko Strait)",
+        "authority": "SEA & SKY 官方實況",
+        "type": "youtube",
+        "videoId": "_r-g8wU-0o8",
+        "lat": 33.9469,
+        "lon": 130.9621,
+        "streamUrl": "https://www.youtube.com/watch?v=_r-g8wU-0o8",
+        "sourceUrl": "https://www.youtube.com/watch?v=_r-g8wU-0o8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "門司港",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-67-hakata-station",
+        "cctvCode": "JP-HAKATA",
+        "name": "福岡博多 ‧ JR博多車站博多口站前商圈 (Hakata Station)",
+        "authority": "朝日新聞LIVE 官方實況",
+        "type": "youtube",
+        "videoId": "yETDDgrE2E4",
+        "lat": 33.5898,
+        "lon": 130.4207,
+        "streamUrl": "https://www.youtube.com/watch?v=yETDDgrE2E4",
+        "sourceUrl": "https://www.youtube.com/watch?v=yETDDgrE2E4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "福岡博多",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-68-beppu",
+        "cctvCode": "JP-BEPPU-ONSEN",
+        "name": "大分別府灣溫泉鄉 ‧ 海岸由布院之森鐵道實況 (Beppu Bay)",
+        "authority": "Beppu Bay Camera 實況",
+        "type": "youtube",
+        "videoId": "Em22Cuoe8Pk",
+        "lat": 33.2662,
+        "lon": 131.5038,
+        "streamUrl": "https://www.youtube.com/watch?v=Em22Cuoe8Pk",
+        "sourceUrl": "https://www.youtube.com/watch?v=Em22Cuoe8Pk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "別府溫泉",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-69-nagasaki",
+        "cctvCode": "JP-NAGASAKI",
+        "name": "長崎鍋冠山 ‧ 長崎港女神大橋百萬海灣夜景 (Nagasaki Port)",
+        "authority": "長崎ケーブルメディア 官方實況",
+        "type": "youtube",
+        "videoId": "ECA5G89gogI",
+        "lat": 32.7336,
+        "lon": 129.8732,
+        "streamUrl": "https://www.youtube.com/watch?v=ECA5G89gogI",
+        "sourceUrl": "https://www.youtube.com/watch?v=ECA5G89gogI",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "長崎港",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-70-okinawa",
+        "cctvCode": "JP-OKINAWA-BEACH",
+        "name": "沖繩恩納村 ‧ 部瀨名蔚藍海灘渡假海灣 (Okinawa Busena)",
         "authority": "TheTerraceHotels 官方實況",
         "type": "youtube",
         "videoId": "VWpOgCVKoK4",
@@ -18790,7 +19649,58 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-25-haneda",
+        "id": "jp-71-okinawa-bise",
+        "cctvCode": "JP-OKINAWA-BISE",
+        "name": "沖繩本部備瀨 ‧ 翡翠海岸與伊江島日落 4K (Okinawa Bise 4K)",
+        "authority": "CAHAYA BULAN 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "5ZIw5x5jnQg",
+        "lat": 26.7058,
+        "lon": 127.8788,
+        "streamUrl": "https://www.youtube.com/watch?v=5ZIw5x5jnQg",
+        "sourceUrl": "https://www.youtube.com/watch?v=5ZIw5x5jnQg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "沖繩翡翠海",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-72-naha-kokusai",
+        "cctvCode": "JP-NAHA-KOKUSAI",
+        "name": "沖繩那霸 ‧ 國際通商店街街景商圈 (Naha Kokusai Dori)",
+        "authority": "バクノビジョン 官方實況",
+        "type": "youtube",
+        "videoId": "ZBBezhwzCzY",
+        "lat": 26.2165,
+        "lon": 127.6889,
+        "streamUrl": "https://www.youtube.com/watch?v=ZBBezhwzCzY",
+        "sourceUrl": "https://www.youtube.com/watch?v=ZBBezhwzCzY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "那霸國際通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-73-naha-senagajima",
+        "cctvCode": "JP-SENAGAJIMA",
+        "name": "沖繩瀨長島 ‧ 珊瑚海灣與那霸機場客機起降 (Senagajima)",
+        "authority": "沖縄瀬長島 官方實況",
+        "type": "youtube",
+        "videoId": "3e_uPkJCTNo",
+        "lat": 26.1763,
+        "lon": 127.643,
+        "streamUrl": "https://www.youtube.com/watch?v=3e_uPkJCTNo",
+        "sourceUrl": "https://www.youtube.com/watch?v=3e_uPkJCTNo",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "沖繩瀨長島",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-74-haneda",
         "cctvCode": "JP-HANEDA",
         "name": "東京羽田 ‧ 國際機場第一航廈停機坪 (Haneda Airport T1)",
         "authority": "TBS NEWS DIG 官方實況",
@@ -18807,36 +19717,104 @@ window.CAMERAS_DATA = {
         "distanceKm": 0
       },
       {
-        "id": "jp-26-hakata-station",
-        "cctvCode": "JP-HAKATA",
-        "name": "福岡博多 ‧ JR博多車站博多口站前街景 (Hakata Station)",
+        "id": "jp-75-narita",
+        "cctvCode": "JP-NARITA",
+        "name": "千葉成田 ‧ 成田國際機場 A 跑道客機起降 (Narita Airport)",
         "authority": "朝日新聞LIVE 官方實況",
         "type": "youtube",
-        "videoId": "yETDDgrE2E4",
-        "lat": 33.5898,
-        "lon": 130.4207,
-        "streamUrl": "https://www.youtube.com/watch?v=yETDDgrE2E4",
-        "sourceUrl": "https://www.youtube.com/watch?v=yETDDgrE2E4",
+        "videoId": "OuCbntsMsWY",
+        "lat": 35.7647,
+        "lon": 140.3864,
+        "streamUrl": "https://www.youtube.com/watch?v=OuCbntsMsWY",
+        "sourceUrl": "https://www.youtube.com/watch?v=OuCbntsMsWY",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "福岡博多",
+        "tag": "成田機場",
         "distanceMeters": 0,
         "distanceKm": 0
       },
       {
-        "id": "jp-27-sapporo",
-        "cctvCode": "JP-SAPPORO",
-        "name": "北海道札幌 ‧ 大通公園與札幌電視塔 (Sapporo Odori Park)",
-        "authority": "朝日新聞LIVE 官方實況",
+        "id": "jp-76-kansai-airport",
+        "cctvCode": "JP-KIX-OSAKA",
+        "name": "大阪關西 ‧ 關西國際機場第一航廈停機坪 (Kansai Airport KIX)",
+        "authority": "カンテレNEWS 官方實況",
         "type": "youtube",
-        "videoId": "RBHsITnIoI0",
-        "lat": 43.0618,
-        "lon": 141.3545,
-        "streamUrl": "https://www.youtube.com/watch?v=RBHsITnIoI0",
-        "sourceUrl": "https://www.youtube.com/watch?v=RBHsITnIoI0",
+        "videoId": "1dY5_2BScEE",
+        "lat": 34.4347,
+        "lon": 135.244,
+        "streamUrl": "https://www.youtube.com/watch?v=1dY5_2BScEE",
+        "sourceUrl": "https://www.youtube.com/watch?v=1dY5_2BScEE",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "札幌大通",
+        "tag": "關西機場",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-77-shinchitose",
+        "cctvCode": "JP-CTS-SAPPORO",
+        "name": "北海道新千歲 ‧ 新千歲國際機場跑道天候 (New Chitose Airport)",
+        "authority": "HTB北海道テレビ 官方實況",
+        "type": "youtube",
+        "videoId": "Azbdr5jbN6o",
+        "lat": 42.7752,
+        "lon": 141.6923,
+        "streamUrl": "https://www.youtube.com/watch?v=Azbdr5jbN6o",
+        "sourceUrl": "https://www.youtube.com/watch?v=Azbdr5jbN6o",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新千歲機場",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-78-oarai-aquarium",
+        "cctvCode": "JP-OARAI-SHARK",
+        "name": "茨城大洗水族館 ‧ 24 小時大洋沙虎鯊生態槽 (Oarai Aquarium)",
+        "authority": "ANNnewsCH 官方實況",
+        "type": "youtube",
+        "videoId": "E1zLXKr44Ec",
+        "lat": 36.3324,
+        "lon": 140.5945,
+        "streamUrl": "https://www.youtube.com/watch?v=E1zLXKr44Ec",
+        "sourceUrl": "https://www.youtube.com/watch?v=E1zLXKr44Ec",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "水族館",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-79-naritasan",
+        "cctvCode": "JP-NARITASAN",
+        "name": "千葉成田山 ‧ 新勝寺大本堂與三重塔參道 (Naritasan Temple)",
+        "authority": "NARITASAN SHINSHOJI 官方實況",
+        "type": "youtube",
+        "videoId": "g9Y-Bkq5O0Q",
+        "lat": 35.7862,
+        "lon": 140.3183,
+        "streamUrl": "https://www.youtube.com/watch?v=g9Y-Bkq5O0Q",
+        "sourceUrl": "https://www.youtube.com/watch?v=g9Y-Bkq5O0Q",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "成田山新勝寺",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "jp-80-shiodome",
+        "cctvCode": "JP-SHINBASHI-4K",
+        "name": "東京銀座汐留新橋 ‧ 摩天樓與新幹線鐵道 4K (Shiodome 4K)",
+        "authority": "共同通信Live 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "VM18f-IIUTw",
+        "lat": 35.6632,
+        "lon": 139.7606,
+        "streamUrl": "https://www.youtube.com/watch?v=VM18f-IIUTw",
+        "sourceUrl": "https://www.youtube.com/watch?v=VM18f-IIUTw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "銀座汐留",
         "distanceMeters": 0,
         "distanceKm": 0
       }
@@ -19045,17 +20023,41 @@ class MonitorApp {
     console.log('雙埔生活資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊 ‧ 收藏專屬牆 ‧ TV導航)');
   }
 
-  // 數位時鐘
+  // 數位時鐘 (日本分頁即時自動切換日本標準時間 JST)
   initClock() {
     const updateTime = () => {
       const now = new Date();
-      const timeStr = now.toTimeString().split(' ')[0];
-      const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
       const timeEl = document.getElementById('clockTime');
       const dateEl = document.getElementById('clockDate');
+      if (this.currentCenterId === 'japan') {
+        try {
+          const timeStr = new Intl.DateTimeFormat('zh-TW', {
+            timeZone: 'Asia/Tokyo',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          }).format(now);
+          const parts = new Intl.DateTimeFormat('zh-TW', {
+            timeZone: 'Asia/Tokyo',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+          }).formatToParts(now);
+          const y = parts.find(p => p.type === 'year')?.value || '';
+          const m = parts.find(p => p.type === 'month')?.value || '';
+          const d = parts.find(p => p.type === 'day')?.value || '';
+          if (timeEl) timeEl.innerText = timeStr;
+          if (dateEl) dateEl.innerText = `${y}年${m}月${d}日 (日本時間)`;
+          return;
+        } catch (_) {}
+      }
+      const timeStr = now.toTimeString().split(' ')[0];
+      const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
       if (timeEl) timeEl.innerText = timeStr;
       if (dateEl) dateEl.innerText = dateStr;
     };
+    this.updateClockDisplay = updateTime;
     updateTime();
     setInterval(updateTime, 1000);
   }
@@ -19277,17 +20279,18 @@ class MonitorApp {
       { title: '切換至「青埔」高鐵特區', sub: '高鐵桃園站、A18/A19 與周邊路口', badge: '區域中心', icon: 'fa-building-user', run: () => this.switchCenter('qingpu') },
       { title: '切換至「新埔」板橋商圈', sub: '新埔站、文化路與台64沿線', badge: '區域中心', icon: 'fa-house-signal', run: () => this.switchCenter('banqiao') },
       { title: '切換至「觀光」精選實況', sub: '九份、西門町、大稻埕、淡水', badge: '區域中心', icon: 'fa-plane-arrival', run: () => this.switchCenter('tourist') },
-      { title: '切換至「日本」4K 跨國視角', sub: '澀谷、富士山 4K、道頓堀、歌舞伎町、上高地', badge: '區域中心', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
+      { title: '切換至「日本」80 處跨國實況', sub: '東京澀谷、富士山 4K、京都大阪、上高地、北海道、沖繩', badge: '區域中心', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
       { title: '切換至「收藏」專屬視訊牆', sub: '自選常看跨區跨國攝影機 (${this.getFavorites().length})', badge: '收藏牆', icon: 'fa-star', run: () => this.switchCenter('favorites') }
     ].map(item => ({
       ...item,
       sub: item.sub.replace('${this.getFavorites().length}', String(this.getFavorites().length))
     }));
 
+    const inJapan = this.currentCenterId === 'japan';
     const quickOps = [
       { title: '一屏呈現免捲動模式切換', sub: '自動計算可視區域高度填滿視訊網格', badge: '版面控制', icon: 'fa-expand', run: () => document.getElementById('btnToggleAdaptive')?.click() },
-      { title: '展開／收合右側在地資訊面板', sub: '氣象、空氣品質、降雨走勢與 YouBike', badge: '版面控制', icon: 'fa-circle-info', run: () => document.getElementById('btnToggleSidebar')?.click() },
-      { title: '立即刷新全部視訊與即時遙測', sub: '同步台鐵、高鐵、機捷與 Open-Meteo', badge: '系統操作', icon: 'fa-arrows-rotate', run: () => document.getElementById('btnRefreshAll')?.click() },
+      { title: '展開／收合右側在地資訊面板', sub: inJapan ? '日本當地氣象、空氣品質與即時雷達' : '氣象、空氣品質、降雨走勢與 YouBike', badge: '版面控制', icon: 'fa-circle-info', run: () => document.getElementById('btnToggleSidebar')?.click() },
+      { title: '立即刷新全部視訊與即時遙測', sub: inJapan ? '重新同步日本 80 處即時視訊與日本氣象遙測' : '同步台鐵、高鐵、機捷與 Open-Meteo', badge: '系統操作', icon: 'fa-arrows-rotate', run: () => document.getElementById('btnRefreshAll')?.click() },
       { title: '切換「12 格」廣域矩陣檢視', sub: '同時監看最多 12 台攝影機畫面', badge: '網格模式', icon: 'fa-grip', run: () => this.setGridMode('grid-12') },
       { title: '切換「6 格」黃金標準分割', sub: '預設均衡雙排視角', badge: '網格模式', icon: 'fa-table-cells', run: () => this.setGridMode('grid-6') }
     ];
@@ -19848,12 +20851,65 @@ class MonitorApp {
     }
   }
 
-  // 切換監控中心 (dual vs qingpu vs banqiao vs tourist)
+  // 同步各區域中心之介面在地化與專屬元件顯示狀態 (確保日本分頁隱藏台灣專屬資訊)
+  syncCenterLocalization(centerId) {
+    const isJapan = centerId === 'japan';
+    const showOnsenPill = isJapan || centerId === 'favorites';
+
+    const brandTitleEl = document.getElementById('brandTitle');
+    if (brandTitleEl) brandTitleEl.textContent = isJapan ? '日本實況' : '雙埔生活';
+
+    const youbikeCard = document.getElementById('youbikeWidgetCard');
+    if (youbikeCard) youbikeCard.style.display = isJapan ? 'none' : '';
+
+    const cwaCard = document.getElementById('cwaRadarWidgetCard');
+    if (cwaCard) cwaCard.style.display = isJapan ? 'none' : '';
+    if (!isJapan && this.weatherMonitor && typeof this.weatherMonitor.refreshRadar === 'function') {
+      this.weatherMonitor.refreshRadar();
+    }
+
+    const transitBar = document.getElementById('transitTransitBar');
+    if (transitBar) {
+      transitBar.style.display = (centerId === 'tourist' || isJapan) ? 'none' : '';
+    }
+
+    const onsenPill = document.getElementById('filterPillOnsen');
+    if (onsenPill) onsenPill.style.display = showOnsenPill ? '' : 'none';
+
+    const searchInput = document.getElementById('cameraSearchInput');
+    if (searchInput) {
+      searchInput.placeholder = isJapan
+        ? '快搜日本景點、富士山、溫泉、4K、東京大阪或機場...'
+        : '快搜路名、交流道、富士山、4K 或捷運周邊...';
+    }
+
+    const radarTitleEl = document.getElementById('radarMapTitle');
+    if (radarTitleEl) {
+      radarTitleEl.innerHTML = isJapan
+        ? '<i class="fa-solid fa-map-location-dot"></i> 日本全境地理雷達'
+        : '<i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達';
+    }
+    const radarScopeBadge = document.getElementById('radarScopeBadge');
+    if (radarScopeBadge) {
+      radarScopeBadge.textContent = isJapan ? '全國即時座標' : '500m/1km 安全圈';
+    }
+
+    if (typeof window !== 'undefined' && window.earthquakeMonitor && typeof window.earthquakeMonitor.setRegion === 'function') {
+      window.earthquakeMonitor.setRegion(isJapan ? 'japan' : 'taiwan');
+    }
+
+    if (typeof this.updateClockDisplay === 'function') {
+      this.updateClockDisplay();
+    }
+  }
+
+  // 切換監控中心 (dual vs qingpu vs banqiao vs tourist vs japan)
   async switchCenter(centerId) {
     this.currentCenterId = centerId;
     if (typeof document !== 'undefined' && document.body) {
       document.body.dataset.themeCenter = centerId;
     }
+    this.syncCenterLocalization(centerId);
     this.filterKeyword = '';
     this.filterTag = 'all';
     const filterInputEl = document.getElementById('cameraSearchInput');
@@ -19897,13 +20953,6 @@ class MonitorApp {
 
       this.currentCenterData = centerData || { name: '雙埔生活', id: centerId };
 
-      // 進到觀光和日本的時候，交通資訊自動隱藏
-      const transitBar = document.getElementById('transitTransitBar');
-      if (centerId === 'tourist' || centerId === 'japan') {
-        if (transitBar) transitBar.style.display = 'none';
-      } else {
-        if (transitBar) transitBar.style.display = '';
-      }
       this.currentCameras = cameras || [];
 
       // 原生 APK 環境下雙重確保臺北市交工處鏡頭為原生 HLS 直播
@@ -19945,7 +20994,7 @@ class MonitorApp {
         if (centerId === 'dual') {
           sortIndicator.innerText = '雙埔公平呈現：青埔與新埔各半均分 (零切角自適應)';
         } else if (centerId === 'japan') {
-          sortIndicator.innerText = '日本精選 27 處即時實況：澀谷 ‧ 富士山4K ‧ 道頓堀 ‧ 歌舞伎町 ‧ 晴空塔 ‧ 上高地 ‧ 草津溫泉 ‧ 函館';
+          sortIndicator.innerText = '日本全境 80 處即時實況：東京澀谷 ‧ 富士山 4K ‧ 大阪道頓堀 ‧ 京都嵐山 ‧ 上高地 ‧ 北海道 ‧ 沖繩';
         } else if (centerId === 'favorites') {
           sortIndicator.innerText = `自選專屬視訊牆：已收藏 ${this.currentCameras.length} 處即時鏡頭 (點擊畫面星號 ★ 自由增刪)`;
         } else if (centerId === 'tourist') {
@@ -20120,10 +21169,10 @@ class MonitorApp {
         filteredList = filteredList.filter(c => {
           const t = ((c.name || '') + ' ' + (c.tag || '') + ' ' + (c.authority || '') + ' ' + (c.description || '') + ' ' + (c.areaTag || '')).toLowerCase();
           if (tag === '富士山') return t.includes('富士山') || t.includes('fuji');
-          if (tag === '溫泉') return t.includes('溫泉') || t.includes('草津') || t.includes('箱根') || t.includes('onsen');
+          if (tag === '溫泉') return t.includes('溫泉') || t.includes('湯畑') || t.includes('熱海') || t.includes('別府') || t.includes('白濱') || t.includes('箱根') || t.includes('草津') || t.includes('onsen');
           if (tag === '商圈') return t.includes('商圈') || t.includes('十字路口') || t.includes('街') || t.includes('夜市') || t.includes('站前') || t.includes('歌舞伎町') || t.includes('澀谷') || t.includes('天神') || t.includes('西門') || t.includes('大稻埕') || t.includes('松山');
-          if (tag === '風景') return t.includes('湖') || t.includes('公園') || t.includes('園') || t.includes('海') || t.includes('山') || t.includes('寺') || t.includes('橋') || t.includes('上高地') || t.includes('九份') || t.includes('淡水');
-          if (tag === '交通') return t.includes('路口') || t.includes('交流道') || t.includes('高鐵') || t.includes('捷運') || t.includes('機場') || t.includes('車站') || t.includes('公路') || t.includes('國道');
+          if (tag === '風景') return t.includes('湖') || t.includes('公園') || t.includes('園') || t.includes('海') || t.includes('山') || t.includes('寺') || t.includes('神社') || t.includes('橋') || t.includes('城') || t.includes('塔') || t.includes('峽') || t.includes('瀑') || t.includes('上高地') || t.includes('九份') || t.includes('淡水');
+          if (tag === '交通') return t.includes('路口') || t.includes('交流道') || t.includes('高鐵') || t.includes('捷運') || t.includes('機場') || t.includes('車站') || t.includes('公路') || t.includes('國道') || t.includes('鐵道') || t.includes('新幹線');
           if (tag === '4k') return t.includes('4k');
           return t.includes(tag);
         });
