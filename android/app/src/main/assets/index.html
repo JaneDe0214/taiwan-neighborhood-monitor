@@ -8794,6 +8794,8 @@ class CameraPlayerEngine {
     this.hlsPlayers = new Map();  // 桃園市官方 HLS 實例
     this.mjpegTimers = new Map();
     this.staggerTimers = [];      // 錯開排隊計時器
+    this.visibilityObserver = null; // 超大宮格視口按需延遲載入觀察器
+    this.pendingLazyCams = new Map();
     this.watchdogs = new Map();   // 逾時卡頓看門狗
     this.retryCounts = new Map(); // 重試與切換次數計數
     this.recoveryDebounce = new Map(); // 防抖時間戳 (防止 flvjs 多重 error 與看門狗短時間重複連發)
@@ -8803,11 +8805,18 @@ class CameraPlayerEngine {
     this.isPaused = false;
   }
 
-  // 清理所有排隊中的階梯式啟動計時器
+  // 清理所有排隊中的階梯式啟動計時器與視口觀察器
   clearStaggerTimers() {
     if (this.staggerTimers && this.staggerTimers.length > 0) {
       this.staggerTimers.forEach(t => clearTimeout(t));
       this.staggerTimers = [];
+    }
+    if (this.visibilityObserver) {
+      try { this.visibilityObserver.disconnect(); } catch (e) {}
+      this.visibilityObserver = null;
+    }
+    if (this.pendingLazyCams) {
+      this.pendingLazyCams.clear();
     }
   }
 
@@ -9226,7 +9235,6 @@ class CameraPlayerEngine {
             title="${cam.name}" 
             allow="autoplay; fullscreen" 
             referrerpolicy="no-referrer-when-downgrade" 
-            loading="lazy" 
             scrolling="no" 
             frameborder="0"
             style="width: 100%; height: 100%; border: none; background: #000;"></iframe>
@@ -9314,46 +9322,112 @@ class CameraPlayerEngine {
     return card;
   }
 
+  // 啟動單一張卡片播放器
+  startCardPlayer(cam) {
+    if (!cam) return;
+    const videoEl = document.getElementById(`video-${cam.id}`);
+    const imgEl = document.getElementById(`feed-${cam.id}`);
+    if (!videoEl && !imgEl) return;
+
+    if (cam.type === 'hls') {
+      this.initHlsPlayer(cam);
+    } else if (cam.type === 'flv') {
+      this.initFlvPlayer(cam);
+    } else if (cam.type === 'mjpeg') {
+      this.initMjpegKeeper(cam);
+      this.startLiveClock(cam.id);
+    } else if (cam.type === 'youtube' || cam.type === 'iframe') {
+      const frameEl = document.getElementById(`yt-${cam.id}`) || document.getElementById(`iframe-${cam.id}`);
+      const wrapEl = frameEl ? frameEl.closest('.video-wrapper') : null;
+      if (wrapEl) {
+        frameEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
+        setTimeout(() => wrapEl.classList.add('is-ready'), 500);
+      }
+      this.startLiveClock(cam.id);
+    } else if (imgEl) {
+      const wrapEl = imgEl.closest('.video-wrapper');
+      if (wrapEl) {
+        if (imgEl.complete) wrapEl.classList.add('is-ready');
+        else imgEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
+      }
+    }
+  }
+
+  // 台北市交工處 HLS 網路無法連通時自動降級為官方 iframe 播放
+  fallbackBoteToIframe(cam, videoEl) {
+    try {
+      if (this.hlsPlayers.has(cam.id)) {
+        const oldHls = this.hlsPlayers.get(cam.id);
+        oldHls.stopLoad();
+        oldHls.detachMedia();
+        oldHls.destroy();
+        this.hlsPlayers.delete(cam.id);
+      }
+    } catch (e) {}
+    this.clearWatchdog(cam.id);
+    const wrapper = videoEl && videoEl.parentElement;
+    if (!wrapper) return;
+    const iframeSrc = cam.sourceUrl || `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId || cam.id}`;
+    wrapper.classList.add('bote-stream-wrapper', 'is-ready');
+    wrapper.innerHTML = `<iframe id="iframe-${cam.id}" class="cam-feed bote-iframe" src="${iframeSrc}" title="${cam.name}" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade" scrolling="no" frameborder="0" style="width:100%;height:100%;border:none;background:#000;"></iframe>`;
+  }
+
   // 初始化所有可見的播放器 (HLS, FLV, MJPEG)
-  // 採用階梯式平滑啟動，兼具秒開起播與防止網路並發擁塞
+  // 急速出現模式：前 6 格首屏鏡頭 0ms 並行秒開起播；第 7 格起由視口觀察器按需平滑接力，避免 50+ 路併發塞車
   initPlayersForVisibleCards(cameras) {
     this.clearStaggerTimers();
-    const isNativeApp = typeof window !== 'undefined' && 
-      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
+    if (!Array.isArray(cameras) || cameras.length === 0) return;
 
-    cameras.forEach((cam, index) => {
-      // 高階設備與原生 APK 採用極速並行載入 (前 4 台 0~15ms，後續 15ms 錯開)，低階或一般環境維持平滑錯開
-      const delay = isNativeApp ? Math.min(index * 15, 60) : (index < 2 ? index * 40 : 80 + (index - 2) * 70);
-      const timer = setTimeout(() => {
-        const videoEl = document.getElementById(`video-${cam.id}`);
-        const imgEl = document.getElementById(`feed-${cam.id}`);
-        if (!videoEl && !imgEl) return;
+    const immediateCount = Math.min(6, cameras.length);
+    for (let i = 0; i < immediateCount; i++) {
+      this.startCardPlayer(cameras[i]);
+    }
 
-        if (cam.type === 'hls') {
-          this.initHlsPlayer(cam);
-        } else if (cam.type === 'flv') {
-          this.initFlvPlayer(cam);
-        } else if (cam.type === 'mjpeg') {
-          this.initMjpegKeeper(cam);
-          this.startLiveClock(cam.id);
-        } else if (cam.type === 'youtube' || cam.type === 'iframe') {
-          const frameEl = document.getElementById(`yt-${cam.id}`) || document.getElementById(`iframe-${cam.id}`);
-          const wrapEl = frameEl ? frameEl.closest('.video-wrapper') : null;
-          if (wrapEl) {
-            frameEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
-            setTimeout(() => wrapEl.classList.add('is-ready'), 1400);
+    if (cameras.length <= immediateCount) return;
+
+    const restCams = cameras.slice(immediateCount);
+    if (typeof IntersectionObserver !== 'undefined') {
+      let burstQueueIndex = 0;
+      let burstResetTimer = null;
+      this.visibilityObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const cardEl = entry.target;
+          const camId = cardEl && cardEl.dataset ? cardEl.dataset.camId : null;
+          if (!camId || !this.pendingLazyCams.has(camId)) return;
+          const cam = this.pendingLazyCams.get(camId);
+          this.pendingLazyCams.delete(camId);
+          if (this.visibilityObserver) this.visibilityObserver.unobserve(cardEl);
+
+          const delay = Math.min(burstQueueIndex * 45, 360);
+          burstQueueIndex++;
+          clearTimeout(burstResetTimer);
+          burstResetTimer = setTimeout(() => { burstQueueIndex = 0; }, 300);
+
+          if (delay === 0) {
+            this.startCardPlayer(cam);
+          } else {
+            const t = setTimeout(() => this.startCardPlayer(cam), delay);
+            this.staggerTimers.push(t);
           }
-          this.startLiveClock(cam.id);
-        } else if (imgEl) {
-          const wrapEl = imgEl.closest('.video-wrapper');
-          if (wrapEl) {
-            if (imgEl.complete) wrapEl.classList.add('is-ready');
-            else imgEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
-          }
+        });
+      }, { root: null, rootMargin: '220px 0px', threshold: 0.01 });
+
+      restCams.forEach(cam => {
+        const cardEl = document.getElementById(`cam-card-${cam.id}`);
+        if (cardEl) {
+          this.pendingLazyCams.set(String(cam.id), cam);
+          this.visibilityObserver.observe(cardEl);
+        } else {
+          this.startCardPlayer(cam);
         }
-      }, delay);
-      this.staggerTimers.push(timer);
-    });
+      });
+    } else {
+      restCams.forEach((cam, idx) => {
+        const timer = setTimeout(() => this.startCardPlayer(cam), 80 + idx * 70);
+        this.staggerTimers.push(timer);
+      });
+    }
   }
 
   // 初始化 HLS 播放器 (支援桃園官方 HLS 與臺北市交工處原生代理串流，具備充足緩衝與卡頓自癒)
@@ -9388,28 +9462,29 @@ class CameraPlayerEngine {
 
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       try {
-        const isTaipeiBote = (streamUrl && streamUrl.includes('bote.gov.taipei')) || (cam.id && String(cam.id).startsWith('tpe-'));
+        const isTaipeiBote = (streamUrl && (streamUrl.includes('bote.gov.taipei') || streamUrl.includes('/api/bote/'))) || (cam.id && String(cam.id).startsWith('tpe-'));
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,          // 關閉 LL 模式以獲得最佳硬體解碼平穩度
-          liveSyncDurationCount: isTaipeiBote ? 1.5 : 3.5, // 臺北市交工處固定 3 個短切片 (約6秒)，以 1.5 深度極速秒開起播；桃園為 3.5
-          liveMaxLatencyDurationCount: isTaipeiBote ? 4.0 : 7.0,// 容許合理延遲窗口
+          startFragPrefetch: isTaipeiBote, // 台北短切片解析播放清單後立即預抓首片 fMP4
+          liveSyncDurationCount: isTaipeiBote ? 1.0 : 3.5, // 臺北市交工處以 1 片極速秒開起播；桃園為 3.5
+          liveMaxLatencyDurationCount: isTaipeiBote ? 3.5 : 7.0,// 容許合理延遲窗口
           liveDurationInfinity: true,
           maxLiveSyncPlaybackRate: 1.05,  // 內建極微幅平滑追幀，平緩無感，絕不爆衝耗盡緩衝
           capLevelToPlayerSize: false,    // 解鎖最高畫質：絕不因容器小而降級
           autoLevelCapping: -1,
           startLevel: -1,
-          maxBufferLength: isTaipeiBote ? 8 : 20,            // 多宮格前方緩衝深度，台北短切片設為 8 秒快速加載
-          maxMaxBufferLength: isTaipeiBote ? 16 : 40,        // 最大容許緩衝深度
+          maxBufferLength: isTaipeiBote ? 6 : 20,            // 多宮格前方緩衝深度，台北短切片設為 6 秒極速起播
+          maxMaxBufferLength: isTaipeiBote ? 12 : 40,        // 最大容許緩衝深度
           maxBufferSize: 20 * 1024 * 1024,// 多宮格並行控制在 20MB 緩衝記憶體空間，杜絕 6 路並播吃光 WebView 記憶體造成崩潰閃退
           backBufferLength: isTaipeiBote ? 4 : 15,           // 歷史緩衝保留
-          fragLoadingTimeOut: 12000,      // 單一切片逾時緊縮為 12 秒，超時即快速重試
-          manifestLoadingTimeOut: 10000,
-          levelLoadingTimeOut: 10000,
+          fragLoadingTimeOut: isTaipeiBote ? 8000 : 12000,   // 單一切片逾時快速重試
+          manifestLoadingTimeOut: isTaipeiBote ? 8000 : 10000,
+          levelLoadingTimeOut: isTaipeiBote ? 8000 : 10000,
           fragLoadingMaxRetry: 8,         // 提升切片重試容錯次數至 8 次
-          fragLoadingRetryDelay: 600,     // 600ms 快速重試，無需乾等
+          fragLoadingRetryDelay: isTaipeiBote ? 350 : 600,   // 快速重試，無需乾等
           manifestLoadingMaxRetry: 8,
-          manifestLoadingRetryDelay: 600,
+          manifestLoadingRetryDelay: isTaipeiBote ? 350 : 600,
           nudgeOffset: 0.1,               // 遇時間戳微小空隙自動推進 0.1 秒除卡
           nudgeMaxRetry: 5                // 最多微推進 5 次除卡自癒
         });
@@ -9440,6 +9515,7 @@ class CameraPlayerEngine {
         });
 
         const onHlsPlaying = () => {
+          this.retryCounts.delete(cam.id);
           const wrapper = videoEl.parentElement;
           if (wrapper) wrapper.classList.add('is-ready');
           if (wm) {
@@ -9450,6 +9526,11 @@ class CameraPlayerEngine {
           this.startLiveClock(cam.id);
         };
         videoEl.addEventListener('playing', onHlsPlaying);
+        videoEl.addEventListener('loadeddata', () => {
+          const wrapper = videoEl.parentElement;
+          if (wrapper) wrapper.classList.add('is-ready');
+          this.detectVideoResolution(cam, videoEl);
+        }, { once: true });
         videoEl.addEventListener('loadedmetadata', () => this.detectVideoResolution(cam, videoEl), { once: true });
 
         // 主動式轉圈偵測與快速除卡自癒機制 (Stall & Gap Watchdog)
@@ -9563,6 +9644,26 @@ class CameraPlayerEngine {
                     hls.startLoad();
                     return;
                   }
+                } else if (isTaipeiBote && streamUrl && streamUrl.startsWith('/api/bote/')) {
+                  const statusCode = data.response ? data.response.code : 0;
+                  const retries = (this.retryCounts.get(cam.id) || 0) + 1;
+                  this.retryCounts.set(cam.id, retries);
+                  if (statusCode === 404) {
+                    window._boteProxyUnavailable = true;
+                    this.fallbackBoteToIframe(cam, videoEl);
+                    return;
+                  }
+                  if (retries <= 3) {
+                    setTimeout(() => {
+                      if (this.hlsPlayers.get(cam.id) === hls) {
+                        hls.loadSource(streamUrl);
+                        hls.startLoad();
+                      }
+                    }, 350 * retries);
+                    return;
+                  }
+                  this.fallbackBoteToIframe(cam, videoEl);
+                  return;
                 }
                 hls.startLoad();
                 break;
@@ -19823,25 +19924,67 @@ window.CAMERAS_DATA = {
 };
 
 // 智慧串流環境自適應：原生 Android APK / file:// 協定環境下，將臺北市交工處鏡頭自動升級為原生硬體解碼 HLS 直播
-(function adaptTaipeiStreamsForNative() {
-  const isNativeApp = (typeof window.AndroidBridge !== 'undefined') || 
+// 臺北市交工處直出快速 HLS 解析共用函式 (桌面走本機 Keep-Alive 代理 /api/bote/hls/<id>/index.m3u8；原生 APK 走 https://hls.bote.gov.taipei/hls/<id>/index.m3u8)
+window.resolveTaipeiStreams = function resolveTaipeiStreams(list) {
+  if (!Array.isArray(list)) return;
+  const isNativeApp = (typeof window.AndroidBridge !== 'undefined') ||
                       (window.location && window.location.protocol === 'file:') ||
                       (navigator.userAgent && navigator.userAgent.includes('TaiwanNeighborhoodMonitor'));
+  const isLocalProxy = !window._boteProxyUnavailable &&
+                       window.location && window.location.protocol &&
+                       window.location.protocol.startsWith('http') &&
+                       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  if (!isNativeApp && !isLocalProxy) return;
 
-  if (isNativeApp && window.CAMERAS_DATA && window.CAMERAS_DATA.cameras) {
+  list.forEach(cam => {
+    if (!cam || !cam.ccdId) return;
+    const isBote = cam.type === 'iframe' ||
+                   (cam.streamUrl && (cam.streamUrl.includes('hls.bote.gov.taipei') || cam.streamUrl.includes('/api/bote/'))) ||
+                   (cam.id && String(cam.id).startsWith('tpe-'));
+    if (!isBote) return;
+
+    cam.type = 'hls';
+    cam.streamUrl = isNativeApp
+      ? `https://hls.bote.gov.taipei/hls/${cam.ccdId}/index.m3u8`
+      : `/api/bote/hls/${cam.ccdId}/index.m3u8`;
+    if (!cam.sourceUrl) {
+      cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
+    }
+  });
+};
+
+window.prewarmTaipeiBote = function prewarmTaipeiBote(cams) {
+  if (window._boteProxyUnavailable) return;
+  const isNativeApp = (typeof window.AndroidBridge !== 'undefined') ||
+                      (window.location && window.location.protocol === 'file:');
+  const isLocalProxy = window.location && window.location.protocol &&
+                       window.location.protocol.startsWith('http') &&
+                       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  if (isNativeApp || !isLocalProxy) return;
+
+  const now = Date.now();
+  if (window._lastBotePrewarmAt && now - window._lastBotePrewarmAt < 20000) return;
+  window._lastBotePrewarmAt = now;
+
+  const sourceList = Array.isArray(cams) ? cams : (window.CAMERAS_DATA && window.CAMERAS_DATA.cameras && window.CAMERAS_DATA.cameras.tourist) || [];
+  const ids = sourceList
+    .filter(c => c && c.ccdId)
+    .slice(0, 6)
+    .map(c => c.ccdId);
+  if (ids.length === 0) return;
+
+  fetch(`/api/bote/prewarm?ids=${encodeURIComponent(ids.join(','))}`)
+    .then(res => {
+      if (res.status === 404) window._boteProxyUnavailable = true;
+    })
+    .catch(() => {});
+};
+
+(function adaptTaipeiStreamsOnBoot() {
+  if (window.CAMERAS_DATA && window.CAMERAS_DATA.cameras) {
     Object.keys(window.CAMERAS_DATA.cameras).forEach(centerKey => {
-      const list = window.CAMERAS_DATA.cameras[centerKey];
-      if (Array.isArray(list)) {
-        list.forEach(cam => {
-          if (cam.ccdId && (cam.type === 'iframe' || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei')))) {
-            cam.type = 'hls';
-            cam.streamUrl = `https://hls.bote.gov.taipei/stream/${cam.ccdId}/index.m3u8`;
-            cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
-          }
-        });
-      }
+      window.resolveTaipeiStreams(window.CAMERAS_DATA.cameras[centerKey]);
     });
-    console.log('[NativeBridge] 原生環境偵測成功：已將臺北市全域交控鏡頭升級為原生 HLS 硬體解碼串流');
   }
 })();
 
@@ -20768,18 +20911,9 @@ class MonitorApp {
       description: `依目前位置 (${city.name}) 由近到遠即時排序呈現`
     };
 
-    // 原生 APK 環境下臺北市交工處鏡頭直出相容
-    const isNativeMode = (typeof window.AndroidBridge !== 'undefined') || 
-                         (window.location && window.location.protocol === 'file:') ||
-                         (navigator.userAgent && navigator.userAgent.includes('TaiwanNeighborhoodMonitor'));
-    if (isNativeMode) {
-      this.currentCameras.forEach(cam => {
-        if (cam.ccdId && (cam.type === 'iframe' || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei')))) {
-          cam.type = 'hls';
-          cam.streamUrl = `https://hls.bote.gov.taipei/stream/${cam.ccdId}/index.m3u8`;
-          cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
-        }
-      });
+    // 臺北市交工處鏡頭急速 HLS 直出相容
+    if (typeof window.resolveTaipeiStreams === 'function') {
+      window.resolveTaipeiStreams(this.currentCameras);
     }
 
     // 6. 更新介面標籤
@@ -20955,18 +21089,9 @@ class MonitorApp {
 
       this.currentCameras = cameras || [];
 
-      // 原生 APK 環境下雙重確保臺北市交工處鏡頭為原生 HLS 直播
-      const isNativeMode = (typeof window.AndroidBridge !== 'undefined') || 
-                           (window.location && window.location.protocol === 'file:') ||
-                           (navigator.userAgent && navigator.userAgent.includes('TaiwanNeighborhoodMonitor'));
-      if (isNativeMode) {
-        this.currentCameras.forEach(cam => {
-          if (cam.ccdId && (cam.type === 'iframe' || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei')))) {
-            cam.type = 'hls';
-            cam.streamUrl = `https://hls.bote.gov.taipei/stream/${cam.ccdId}/index.m3u8`;
-            cam.sourceUrl = `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId}`;
-          }
-        });
+      // 雙重確保臺北市交工處鏡頭為急速 HLS 直播
+      if (typeof window.resolveTaipeiStreams === 'function') {
+        window.resolveTaipeiStreams(this.currentCameras);
       }
 
       // 更新介面標籤
@@ -20998,7 +21123,7 @@ class MonitorApp {
         } else if (centerId === 'favorites') {
           sortIndicator.innerText = `自選專屬視訊牆：已收藏 ${this.currentCameras.length} 處即時鏡頭 (點擊畫面星號 ★ 自由增刪)`;
         } else if (centerId === 'tourist') {
-          sortIndicator.innerText = '觀光精選：九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水 (4K UHD / 1080P FHD 動態串流)';
+          sortIndicator.innerText = '觀光精選 58 處：急速 6 格即時起播（九份 ‧ 北車 ‧ 西門町，可切換全部）';
         } else if (centerId === 'qingpu') {
           sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
         } else if (centerId === 'banqiao') {
@@ -21008,9 +21133,9 @@ class MonitorApp {
         }
       }
 
-      // 依中心需求切換預設宮格：日本模式預設四分割 (grid-4)，青埔/新埔/觀光預設全部宮格 (grid-all)
-      if (centerId === 'japan') {
-        const defaultMode = 'grid-4';
+      // 依中心需求切換預設宮格：日本預設四分割 (grid-4)、觀光預設急速六宮格 (grid-6)，青埔/新埔預設全部宮格 (grid-all)
+      if (centerId === 'japan' || centerId === 'tourist') {
+        const defaultMode = centerId === 'japan' ? 'grid-4' : 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
         this.focusedCamId = null;
@@ -21036,7 +21161,7 @@ class MonitorApp {
           if (btn.dataset.grid === defaultMode) btn.classList.add('active');
           else btn.classList.remove('active');
         });
-      } else if (centerId === 'tourist' || centerId === 'qingpu' || centerId === 'banqiao') {
+      } else if (centerId === 'qingpu' || centerId === 'banqiao') {
         this.currentGridMode = 'grid-all';
         this.previousGridMode = 'grid-all';
         this.focusedCamId = null;
@@ -21481,12 +21606,13 @@ class MonitorApp {
 
       const modalVideo = document.getElementById('modalVideo');
       if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-        const isTaipeiBote = (cam.streamUrl && cam.streamUrl.includes('bote.gov.taipei')) || (cam.id && String(cam.id).startsWith('tpe-'));
+        const isTaipeiBote = (cam.streamUrl && (cam.streamUrl.includes('bote.gov.taipei') || cam.streamUrl.includes('/api/bote/'))) || (cam.id && String(cam.id).startsWith('tpe-'));
         this.modalHlsPlayer = new Hls({ 
           enableWorker: true, 
           lowLatencyMode: false, 
-          liveSyncDurationCount: isTaipeiBote ? 1.5 : 2.5, 
-          maxBufferLength: isTaipeiBote ? 8 : 12,
+          startFragPrefetch: isTaipeiBote,
+          liveSyncDurationCount: isTaipeiBote ? 1.0 : 2.5, 
+          maxBufferLength: isTaipeiBote ? 6 : 12,
           capLevelToPlayerSize: false,
           autoLevelCapping: -1
         });
@@ -21661,6 +21787,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (window.earthquakeMonitor) {
     window.earthquakeMonitor.init();
+  }
+
+  // 啟動後台預熱前 6 路臺北市交工處觀光鏡頭，切換至「觀光」時秒開起播
+  if (typeof window.prewarmTaipeiBote === 'function') {
+    setTimeout(() => {
+      if (window.monitorApp && window.monitorApp.currentCenterId !== 'tourist') {
+        window.prewarmTaipeiBote();
+      }
+    }, 1200);
   }
 
   // 原生 Android 雙向握手：通知原生前端已完全就緒，立即高速推送最新預熱數據

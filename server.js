@@ -30,6 +30,216 @@ const cache = {
   weatherMap: new Map()
 };
 
+// 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
+const BOTE_ORIGIN = 'https://hls.bote.gov.taipei';
+const BOTE_REFERER = 'https://hls.bote.gov.taipei/live/index.html';
+const BOTE_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const boteHttpsAgent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 24,
+  maxFreeSockets: 12,
+  keepAliveMsecs: 15000
+});
+const boteCookieJar = new Map();
+const botePrewarmCooldown = new Map();
+
+function extractBoteCamKey(targetPath) {
+  const m = String(targetPath || '').match(/^\/(?:hls\/|streamapi_)([0-9A-Za-z_-]+)/);
+  return m ? m[1] : 'global';
+}
+
+function saveBoteSetCookies(camKey, setCookieHeaders) {
+  if (!Array.isArray(setCookieHeaders) || setCookieHeaders.length === 0) return;
+  let camMap = boteCookieJar.get(camKey);
+  if (!camMap) {
+    camMap = new Map();
+    boteCookieJar.set(camKey, camMap);
+  }
+  for (const raw of setCookieHeaders) {
+    const firstPart = String(raw || '').split(';')[0];
+    const eqIdx = firstPart.indexOf('=');
+    if (eqIdx > 0) {
+      const k = firstPart.slice(0, eqIdx).trim();
+      const v = firstPart.slice(eqIdx + 1).trim();
+      if (k) camMap.set(k, v);
+    }
+  }
+}
+
+function getBoteCookieHeader(camKey) {
+  const camMap = boteCookieJar.get(camKey);
+  if (!camMap || camMap.size === 0) return '';
+  return Array.from(camMap.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+}
+
+function isAllowedBotePath(targetPath) {
+  return /^\/(hls\/|streamapi_|live\/|_api\/|api\/)/.test(targetPath);
+}
+
+function requestBoteUpstream(targetPath, reqHeaders, onResponse, onError, clientRes, hopCount = 0) {
+  if (!isAllowedBotePath(targetPath)) {
+    onError(400, new Error('不允許的臺北市交控串流路徑'));
+    return;
+  }
+  const camKey = extractBoteCamKey(targetPath);
+  const headers = {
+    'Referer': BOTE_REFERER,
+    'Origin': BOTE_ORIGIN,
+    'User-Agent': BOTE_UA,
+    'Accept': '*/*',
+    'Accept-Encoding': 'identity'
+  };
+  const cookieStr = getBoteCookieHeader(camKey);
+  if (cookieStr) headers['Cookie'] = cookieStr;
+  if (reqHeaders && reqHeaders.range) headers['Range'] = reqHeaders.range;
+
+  const upstreamReq = https.request({
+    hostname: 'hls.bote.gov.taipei',
+    port: 443,
+    path: targetPath,
+    method: 'GET',
+    agent: boteHttpsAgent,
+    headers
+  }, (upstreamRes) => {
+    saveBoteSetCookies(camKey, upstreamRes.headers['set-cookie']);
+    if (upstreamRes.statusCode === 401 || upstreamRes.statusCode === 403) {
+      boteCookieJar.delete(camKey);
+    }
+
+    if ([301, 302, 303, 307, 308].includes(upstreamRes.statusCode) && upstreamRes.headers.location && hopCount < 4) {
+      upstreamRes.resume();
+      try {
+        const nextUrl = new URL(upstreamRes.headers.location, BOTE_ORIGIN + targetPath);
+        if (nextUrl.hostname !== 'hls.bote.gov.taipei') {
+          onError(403, new Error('禁止跨網域重新導向'));
+          return;
+        }
+        requestBoteUpstream(nextUrl.pathname + nextUrl.search, reqHeaders, onResponse, onError, clientRes, hopCount + 1);
+      } catch (e) {
+        onError(502, e);
+      }
+      return;
+    }
+
+    onResponse(upstreamRes, targetPath);
+  });
+
+  upstreamReq.setTimeout(10000, () => {
+    upstreamReq.destroy(new Error('臺北市交控上游連線逾時'));
+  });
+
+  upstreamReq.on('error', (err) => {
+    onError(502, err);
+  });
+
+  if (clientRes) {
+    clientRes.on('close', () => {
+      if (!clientRes.writableFinished) {
+        try { upstreamReq.destroy(); } catch (_) {}
+      }
+    });
+  }
+
+  upstreamReq.end();
+}
+
+function handleBoteProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const targetPath = parsedUrl.pathname.replace(/^\/api\/bote/, '') + (parsedUrl.search || '');
+  requestBoteUpstream(
+    targetPath,
+    req.headers,
+    (upstreamRes, finalPath) => {
+      const status = upstreamRes.statusCode || 502;
+      const cleanPath = finalPath.split('?')[0].toLowerCase();
+      const rawType = String(upstreamRes.headers['content-type'] || '');
+      const isM3u8 = cleanPath.endsWith('.m3u8') || rawType.toLowerCase().includes('mpegurl');
+
+      if (isM3u8 && status >= 200 && status < 300) {
+        const chunks = [];
+        upstreamRes.on('data', (chunk) => chunks.push(chunk));
+        upstreamRes.on('end', () => {
+          let body = Buffer.concat(chunks).toString('utf8');
+          body = body.replace(/(^|\n)(\/(?:hls|streamapi_[^/\s]+|live)\/)/g, '$1/api/bote$2');
+          res.setHeader('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+          res.writeHead(status);
+          res.end(body);
+        });
+        return;
+      }
+
+      let contentType = rawType ? rawType.split(';')[0].trim() : '';
+      if (cleanPath.endsWith('.mp4')) contentType = 'video/mp4';
+      else if (cleanPath.endsWith('.m4s')) contentType = 'video/iso.segment';
+      else if (cleanPath.endsWith('.ts')) contentType = 'video/mp2t';
+      else if (!contentType) contentType = 'application/octet-stream';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      if (upstreamRes.headers['content-length']) {
+        res.setHeader('Content-Length', upstreamRes.headers['content-length']);
+      }
+      if (upstreamRes.headers['content-range']) {
+        res.setHeader('Content-Range', upstreamRes.headers['content-range']);
+      }
+      res.writeHead(status);
+      upstreamRes.pipe(res);
+    },
+    (statusCode, err) => {
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.writeHead(statusCode || 502);
+        res.end(JSON.stringify({ success: false, error: '臺北市交控代理失敗', detail: err ? err.message : '' }));
+      } else {
+        try { res.end(); } catch (_) {}
+      }
+    },
+    res
+  );
+}
+
+function handleBotePrewarm(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+
+  const rawIds = (parsedUrl.searchParams.get('ids') || '301,303,304,346,166,028').split(',');
+  const validIds = rawIds
+    .map(s => s.trim())
+    .filter(s => /^[0-9A-Za-z_-]{1,12}$/.test(s))
+    .slice(0, 8);
+
+  const now = Date.now();
+  const warmedIds = [];
+  for (const id of validIds) {
+    const last = botePrewarmCooldown.get(id) || 0;
+    if (now - last < 20000) continue;
+    botePrewarmCooldown.set(id, now);
+    warmedIds.push(id);
+    requestBoteUpstream(
+      `/hls/${id}/index.m3u8`,
+      null,
+      (upstreamRes) => { upstreamRes.resume(); },
+      () => {},
+      null
+    );
+  }
+
+  res.writeHead(200);
+  res.end(JSON.stringify({ ok: true, prewarmed: warmedIds, totalRequested: validIds.length }));
+}
+
 // 內部抓取遠端 JSON 函式
 function fetchRemoteJson(url) {
   return new Promise((resolve, reject) => {
@@ -809,6 +1019,14 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/api/parking/thsr') {
     handleParkingThsrProxy(req, res);
+    return;
+  }
+  if (pathname === '/api/bote/prewarm') {
+    handleBotePrewarm(req, res, parsedUrl);
+    return;
+  }
+  if (pathname.startsWith('/api/bote/')) {
+    handleBoteProxy(req, res, parsedUrl);
     return;
   }
 

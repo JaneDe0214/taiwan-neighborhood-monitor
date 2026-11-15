@@ -288,6 +288,14 @@ class MainActivity : ComponentActivity() {
                 if (url.startsWith("http://") || url.startsWith("https://")) {
                     // 針對臺北市交工處 HLS 串流與即時視訊資源進行原生代抓 (精準注入 Referer 與 CORS 標頭，徹底消除 403 與 iframe 破圖)
                     if (url.contains("hls.bote.gov.taipei")) {
+                        if (request.method.equals("OPTIONS", ignoreCase = true)) {
+                            val headers = mutableMapOf<String, String>(
+                                "Access-Control-Allow-Origin" to "*",
+                                "Access-Control-Allow-Methods" to "GET, HEAD, OPTIONS",
+                                "Access-Control-Allow-Headers" to "*"
+                            )
+                            return WebResourceResponse("text/plain", "utf-8", 204, "No Content", headers, ByteArrayInputStream(ByteArray(0)))
+                        }
                         try {
                             val boteRes = fetchNativeBoteUrl(url)
                             if (boteRes != null) return boteRes
@@ -308,45 +316,98 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val boteCookies = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.ConcurrentHashMap<String, String>>()
+
+    private fun extractBoteCamKey(urlString: String): String {
+        val m = Regex("/(?:hls/|streamapi_)([0-9A-Za-z_-]+)").find(urlString)
+        return m?.groupValues?.getOrNull(1) ?: "global"
+    }
+
     /**
      * 臺北市交通管制工程處 (hls.bote.gov.taipei) 專屬原生高速代理直透實作
-     * 1. 精準注入官方防盜鏈驗證標頭 (Referer: https://hls.bote.gov.taipei/live/index.html)
-     * 2. 自動分配標準視訊切片 MIME Type (.m3u8 -> application/vnd.apple.mpegurl, .ts -> video/mp2t)
-     * 3. 注入 Access-Control-Allow-Origin: * 消除瀏覽器同源限制
-     * 4. 消除 CSP 與 X-Frame-Options 限制，確保原生硬體解碼與 iframe 雙重暢通
+     * 1. 手動跟隨 301/302/303/307/308 重新導向（依鏡頭 ID 獨立隔離 hlsSession / cookieCheck Cookie）
+     * 2. 自動分配標準視訊切片 MIME Type (.m3u8, .ts, .mp4, .m4s) 並將所有二進位媒體 encoding 設為 null
+     * 3. 注入 Access-Control-Allow-Origin: * 消除 WebView 同源限制
      */
     private fun fetchNativeBoteUrl(urlString: String): WebResourceResponse? {
         return try {
-            val url = URL(urlString)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 5000
-                readTimeout = 10000
-                requestMethod = "GET"
-                setRequestProperty("Referer", "https://hls.bote.gov.taipei/live/index.html")
-                setRequestProperty("Origin", "https://hls.bote.gov.taipei")
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                instanceFollowRedirects = true
+            var currentUrl = urlString
+            var conn: HttpURLConnection? = null
+            var code = -1
+            val camKey = extractBoteCamKey(urlString)
+            val camCookies = boteCookies.computeIfAbsent(camKey) { java.util.concurrent.ConcurrentHashMap() }
+
+            for (hop in 0..4) {
+                val url = URL(currentUrl)
+                val attempt = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 5000
+                    readTimeout = 10000
+                    requestMethod = "GET"
+                    setRequestProperty("Referer", "https://hls.bote.gov.taipei/live/index.html")
+                    setRequestProperty("Origin", "https://hls.bote.gov.taipei")
+                    setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    setRequestProperty("Accept", "*/*")
+                    if (camCookies.isNotEmpty()) {
+                        val cookieHeader = camCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                        setRequestProperty("Cookie", cookieHeader)
+                    }
+                    instanceFollowRedirects = false
+                }
+                attempt.connect()
+
+                attempt.headerFields?.forEach { (headerName, values) ->
+                    if (headerName != null && headerName.equals("Set-Cookie", ignoreCase = true) && values != null) {
+                        for (raw in values) {
+                            val pair = raw.split(";")[0]
+                            val eqIdx = pair.indexOf('=')
+                            if (eqIdx > 0) {
+                                val k = pair.substring(0, eqIdx).trim()
+                                val v = pair.substring(eqIdx + 1).trim()
+                                if (k.isNotEmpty()) camCookies[k] = v
+                            }
+                        }
+                    }
+                }
+
+                code = attempt.responseCode
+                if (code == 401 || code == 403) {
+                    camCookies.clear()
+                }
+                if (code in 300..399) {
+                    val location = attempt.getHeaderField("Location")
+                    attempt.disconnect()
+                    if (location.isNullOrBlank()) return null
+                    val nextUrl = URL(url, location)
+                    if (!nextUrl.host.equals("hls.bote.gov.taipei", ignoreCase = true)) return null
+                    currentUrl = nextUrl.toString()
+                    continue
+                }
+                conn = attempt
+                break
             }
-            conn.connect()
-            val code = conn.responseCode
-            if (code in 200..299) {
+
+            if (conn != null && code in 200..299) {
                 val rawContentType = conn.contentType ?: ""
-                val isM3u8 = urlString.contains(".m3u8")
-                val isTs = urlString.contains(".ts")
-                val isBinary = isTs || urlString.contains(".png") || urlString.contains(".jpg") || urlString.contains(".ico")
+                val cleanPath = currentUrl.substringBefore("?").lowercase()
+                val isM3u8 = cleanPath.endsWith(".m3u8") || rawContentType.contains("mpegurl", ignoreCase = true)
+                val isTs = cleanPath.endsWith(".ts")
+                val isMp4 = cleanPath.endsWith(".mp4")
+                val isM4s = cleanPath.endsWith(".m4s") || cleanPath.endsWith(".m4v") || cleanPath.endsWith(".m4a")
+                val isBinary = isTs || isMp4 || isM4s || cleanPath.endsWith(".png") || cleanPath.endsWith(".jpg") || cleanPath.endsWith(".ico")
 
                 val mimeType = when {
                     isM3u8 -> "application/vnd.apple.mpegurl"
                     isTs -> "video/mp2t"
-                    urlString.contains(".js") -> "application/javascript"
-                    urlString.contains(".css") -> "text/css"
-                    urlString.contains(".html") || (urlString.contains("/live/") && !urlString.contains(".")) -> "text/html"
+                    isMp4 -> "video/mp4"
+                    isM4s -> "video/iso.segment"
+                    cleanPath.endsWith(".js") -> "application/javascript"
+                    cleanPath.endsWith(".css") -> "text/css"
+                    cleanPath.endsWith(".html") || (currentUrl.contains("/live/") && !cleanPath.substringAfterLast("/").contains(".")) -> "text/html"
                     rawContentType.isNotEmpty() -> rawContentType.split(";")[0].trim()
                     else -> "application/octet-stream"
                 }
 
-                // 核心關鍵修復：針對二進位視訊切片 (.ts) 與圖檔，encoding 必須傳入 null！
-                // 傳入 "utf-8" 會強制 Chromium 進行字串解碼，導致二進位位元組串流損毀造成 Hls.js demux 失敗黑畫面！
+                // 針對二進位視訊切片 (.ts / .mp4 / .m4s) 與圖檔，encoding 必須傳入 null，避免 UTF-8 破壞位元組造成解碼失敗
                 val encoding = if (isBinary) null else {
                     if (rawContentType.contains("charset=")) {
                         rawContentType.split("charset=")[1].trim()
@@ -356,6 +417,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val bytes = conn.inputStream.use { it.readBytes() }
+                conn.disconnect()
 
                 val headers = mutableMapOf<String, String>()
                 headers["Access-Control-Allow-Origin"] = "*"
@@ -374,6 +436,7 @@ class MainActivity : ComponentActivity() {
                     ByteArrayInputStream(bytes)
                 )
             } else {
+                conn?.disconnect()
                 null
             }
         } catch (_: Exception) {
