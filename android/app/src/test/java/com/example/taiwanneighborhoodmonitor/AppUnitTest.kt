@@ -126,8 +126,10 @@ class AppUnitTest {
               "data": {
                 "DepartureTable": {
                   "TrainItem": [
+                    { "TrainNumber": "0837", "DepartureTime": "00:02", "DestinationTime": "00:15" },
+                    { "TrainNumber": "0109", "DepartureTime": "15:10", "DestinationTime": "15:22" },
                     { "TrainNumber": "0657", "DepartureTime": "16:20", "DestinationTime": "16:32" },
-                    { "TrainNumber": "0837", "DepartureTime": "00:02", "DestinationTime": "00:15" }
+                    { "TrainNumber": "1609", "DepartureTime": "17:10", "DestinationTime": "17:23" }
                   ]
                 }
               }
@@ -135,7 +137,8 @@ class AppUnitTest {
         """.trimIndent()
 
         val trains = TransitParsers.parseOfficialThsr(json)
-        assertEquals(2, trains.length())
+        // 必須排除不停桃園之 0109（保留 1609），並依營運日分鐘數遞增排序（00:02 在最後）
+        assertEquals(3, trains.length())
 
         val t0 = trains.getJSONObject(0)
         assertEquals("0657", t0.getString("trainNo"))
@@ -144,9 +147,13 @@ class AppUnitTest {
         assertEquals(16 * 60 + 20, t0.getInt("depMinutes"))
 
         val t1 = trains.getJSONObject(1)
-        assertEquals(13, t1.getInt("duration"))
-        assertFalse(t1.getBoolean("isExpress"))
-        assertEquals(24 * 60 + 2, t1.getInt("depMinutes"))
+        assertEquals("1609", t1.getString("trainNo"))
+
+        val t2 = trains.getJSONObject(2)
+        assertEquals("0837", t2.getString("trainNo"))
+        assertEquals(13, t2.getInt("duration"))
+        assertFalse(t2.getBoolean("isExpress"))
+        assertEquals(24 * 60 + 2, t2.getInt("depMinutes"))
     }
 
     @Test

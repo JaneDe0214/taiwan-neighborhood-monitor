@@ -30,6 +30,7 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
@@ -76,7 +77,14 @@ class MainActivity : ComponentActivity() {
 
     private var pendingLocationCallback: android.webkit.GeolocationPermissions.Callback? = null
     private var pendingLocationOrigin: String? = null
-    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val granted = results.values.any { it }
+        pendingLocationCallback?.invoke(pendingLocationOrigin, granted, false)
+        pendingLocationCallback = null
+        pendingLocationOrigin = null
+    }
 
     // HTML5 影片 / iframe 原生全螢幕視圖管理
     private var customFullscreenView: View? = null
@@ -199,13 +207,13 @@ class MainActivity : ComponentActivity() {
         s.loadWithOverviewMode = true
         s.displayZoomControls = false
         s.builtInZoomControls = false
-        s.allowFileAccess = true
+        s.allowFileAccess = false
         s.allowContentAccess = true
         s.javaScriptCanOpenWindowsAutomatically = true
         @Suppress("DEPRECATION")
-        s.allowFileAccessFromFileURLs = true
+        s.allowFileAccessFromFileURLs = false
         @Suppress("DEPRECATION")
-        s.allowUniversalAccessFromFileURLs = true
+        s.allowUniversalAccessFromFileURLs = false
 
         // 允許即時視訊串流自動起播，無需使用者點擊
         s.mediaPlaybackRequiresUserGesture = false
@@ -293,13 +301,11 @@ class MainActivity : ComponentActivity() {
                 } else {
                     pendingLocationCallback = callback
                     pendingLocationOrigin = origin
-                    androidx.core.app.ActivityCompat.requestPermissions(
-                        this@MainActivity,
+                    locationPermissionLauncher.launch(
                         arrayOf(
                             android.Manifest.permission.ACCESS_FINE_LOCATION,
                             android.Manifest.permission.ACCESS_COARSE_LOCATION
-                        ),
-                        LOCATION_PERMISSION_REQUEST_CODE
+                        )
                     )
                 }
             }
@@ -526,37 +532,44 @@ class MainActivity : ComponentActivity() {
                     }
                     instanceFollowRedirects = false
                 }
-                attempt.connect()
+                try {
+                    attempt.connect()
 
-                attempt.headerFields?.forEach { (headerName, values) ->
-                    if (headerName != null && headerName.equals("Set-Cookie", ignoreCase = true) && values != null) {
-                        for (raw in values) {
-                            val pair = raw.split(";")[0]
-                            val eqIdx = pair.indexOf('=')
-                            if (eqIdx > 0) {
-                                val k = pair.substring(0, eqIdx).trim()
-                                val v = pair.substring(eqIdx + 1).trim()
-                                if (k.isNotEmpty()) camCookies[k] = v
+                    attempt.headerFields?.forEach { (headerName, values) ->
+                        if (headerName != null && headerName.equals("Set-Cookie", ignoreCase = true) && values != null) {
+                            for (raw in values) {
+                                val pair = raw.split(";")[0]
+                                val eqIdx = pair.indexOf('=')
+                                if (eqIdx > 0) {
+                                    val k = pair.substring(0, eqIdx).trim()
+                                    val v = pair.substring(eqIdx + 1).trim()
+                                    if (k.isNotEmpty()) camCookies[k] = v
+                                }
                             }
                         }
                     }
-                }
 
-                code = attempt.responseCode
-                if (code == 401 || code == 403) {
-                    camCookies.clear()
+                    code = attempt.responseCode
+                    if (code == 401 || code == 403) {
+                        camCookies.clear()
+                    }
+                    if (code in 300..399) {
+                        val location = attempt.getHeaderField("Location")
+                        attempt.disconnect()
+                        if (location.isNullOrBlank()) return null
+                        val nextUrl = URL(url, location)
+                        if (!nextUrl.host.equals("hls.bote.gov.taipei", ignoreCase = true)) return null
+                        currentUrl = nextUrl.toString()
+                        continue
+                    }
+                    conn = attempt
+                    break
+                } catch (e: Exception) {
+                    try {
+                        attempt.disconnect()
+                    } catch (_: Exception) {}
+                    throw e
                 }
-                if (code in 300..399) {
-                    val location = attempt.getHeaderField("Location")
-                    attempt.disconnect()
-                    if (location.isNullOrBlank()) return null
-                    val nextUrl = URL(url, location)
-                    if (!nextUrl.host.equals("hls.bote.gov.taipei", ignoreCase = true)) return null
-                    currentUrl = nextUrl.toString()
-                    continue
-                }
-                conn = attempt
-                break
             }
 
             if (conn != null && code in 200..299) {
@@ -582,19 +595,23 @@ class MainActivity : ComponentActivity() {
 
                 // 針對二進位視訊切片 (.ts / .mp4 / .m4s) 與圖檔，encoding 必須傳入 null，避免 UTF-8 破壞位元組造成解碼失敗
                 val encoding = if (isBinary) null else {
-                    if (rawContentType.contains("charset=")) {
-                        rawContentType.split("charset=")[1].trim()
+                    if (rawContentType.contains("charset=", ignoreCase = true)) {
+                        rawContentType.substringAfter("charset=").substringBefore(";").trim().ifEmpty { "utf-8" }
                     } else {
                         "utf-8"
                     }
                 }
 
+                val contentRangeHeader = if (code == 206) conn.getHeaderField("Content-Range") else null
                 val bytes = if (method == "HEAD") ByteArray(0) else conn.inputStream.use { it.readBytes() }
                 conn.disconnect()
 
                 val headers = corsHeaders().apply {
                     put("Cache-Control", "no-cache, no-store, must-revalidate")
                     put("Accept-Ranges", "bytes")
+                    if (!contentRangeHeader.isNullOrBlank()) {
+                        put("Content-Range", contentRangeHeader)
+                    }
                     if (method != "HEAD") {
                         put("Content-Length", bytes.size.toString())
                     }
@@ -665,23 +682,6 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 處理執行階段定位權限授權結果
-     */
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-            pendingLocationCallback?.invoke(pendingLocationOrigin, granted, false)
-            pendingLocationCallback = null
-            pendingLocationOrigin = null
-        }
-    }
-
-    /**
      * 電視遙控器功能鍵支援 (方向鍵交由 WebView 原生空間焦點導航處理)
      */
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -704,7 +704,7 @@ class MainActivity : ComponentActivity() {
             """
             (function() {
                 if (window.weatherMonitor && typeof window.weatherMonitor.triggerAutoRefresh === 'function') {
-                    window.weatherMonitor.triggerAutoRefresh();
+                    window.weatherMonitor.triggerAutoRefresh(true);
                 }
             })();
             """.trimIndent(),
@@ -1604,6 +1604,7 @@ internal object TransitParsers {
 
     fun parseOfficialThsr(jsonStr: String): JSONArray {
         val trainsArray = JSONArray()
+        val items = mutableListOf<Pair<Int, JSONObject>>()
         try {
             val root = JSONObject(jsonStr)
             val data = root.optJSONObject("data") ?: return trainsArray
@@ -1613,6 +1614,11 @@ internal object TransitParsers {
             for (i in 0 until trainItem.length()) {
                 val t = trainItem.getJSONObject(i)
                 val trainNo = t.optString("TrainNumber", "")
+                val cleanNo = trainNo.trimStart('0')
+                // 嚴格排除不停靠桃園站之 1xx / 11xx 直達台中車次（保留 16xx）
+                if (cleanNo.startsWith("1") && cleanNo.length <= 4 && !cleanNo.startsWith("16")) {
+                    continue
+                }
                 val depTime = t.optString("DepartureTime", "")
                 val arrTime = t.optString("DestinationTime", "")
                 if (depTime.isNotBlank() && arrTime.isNotBlank()) {
@@ -1623,6 +1629,7 @@ internal object TransitParsers {
                         if (duration < 0) duration += 1440
                         val isExpress = trainNo.startsWith("06") || trainNo.startsWith("6")
                         val depOpH = if (depParts[0] < 4) depParts[0] + 24 else depParts[0]
+                        val depMinutes = depOpH * 60 + depParts[1]
                         val item = JSONObject().apply {
                             put("trainNo", trainNo)
                             put("depTime", depTime)
@@ -1631,12 +1638,13 @@ internal object TransitParsers {
                             put("isExpress", isExpress)
                             put("type", if (isExpress) "6xx特快" else "8xx全停")
                             put("stopsAtTaoyuan", true)
-                            put("depMinutes", depOpH * 60 + depParts[1])
+                            put("depMinutes", depMinutes)
                         }
-                        trainsArray.put(item)
+                        items.add(depMinutes to item)
                     }
                 }
             }
+            items.sortedBy { it.first }.forEach { trainsArray.put(it.second) }
         } catch (_: Exception) {}
         return trainsArray
     }

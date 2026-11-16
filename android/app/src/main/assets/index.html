@@ -9303,9 +9303,10 @@ class CameraPlayerEngine {
       `;
     } else {
       // 快照備援
+      const snapSep = String(cam.streamUrl || '').includes('?') ? '&' : '?';
       mediaHtml = `
         <div class="video-wrapper" ondblclick="window.monitorApp.openFullscreen('${cam.id}')" title="按兩下開啟全螢幕檢視">
-          <img class="cam-feed snapshot-feed" id="feed-${cam.id}" data-raw-url="${cam.streamUrl}" referrerpolicy="no-referrer" src="${cam.streamUrl}?_t=${Date.now()}" alt="${cam.name}" loading="lazy" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${cam.id}')" />
+          <img class="cam-feed snapshot-feed" id="feed-${cam.id}" data-raw-url="${cam.streamUrl}" referrerpolicy="no-referrer" src="${cam.streamUrl}${snapSep}_t=${Date.now()}" alt="${cam.name}" loading="lazy" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${cam.id}')" />
         </div>
       `;
     }
@@ -10071,7 +10072,8 @@ class CameraPlayerEngine {
     snapshotImgs.forEach(img => {
       const rawUrl = img.dataset.rawUrl;
       if (rawUrl) {
-        const newSrc = `${rawUrl}?_t=${now}`;
+        const sep = rawUrl.includes('?') ? '&' : '?';
+        const newSrc = `${rawUrl}${sep}_t=${now}`;
         const tempImg = new Image();
         tempImg.onload = () => {
           img.src = newSrc;
@@ -10450,13 +10452,13 @@ class WeatherEnvironmentMonitor {
     });
   }
 
-  // 觸發自動重新整理
-  triggerAutoRefresh() {
+  // 觸發自動重新整理 (skipTransit 為 true 時僅更新天候/雷達與 YouBike，避免重複觸發原生捷運輪詢)
+  triggerAutoRefresh(skipTransit = false) {
     this.countdownSec = this.refreshIntervalSec;
     this.updateCountdownDisplay();
 
     const isJapanMode = typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan';
-    if (!isJapanMode) {
+    if (!isJapanMode && !skipTransit) {
       // 週期觸發 YouBike 2.0 即時動態同步 (內建防抖保護)
       this.fetchRealtimeYouBike();
 
@@ -11825,8 +11827,13 @@ class WeatherEnvironmentMonitor {
     const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp && 
       (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
-    // 雲端與同源整合資料端點 (優先同源秒讀，支援純靜態/APK 免 CORS 直連)
-    const cloudDataUrls = [
+    // 雲端與同源整合資料端點 (Android APK 環境遠端 GitHub 優先，避免優先讀取打包期舊資產；Web 環境同源優先)
+    const cloudDataUrls = isAndroidApp ? [
+      'https://janede0214.github.io/taiwan-neighborhood-monitor/data/youbike.json',
+      'https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/youbike.json',
+      './data/youbike.json',
+      'data/youbike.json'
+    ] : [
       './data/youbike.json',
       'data/youbike.json',
       'https://janede0214.github.io/taiwan-neighborhood-monitor/data/youbike.json',
@@ -11946,14 +11953,29 @@ class WeatherEnvironmentMonitor {
 
       // 途徑 4：雲端資料庫直連 (GitHub Actions 每 5 分鐘推送最新資料庫) 與同源備援
       if (!ntpcData && !tycgRaw && !fromNativePush) {
-        const cloudJson = await fetchJsonSafe(cloudDataUrls);
-        if (cloudJson) {
-          ntpcData = cloudJson.ntpc || null;
-          tycgRaw = cloudJson.tycg || null;
-          if (cloudJson.updateTimeDisplay) {
-            staticUpdateTime = cloudJson.updateTimeDisplay;
+        let staleFallback = null;
+        for (const rawUrl of cloudDataUrls) {
+          const candidateJson = await fetchJsonSafe([rawUrl]);
+          if (candidateJson && (candidateJson.ntpc || candidateJson.tycg)) {
+            const fresh = Boolean(candidateJson.isDirectApi) || isSnapshotFresh(candidateJson.updatedAt);
+            if (fresh) {
+              ntpcData = candidateJson.ntpc || null;
+              tycgRaw = candidateJson.tycg || null;
+              if (candidateJson.updateTimeDisplay) staticUpdateTime = candidateJson.updateTimeDisplay;
+              isSourceRealtime = true;
+              break;
+            } else if (!staleFallback) {
+              staleFallback = candidateJson;
+            }
           }
-          isSourceRealtime = Boolean(cloudJson.isDirectApi) || isSnapshotFresh(cloudJson.updatedAt);
+        }
+        if (!ntpcData && !tycgRaw && staleFallback) {
+          ntpcData = staleFallback.ntpc || null;
+          tycgRaw = staleFallback.tycg || null;
+          if (staleFallback.updateTimeDisplay) {
+            staticUpdateTime = staleFallback.updateTimeDisplay;
+          }
+          isSourceRealtime = false;
         }
       }
 
@@ -12476,7 +12498,7 @@ class NeighborhoodRadarMap {
     this.cameraMarkers.forEach(m => this.map.removeLayer(m));
     this.cameraMarkers = [];
 
-    const isDual = centerInfo.id === 'dual';
+    const isDual = safeCenter.id === 'dual';
 
     // 建立居所中心標記圖標產生器
     const makeCenterIcon = (color) => L.divIcon({
@@ -13638,8 +13660,11 @@ class TwinCityTransitMonitor {
     this.render();
 
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      alert('您的瀏覽器或裝置不支援 GPS 定位功能。');
+      if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
+        window.showToast('您的裝置或瀏覽器不支援 GPS 定位功能', 'warning');
+      }
       this.isLocating = false;
+      this.isAutoLocationActive = false;
       return;
     }
 
@@ -14115,9 +14140,14 @@ class TwinCityTransitMonitor {
         weightRes = await fetch('/api/metro/carweight', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (Android APK 環境遠端優先)
       if (!res && !fromNativePush) {
-        const candidateUrls = [
+        const candidateUrls = isAndroidApp ? [
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json?_t=${nowMs}`,
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/metro-live.json?_t=${nowMs}`,
+          `./data/metro-live.json?_t=${nowMs}`,
+          `data/metro-live.json?_t=${nowMs}`
+        ] : [
           `./data/metro-live.json?_t=${nowMs}`,
           `data/metro-live.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/metro-live.json?_t=${nowMs}`,
@@ -14130,6 +14160,14 @@ class TwinCityTransitMonitor {
           }).then(r => r.ok ? r.json() : null).catch(() => null);
 
           if (staticLive) {
+            const upMs = staticLive.updatedAt ? Date.parse(staticLive.updatedAt) : NaN;
+            const age = Number.isFinite(upMs) ? (Date.now() - upMs) : 0;
+            if (age > 180000 || age < -60000) {
+              if (!weightRes && staticLive.carWeight) {
+                weightRes = { success: true, data: staticLive.carWeight };
+              }
+              continue; // 略過過期快照，繼續嘗試下一個即時端點
+            }
             if (Array.isArray(staticLive.trains)) {
               res = { 
                 success: true, 
@@ -14302,9 +14340,14 @@ class TwinCityTransitMonitor {
         res = await fetch('/api/parking/thsr', { signal: AbortSignal.timeout(3000) }).then(r => r.ok ? r.json() : null).catch(() => null);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (Android APK 環境遠端優先)
       if ((!res || !res.lots) && !fromNativePush) {
-        const candidateUrls = [
+        const candidateUrls = isAndroidApp ? [
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json?_t=${nowMs}`,
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/parking.json?_t=${nowMs}`,
+          `./data/parking.json?_t=${nowMs}`,
+          `data/parking.json?_t=${nowMs}`
+        ] : [
           `./data/parking.json?_t=${nowMs}`,
           `data/parking.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/parking.json?_t=${nowMs}`,
@@ -14369,8 +14412,45 @@ class TwinCityTransitMonitor {
 
     const upcoming = mapped.filter(t => t.opMin >= curOpMin);
 
-    // 收班時段檢查 (凌晨 00:56 ~ 06:01)
-    if (upcoming.length === 0 || (curH >= 1 && curH < 6)) {
+    // 雙軌互補融合：先檢核即時看板（避免靜態末班後實際仍在延誤或加班車營運期間誤報收班）
+    let liveMatch = null;
+    let minCalibratedSec = Infinity;
+    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0) {
+      const targetStation = isToQingpu ? '新埔' : '板橋';
+      const nowMs = now.getTime();
+      const candidates = this.metroLiveData.filter(item => {
+        if (!item.station || !item.station.includes(targetStation)) return false;
+        if (item.line && !item.line.includes('板南')) return false;
+        if (isToQingpu) {
+          return item.dest && (item.dest.includes('頂埔') || item.dest.includes('亞東') || item.dest.includes('板橋'));
+        } else {
+          return item.dest && (item.dest.includes('南港') || item.dest.includes('昆陽') || item.dest.includes('新埔'));
+        }
+      });
+
+      // 挑選秒數最小（最快進站）之即時班次，以航位推測平滑引擎計算每秒真實剩餘秒數
+      candidates.forEach(c => {
+        const trackerKey = c.trackerKey || `${c.line || ''}_${c.station || ''}_${c.dest || ''}_0`;
+        const tracked = this.metroSmoothTracker ? this.metroSmoothTracker.get(trackerKey) : null;
+        let currentSec = 0;
+        if (tracked && tracked.targetArrivalMs) {
+          currentSec = Math.round((tracked.targetArrivalMs - nowMs) / 1000);
+        } else if (c.targetArrivalMs) {
+          currentSec = Math.round((c.targetArrivalMs - nowMs) / 1000);
+        } else if (c.remainSec != null && !isNaN(c.remainSec)) {
+          currentSec = c.remainSec;
+        }
+
+        // 容許進站停靠中 (-35秒內) 仍判定為該班車，不直接斷開跳表
+        if (currentSec >= -35 && currentSec < minCalibratedSec) {
+          minCalibratedSec = currentSec;
+          liveMatch = { ...c, currentSec };
+        }
+      });
+    }
+
+    // 收班時段檢查 (凌晨 00:56 ~ 06:01，且無即時看板列車)
+    if (!liveMatch && (upcoming.length === 0 || (curH >= 1 && curH < 6))) {
       return {
         lineName: '台北捷運板南線',
         shortName: '板南線',
@@ -14390,56 +14470,18 @@ class TwinCityTransitMonitor {
       };
     }
 
-    const nextTrain = upcoming[0];
+    const nextTrain = upcoming[0] || { timeStr: '--:--', opMin: curOpMin };
     const curTotalSec = ((curH < 4 ? curH + 24 : curH) * 3600) + (curM * 60) + curS;
     const trainTotalSec = nextTrain.opMin * 60;
     const schedRemainSec = Math.max(0, trainTotalSec - curTotalSec);
 
-    // 雙軌互補融合：優先以 opendata.vip 官方即時看板為主，班表作為可靠備援
     let remainSec = schedRemainSec;
     let isLive = false;
     let liveDest = '';
-
-    if (this.isMetroOnline && Array.isArray(this.metroLiveData) && this.metroLiveData.length > 0) {
-      const targetStation = isToQingpu ? '新埔' : '板橋';
-      const nowMs = now.getTime();
-      const candidates = this.metroLiveData.filter(item => {
-        if (!item.station || !item.station.includes(targetStation)) return false;
-        if (item.line && !item.line.includes('板南')) return false;
-        if (isToQingpu) {
-          return item.dest && (item.dest.includes('頂埔') || item.dest.includes('亞東') || item.dest.includes('板橋'));
-        } else {
-          return item.dest && (item.dest.includes('南港') || item.dest.includes('昆陽') || item.dest.includes('新埔'));
-        }
-      });
-
-      // 挑選秒數最小（最快進站）之即時班次，以航位推測平滑引擎計算每秒真實剩餘秒數
-      let bestMatch = null;
-      let minCalibratedSec = Infinity;
-      candidates.forEach(c => {
-        const trackerKey = c.trackerKey || `${c.line || ''}_${c.station || ''}_${c.dest || ''}_0`;
-        const tracked = this.metroSmoothTracker ? this.metroSmoothTracker.get(trackerKey) : null;
-        let currentSec = 0;
-        if (tracked && tracked.targetArrivalMs) {
-          currentSec = Math.round((tracked.targetArrivalMs - nowMs) / 1000);
-        } else if (c.targetArrivalMs) {
-          currentSec = Math.round((c.targetArrivalMs - nowMs) / 1000);
-        } else if (c.remainSec != null && !isNaN(c.remainSec)) {
-          currentSec = c.remainSec;
-        }
-
-        // 容許進站停靠中 (-35秒內) 仍判定為該班車，不直接斷開跳表
-        if (currentSec >= -35 && currentSec < minCalibratedSec) {
-          minCalibratedSec = currentSec;
-          bestMatch = { ...c, currentSec };
-        }
-      });
-
-      if (bestMatch) {
-        remainSec = Math.max(0, minCalibratedSec);
-        isLive = true;
-        liveDest = (bestMatch.dest || '').replace(/站$/, '').replace('新北產業園區', '新北產園');
-      }
+    if (liveMatch) {
+      remainSec = Math.max(0, minCalibratedSec);
+      isLive = true;
+      liveDest = (liveMatch.dest || '').replace(/站$/, '').replace('新北產業園區', '新北產園');
     }
 
     const isArriving = remainSec <= 35;
@@ -14647,9 +14689,14 @@ class TwinCityTransitMonitor {
         ]);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (Android APK 環境遠端優先)
       if (!southRes && !northRes && !fromNativePush) {
-        const candidateUrls = [
+        const candidateUrls = isAndroidApp ? [
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json?_t=${nowMs}`,
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/thsr.json?_t=${nowMs}`,
+          `./data/thsr.json?_t=${nowMs}`,
+          `data/thsr.json?_t=${nowMs}`
+        ] : [
           `./data/thsr.json?_t=${nowMs}`,
           `data/thsr.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/thsr.json?_t=${nowMs}`,
@@ -14752,9 +14799,14 @@ class TwinCityTransitMonitor {
         ]);
       }
 
-      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (優先同源秒讀)
+      // 途徑 3：GitHub 雲端最新資料庫與同源備援 (Android APK 環境遠端優先)
       if (!southRes && !northRes && !fromNativePush) {
-        const candidateUrls = [
+        const candidateUrls = isAndroidApp ? [
+          `https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json?_t=${nowMs}`,
+          `https://raw.githubusercontent.com/JaneDe0214/taiwan-neighborhood-monitor/main/data/tymetro.json?_t=${nowMs}`,
+          `./data/tymetro.json?_t=${nowMs}`,
+          `data/tymetro.json?_t=${nowMs}`
+        ] : [
           `./data/tymetro.json?_t=${nowMs}`,
           `data/tymetro.json?_t=${nowMs}`,
           `https://janede0214.github.io/taiwan-neighborhood-monitor/data/tymetro.json?_t=${nowMs}`,
@@ -15295,6 +15347,7 @@ class TwinCityTransitMonitor {
         trainNo: t.trainNo,
         leaveTimeMs: leaveDate.getTime(),
         depTimeMs: depDate.getTime(),
+        boardTimeMs: depDate.getTime(),
         arriveTimeMs: finalDestArr.getTime(),
         leaveTime: this.formatTime(leaveDate),
         boardTrainTime: t.depTime,
@@ -15335,6 +15388,7 @@ class TwinCityTransitMonitor {
         trainTypeShort: p.isExpress ? '直達' : '普通',
         leaveTimeMs: leaveDate.getTime(),
         depTimeMs: depDate.getTime(),
+        boardTimeMs: depDate.getTime(),
         arriveTimeMs: finalDestArr.getTime(),
         leaveTime: this.formatTime(leaveDate),
         boardTrainTime: p.depTime,
@@ -15579,13 +15633,15 @@ class TwinCityTransitMonitor {
         circularBeacon.title = `${circular.lineName} (${circular.trainNo} ${circular.runStatusText})`;
       }
 
-      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新 (邏輯同月台發車倒數跳秒)
+      // 5. 即時出門指南 (Ready-to-Go Hub) 秒級原地更新 (使用可趕上推薦班次的精確發車時間戳)
       const now = new Date();
-      const thsrPlanWaitSec = (firstThsrPlan && firstThsrPlan.boardTimeMs)
-        ? Math.max(0, Math.floor((firstThsrPlan.boardTimeMs - now.getTime()) / 1000))
+      const firstThsrDepMs = firstThsrPlan ? (firstThsrPlan.depTimeMs ?? firstThsrPlan.boardTimeMs) : null;
+      const firstTymetroDepMs = firstTymetroPlan ? (firstTymetroPlan.depTimeMs ?? firstTymetroPlan.boardTimeMs) : null;
+      const thsrPlanWaitSec = firstThsrDepMs
+        ? Math.max(0, Math.floor((firstThsrDepMs - now.getTime()) / 1000))
         : thsr.waitSec;
-      const tymetroPlanWaitSec = (firstTymetroPlan && firstTymetroPlan.boardTimeMs)
-        ? Math.max(0, Math.floor((firstTymetroPlan.boardTimeMs - now.getTime()) / 1000))
+      const tymetroPlanWaitSec = firstTymetroDepMs
+        ? Math.max(0, Math.floor((firstTymetroDepMs - now.getTime()) / 1000))
         : tymetro.waitSec;
 
       const hubThsrCountdown = mainSlot.querySelector('[data-f-hub-thsr-countdown]');
@@ -16270,8 +16326,9 @@ class TwinCityTransitMonitor {
 
         ${(() => {
           const now = new Date();
-          const thsrPlanWaitSec = (firstThsrPlan && firstThsrPlan.boardTimeMs)
-            ? Math.max(0, Math.floor((firstThsrPlan.boardTimeMs - now.getTime()) / 1000))
+          const firstThsrDepMs = firstThsrPlan ? (firstThsrPlan.depTimeMs ?? firstThsrPlan.boardTimeMs) : null;
+          const thsrPlanWaitSec = firstThsrDepMs
+            ? Math.max(0, Math.floor((firstThsrDepMs - now.getTime()) / 1000))
             : thsr.waitSec;
           const thsrDepTime = firstThsrPlan ? firstThsrPlan.boardTrainTime : thsr.depTime;
           const thsrTrainNo = firstThsrPlan ? `${firstThsrPlan.trainNo}次` : `${thsr.trainNo}次`;
@@ -16290,8 +16347,9 @@ class TwinCityTransitMonitor {
             }
           }
 
-          const tymetroPlanWaitSec = (firstTymetroPlan && firstTymetroPlan.boardTimeMs)
-            ? Math.max(0, Math.floor((firstTymetroPlan.boardTimeMs - now.getTime()) / 1000))
+          const firstTymetroDepMs = firstTymetroPlan ? (firstTymetroPlan.depTimeMs ?? firstTymetroPlan.boardTimeMs) : null;
+          const tymetroPlanWaitSec = firstTymetroDepMs
+            ? Math.max(0, Math.floor((firstTymetroDepMs - now.getTime()) / 1000))
             : tymetro.waitSec;
           const tymetroDepTime = firstTymetroPlan ? firstTymetroPlan.boardTrainTime : tymetro.depTime;
           const isExpress = firstTymetroPlan ? firstTymetroPlan.isExpress : tymetro.isExpress;
@@ -21090,9 +21148,11 @@ class MonitorApp {
           console.warn('[Geolocation] 定位授權或逾時異常:', error.message);
           if (nearbyBtn) nearbyBtn.classList.remove('locating');
           this.isLocatingNearby = false;
-          // 若無快取，安全容錯退回預設雙埔中心
+          // 若無快取，非阻塞提示並容錯退回預設雙埔中心
           if (!hasRenderedFromCache) {
-            alert('未能取得您的目前地理位置，已為您自動載入預設「雙埔生活」中心。');
+            if (window.showToast) {
+              window.showToast('未能取得目前地理位置，已自動切換回「雙埔生活」中心', 'warning');
+            }
             this.switchCenter('dual');
           }
         },
@@ -21946,8 +22006,9 @@ class MonitorApp {
         <img referrerpolicy="no-referrer" src="${cam.streamUrl}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
       `;
     } else {
+      const snapSep = String(cam.streamUrl || '').includes('?') ? '&' : '?';
       modalBody.innerHTML = `
-        <img referrerpolicy="no-referrer" src="${cam.streamUrl}?_t=${Date.now()}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
+        <img referrerpolicy="no-referrer" src="${cam.streamUrl}${snapSep}_t=${Date.now()}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
       `;
     }
 
