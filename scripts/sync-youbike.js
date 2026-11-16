@@ -2,13 +2,32 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-function fetchUrl(url) {
+function fetchUrl(url, hopCount = 0) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0' } }, res => {
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => resolve(d));
-    }).on('error', reject);
+    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0' } }, res => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume();
+        if (hopCount >= 5) return reject(new Error('重新導向次數過多'));
+        try {
+          const nextUrl = new URL(res.headers.location, url).toString();
+          return fetchUrl(nextUrl, hopCount + 1).then(resolve).catch(reject);
+        } catch (e) {
+          return reject(e);
+        }
+      }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        res.resume();
+        return reject(new Error(`HTTP Status ${res.statusCode}`));
+      }
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    });
+    req.on('error', reject);
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error(`連線逾時: ${url}`));
+    });
   });
 }
 
@@ -73,23 +92,37 @@ async function sync() {
   const mm = String(twDate.getMinutes()).padStart(2, '0');
   const updateTime = `${hh}:${mm}`;
 
-  const payload = {
-    updatedAt: twDate.toISOString(),
-    updateTimeDisplay: updateTime,
-    ntpcCount: ntpcList.length,
-    tycgCount: tycgList.length,
-    ntpc: ntpcList,
-    tycg: tycgList
-  };
-
   const outDir = path.join(__dirname, '../data');
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
   const outFile = path.join(outDir, 'youbike.json');
+  let existingData = {};
+  if (fs.existsSync(outFile)) {
+    try {
+      existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+    } catch (_e) {}
+  }
+
+  const finalNtpc = ntpcList.length > 0 ? ntpcList : (Array.isArray(existingData.ntpc) ? existingData.ntpc : []);
+  const finalTycg = tycgList.length > 0 ? tycgList : (Array.isArray(existingData.tycg) ? existingData.tycg : []);
+  if (finalNtpc.length === 0 && finalTycg.length === 0) {
+    console.warn('[YouBike 同步] 兩市均無有效資料，保留既有檔案');
+    return;
+  }
+
+  const payload = {
+    updatedAt: new Date().toISOString(),
+    updateTimeDisplay: updateTime,
+    ntpcCount: finalNtpc.length,
+    tycgCount: finalTycg.length,
+    ntpc: finalNtpc,
+    tycg: finalTycg
+  };
+
   fs.writeFileSync(outFile, JSON.stringify(payload));
-  console.log(`[YouBike 同步完成] 已儲存至 ${outFile}，新北: ${ntpcList.length} 站，桃園: ${tycgList.length} 站，更新時間: ${updateTime}`);
+  console.log(`[YouBike 同步完成] 已儲存至 ${outFile}，新北: ${finalNtpc.length} 站，桃園: ${finalTycg.length} 站，更新時間: ${updateTime}`);
 }
 
 sync().catch(console.error);

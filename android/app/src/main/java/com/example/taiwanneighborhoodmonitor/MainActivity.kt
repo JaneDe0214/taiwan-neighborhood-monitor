@@ -2,14 +2,21 @@ package com.example.taiwanneighborhoodmonitor
 
 import android.annotation.SuppressLint
 import android.app.UiModeManager
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Base64
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
 import android.webkit.RenderProcessGoneDetail
@@ -19,7 +26,12 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,10 +40,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 import okhttp3.ConnectionPool
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -40,12 +49,17 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.FilterInputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 /**
  * 雙埔生活 (新埔 ‧ 青埔) 原生 Android 應用程式
@@ -58,12 +72,17 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
     private var isTvDevice: Boolean = false
-    private val scope = CoroutineScope(Dispatchers.Main)
     private lateinit var nativeBridge: AndroidNativeBridge
 
     private var pendingLocationCallback: android.webkit.GeolocationPermissions.Callback? = null
     private var pendingLocationOrigin: String? = null
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
+
+    // HTML5 影片 / iframe 原生全螢幕視圖管理
+    private var customFullscreenView: View? = null
+    private var customFullscreenCallback: WebChromeClient.CustomViewCallback? = null
+    private var customFullscreenContainer: FrameLayout? = null
+    private var lastTriggerRefreshMs: Long = 0L
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,19 +105,73 @@ class MainActivity : ComponentActivity() {
         // 3. 建立並配置全硬體加速的原生 WebView 視圖 (使用 LAYER_TYPE_NONE 交由 Chromium 內建管線加速，避免雙重離屏緩衝破圖黑塊)
         webView = WebView(this).apply {
             setLayerType(View.LAYER_TYPE_NONE, null)
-            setBackgroundColor(android.graphics.Color.parseColor("#0a0e17"))
+            setBackgroundColor("#0a0e17".toColorInt())
             isFocusable = true
             isFocusableInTouchMode = true
         }
         setContentView(webView)
 
         configureWebView(webView)
+        registerBackNavigation()
 
         // 4. 背景立即非同步平行預熱所有大眾運輸與 YouBike 即時數據 (0 阻塞、秒開無白屏)
+        lastTriggerRefreshMs = System.currentTimeMillis()
         nativeBridge.prewarmAllData()
 
         // 5. 透過官方建議的 HTTPS 虛擬網域載入本機資產應用程式（確保 YouTube/外部嵌入接收合法 HTTPS Referer，徹底消除錯誤 153）
         webView.loadUrl("https://appassets.androidplatform.net/index.html")
+    }
+
+    /**
+     * 使用 AndroidX OnBackPressedDispatcher 處理返回與 Android 16+ 預測返回手勢
+     */
+    private fun registerBackNavigation() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (customFullscreenView != null) {
+                    hideCustomFullscreenView()
+                    return
+                }
+                webView.evaluateJavascript(
+                    """
+                    (function() {
+                        const cp = document.getElementById('commandPaletteOverlay');
+                        if (cp && cp.classList.contains('active')) {
+                            cp.classList.remove('active');
+                            return true;
+                        }
+                        const modal = document.getElementById('cameraModal');
+                        if (modal && modal.classList.contains('active')) {
+                            const closeBtn = document.getElementById('modalCloseBtn');
+                            if (closeBtn) closeBtn.click();
+                            return true;
+                        }
+                        return false;
+                    })();
+                    """.trimIndent()
+                ) { handled ->
+                    if (handled == "true") return@evaluateJavascript
+                    if (webView.canGoBack()) {
+                        webView.goBack()
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
+                }
+            }
+        })
+    }
+
+    private fun hideCustomFullscreenView() {
+        try {
+            customFullscreenContainer?.let { container ->
+                (window.decorView as? ViewGroup)?.removeView(container)
+            }
+            customFullscreenCallback?.onCustomViewHidden()
+        } catch (_: Exception) {}
+        customFullscreenView = null
+        customFullscreenCallback = null
+        customFullscreenContainer = null
     }
 
     /**
@@ -159,7 +232,50 @@ class MainActivity : ComponentActivity() {
         nativeBridge = AndroidNativeBridge(this, isTvDevice, wv)
         wv.addJavascriptInterface(nativeBridge, "AndroidBridge")
 
+        // 支援網頁快照 (data:image/) 儲存與外部下載
+        wv.setDownloadListener { url, _, _, _, _ ->
+            if (url.startsWith("data:image/")) {
+                nativeBridge.saveImageDataUrl(url, "cam_snapshot_${System.currentTimeMillis()}.jpg")
+            } else if (url.startsWith("http://") || url.startsWith("https://")) {
+                openExternalUri(url.toUri())
+            }
+        }
+
         wv.webChromeClient = object : WebChromeClient() {
+            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                if (view == null) {
+                    callback?.onCustomViewHidden()
+                    return
+                }
+                if (customFullscreenView != null) {
+                    hideCustomFullscreenView()
+                }
+                val container = FrameLayout(this@MainActivity).apply {
+                    setBackgroundColor(Color.BLACK)
+                    addView(
+                        view,
+                        FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    )
+                }
+                (window.decorView as? ViewGroup)?.addView(
+                    container,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                )
+                customFullscreenView = view
+                customFullscreenCallback = callback
+                customFullscreenContainer = container
+            }
+
+            override fun onHideCustomView() {
+                hideCustomFullscreenView()
+            }
+
             override fun onGeolocationPermissionsShowPrompt(
                 origin: String?,
                 callback: android.webkit.GeolocationPermissions.Callback?
@@ -194,7 +310,7 @@ class MainActivity : ComponentActivity() {
                 // 攔截 Chromium WebView 子進程崩潰，避免直接彈出顛倒 Android 機器人圖示
                 try {
                     view?.let {
-                        val parent = it.parent as? android.view.ViewGroup
+                        val parent = it.parent as? ViewGroup
                         parent?.removeView(it)
                         it.destroy()
                     }
@@ -206,60 +322,23 @@ class MainActivity : ComponentActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val uri = request?.url ?: return false
                 val url = uri.toString()
+                if (uri.scheme.equals("https", ignoreCase = true) &&
+                    uri.host.equals("appassets.androidplatform.net", ignoreCase = true)
+                ) {
+                    return false
+                }
                 if (url.startsWith("https://www.google.com/maps") ||
                     url.startsWith("https://maps.google.com") ||
                     url.startsWith("http://maps.google.com") ||
                     url.startsWith("geo:")
                 ) {
-                    return try {
-                        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        this@MainActivity.startActivity(intent)
-                        true
-                    } catch (e: Exception) {
-                        try {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            }
-                            this@MainActivity.startActivity(browserIntent)
-                            true
-                        } catch (_: Exception) {
-                            false
-                        }
-                    }
+                    return openExternalUri(uri)
                 }
-                return super.shouldOverrideUrlLoading(view, request)
-            }
-
-            @Deprecated("Deprecated in Java")
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url == null) return false
-                if (url.startsWith("https://www.google.com/maps") ||
-                    url.startsWith("https://maps.google.com") ||
-                    url.startsWith("http://maps.google.com") ||
-                    url.startsWith("geo:")
-                ) {
-                    return try {
-                        val uri = Uri.parse(url)
-                        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        this@MainActivity.startActivity(intent)
-                        true
-                    } catch (e: Exception) {
-                        try {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            }
-                            this@MainActivity.startActivity(browserIntent)
-                            true
-                        } catch (_: Exception) {
-                            false
-                        }
-                    }
+                // 若為主框架主動點擊外部連結 (如地震報告、官方即時視窗)，交由系統瀏覽器開啟以免覆蓋監控頁面；子框架 (YouTube/BOTE iframe) 放行內嵌載入
+                if (request.isForMainFrame && (url.startsWith("http://") || url.startsWith("https://"))) {
+                    return openExternalUri(uri)
                 }
-                return super.shouldOverrideUrlLoading(view, url)
+                return false
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -270,11 +349,17 @@ class MainActivity : ComponentActivity() {
                     (function() {
                         document.body.classList.add('$modeClass');
                         if ($isTvDevice) {
-                            // 電視版：調大字體與電視牆卡片比重，最佳化 3 公尺客廳視距
+                            // 電視版：調大字體與電視牆卡片比重，最佳化 3 公尺客廳視距，並聚焦導航列起點支援 D-Pad 移動
                             document.documentElement.style.setProperty('--tv-zoom', '1.15');
+                            if (!document.activeElement || document.activeElement === document.body) {
+                                const firstFocus = document.querySelector('.center-btn.active') || document.querySelector('.center-btn');
+                                if (firstFocus && typeof firstFocus.focus === 'function') firstFocus.focus();
+                            }
                         } else {
-                            // 手機版：優先展開交通即時走廊，讓通勤者掌握出門搭車與騎車班況
-                            if (window.transitMonitor && window.transitMonitor.isCollapsed) {
+                            // 手機版：僅於尚未自訂收合狀態時預設展開交通即時走廊
+                            let savedCollapse = null;
+                            try { savedCollapse = localStorage.getItem('dpu_transit_collapsed'); } catch (_e) {}
+                            if (savedCollapse === null && window.transitMonitor && window.transitMonitor.isCollapsed) {
                                 window.transitMonitor.isCollapsed = false;
                                 window.transitMonitor.render();
                             }
@@ -285,7 +370,7 @@ class MainActivity : ComponentActivity() {
             }
 
             /**
-             * 原生網路攔截直通：當 Web 請求外部 API 或串流時，可透過原生 HttpURLConnection 高速並行直取 (免 CORS、免 Referer 限制)
+             * 原生網路攔截直通：當 Web 請求外部 API 或串流時，透過原生直取並補齊 CORS 標頭
              */
             override fun shouldInterceptRequest(
                 view: WebView?,
@@ -299,27 +384,42 @@ class MainActivity : ComponentActivity() {
                     return serveBundledAsset(uri)
                 }
                 if (url.startsWith("http://") || url.startsWith("https://")) {
-                    // 針對臺北市交工處 HLS 串流與即時視訊資源進行原生代抓 (精準注入 Referer 與 CORS 標頭，徹底消除 403 與 iframe 破圖)
-                    if (url.contains("hls.bote.gov.taipei")) {
-                        if (request.method.equals("OPTIONS", ignoreCase = true)) {
-                            val headers = mutableMapOf<String, String>(
-                                "Access-Control-Allow-Origin" to "*",
-                                "Access-Control-Allow-Methods" to "GET, HEAD, OPTIONS",
-                                "Access-Control-Allow-Headers" to "*"
-                            )
-                            return WebResourceResponse("text/plain", "utf-8", 204, "No Content", headers, ByteArrayInputStream(ByteArray(0)))
-                        }
+                    val isBote = url.contains("hls.bote.gov.taipei")
+                    val isNativeApi = url.contains("raw.githubusercontent.com") ||
+                        url.contains("janede0214.github.io") ||
+                        url.contains("opendata.vip") ||
+                        url.contains("tdx") ||
+                        url.contains("data.ntpc.gov.tw") ||
+                        url.contains("opendata.tycg.gov.tw") ||
+                        url.contains("cwa.gov.tw") ||
+                        url.contains("thsrc.com.tw") ||
+                        url.contains("earthquake.usgs.gov") ||
+                        url.contains("open-meteo.com")
+
+                    if ((isBote || isNativeApi) && request.method.equals("OPTIONS", ignoreCase = true)) {
+                        return WebResourceResponse(
+                            "text/plain",
+                            "utf-8",
+                            204,
+                            "No Content",
+                            corsHeaders(),
+                            ByteArrayInputStream(ByteArray(0))
+                        )
+                    }
+
+                    if (isBote) {
                         try {
-                            val boteRes = fetchNativeBoteUrl(url)
+                            val method = if (request.method.equals("HEAD", ignoreCase = true)) "HEAD" else "GET"
+                            val rangeHeader = request.requestHeaders?.entries?.firstOrNull {
+                                it.key.equals("Range", ignoreCase = true)
+                            }?.value
+                            val boteRes = fetchNativeBoteUrl(url, method, rangeHeader)
                             if (boteRes != null) return boteRes
                         } catch (_: Exception) {}
-                    } else if (url.contains("raw.githubusercontent.com") || url.contains("janede0214.github.io") ||
-                        url.contains("opendata.vip") || url.contains("tdx") || url.contains("data.ntpc.gov.tw") ||
-                        url.contains("opendata.tycg.gov.tw") || url.contains("cwa.gov.tw") || url.contains("thsrc.com.tw") ||
-                        url.contains("earthquake.usgs.gov") || url.contains("open-meteo.com")
-                    ) {
+                    } else if (isNativeApi) {
                         try {
-                            val nativeRes = fetchNativeUrl(url)
+                            val method = if (request.method.equals("HEAD", ignoreCase = true)) "HEAD" else "GET"
+                            val nativeRes = fetchNativeUrl(url, method)
                             if (nativeRes != null) return nativeRes
                         } catch (_: Exception) {}
                     }
@@ -328,6 +428,24 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun openExternalUri(uri: Uri): Boolean {
+        return try {
+            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(intent)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun corsHeaders(): MutableMap<String, String> = mutableMapOf(
+        "Access-Control-Allow-Origin" to "*",
+        "Access-Control-Allow-Methods" to "GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Headers" to "*"
+    )
 
     /**
      * 自 APK assets 目錄直讀靜態檔案並以標準 HTTPS 虛擬來源回應（支援 Referrer-Policy 與二進位編碼隔離）
@@ -377,24 +495,31 @@ class MainActivity : ComponentActivity() {
      * 2. 自動分配標準視訊切片 MIME Type (.m3u8, .ts, .mp4, .m4s) 並將所有二進位媒體 encoding 設為 null
      * 3. 注入 Access-Control-Allow-Origin: * 消除 WebView 同源限制
      */
-    private fun fetchNativeBoteUrl(urlString: String): WebResourceResponse? {
+    private fun fetchNativeBoteUrl(
+        urlString: String,
+        method: String = "GET",
+        rangeHeader: String? = null
+    ): WebResourceResponse? {
         return try {
             var currentUrl = urlString
             var conn: HttpURLConnection? = null
             var code = -1
             val camKey = extractBoteCamKey(urlString)
-            val camCookies = boteCookies.computeIfAbsent(camKey) { java.util.concurrent.ConcurrentHashMap() }
+            val camCookies = boteCookies.computeIfAbsent(camKey) { ConcurrentHashMap() }
 
             for (hop in 0..4) {
                 val url = URL(currentUrl)
                 val attempt = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 5000
                     readTimeout = 10000
-                    requestMethod = "GET"
+                    requestMethod = method
                     setRequestProperty("Referer", "https://hls.bote.gov.taipei/live/index.html")
                     setRequestProperty("Origin", "https://hls.bote.gov.taipei")
                     setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                     setRequestProperty("Accept", "*/*")
+                    if (!rangeHeader.isNullOrBlank()) {
+                        setRequestProperty("Range", rangeHeader)
+                    }
                     if (camCookies.isNotEmpty()) {
                         val cookieHeader = camCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
                         setRequestProperty("Cookie", cookieHeader)
@@ -464,22 +589,22 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val bytes = conn.inputStream.use { it.readBytes() }
+                val bytes = if (method == "HEAD") ByteArray(0) else conn.inputStream.use { it.readBytes() }
                 conn.disconnect()
 
-                val headers = mutableMapOf<String, String>()
-                headers["Access-Control-Allow-Origin"] = "*"
-                headers["Access-Control-Allow-Methods"] = "GET, HEAD, OPTIONS"
-                headers["Access-Control-Allow-Headers"] = "*"
-                headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-                headers["Content-Length"] = bytes.size.toString()
-                headers["Accept-Ranges"] = "bytes"
+                val headers = corsHeaders().apply {
+                    put("Cache-Control", "no-cache, no-store, must-revalidate")
+                    put("Accept-Ranges", "bytes")
+                    if (method != "HEAD") {
+                        put("Content-Length", bytes.size.toString())
+                    }
+                }
 
                 WebResourceResponse(
                     mimeType,
                     encoding,
-                    200,
-                    "OK",
+                    code,
+                    if (code == 206) "Partial Content" else "OK",
                     headers,
                     ByteArrayInputStream(bytes)
                 )
@@ -493,24 +618,45 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 原生網路請求實作 (免除瀏覽器 CORS 與 Mixed Content 限制，流式直通)
+     * 原生網路請求實作 (透過 OkHttp 連線池直取並附加 CORS 標頭，免除 WebView 跨網域阻擋與連線洩漏)
      */
-    private fun fetchNativeUrl(urlString: String): WebResourceResponse? {
+    private fun fetchNativeUrl(urlString: String, method: String = "GET"): WebResourceResponse? {
         return try {
-            val url = URL(urlString)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 3000
-                readTimeout = 4000
-                requestMethod = "GET"
-                setRequestProperty("User-Agent", "TaiwanNeighborhoodMonitor-Android/1.0")
-            }
-            conn.connect()
-            if (conn.responseCode in 200..299) {
-                val contentType = conn.contentType ?: "application/json"
-                val mimeType = contentType.split(";")[0].trim()
-                val encoding = if (contentType.contains("charset=")) contentType.split("charset=")[1].trim() else "utf-8"
-                WebResourceResponse(mimeType, encoding, java.io.BufferedInputStream(conn.inputStream, 16384))
+            val reqBuilder = Request.Builder()
+                .url(urlString)
+                .header("User-Agent", "TaiwanNeighborhoodMonitor-Android/1.0")
+                .header("Accept", "application/json, text/plain, */*")
+            if (method == "HEAD") reqBuilder.head() else reqBuilder.get()
+
+            val response = nativeBridge.sharedHttpClient().newCall(reqBuilder.build()).execute()
+            if (response.isSuccessful) {
+                val contentType = response.header("Content-Type") ?: "application/json"
+                val mimeType = contentType.split(";")[0].trim().ifEmpty { "application/json" }
+                val isBinary = mimeType.startsWith("image/") || mimeType.startsWith("video/") || mimeType == "application/octet-stream"
+                val encoding = if (isBinary) {
+                    null
+                } else if (contentType.contains("charset=", ignoreCase = true)) {
+                    contentType.substringAfter("charset=").substringBefore(";").trim().ifEmpty { "utf-8" }
+                } else {
+                    "utf-8"
+                }
+
+                val headers = corsHeaders().apply {
+                    put("Cache-Control", "no-store")
+                }
+                val rawStream = response.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+                val closingStream: InputStream = object : FilterInputStream(rawStream) {
+                    override fun close() {
+                        try {
+                            super.close()
+                        } finally {
+                            response.close()
+                        }
+                    }
+                }
+                WebResourceResponse(mimeType, encoding, response.code, "OK", headers, closingStream)
             } else {
+                response.close()
                 null
             }
         } catch (_: Exception) {
@@ -536,49 +682,12 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 電視遙控器 D-Pad 支援與手勢攔截
+     * 電視遙控器功能鍵支援 (方向鍵交由 WebView 原生空間焦點導航處理)
      */
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                // 電視遙控器確定鍵：觸發焦點元素點擊
-                webView.evaluateJavascript("document.activeElement && document.activeElement.click();", null)
-                return true
-            }
-            KeyEvent.KEYCODE_DPAD_DOWN -> {
-                // 遙控器下鍵：平滑向下滾動視窗
-                webView.scrollBy(0, 150)
-                return true
-            }
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                // 遙控器上鍵：平滑向上滾動視窗
-                webView.scrollBy(0, -150)
-                return true
-            }
-            KeyEvent.KEYCODE_MENU -> {
-                // 遙控器選單鍵：強制全域立即刷新所有資料
-                triggerForceRefreshAll()
-                return true
-            }
-            KeyEvent.KEYCODE_BACK -> {
-                // 遙控器返回鍵：若 Modal 開啟先關閉 Modal，否則退出
-                webView.evaluateJavascript("""
-                    (function() {
-                        const modal = document.getElementById('cameraModal');
-                        if (modal && modal.classList.contains('active')) {
-                            const closeBtn = document.getElementById('modalCloseBtn');
-                            if (closeBtn) closeBtn.click();
-                            return true;
-                        }
-                        return false;
-                    })();
-                """.trimIndent()) { result ->
-                    if (result != "true") {
-                        finish()
-                    }
-                }
-                return true
-            }
+        if (keyCode == KeyEvent.KEYCODE_MENU) {
+            triggerForceRefreshAll(force = true)
+            return true
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -586,24 +695,28 @@ class MainActivity : ComponentActivity() {
     /**
      * 強制全域立即刷新大眾運輸、車廂擁擠度與 YouBike 資料
      */
-    private fun triggerForceRefreshAll() {
-        webView.evaluateJavascript("""
+    private fun triggerForceRefreshAll(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && now - lastTriggerRefreshMs < 4000L) return
+        lastTriggerRefreshMs = now
+        nativeBridge.forceRefreshAll()
+        webView.evaluateJavascript(
+            """
             (function() {
-                if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
-                    window.transitMonitor.forceRefreshAll();
-                }
                 if (window.weatherMonitor && typeof window.weatherMonitor.triggerAutoRefresh === 'function') {
                     window.weatherMonitor.triggerAutoRefresh();
                 }
             })();
-        """.trimIndent(), null)
+            """.trimIndent(),
+            null
+        )
     }
 
     override fun onResume() {
         super.onResume()
         webView.onResume()
-        // 前景喚醒時立即觸發最新資料更新
-        triggerForceRefreshAll()
+        // 前景喚醒時檢查節流後刷新最新資料 (避免剛啟動重複抓兩次)
+        triggerForceRefreshAll(force = false)
     }
 
     override fun onPause() {
@@ -612,6 +725,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        hideCustomFullscreenView()
         nativeBridge.cancelScope()
         webView.destroy()
         super.onDestroy()
@@ -629,6 +743,7 @@ class AndroidNativeBridge(
     private val bridgeScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val dataMemoryCache = ConcurrentHashMap<String, String>()
     private val isRefreshing = ConcurrentHashMap<String, Boolean>()
+    private val lastFetchTimes = ConcurrentHashMap<String, Long>()
 
     /**
      * 取消所有背景協程，防止 Activity 銷毀後記憶體洩漏
@@ -650,19 +765,47 @@ class AndroidNativeBridge(
     fun openExternalMap(url: String) {
         activity.runOnUiThread {
             try {
-                val uri = Uri.parse(url)
+                val uri = url.toUri()
                 val intent = Intent(Intent.ACTION_VIEW, uri).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 activity.startActivity(intent)
-            } catch (e: Exception) {
-                try {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    activity.startActivity(browserIntent)
-                } catch (_: Exception) {}
+            } catch (_: Exception) {}
+        }
+    }
+
+    /**
+     * 原生儲存 Canvas 截圖 (data:image/jpeg;base64,...) 至手機圖片庫 / App 相簿目錄
+     */
+    @JavascriptInterface
+    fun saveImageDataUrl(dataUrl: String, fileName: String): Boolean {
+        return try {
+            val commaIdx = dataUrl.indexOf(',')
+            if (commaIdx <= 0) return false
+            val base64Part = dataUrl.substring(commaIdx + 1)
+            val bytes = Base64.decode(base64Part, Base64.DEFAULT)
+            val safeName = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "snapshot_${System.currentTimeMillis()}.jpg" }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, safeName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TaiwanNeighborhoodMonitor")
+                }
+                val resolver = activity.contentResolver
+                val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
+                resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
+            } else {
+                val dir = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: activity.filesDir
+                if (!dir.exists()) dir.mkdirs()
+                File(dir, safeName).writeBytes(bytes)
             }
+            activity.runOnUiThread {
+                Toast.makeText(activity, "截圖已儲存：$safeName", Toast.LENGTH_SHORT).show()
+            }
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -675,6 +818,8 @@ class AndroidNativeBridge(
         .readTimeout(4000, TimeUnit.MILLISECONDS)
         .retryOnConnectionFailure(true)
         .build()
+
+    internal fun sharedHttpClient(): OkHttpClient = okHttpClient
 
     /**
      * 原生直接以 HTTPS GET 抓取遠端字串 (免除瀏覽器同源 CORS 與 Mixed Content 限制，強化破快取時間戳)
@@ -761,38 +906,45 @@ class AndroidNativeBridge(
         }
     }
 
+    private fun formatTaipeiTime(date: Date, pattern: String): String {
+        return SimpleDateFormat(pattern, Locale.TAIWAN).apply {
+            timeZone = TimeZone.getTimeZone("Asia/Taipei")
+        }.format(date)
+    }
+
+    private fun formatUtcIso(date: Date): String {
+        return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }.format(date)
+    }
+
     /**
-     * 背景非同步通知 WebView 前端最新資料已更新完成，平滑重繪 UI (交通走廊與全天候指標同步刷新)
+     * 背景非同步通知 WebView 前端最新資料已更新完成，僅讀取快取並平滑重繪 UI（不反過來觸發新一輪原生請求，徹底阻斷無限迴圈）
      */
     private fun notifyDataUpdated(dataType: String) {
         activity.runOnUiThread {
             val js = when (dataType) {
                 "youbike" -> """
                     (function() {
-                        if (window.weatherMonitor && typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
-                            window.weatherMonitor.fetchRealtimeYouBike(true);
+                        if (window.weatherMonitor && typeof window.weatherMonitor.onNativeYouBikeUpdated === 'function') {
+                            window.weatherMonitor.onNativeYouBikeUpdated();
                         }
                     })();
                 """.trimIndent()
                 "metro-live", "parking", "thsr", "tymetro" -> """
                     (function() {
-                        if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
-                            window.transitMonitor.forceRefreshAll();
+                        if (window.transitMonitor && typeof window.transitMonitor.onNativeDataUpdated === 'function') {
+                            window.transitMonitor.onNativeDataUpdated('$dataType');
                         }
                     })();
                 """.trimIndent()
                 else -> """
                     (function() {
-                        if (window.transitMonitor && typeof window.transitMonitor.forceRefreshAll === 'function') {
-                            window.transitMonitor.forceRefreshAll();
+                        if (window.transitMonitor && typeof window.transitMonitor.onNativeDataUpdated === 'function') {
+                            window.transitMonitor.onNativeDataUpdated('all');
                         }
-                        if (window.weatherMonitor) {
-                            if (typeof window.weatherMonitor.fetchRealtimeYouBike === 'function') {
-                                window.weatherMonitor.fetchRealtimeYouBike(true);
-                            }
-                            if (typeof window.weatherMonitor.triggerAutoRefresh === 'function') {
-                                window.weatherMonitor.triggerAutoRefresh();
-                            }
+                        if (window.weatherMonitor && typeof window.weatherMonitor.onNativeYouBikeUpdated === 'function') {
+                            window.weatherMonitor.onNativeYouBikeUpdated();
                         }
                     })();
                 """.trimIndent()
@@ -812,11 +964,12 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 啟動時毫秒級預熱所有資料庫快照，並於背景非同步並行拉取全台交通即時最新動態 (0 毫秒秒開、0 白屏、0 阻塞)
+     * 啟動時預熱靜態時刻表快照，並於背景非同步並行拉取全台交通即時最新動態 (0 阻塞、不注入過期即時倒數)
      */
     fun prewarmAllData() {
         bridgeScope.launch(Dispatchers.IO) {
-            val prewarmKeys = listOf("youbike", "metro-live", "parking", "thsr", "tymetro")
+            // 僅預熱時刻表／停車參考快照；即時 YouBike 與捷運倒數須等待即時網路資料，避免冷啟動閃現舊快照數字
+            val prewarmKeys = listOf("parking", "thsr", "tymetro")
             for (key in prewarmKeys) {
                 try {
                     val text = activity.assets.open("data/$key.json").bufferedReader().use { it.readText() }
@@ -853,12 +1006,28 @@ class AndroidNativeBridge(
         }
     }
 
+    private fun shouldSkipByCooldown(key: String, force: Boolean, cooldownMs: Long): Boolean {
+        if (force) return false
+        val last = lastFetchTimes[key] ?: return false
+        return (System.currentTimeMillis() - last) < cooldownMs
+    }
+
     /**
      * 背景非同步拉取 YouBike 即時開放資料 (TDX / 桃園官方 / 雲端)
      */
     private suspend fun refreshYouBikeAsync(force: Boolean = false) = withContext(Dispatchers.IO) {
-        if (!force && isRefreshing.putIfAbsent("youbike", true) != null) return@withContext
+        if (shouldSkipByCooldown("youbike", force, 10000L)) return@withContext
+        if (isRefreshing.putIfAbsent("youbike", true) != null) return@withContext
         try {
+            fun isValidJsonArray(raw: String?): Boolean {
+                val trimmed = raw?.trim() ?: return false
+                return trimmed.startsWith("[") && trimmed.endsWith("]")
+            }
+            fun isValidJsonObject(raw: String?): Boolean {
+                val trimmed = raw?.trim() ?: return false
+                return trimmed.startsWith("{") && trimmed.endsWith("}")
+            }
+
             // 1. 優先直打台灣 TDX 即時開放資料 API (opendata.vip，每分鐘動態更新)
             try {
                 val ntpcDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500) }
@@ -866,17 +1035,16 @@ class AndroidNativeBridge(
                 val ntpcRaw = ntpcDeferred.await()
                 val tycgRaw = tycgDeferred.await()
 
-                fun isValidJsonArray(raw: String?): Boolean {
-                    val trimmed = raw?.trim() ?: return false
-                    return trimmed.startsWith("[") && trimmed.endsWith("]")
-                }
                 val safeNtpc = if (isValidJsonArray(ntpcRaw)) ntpcRaw else "[]"
                 val safeTycg = if (isValidJsonArray(tycgRaw)) tycgRaw else "[]"
 
                 if (isValidJsonArray(ntpcRaw) || isValidJsonArray(tycgRaw)) {
-                    val now = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(Date())
-                    val json = """{"success":true,"isDirectApi":true,"updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
+                    val nowDate = Date()
+                    val now = formatTaipeiTime(nowDate, "HH:mm")
+                    val iso = formatUtcIso(nowDate)
+                    val json = """{"success":true,"isDirectApi":true,"updatedAt":"$iso","updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
                     dataMemoryCache["youbike"] = json
+                    lastFetchTimes["youbike"] = System.currentTimeMillis()
                     notifyDataUpdated("youbike")
                     return@withContext
                 }
@@ -884,12 +1052,21 @@ class AndroidNativeBridge(
 
             // 2. 備援 1：官方備援 API (桃園 JSON)
             try {
-                val tycgDirect = fetchHttp("https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download", 4000)
-                val ntpcRaw = fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500)
-                if (ntpcRaw.isNotBlank() && tycgDirect.isNotBlank()) {
-                    val now = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(Date())
-                    val json = """{"success":true,"isDirectApi":true,"updateTimeDisplay":"$now","ntpc":$ntpcRaw,"tycg":$tycgDirect}"""
+                val tycgDirectDeferred = async { fetchHttp("https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download", 4000) }
+                val ntpcRawDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500) }
+                val tycgDirect = tycgDirectDeferred.await()
+                val ntpcRaw = ntpcRawDeferred.await()
+                val validNtpc = isValidJsonArray(ntpcRaw)
+                val validTycg = isValidJsonArray(tycgDirect) || isValidJsonObject(tycgDirect)
+                if (validNtpc || validTycg) {
+                    val nowDate = Date()
+                    val now = formatTaipeiTime(nowDate, "HH:mm")
+                    val iso = formatUtcIso(nowDate)
+                    val safeNtpc = if (validNtpc) ntpcRaw else "[]"
+                    val safeTycg = if (validTycg) tycgDirect else "[]"
+                    val json = """{"success":true,"isDirectApi":true,"updatedAt":"$iso","updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
                     dataMemoryCache["youbike"] = json
+                    lastFetchTimes["youbike"] = System.currentTimeMillis()
                     notifyDataUpdated("youbike")
                     return@withContext
                 }
@@ -904,6 +1081,7 @@ class AndroidNativeBridge(
                 val res = fetchHttp(url, 3500)
                 if (res.isNotBlank() && res.trim().startsWith("{")) {
                     dataMemoryCache["youbike"] = res
+                    lastFetchTimes["youbike"] = System.currentTimeMillis()
                     notifyDataUpdated("youbike")
                     return@withContext
                 }
@@ -914,261 +1092,11 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 解析捷運到站看板 HTML
-     */
-    private fun parseDepartureHtml(html: String, defaultStation: String): List<JSONObject> {
-        val list = mutableListOf<JSONObject>()
-        val regex = Regex("""<div class="departStation">\s*([^<]+)\s*</div>[\s\S]*?<div class="destinationStation">\s*([^<]+)\s*</div>[\s\S]*?class="countDown"[^>]*data-start="([^"]+)"""")
-        for (m in regex.findAll(html)) {
-            val from = m.groupValues[1].trim().ifEmpty { defaultStation }
-            val to = m.groupValues[2].trim()
-            val countdown = m.groupValues[3].trim()
-            var totalSec = 0
-            if (countdown.contains(":")) {
-                val parts = countdown.split(":").mapNotNull { it.toIntOrNull() }
-                if (parts.size >= 2) {
-                    totalSec = parts[0] * 60 + parts[1]
-                }
-            } else if (countdown.contains("進站")) {
-                totalSec = 20
-            }
-            val line = when {
-                from.contains("民生") || from.contains("產業園區") -> "環狀線"
-                from.contains("板橋") && (to.contains("大坪林") || to.contains("產業園區")) -> "環狀線"
-                else -> "板南線"
-            }
-            val item = JSONObject().apply {
-                put("station", from)
-                put("dest", to)
-                put("countdownText", countdown)
-                put("remainSec", totalSec)
-                put("line", line)
-            }
-            list.add(item)
-        }
-        return list
-    }
-
-    /**
-     * 解析捷運車廂載重擁擠度 HTML (1~6 車廂)
-     */
-    private fun parseCarWeightHtml(html: String, stationName: String, code: String): JSONObject {
-        val carsArray = JSONArray()
-        val carRegex = Regex("""<span class="carNum">([^<]+)</span>[\s\S]*?<span class="carWeight">([\s\S]*?)</span>""", RegexOption.IGNORE_CASE)
-        val labelRegex = Regex("""class="label\s+([^"]+)"[^>]*>([^<]+)</label>""", RegexOption.IGNORE_CASE)
-        val matches = carRegex.findAll(html).toList()
-        val seenCars = mutableSetOf<String>()
-
-        for (cm in matches) {
-            val carNum = cm.groupValues[1].trim()
-            if (seenCars.contains(carNum)) continue
-            seenCars.add(carNum)
-
-            val raw = cm.groupValues[2]
-            val lm = labelRegex.find(raw)
-            var status = "舒適"
-            var level = 1
-            if (lm != null) {
-                status = lm.groupValues[2].trim()
-                val cls = lm.groupValues[1].lowercase()
-                level = when {
-                    cls.contains("danger") -> 4
-                    cls.contains("warning") -> 3
-                    cls.contains("info") || cls.contains("primary") -> 2
-                    else -> 1
-                }
-            } else {
-                val clean = raw.replace(Regex("<[^>]+>"), "").trim()
-                status = clean.ifEmpty { "舒適" }
-                level = when {
-                    status.contains("擁擠") -> 4
-                    status.contains("略擠") -> 3
-                    status.contains("普通") || status.contains("適中") -> 2
-                    else -> 1
-                }
-            }
-            val carObj = JSONObject().apply {
-                put("carNum", carNum)
-                put("status", status)
-                put("level", level)
-            }
-            carsArray.put(carObj)
-        }
-
-        var message = "即時更新中"
-        val hasData = carsArray.length() > 0
-        if (!hasData) {
-            message = when {
-                html.contains("尚無資料") -> "目前無列車停靠"
-                html.contains("營運時間已過") -> "營運時間已過"
-                else -> "離峰舒適運轉"
-            }
-            for (i in 1..6) {
-                val carObj = JSONObject().apply {
-                    put("carNum", "${i}車")
-                    put("status", "舒適")
-                    put("level", 1)
-                }
-                carsArray.put(carObj)
-            }
-        }
-
-        return JSONObject().apply {
-            put("station", stationName)
-            put("code", code)
-            put("line", "板南線")
-            put("hasData", hasData)
-            put("message", message)
-            put("cars", carsArray)
-        }
-    }
-
-    /**
-     * 解析高鐵剩餘停車位 HTML
-     */
-    private fun parseParkingHtml(html: String): JSONArray {
-        val lotsArray = JSONArray()
-        val trRegex = Regex("""<tr[^>]*>([\s\S]*?)</tr>""", RegexOption.IGNORE_CASE)
-        val tdRegex = Regex("""<td[^>]*>([\s\S]*?)</td>""", RegexOption.IGNORE_CASE)
-        val tagRegex = Regex("""<[^>]+>""")
-
-        for (tm in trRegex.findAll(html)) {
-            val tr = tm.groupValues[1]
-            if (tr.contains("桃園") || tr.contains("板橋")) {
-                val tds = tdRegex.findAll(tr).map { it.groupValues[1] }.toList()
-                if (tds.size >= 4) {
-                    val name = tds[0].replace(tagRegex, "").trim()
-                    val spaceText = tds[1].replace(tagRegex, "").trim()
-                    val status = tds[3].replace(tagRegex, "").trim()
-                    var available = 0
-                    var total = 0
-                    if (spaceText.contains("/")) {
-                        val parts = spaceText.split("/").map { it.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0 }
-                        if (parts.size >= 2) {
-                            available = parts[0]
-                            total = parts[1]
-                        }
-                    }
-                    val lotObj = JSONObject().apply {
-                        put("name", name)
-                        put("available", available)
-                        put("total", total)
-                        put("spaceText", spaceText)
-                        put("status", status)
-                    }
-                    lotsArray.put(lotObj)
-                }
-            }
-        }
-        return lotsArray
-    }
-
-    /**
-     * 解析台灣高鐵官網回傳 JSON 資料
-     */
-    private fun parseOfficialThsr(jsonStr: String): JSONArray {
-        val trainsArray = JSONArray()
-        try {
-            val root = JSONObject(jsonStr)
-            val data = root.optJSONObject("data") ?: return trainsArray
-            val depTable = data.optJSONObject("DepartureTable") ?: return trainsArray
-            val trainItem = depTable.optJSONArray("TrainItem") ?: return trainsArray
-
-            for (i in 0 until trainItem.length()) {
-                val t = trainItem.getJSONObject(i)
-                val trainNo = t.optString("TrainNumber", "")
-                val depTime = t.optString("DepartureTime", "")
-                val arrTime = t.optString("DestinationTime", "")
-                if (depTime.isNotBlank() && arrTime.isNotBlank()) {
-                    val depParts = depTime.split(":").mapNotNull { it.toIntOrNull() }
-                    val arrParts = arrTime.split(":").mapNotNull { it.toIntOrNull() }
-                    if (depParts.size >= 2 && arrParts.size >= 2) {
-                        var duration = (arrParts[0] * 60 + arrParts[1]) - (depParts[0] * 60 + depParts[1])
-                        if (duration < 0) duration += 1440
-                        val isExpress = trainNo.startsWith("06") || trainNo.startsWith("6")
-                        val item = JSONObject().apply {
-                            put("trainNo", trainNo)
-                            put("depTime", depTime)
-                            put("arrTime", arrTime)
-                            put("duration", if (duration > 0) duration else 12)
-                            put("isExpress", isExpress)
-                            put("type", if (isExpress) "6xx特快" else "8xx全停")
-                            put("stopsAtTaoyuan", true)
-                            put("depMinutes", depParts[0] * 60 + depParts[1])
-                        }
-                        trainsArray.put(item)
-                    }
-                }
-            }
-        } catch (_: Exception) {}
-        return trainsArray
-    }
-
-    /**
-     * 解析桃園機場捷運官網 HTML 時刻表
-     */
-    private fun parseOfficialTymetro(html: String, isSouth: Boolean): JSONArray {
-        val trainsArray = JSONArray()
-        try {
-            val tableRegex = Regex("""<table[\s\S]*?</table>""", RegexOption.IGNORE_CASE)
-            val tables = tableRegex.findAll(html).map { it.value }.toList()
-            val targetTableIndex = if (isSouth) 1 else 0
-            val tbl = if (tables.size > targetTableIndex) tables[targetTableIndex] else return trainsArray
-
-            val rowRegex = Regex("""<tr>([\s\S]*?)</tr>""", RegexOption.IGNORE_CASE)
-            val thRegex = Regex("""<th[^>]*scope="row"[^>]*>(\d{1,2})</th>""", RegexOption.IGNORE_CASE)
-            val tdRegex = Regex("""<td[\s\S]*?</td>""", RegexOption.IGNORE_CASE)
-            val minRegex = Regex("""<i>(\d{1,2})</i>""", RegexOption.IGNORE_CASE)
-
-            for (rm in rowRegex.findAll(tbl)) {
-                val row = rm.groupValues[1]
-                val hm = thRegex.find(row) ?: continue
-                val h = hm.groupValues[1].padStart(2, '0')
-                val hInt = h.toIntOrNull() ?: continue
-
-                for (tdm in tdRegex.findAll(row)) {
-                    val td = tdm.value
-                    val mm = minRegex.find(td) ?: continue
-                    val m = mm.groupValues[1].padStart(2, '0')
-                    val mInt = m.toIntOrNull() ?: continue
-
-                    val isExp = td.contains("直達車")
-                    val isPeakA18 = td.contains("停靠A18") || td.contains("尖峰增停直達車")
-                    val stopsAtA18 = !isExp || isPeakA18
-
-                    if (!stopsAtA18) continue // 嚴格只保留停靠 A18 的班次
-
-                    val depTime = "$h:$m"
-                    val depMinutes = hInt * 60 + mInt
-                    val duration = if (isExp) 28 else 38
-                    val arrMinutes = depMinutes + duration
-                    val arrH = String.format(Locale.TAIWAN, "%02d", (arrMinutes / 60) % 24)
-                    val arrM = String.format(Locale.TAIWAN, "%02d", arrMinutes % 60)
-                    val trainNoPrefix = if (isSouth) "A3➔A18" else "A18➔A3"
-
-                    val item = JSONObject().apply {
-                        put("trainNo", "$trainNoPrefix-$depTime")
-                        put("depTime", depTime)
-                        put("arrTime", "$arrH:$arrM")
-                        put("duration", duration)
-                        put("isExpress", isExp)
-                        put("type", if (isExp) "尖峰直達" else "普通車")
-                        put("depMinutes", depMinutes)
-                        put("min", mInt)
-                        put("stopsAtA18", true)
-                    }
-                    trainsArray.put(item)
-                }
-            }
-        } catch (_: Exception) {}
-        return trainsArray
-    }
-
-    /**
      * 背景非同步拉取捷運到站看板與車廂擁擠度
      */
     private suspend fun refreshMetroLiveAsync(force: Boolean = false) = withContext(Dispatchers.IO) {
-        if (!force && isRefreshing.putIfAbsent("metro-live", true) != null) return@withContext
+        if (shouldSkipByCooldown("metro-live", force, 8000L)) return@withContext
+        if (isRefreshing.putIfAbsent("metro-live", true) != null) return@withContext
         try {
             // 1. 優先直接高速並行打 opendata.vip API
             try {
@@ -1186,29 +1114,27 @@ class AndroidNativeBridge(
 
                 val allTrains = JSONArray()
                 if (xpDep.isNotBlank()) {
-                    parseDepartureHtml(xpDep, "新埔站").forEach { allTrains.put(it) }
+                    TransitParsers.parseDepartureHtml(xpDep, "新埔站").forEach { allTrains.put(it) }
                 }
                 if (bqDep.isNotBlank()) {
-                    parseDepartureHtml(bqDep, "板橋站").forEach { allTrains.put(it) }
+                    TransitParsers.parseDepartureHtml(bqDep, "板橋站").forEach { allTrains.put(it) }
                 }
                 if (y20Dep.isNotBlank()) {
-                    parseDepartureHtml(y20Dep, "新北產業園區站").forEach { allTrains.put(it) }
+                    TransitParsers.parseDepartureHtml(y20Dep, "新北產業園區站").forEach { allTrains.put(it) }
                 }
 
                 val carWeightObj = JSONObject()
                 if (bl08Html.isNotBlank()) {
-                    carWeightObj.put("BL08", parseCarWeightHtml(bl08Html, "新埔", "BL08"))
+                    carWeightObj.put("BL08", TransitParsers.parseCarWeightHtml(bl08Html, "新埔", "BL08"))
                 }
                 if (bl07Html.isNotBlank()) {
-                    carWeightObj.put("BL07", parseCarWeightHtml(bl07Html, "板橋", "BL07"))
+                    carWeightObj.put("BL07", TransitParsers.parseCarWeightHtml(bl07Html, "板橋", "BL07"))
                 }
 
                 if (allTrains.length() > 0 || carWeightObj.length() > 0) {
                     val now = Date()
-                    val timeStr = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(now)
-                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
-                        timeZone = TimeZone.getTimeZone("UTC")
-                    }.format(now)
+                    val timeStr = formatTaipeiTime(now, "HH:mm")
+                    val isoStr = formatUtcIso(now)
 
                     val json = JSONObject().apply {
                         put("success", true)
@@ -1221,6 +1147,7 @@ class AndroidNativeBridge(
                     }.toString()
 
                     dataMemoryCache["metro-live"] = json
+                    lastFetchTimes["metro-live"] = System.currentTimeMillis()
                     notifyDataUpdated("metro-live")
                     return@withContext
                 }
@@ -1235,6 +1162,7 @@ class AndroidNativeBridge(
                 val res = fetchHttp(url, 3500)
                 if (res.isNotBlank() && res.trim().startsWith("{")) {
                     dataMemoryCache["metro-live"] = res
+                    lastFetchTimes["metro-live"] = System.currentTimeMillis()
                     notifyDataUpdated("metro-live")
                     return@withContext
                 }
@@ -1248,19 +1176,18 @@ class AndroidNativeBridge(
      * 背景非同步拉取高鐵停車位
      */
     private suspend fun refreshParkingAsync(force: Boolean = false) = withContext(Dispatchers.IO) {
-        if (!force && isRefreshing.putIfAbsent("parking", true) != null) return@withContext
+        if (shouldSkipByCooldown("parking", force, 15000L)) return@withContext
+        if (isRefreshing.putIfAbsent("parking", true) != null) return@withContext
         try {
             // 1. 優先直接高速打 opendata.vip 高鐵即時停車位 API
             try {
                 val html = fetchHttp("https://www.opendata.vip/tdx/parkingTHSR", 3500)
                 if (html.isNotBlank()) {
-                    val lotsArray = parseParkingHtml(html)
+                    val lotsArray = TransitParsers.parseParkingHtml(html)
                     if (lotsArray.length() > 0) {
                         val now = Date()
-                        val timeStr = SimpleDateFormat("HH:mm", Locale.TAIWAN).format(now)
-                        val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
-                            timeZone = TimeZone.getTimeZone("UTC")
-                        }.format(now)
+                        val timeStr = formatTaipeiTime(now, "HH:mm")
+                        val isoStr = formatUtcIso(now)
 
                         val json = JSONObject().apply {
                             put("success", true)
@@ -1272,6 +1199,7 @@ class AndroidNativeBridge(
                         }.toString()
 
                         dataMemoryCache["parking"] = json
+                        lastFetchTimes["parking"] = System.currentTimeMillis()
                         notifyDataUpdated("parking")
                         return@withContext
                     }
@@ -1287,6 +1215,7 @@ class AndroidNativeBridge(
                 val res = fetchHttp(url, 3500)
                 if (res.isNotBlank() && res.trim().startsWith("{")) {
                     dataMemoryCache["parking"] = res
+                    lastFetchTimes["parking"] = System.currentTimeMillis()
                     notifyDataUpdated("parking")
                     return@withContext
                 }
@@ -1300,10 +1229,11 @@ class AndroidNativeBridge(
      * 背景非同步拉取台灣高鐵即時官方班表
      */
     private suspend fun refreshThsrAsync(force: Boolean = false) = withContext(Dispatchers.IO) {
-        if (!force && isRefreshing.putIfAbsent("thsr", true) != null) return@withContext
+        if (shouldSkipByCooldown("thsr", force, 120000L)) return@withContext
+        if (isRefreshing.putIfAbsent("thsr", true) != null) return@withContext
         try {
             val now = Date()
-            val dateStr = SimpleDateFormat("yyyy/MM/dd", Locale.TAIWAN).format(now)
+            val dateStr = formatTaipeiTime(now, "yyyy/MM/dd")
             try {
                 val southPost = "SearchType=S&Lang=TW&StartStation=BanQiao&EndStation=TaoYuan&OutWardSearchDate=" +
                     java.net.URLEncoder.encode(dateStr, "UTF-8") + "&OutWardSearchTime=05%3A00&ReturnSearchDate=&ReturnSearchTime=&DiscountType="
@@ -1316,13 +1246,11 @@ class AndroidNativeBridge(
                 val southRaw = southDeferred.await()
                 val northRaw = northDeferred.await()
 
-                val southTrains = parseOfficialThsr(southRaw)
-                val northTrains = parseOfficialThsr(northRaw)
+                val southTrains = TransitParsers.parseOfficialThsr(southRaw)
+                val northTrains = TransitParsers.parseOfficialThsr(northRaw)
 
                 if (southTrains.length() > 0 || northTrains.length() > 0) {
-                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
-                        timeZone = TimeZone.getTimeZone("UTC")
-                    }.format(now)
+                    val isoStr = formatUtcIso(now)
 
                     val json = JSONObject().apply {
                         put("date", dateStr)
@@ -1339,6 +1267,7 @@ class AndroidNativeBridge(
                     }.toString()
 
                     dataMemoryCache["thsr"] = json
+                    lastFetchTimes["thsr"] = System.currentTimeMillis()
                     notifyDataUpdated("thsr")
                     return@withContext
                 }
@@ -1353,6 +1282,7 @@ class AndroidNativeBridge(
                 val res = fetchHttp(url, 3500)
                 if (res.isNotBlank() && res.trim().startsWith("{")) {
                     dataMemoryCache["thsr"] = res
+                    lastFetchTimes["thsr"] = System.currentTimeMillis()
                     notifyDataUpdated("thsr")
                     return@withContext
                 }
@@ -1366,7 +1296,8 @@ class AndroidNativeBridge(
      * 背景非同步拉取桃園機場捷運即時官方班表
      */
     private suspend fun refreshTymetroAsync(force: Boolean = false) = withContext(Dispatchers.IO) {
-        if (!force && isRefreshing.putIfAbsent("tymetro", true) != null) return@withContext
+        if (shouldSkipByCooldown("tymetro", force, 120000L)) return@withContext
+        if (isRefreshing.putIfAbsent("tymetro", true) != null) return@withContext
         try {
             val now = Date()
             try {
@@ -1376,14 +1307,12 @@ class AndroidNativeBridge(
                 val southHtml = southDeferred.await()
                 val northHtml = northDeferred.await()
 
-                val southTrains = parseOfficialTymetro(southHtml, true)
-                val northTrains = parseOfficialTymetro(northHtml, false)
+                val southTrains = TransitParsers.parseOfficialTymetro(southHtml, true)
+                val northTrains = TransitParsers.parseOfficialTymetro(northHtml, false)
 
                 if (southTrains.length() > 0 || northTrains.length() > 0) {
-                    val dateStr = SimpleDateFormat("yyyy/MM/dd", Locale.TAIWAN).format(now)
-                    val isoStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.TAIWAN).apply {
-                        timeZone = TimeZone.getTimeZone("UTC")
-                    }.format(now)
+                    val dateStr = formatTaipeiTime(now, "yyyy/MM/dd")
+                    val isoStr = formatUtcIso(now)
 
                     val json = JSONObject().apply {
                         put("date", dateStr)
@@ -1400,6 +1329,7 @@ class AndroidNativeBridge(
                     }.toString()
 
                     dataMemoryCache["tymetro"] = json
+                    lastFetchTimes["tymetro"] = System.currentTimeMillis()
                     notifyDataUpdated("tymetro")
                     return@withContext
                 }
@@ -1414,6 +1344,7 @@ class AndroidNativeBridge(
                 val res = fetchHttp(url, 3500)
                 if (res.isNotBlank() && res.trim().startsWith("{")) {
                     dataMemoryCache["tymetro"] = res
+                    lastFetchTimes["tymetro"] = System.currentTimeMillis()
                     notifyDataUpdated("tymetro")
                     return@withContext
                 }
@@ -1424,29 +1355,30 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生秒級即時 YouBike 直取 (0 毫秒極速快取優先，背景自動異步更新)
+     * 純讀取目前原生記憶體快取（不觸發新網路請求，供原生推送後前端讀取用）
+     */
+    @JavascriptInterface
+    fun getCachedData(dataType: String): String {
+        val key = if (dataType == "metro") "metro-live" else dataType
+        return dataMemoryCache[key] ?: ""
+    }
+
+    /**
+     * 原生秒級即時 YouBike 直取 (優先回傳記憶體即時資料，背景自動異步更新)
      */
     @JavascriptInterface
     fun getRealtimeYouBike(): String {
         bridgeScope.launch { refreshYouBikeAsync() }
-        val cached = dataMemoryCache["youbike"]
-        if (!cached.isNullOrBlank()) return cached
-        val asset = fetchAsset("data/youbike.json")
-        if (asset.isNotBlank()) dataMemoryCache["youbike"] = asset
-        return asset
+        return dataMemoryCache["youbike"] ?: ""
     }
 
     /**
-     * 原生秒級即時捷運看板與擁擠度直取 (0 毫秒極速快取優先，背景自動異步更新)
+     * 原生秒級即時捷運看板與擁擠度直取 (優先回傳記憶體即時資料，背景自動異步更新)
      */
     @JavascriptInterface
     fun getRealtimeMetroLive(): String {
         bridgeScope.launch { refreshMetroLiveAsync() }
-        val cached = dataMemoryCache["metro-live"]
-        if (!cached.isNullOrBlank()) return cached
-        val asset = fetchAsset("data/metro-live.json")
-        if (asset.isNotBlank()) dataMemoryCache["metro-live"] = asset
-        return asset
+        return dataMemoryCache["metro-live"] ?: ""
     }
 
     /**
@@ -1513,12 +1445,254 @@ class AndroidNativeBridge(
     @JavascriptInterface
     fun forceRefreshAll() {
         bridgeScope.launch {
-            refreshYouBikeAsync(force = true)
-            refreshMetroLiveAsync(force = true)
-            refreshParkingAsync(force = true)
-            refreshThsrAsync(force = true)
-            refreshTymetroAsync(force = true)
+            launch { refreshYouBikeAsync(force = true) }
+            launch { refreshMetroLiveAsync(force = true) }
+            launch { refreshParkingAsync(force = true) }
+            launch { refreshThsrAsync(force = true) }
+            launch { refreshTymetroAsync(force = true) }
         }
+    }
+}
+
+/**
+ * 大眾運輸 HTML / JSON 解析純 Kotlin 工具（供 AndroidNativeBridge 與單元測試共用）
+ */
+internal object TransitParsers {
+    private val depRegex = Regex("""<div class="departStation">\s*([^<]+)\s*</div>[\s\S]*?<div class="destinationStation">\s*([^<]+)\s*</div>[\s\S]*?class="countDown"[^>]*data-start="([^"]+)"""")
+    private val carRegex = Regex("""<span class="carNum">([^<]+)</span>[\s\S]*?<span class="carWeight">([\s\S]*?)</span>""", RegexOption.IGNORE_CASE)
+    private val labelRegex = Regex("""class="label\s+([^"]+)"[^>]*>([^<]+)</label>""", RegexOption.IGNORE_CASE)
+    private val trRegex = Regex("""<tr[^>]*>([\s\S]*?)</tr>""", RegexOption.IGNORE_CASE)
+    private val tdRegex = Regex("""<td[^>]*>([\s\S]*?)</td>""", RegexOption.IGNORE_CASE)
+    private val tagRegex = Regex("""<[^>]+>""")
+    private val tableRegex = Regex("""<table[\s\S]*?</table>""", RegexOption.IGNORE_CASE)
+    private val rowRegex = Regex("""<tr>([\s\S]*?)</tr>""", RegexOption.IGNORE_CASE)
+    private val thRegex = Regex("""<th[^>]*scope="row"[^>]*>(\d{1,2})</th>""", RegexOption.IGNORE_CASE)
+    private val minRegex = Regex("""<i>(\d{1,2})</i>""", RegexOption.IGNORE_CASE)
+
+    fun parseDepartureHtml(html: String, defaultStation: String): List<JSONObject> {
+        val list = mutableListOf<JSONObject>()
+        for (m in depRegex.findAll(html)) {
+            val from = m.groupValues[1].trim().ifEmpty { defaultStation }
+            val to = m.groupValues[2].trim()
+            val countdown = m.groupValues[3].trim()
+            var totalSec = 0
+            if (countdown.contains(":")) {
+                val parts = countdown.split(":").mapNotNull { it.toIntOrNull() }
+                if (parts.size >= 2) {
+                    totalSec = parts[0] * 60 + parts[1]
+                }
+            } else if (countdown.contains("進站")) {
+                totalSec = 20
+            }
+            val line = when {
+                from.contains("民生") || from.contains("產業園區") -> "環狀線"
+                from.contains("板橋") && (to.contains("大坪林") || to.contains("產業園區")) -> "環狀線"
+                else -> "板南線"
+            }
+            val item = JSONObject().apply {
+                put("station", from)
+                put("dest", to)
+                put("countdownText", countdown)
+                put("remainSec", totalSec)
+                put("line", line)
+            }
+            list.add(item)
+        }
+        return list
+    }
+
+    fun parseCarWeightHtml(html: String, stationName: String, code: String): JSONObject {
+        val carsArray = JSONArray()
+        val seenCars = mutableSetOf<String>()
+
+        for (cm in carRegex.findAll(html)) {
+            val carNum = cm.groupValues[1].trim()
+            if (seenCars.contains(carNum)) continue
+            seenCars.add(carNum)
+
+            val raw = cm.groupValues[2]
+            val lm = labelRegex.find(raw)
+            val status: String
+            val level: Int
+            if (lm != null) {
+                status = lm.groupValues[2].trim()
+                val cls = lm.groupValues[1].lowercase(Locale.US)
+                level = when {
+                    cls.contains("danger") -> 4
+                    cls.contains("warning") -> 3
+                    cls.contains("info") || cls.contains("primary") -> 2
+                    else -> 1
+                }
+            } else {
+                val clean = raw.replace(tagRegex, "").trim()
+                status = clean.ifEmpty { "舒適" }
+                level = when {
+                    status.contains("擁擠") -> 4
+                    status.contains("略擠") -> 3
+                    status.contains("普通") || status.contains("適中") -> 2
+                    else -> 1
+                }
+            }
+            val carObj = JSONObject().apply {
+                put("carNum", carNum)
+                put("status", status)
+                put("level", level)
+            }
+            carsArray.put(carObj)
+        }
+
+        var message = "即時更新中"
+        val hasData = carsArray.length() > 0
+        if (!hasData) {
+            message = when {
+                html.contains("尚無資料") -> "目前無列車停靠"
+                html.contains("營運時間已過") -> "營運時間已過"
+                else -> "離峰舒適運轉"
+            }
+            for (i in 1..6) {
+                val carObj = JSONObject().apply {
+                    put("carNum", "${i}車")
+                    put("status", "舒適")
+                    put("level", 1)
+                }
+                carsArray.put(carObj)
+            }
+        }
+
+        return JSONObject().apply {
+            put("station", stationName)
+            put("code", code)
+            put("line", "板南線")
+            put("hasData", hasData)
+            put("message", message)
+            put("cars", carsArray)
+        }
+    }
+
+    fun parseParkingHtml(html: String): JSONArray {
+        val lotsArray = JSONArray()
+        for (tm in trRegex.findAll(html)) {
+            val tr = tm.groupValues[1]
+            if (tr.contains("桃園") || tr.contains("板橋")) {
+                val tds = tdRegex.findAll(tr).map { it.groupValues[1] }.toList()
+                if (tds.size >= 4) {
+                    val name = tds[0].replace(tagRegex, "").trim()
+                    val spaceText = tds[1].replace(tagRegex, "").trim()
+                    val status = tds[3].replace(tagRegex, "").trim()
+                    var available = 0
+                    var total = 0
+                    if (spaceText.contains("/")) {
+                        val parts = spaceText.split("/").map { it.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0 }
+                        if (parts.size >= 2) {
+                            available = parts[0]
+                            total = parts[1]
+                        }
+                    }
+                    val lotObj = JSONObject().apply {
+                        put("name", name)
+                        put("available", available)
+                        put("total", total)
+                        put("spaceText", spaceText)
+                        put("status", status)
+                    }
+                    lotsArray.put(lotObj)
+                }
+            }
+        }
+        return lotsArray
+    }
+
+    fun parseOfficialThsr(jsonStr: String): JSONArray {
+        val trainsArray = JSONArray()
+        try {
+            val root = JSONObject(jsonStr)
+            val data = root.optJSONObject("data") ?: return trainsArray
+            val depTable = data.optJSONObject("DepartureTable") ?: return trainsArray
+            val trainItem = depTable.optJSONArray("TrainItem") ?: return trainsArray
+
+            for (i in 0 until trainItem.length()) {
+                val t = trainItem.getJSONObject(i)
+                val trainNo = t.optString("TrainNumber", "")
+                val depTime = t.optString("DepartureTime", "")
+                val arrTime = t.optString("DestinationTime", "")
+                if (depTime.isNotBlank() && arrTime.isNotBlank()) {
+                    val depParts = depTime.split(":").mapNotNull { it.toIntOrNull() }
+                    val arrParts = arrTime.split(":").mapNotNull { it.toIntOrNull() }
+                    if (depParts.size >= 2 && arrParts.size >= 2) {
+                        var duration = (arrParts[0] * 60 + arrParts[1]) - (depParts[0] * 60 + depParts[1])
+                        if (duration < 0) duration += 1440
+                        val isExpress = trainNo.startsWith("06") || trainNo.startsWith("6")
+                        val depOpH = if (depParts[0] < 4) depParts[0] + 24 else depParts[0]
+                        val item = JSONObject().apply {
+                            put("trainNo", trainNo)
+                            put("depTime", depTime)
+                            put("arrTime", arrTime)
+                            put("duration", if (duration > 0) duration else 12)
+                            put("isExpress", isExpress)
+                            put("type", if (isExpress) "6xx特快" else "8xx全停")
+                            put("stopsAtTaoyuan", true)
+                            put("depMinutes", depOpH * 60 + depParts[1])
+                        }
+                        trainsArray.put(item)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+        return trainsArray
+    }
+
+    fun parseOfficialTymetro(html: String, isSouth: Boolean): JSONArray {
+        val trainsArray = JSONArray()
+        val items = mutableListOf<Pair<Int, JSONObject>>()
+        try {
+            val tables = tableRegex.findAll(html).map { it.value }.toList()
+            val targetTableIndex = if (isSouth) 1 else 0
+            val tbl = if (tables.size > targetTableIndex) tables[targetTableIndex] else return trainsArray
+
+            for (rm in rowRegex.findAll(tbl)) {
+                val row = rm.groupValues[1]
+                val hm = thRegex.find(row) ?: continue
+                val hInt = hm.groupValues[1].toIntOrNull() ?: continue
+                val h = hInt.toString().padStart(2, '0')
+                val opH = if (hInt < 4) hInt + 24 else hInt
+
+                for (tdm in tdRegex.findAll(row)) {
+                    val td = tdm.value
+                    val mm = minRegex.find(td) ?: continue
+                    val mInt = mm.groupValues[1].toIntOrNull() ?: continue
+                    val m = mInt.toString().padStart(2, '0')
+
+                    val isExp = td.contains("直達車")
+                    val isPeakA18 = td.contains("停靠A18") || td.contains("尖峰增停直達車")
+                    val stopsAtA18 = !isExp || isPeakA18
+
+                    if (!stopsAtA18) continue
+
+                    val depTime = "$h:$m"
+                    val depMinutes = opH * 60 + mInt
+                    val duration = if (isExp) 28 else 38
+                    val arrMinutes = depMinutes + duration
+                    val arrH = String.format(Locale.TAIWAN, "%02d", (arrMinutes / 60) % 24)
+                    val arrM = String.format(Locale.TAIWAN, "%02d", arrMinutes % 60)
+                    val trainNoPrefix = if (isSouth) "A3➔A18" else "A18➔A3"
+
+                    val item = JSONObject().apply {
+                        put("trainNo", "$trainNoPrefix-$depTime")
+                        put("depTime", depTime)
+                        put("arrTime", "$arrH:$arrM")
+                        put("duration", duration)
+                        put("isExpress", isExp)
+                        put("type", if (isExp) "尖峰直達" else "普通車")
+                        put("depMinutes", depMinutes)
+                        put("min", mInt)
+                        put("stopsAtA18", true)
+                    }
+                    items.add(depMinutes to item)
+                }
+            }
+            items.sortedBy { it.first }.forEach { trainsArray.put(it.second) }
+        } catch (_: Exception) {}
+        return trainsArray
     }
 }
 

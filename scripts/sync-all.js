@@ -12,7 +12,7 @@ const path = require('path');
 
 const server = require('../server.js');
 
-function fetchUrl(url, timeoutMs = 8000) {
+function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
@@ -21,11 +21,24 @@ function fetchUrl(url, timeoutMs = 8000) {
       }
     }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return fetchUrl(res.headers.location, timeoutMs).then(resolve).catch(reject);
+        res.resume();
+        if (hopCount >= 5) {
+          return reject(new Error('重新導向次數過多'));
+        }
+        try {
+          const nextUrl = new URL(res.headers.location, url).toString();
+          return fetchUrl(nextUrl, timeoutMs, hopCount + 1).then(resolve).catch(reject);
+        } catch (e) {
+          return reject(e);
+        }
       }
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => resolve(d));
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        res.resume();
+        return reject(new Error(`HTTP Status ${res.statusCode}`));
+      }
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     });
     req.on('error', reject);
     req.setTimeout(timeoutMs, () => {
@@ -143,19 +156,34 @@ async function syncYouBike(outDir) {
     time: s.time || s.mday || ''
   }));
 
+  const outFile = path.join(outDir, 'youbike.json');
+  let existingData = {};
+  if (fs.existsSync(outFile)) {
+    try {
+      existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
+    } catch (_e) {}
+  }
+
+  const finalNtpc = slimNtpc.length > 0 ? slimNtpc : (Array.isArray(existingData.ntpc) ? existingData.ntpc : []);
+  const finalTycg = slimTycg.length > 0 ? slimTycg : (Array.isArray(existingData.tycg) ? existingData.tycg : []);
+
+  if (finalNtpc.length === 0 && finalTycg.length === 0) {
+    console.warn('  - YouBike 雙端點均無有效資料，略過寫入以保護本地快照');
+    return;
+  }
+
   const timeStr = getTaiwanTimeString();
   const payload = {
-    updatedAt: getTaiwanNow().toISOString(),
-    updateTimeDisplay: timeStr,
-    ntpcCount: slimNtpc.length,
-    tycgCount: slimTycg.length,
-    ntpc: slimNtpc,
-    tycg: slimTycg
+    updatedAt: new Date().toISOString(),
+    updateTimeDisplay: (slimNtpc.length > 0 || slimTycg.length > 0) ? timeStr : (existingData.updateTimeDisplay || timeStr),
+    ntpcCount: finalNtpc.length,
+    tycgCount: finalTycg.length,
+    ntpc: finalNtpc,
+    tycg: finalTycg
   };
 
-  const outFile = path.join(outDir, 'youbike.json');
   fs.writeFileSync(outFile, JSON.stringify(payload));
-  console.log(`  -> 已寫入 ${outFile} (更新時間: ${timeStr}，精煉站點: ${slimNtpc.length + slimTycg.length} 站)`);
+  console.log(`  -> 已寫入 ${outFile} (更新時間: ${payload.updateTimeDisplay}，精煉站點: ${finalNtpc.length + finalTycg.length} 站)`);
 }
 
 // 2. 同步台灣高鐵當日時刻表 (南下: 板橋➔桃園 / 北上: 桃園➔板橋)
@@ -169,7 +197,7 @@ async function syncThsr(outDir) {
 
     const payload = {
       date: server.getTaiwanDateString(),
-      updatedAt: getTaiwanNow().toISOString(),
+      updatedAt: new Date().toISOString(),
       south: { count: southTrains.length, trains: southTrains },
       north: { count: northTrains.length, trains: northTrains }
     };
@@ -193,7 +221,7 @@ async function syncTymetro(outDir) {
 
     const payload = {
       date: server.getTaiwanDateString(),
-      updatedAt: getTaiwanNow().toISOString(),
+      updatedAt: new Date().toISOString(),
       south: { count: southTrains.length, trains: southTrains },
       north: { count: northTrains.length, trains: northTrains }
     };
@@ -229,12 +257,14 @@ async function syncMetroLive(outDir) {
       } catch (e) {}
     }
 
+    const hasFreshTrains = liveTrains.length > 0;
+    const hasFreshWeight = carWeightData && Object.keys(carWeightData).length > 0;
     const payload = {
-      updatedAt: getTaiwanNow().toISOString(),
-      updateTimeDisplay: getTaiwanTimeString(),
-      count: liveTrains.length > 0 ? liveTrains.length : (existingData.count || 0),
-      trains: liveTrains.length > 0 ? liveTrains : (existingData.trains || []),
-      carWeight: (carWeightData && Object.keys(carWeightData).length > 0) ? carWeightData : (existingData.carWeight || {})
+      updatedAt: (hasFreshTrains || hasFreshWeight) ? new Date().toISOString() : (existingData.updatedAt || new Date().toISOString()),
+      updateTimeDisplay: (hasFreshTrains || hasFreshWeight) ? getTaiwanTimeString() : (existingData.updateTimeDisplay || getTaiwanTimeString()),
+      count: hasFreshTrains ? liveTrains.length : (existingData.count || 0),
+      trains: hasFreshTrains ? liveTrains : (existingData.trains || []),
+      carWeight: hasFreshWeight ? carWeightData : (existingData.carWeight || {})
     };
 
     fs.writeFileSync(outFile, JSON.stringify(payload));
@@ -250,17 +280,17 @@ async function syncParking(outDir) {
   try {
     const lots = await server.fetchThsrParkingData();
     const outFile = path.join(outDir, 'parking.json');
-    let existingLots = [];
+    let existingData = {};
     if (fs.existsSync(outFile)) {
       try {
-        const d = JSON.parse(fs.readFileSync(outFile, 'utf8'));
-        if (Array.isArray(d.lots)) existingLots = d.lots;
+        existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
       } catch (e) {}
     }
+    const existingLots = Array.isArray(existingData.lots) ? existingData.lots : [];
 
     const payload = {
-      updatedAt: getTaiwanNow().toISOString(),
-      updateTimeDisplay: getTaiwanTimeString(),
+      updatedAt: lots.length > 0 ? new Date().toISOString() : (existingData.updatedAt || new Date().toISOString()),
+      updateTimeDisplay: lots.length > 0 ? getTaiwanTimeString() : (existingData.updateTimeDisplay || getTaiwanTimeString()),
       lots: lots.length > 0 ? lots : existingLots
     };
 

@@ -240,33 +240,46 @@ function handleBotePrewarm(req, res, parsedUrl) {
   res.end(JSON.stringify({ ok: true, prewarmed: warmedIds, totalRequested: validIds.length }));
 }
 
-// 內部抓取遠端 JSON 函式
-function fetchRemoteJson(url) {
+// 共用遠端文字抓取函式 (支援相對路徑重新導向、跳轉上限、Buffer 安全解碼與連線清理)
+function fetchRemoteText(url, acceptHeader, timeoutMs = 8000, hopCount = 0) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0' } }, (res) => {
+    const req = https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': acceptHeader
+      }
+    }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return fetchRemoteJson(res.headers.location).then(resolve).catch(reject);
+        res.resume();
+        if (hopCount >= 5) {
+          return reject(new Error('重新導向次數過多'));
+        }
+        try {
+          const nextUrl = new URL(res.headers.location, url).toString();
+          return fetchRemoteText(nextUrl, acceptHeader, timeoutMs, hopCount + 1).then(resolve).catch(reject);
+        } catch (e) {
+          return reject(e);
+        }
       }
       if (res.statusCode !== 200) {
+        res.resume();
         return reject(new Error(`HTTP Status ${res.statusCode}`));
       }
-      let rawData = '';
-      res.setEncoding('utf8');
-      res.on('data', chunk => { rawData += chunk; });
-      res.on('end', () => {
-        try {
-          resolve(rawData);
-        } catch (e) {
-          reject(e);
-        }
-      });
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     });
     req.on('error', reject);
-    req.setTimeout(8000, () => {
+    req.setTimeout(timeoutMs, () => {
       req.destroy();
-      reject(new Error('連線逾時 (Timeout)'));
+      reject(new Error(`連線逾時: ${url}`));
     });
   });
+}
+
+// 內部抓取遠端 JSON 函式
+function fetchRemoteJson(url) {
+  return fetchRemoteText(url, 'application/json, text/plain, */*', 8000);
 }
 
 // 取得台灣時間日期字串 (YYYY/MM/DD)
@@ -438,7 +451,10 @@ function fetchOfficialTymetroTimetable(direction) {
               const isExp = td.includes('直達車');
               const isPeakA18 = td.includes('停靠A18') || td.includes('尖峰增停直達車');
               const depTime = `${h}:${m}`;
-              const minutes = parseInt(h, 10) * 60 + parseInt(m, 10);
+              const hourNum = parseInt(h, 10);
+              const minNum = parseInt(m, 10);
+              const opHour = hourNum < 4 ? hourNum + 24 : hourNum;
+              const minutes = opHour * 60 + minNum;
               const stopsAtA18 = !isExp || isPeakA18;
 
               if (!stopsAtA18) return; // 嚴格只保留停靠 A18 的可用班次
@@ -608,30 +624,7 @@ async function handleYouBikeProxy(req, res, cityKey, sourceUrl) {
 
 // 內部通用抓取遠端 HTML 函式
 function fetchRemoteHtml(url, timeoutMs = 8000) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-      }
-    }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return fetchRemoteHtml(res.headers.location, timeoutMs).then(resolve).catch(reject);
-      }
-      if (res.statusCode !== 200) {
-        return reject(new Error(`HTTP Status ${res.statusCode}`));
-      }
-      let rawData = '';
-      res.setEncoding('utf8');
-      res.on('data', chunk => { rawData += chunk; });
-      res.on('end', () => resolve(rawData));
-    });
-    req.on('error', reject);
-    req.setTimeout(timeoutMs, () => {
-      req.destroy();
-      reject(new Error(`連線逾時: ${url}`));
-    });
-  });
+  return fetchRemoteText(url, 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', timeoutMs);
 }
 
 // 解析到站時間 HTML 區塊
@@ -970,8 +963,22 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw) {
 
 // 建立 HTTP 伺服器
 const server = http.createServer((req, res) => {
-  const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const pathname = parsedUrl.pathname;
+  let parsedUrl;
+  let pathname;
+  try {
+    const rawPathname = decodeURIComponent(String(req.url || '/').split('?')[0]);
+    if (rawPathname.split(/[\\/]/).some(seg => seg === '..')) {
+      res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('403 Forbidden');
+      return;
+    }
+    parsedUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+    pathname = decodeURIComponent(parsedUrl.pathname);
+  } catch (_) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('400 Bad Request');
+    return;
+  }
 
   // 1. API 路由
   if (pathname === '/api/health') {
@@ -1030,17 +1037,36 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 2. 靜態檔案路由
-  let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
-  if (!filePath.startsWith(PUBLIC_DIR)) {
-    res.writeHead(403);
+  // 2. 靜態檔案路由 (嚴格防範目錄穿越與後端/設定檔外洩)
+  const relStaticPath = (pathname === '/' ? 'index.html' : pathname).replace(/^\/+/, '');
+  if (!relStaticPath ||
+      relStaticPath.split(/[\\/]/).some(seg => seg.startsWith('.') || seg === '..') ||
+      relStaticPath === 'server.js' ||
+      relStaticPath === 'package.json' ||
+      relStaticPath === 'package-lock.json' ||
+      relStaticPath.startsWith('scripts/') ||
+      relStaticPath.startsWith('android/')) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('403 Forbidden');
+    return;
+  }
+
+  let filePath = path.resolve(PUBLIC_DIR, relStaticPath);
+  if (filePath !== PUBLIC_DIR && !filePath.startsWith(PUBLIC_DIR + path.sep)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('403 Forbidden');
     return;
   }
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      filePath = path.join(PUBLIC_DIR, 'index.html');
+      res.writeHead(404, relStaticPath.startsWith('data/')
+        ? { 'Content-Type': 'application/json; charset=utf-8' }
+        : { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(relStaticPath.startsWith('data/')
+        ? JSON.stringify({ success: false, error: '找不到資料檔案' })
+        : '404 Not Found');
+      return;
     }
 
     const ext = path.extname(filePath).toLowerCase();
@@ -1051,7 +1077,9 @@ const server = http.createServer((req, res) => {
       '.json': 'application/json; charset=utf-8',
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
-      '.svg': 'image/svg+xml'
+      '.jpeg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon'
     };
 
     const contentType = mimeTypes[ext] || 'application/octet-stream';

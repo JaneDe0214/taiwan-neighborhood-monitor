@@ -11,9 +11,10 @@
       "district": "中正區",
       "lat": 25.0465,
       "lon": 121.5148,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=301",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=301"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=301",
+      "ccdId": "301"
     },
     {
       "id": "tpe-303",
@@ -22,9 +23,10 @@
       "district": "中正區",
       "lat": 25.0485,
       "lon": 121.5115,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=303",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=303"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=303",
+      "ccdId": "303"
     },
     {
       "id": "tpe-304",
@@ -33,9 +35,10 @@
       "district": "中正區",
       "lat": 25.0483,
       "lon": 121.5122,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=304",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=304"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=304",
+      "ccdId": "304"
     },
     {
       "id": "tpe-346",
@@ -44,9 +47,10 @@
       "district": "中正區",
       "lat": 25.0442,
       "lon": 121.5208,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=346",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=346"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=346",
+      "ccdId": "346"
     },
     {
       "id": "tpe-166",
@@ -55,9 +59,10 @@
       "district": "中山區",
       "lat": 25.0492,
       "lon": 121.5205,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=166",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=166"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=166",
+      "ccdId": "166"
     },
     {
       "id": "tpe-028",
@@ -66,9 +71,10 @@
       "district": "中山區",
       "lat": 25.0494,
       "lon": 121.521,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=028",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=028"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=028",
+      "ccdId": "028"
     },
     {
       "id": "tpe-292",
@@ -77,9 +83,10 @@
       "district": "中正區",
       "lat": 25.0428,
       "lon": 121.5065,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=292",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=292"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=292",
+      "ccdId": "292"
     },
     {
       "id": "tpe-291",
@@ -88,9 +95,10 @@
       "district": "中正區",
       "lat": 25.0435,
       "lon": 121.5098,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=291",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=291"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=291",
+      "ccdId": "291"
     },
     {
       "id": "tpe-338",
@@ -99,9 +107,10 @@
       "district": "中正區",
       "lat": 25.0452,
       "lon": 121.5091,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=338",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=338"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=338",
+      "ccdId": "338"
     },
     {
       "id": "tpe-263",
@@ -110,9 +119,10 @@
       "district": "中正區",
       "lat": 25.0372,
       "lon": 121.5085,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=263",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=263"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=263",
+      "ccdId": "263"
     },
     {
       "id": "tpe-370",
@@ -121,9 +131,10 @@
       "district": "市區幹道",
       "lat": 25.0358,
       "lon": 121.5012,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=370",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=370"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=370",
+      "ccdId": "370"
     },
     {
       "id": "tpe-356",
@@ -132,9 +143,10 @@
       "district": "萬華區",
       "lat": 25.0325,
       "lon": 121.4988,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=356",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=356"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=356",
+      "ccdId": "356"
     },
     {
       "id": "tpe-419",
@@ -143,9 +155,10 @@
       "district": "萬華區",
       "lat": 25.0298,
       "lon": 121.4965,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=419",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=419"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=419",
+      "ccdId": "419"
     },
     {
       "id": "tpe-295",
@@ -154,9 +167,10 @@
       "district": "萬華區",
       "lat": 25.0265,
       "lon": 121.4982,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=295",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=295"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=295",
+      "ccdId": "295"
     },
     {
       "id": "tpe-353",
@@ -165,9 +179,10 @@
       "district": "市區幹道",
       "lat": 25.0455,
       "lon": 121.5312,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=353",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=353"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=353",
+      "ccdId": "353"
     },
     {
       "id": "tpe-347",
@@ -176,9 +191,10 @@
       "district": "中山區",
       "lat": 25.0365,
       "lon": 121.5182,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=347",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=347"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=347",
+      "ccdId": "347"
     },
     {
       "id": "tpe-387",
@@ -187,9 +203,10 @@
       "district": "市區幹道",
       "lat": 25.0268,
       "lon": 121.5342,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=387",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=387"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=387",
+      "ccdId": "387"
     },
     {
       "id": "tpe-277",
@@ -198,9 +215,10 @@
       "district": "信義區",
       "lat": 25.0339,
       "lon": 121.5645,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=277",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=277"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=277",
+      "ccdId": "277"
     },
     {
       "id": "tpe-134",
@@ -209,9 +227,10 @@
       "district": "信義區",
       "lat": 25.0354,
       "lon": 121.5678,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=134",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=134"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=134",
+      "ccdId": "134"
     },
     {
       "id": "tpe-133",
@@ -220,9 +239,10 @@
       "district": "信義區",
       "lat": 25.0385,
       "lon": 121.5652,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=133",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=133"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=133",
+      "ccdId": "133"
     },
     {
       "id": "tpe-135",
@@ -231,9 +251,10 @@
       "district": "信義區",
       "lat": 25.0345,
       "lon": 121.5621,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=135",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=135"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=135",
+      "ccdId": "135"
     },
     {
       "id": "tpe-139",
@@ -242,9 +263,10 @@
       "district": "信義區",
       "lat": 25.0378,
       "lon": 121.5661,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=139",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=139"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=139",
+      "ccdId": "139"
     },
     {
       "id": "tpe-137",
@@ -253,9 +275,10 @@
       "district": "信義區",
       "lat": 25.0362,
       "lon": 121.5638,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=137",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=137"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=137",
+      "ccdId": "137"
     },
     {
       "id": "tpe-138",
@@ -264,9 +287,10 @@
       "district": "信義區",
       "lat": 25.0356,
       "lon": 121.5658,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=138",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=138"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=138",
+      "ccdId": "138"
     },
     {
       "id": "tpe-074",
@@ -275,9 +299,10 @@
       "district": "信義區",
       "lat": 25.0335,
       "lon": 121.5725,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=074",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=074"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=074",
+      "ccdId": "074"
     },
     {
       "id": "tpe-075",
@@ -286,9 +311,10 @@
       "district": "信義區",
       "lat": 25.0338,
       "lon": 121.5682,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=075",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=075"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=075",
+      "ccdId": "075"
     },
     {
       "id": "tpe-286",
@@ -297,9 +323,10 @@
       "district": "大同區",
       "lat": 25.0568,
       "lon": 121.5108,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=286",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=286"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=286",
+      "ccdId": "286"
     },
     {
       "id": "tpe-278",
@@ -308,9 +335,10 @@
       "district": "大同區",
       "lat": 25.0532,
       "lon": 121.5135,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=278",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=278"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=278",
+      "ccdId": "278"
     },
     {
       "id": "tpe-259",
@@ -319,9 +347,10 @@
       "district": "大同區",
       "lat": 25.0628,
       "lon": 121.5138,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=259",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=259"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=259",
+      "ccdId": "259"
     },
     {
       "id": "tpe-336",
@@ -330,9 +359,10 @@
       "district": "市區幹道",
       "lat": 25.0562,
       "lon": 121.5136,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=336",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=336"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=336",
+      "ccdId": "336"
     },
     {
       "id": "tpe-236",
@@ -341,9 +371,10 @@
       "district": "市區幹道",
       "lat": 25.0998,
       "lon": 121.5492,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=236",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=236"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=236",
+      "ccdId": "236"
     },
     {
       "id": "tpe-234",
@@ -352,9 +383,10 @@
       "district": "市區幹道",
       "lat": 25.0945,
       "lon": 121.5348,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=234",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=234"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=234",
+      "ccdId": "234"
     },
     {
       "id": "tpe-411",
@@ -363,9 +395,10 @@
       "district": "中山區",
       "lat": 25.0932,
       "lon": 121.5285,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=411",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=411"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=411",
+      "ccdId": "411"
     },
     {
       "id": "tpe-157",
@@ -374,9 +407,10 @@
       "district": "中山區",
       "lat": 25.0848,
       "lon": 121.5252,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=157",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=157"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=157",
+      "ccdId": "157"
     },
     {
       "id": "tpe-326",
@@ -385,9 +419,10 @@
       "district": "中山區",
       "lat": 25.0885,
       "lon": 121.5268,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=326",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=326"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=326",
+      "ccdId": "326"
     },
     {
       "id": "tpe-386",
@@ -396,9 +431,10 @@
       "district": "市區幹道",
       "lat": 25.0925,
       "lon": 121.5225,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=386",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=386"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=386",
+      "ccdId": "386"
     },
     {
       "id": "tpe-348",
@@ -407,9 +443,10 @@
       "district": "松山區",
       "lat": 25.0502,
       "lon": 121.5775,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=348",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=348"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=348",
+      "ccdId": "348"
     },
     {
       "id": "tpe-349",
@@ -418,9 +455,10 @@
       "district": "市區幹道",
       "lat": 25.0518,
       "lon": 121.5645,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=349",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=349"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=349",
+      "ccdId": "349"
     },
     {
       "id": "tpe-305",
@@ -429,9 +467,10 @@
       "district": "市區幹道",
       "lat": 25.0519,
       "lon": 121.5492,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=305",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=305"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=305",
+      "ccdId": "305"
     },
     {
       "id": "tpe-306",
@@ -440,9 +479,10 @@
       "district": "市區幹道",
       "lat": 25.0482,
       "lon": 121.5495,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=306",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=306"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=306",
+      "ccdId": "306"
     },
     {
       "id": "tpe-372",
@@ -451,9 +491,10 @@
       "district": "松山區",
       "lat": 25.0618,
       "lon": 121.5498,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=372",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=372"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=372",
+      "ccdId": "372"
     },
     {
       "id": "tpe-382",
@@ -462,9 +503,10 @@
       "district": "市區幹道",
       "lat": 25.0415,
       "lon": 121.5572,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=382",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=382"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=382",
+      "ccdId": "382"
     },
     {
       "id": "tpe-345",
@@ -473,9 +515,10 @@
       "district": "市區幹道",
       "lat": 25.0418,
       "lon": 121.5488,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=345",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=345"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=345",
+      "ccdId": "345"
     },
     {
       "id": "tpe-262",
@@ -484,9 +527,10 @@
       "district": "市區幹道",
       "lat": 25.0416,
       "lon": 121.5435,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=262",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=262"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=262",
+      "ccdId": "262"
     },
     {
       "id": "tpe-330",
@@ -495,9 +539,10 @@
       "district": "信義區",
       "lat": 25.0332,
       "lon": 121.5528,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=330",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=330"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=330",
+      "ccdId": "330"
     },
     {
       "id": "tpe-417",
@@ -506,9 +551,10 @@
       "district": "市區幹道",
       "lat": 25.0265,
       "lon": 121.5282,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=417",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=417"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=417",
+      "ccdId": "417"
     },
     {
       "id": "tpe-008",
@@ -517,9 +563,10 @@
       "district": "市區幹道",
       "lat": 25.0215,
       "lon": 121.5228,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=008",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=008"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=008",
+      "ccdId": "008"
     },
     {
       "id": "tpe-415",
@@ -528,9 +575,10 @@
       "district": "中山區",
       "lat": 25.0528,
       "lon": 121.5188,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=415",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=415"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=415",
+      "ccdId": "415"
     },
     {
       "id": "tpe-328",
@@ -539,9 +587,10 @@
       "district": "中山區",
       "lat": 25.0578,
       "lon": 121.5225,
-      "type": "hls",
+      "type": "iframe",
       "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=328",
-      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=328"
+      "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=328",
+      "ccdId": "328"
     }
   ]
 }
