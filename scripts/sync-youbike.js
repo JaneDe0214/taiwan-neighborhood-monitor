@@ -1,10 +1,26 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
+
+function decodeResponseBuffer(buffer, contentEncoding) {
+  const enc = String(contentEncoding || '').toLowerCase();
+  if (enc.includes('gzip') || enc.includes('x-gzip')) return zlib.gunzipSync(buffer);
+  if (enc.includes('deflate')) {
+    try { return zlib.inflateSync(buffer); } catch (e) { return zlib.inflateRawSync(buffer); }
+  }
+  if (enc.includes('br') && typeof zlib.brotliDecompressSync === 'function') return zlib.brotliDecompressSync(buffer);
+  return buffer;
+}
 
 function fetchUrl(url, hopCount = 0) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0' } }, res => {
+    const req = https.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0',
+        'Accept-Encoding': 'gzip, deflate, br'
+      }
+    }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
         if (hopCount >= 5) return reject(new Error('重新導向次數過多'));
@@ -21,7 +37,14 @@ function fetchUrl(url, hopCount = 0) {
       }
       const chunks = [];
       res.on('data', c => chunks.push(c));
-      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      res.on('error', reject);
+      res.on('end', () => {
+        try {
+          resolve(decodeResponseBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
+        } catch (e) {
+          reject(new Error(`解碼回應失敗: ${e.message}`));
+        }
+      });
     });
     req.on('error', reject);
     req.setTimeout(10000, () => {

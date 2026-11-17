@@ -17,7 +17,8 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
     const req = https.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8'
+        'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br'
       }
     }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -38,7 +39,14 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
       }
       const chunks = [];
       res.on('data', c => chunks.push(c));
-      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      res.on('error', reject);
+      res.on('end', () => {
+        try {
+          resolve(server.decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
+        } catch (e) {
+          reject(new Error(`解碼回應失敗: ${e.message}`));
+        }
+      });
     });
     req.on('error', reject);
     req.setTimeout(timeoutMs, () => {

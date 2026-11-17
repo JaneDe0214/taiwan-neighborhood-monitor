@@ -7,6 +7,40 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
+
+// 安全解壓遠端 HTTP 回應 Buffer (支援 gzip / deflate / br 與未壓縮原文)
+function decodeCompressedBuffer(buffer, contentEncoding) {
+  const enc = String(contentEncoding || '').toLowerCase();
+  if (enc.includes('gzip') || enc.includes('x-gzip')) {
+    return zlib.gunzipSync(buffer);
+  }
+  if (enc.includes('deflate')) {
+    try {
+      return zlib.inflateSync(buffer);
+    } catch (e) {
+      return zlib.inflateRawSync(buffer);
+    }
+  }
+  if (enc.includes('br') && typeof zlib.brotliDecompressSync === 'function') {
+    return zlib.brotliDecompressSync(buffer);
+  }
+  return buffer;
+}
+
+// 寫入有容量上限的 Map (FIFO/LRU 淘汰最舊鍵值以防止長期記憶體膨脹)
+function setBoundedMap(map, key, value, maxEntries = 200) {
+  if (map.has(key)) {
+    map.delete(key);
+  } else {
+    while (map.size >= maxEntries) {
+      const oldestKey = map.keys().next().value;
+      if (oldestKey === undefined) break;
+      map.delete(oldestKey);
+    }
+  }
+  map.set(key, value);
+}
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = __dirname;
@@ -53,8 +87,8 @@ function saveBoteSetCookies(camKey, setCookieHeaders) {
   let camMap = boteCookieJar.get(camKey);
   if (!camMap) {
     camMap = new Map();
-    boteCookieJar.set(camKey, camMap);
   }
+  setBoundedMap(boteCookieJar, camKey, camMap, 200);
   for (const raw of setCookieHeaders) {
     const firstPart = String(raw || '').split(';')[0];
     const eqIdx = firstPart.indexOf('=');
@@ -225,7 +259,7 @@ function handleBotePrewarm(req, res, parsedUrl) {
   for (const id of validIds) {
     const last = botePrewarmCooldown.get(id) || 0;
     if (now - last < 20000) continue;
-    botePrewarmCooldown.set(id, now);
+    setBoundedMap(botePrewarmCooldown, id, now, 200);
     warmedIds.push(id);
     requestBoteUpstream(
       `/hls/${id}/index.m3u8`,
@@ -240,13 +274,14 @@ function handleBotePrewarm(req, res, parsedUrl) {
   res.end(JSON.stringify({ ok: true, prewarmed: warmedIds, totalRequested: validIds.length }));
 }
 
-// 共用遠端文字抓取函式 (支援相對路徑重新導向、跳轉上限、Buffer 安全解碼與連線清理)
+// 共用遠端文字抓取函式 (支援相對路徑重新導向、跳轉上限、壓縮解碼、Buffer 安全解碼與連線清理)
 function fetchRemoteText(url, acceptHeader, timeoutMs = 8000, hopCount = 0) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': acceptHeader
+        'Accept': acceptHeader,
+        'Accept-Encoding': 'gzip, deflate, br'
       }
     }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -267,7 +302,14 @@ function fetchRemoteText(url, acceptHeader, timeoutMs = 8000, hopCount = 0) {
       }
       const chunks = [];
       res.on('data', chunk => chunks.push(chunk));
-      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      res.on('error', reject);
+      res.on('end', () => {
+        try {
+          resolve(decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
+        } catch (e) {
+          reject(new Error(`解碼遠端回應失敗: ${e.message}`));
+        }
+      });
     });
     req.on('error', reject);
     req.setTimeout(timeoutMs, () => {
@@ -314,6 +356,7 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Content-Length': Buffer.byteLength(postData),
+        'Accept-Encoding': 'gzip, deflate, br',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Referer': 'https://www.thsrc.com.tw/ArticleContent/a3b630bb-1066-4352-a1ef-58c7b4e8ef7c',
         'Origin': 'https://www.thsrc.com.tw'
@@ -321,32 +364,51 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
     };
 
     const req = https.request(THSR_SEARCH_URL, options, (res) => {
-      let rawData = '';
-      res.setEncoding('utf8');
-      res.on('data', chunk => { rawData += chunk; });
+      if (res.statusCode !== 200) {
+        res.resume();
+        return reject(new Error(`HTTP Status ${res.statusCode}`));
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('error', reject);
       res.on('end', () => {
         try {
+          const rawData = decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8');
           const json = JSON.parse(rawData);
           const rawItems = (json.data && json.data.DepartureTable && json.data.DepartureTable.TrainItem) || [];
-          
-          const cleanTrains = rawItems.map(t => {
+
+          const cleanTrains = [];
+          for (const t of rawItems) {
+            const trainNo = String((t && t.TrainNumber) || '').trim();
+            const cleanNo = trainNo.replace(/^0+/, '');
+            // 嚴格排除不停靠桃園站之 1xx / 11xx 直達台中車次（保留 16xx）
+            if (cleanNo.startsWith('1') && cleanNo.length <= 4 && !cleanNo.startsWith('16')) {
+              continue;
+            }
+            if (!t.DepartureTime || !t.DestinationTime) continue;
             const depParts = t.DepartureTime.split(':').map(Number);
             const arrParts = t.DestinationTime.split(':').map(Number);
+            if (depParts.length < 2 || arrParts.length < 2 || depParts.some(Number.isNaN) || arrParts.some(Number.isNaN)) {
+              continue;
+            }
             let duration = (arrParts[0] * 60 + arrParts[1]) - (depParts[0] * 60 + depParts[1]);
             if (duration < 0) duration += 1440;
-            const isExpress = t.TrainNumber.startsWith('06') || t.TrainNumber.startsWith('6');
-            return {
-              trainNo: t.TrainNumber,
+            const isExpress = trainNo.startsWith('06') || trainNo.startsWith('6');
+            const depOpH = depParts[0] < 4 ? depParts[0] + 24 : depParts[0];
+            const depMinutes = depOpH * 60 + depParts[1];
+            cleanTrains.push({
+              trainNo,
               depTime: t.DepartureTime,
               arrTime: t.DestinationTime,
               duration: duration || 12,
-              isExpress: isExpress,
+              isExpress,
               type: isExpress ? '6xx特快' : '8xx全停',
               stopsAtTaoyuan: true,
-              depMinutes: depParts[0] * 60 + depParts[1]
-            };
-          });
+              depMinutes
+            });
+          }
 
+          cleanTrains.sort((a, b) => a.depMinutes - b.depMinutes);
           resolve(cleanTrains);
         } catch (e) {
           reject(new Error(`解析高鐵官方資料失敗: ${e.message}`));
@@ -422,15 +484,22 @@ function fetchOfficialTymetroTimetable(direction) {
     const tableIndex = direction === 'south' ? 1 : 0;
     const targetUrl = `https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable.php?station=${stationCode}`;
 
-    const req = https.get(targetUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0' } }, (res) => {
+    const req = https.get(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0',
+        'Accept-Encoding': 'gzip, deflate, br'
+      }
+    }, (res) => {
       if (res.statusCode !== 200) {
+        res.resume();
         return reject(new Error(`HTTP Status ${res.statusCode}`));
       }
-      let rawData = '';
-      res.setEncoding('utf8');
-      res.on('data', chunk => { rawData += chunk; });
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('error', reject);
       res.on('end', () => {
         try {
+          const rawData = decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8');
           const tables = rawData.match(/<table[\s\S]*?<\/table>/g) || [];
           const tbl = tables[tableIndex];
           if (!tbl) {
@@ -947,7 +1016,7 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw) {
       airQuality,
       fetchedAt: new Date().toISOString()
     });
-    cache.weatherMap.set(key, { payload, expireAt: now + 120000 });
+    setBoundedMap(cache.weatherMap, key, { payload, expireAt: now + 120000 }, 200);
     res.writeHead(200);
     res.end(payload);
   } catch (err) {
@@ -1117,5 +1186,8 @@ server.fetchMetroLiveBoard = fetchMetroLiveBoard;
 server.fetchCarWeightData = fetchCarWeightData;
 server.fetchThsrParkingData = fetchThsrParkingData;
 server.getTaiwanDateString = getTaiwanDateString;
+server.decodeCompressedBuffer = decodeCompressedBuffer;
+server.setBoundedMap = setBoundedMap;
+server._internal = { cache, boteCookieJar, botePrewarmCooldown };
 
 module.exports = server;

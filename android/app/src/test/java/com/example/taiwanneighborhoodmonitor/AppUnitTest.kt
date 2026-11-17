@@ -1,10 +1,12 @@
 package com.example.taiwanneighborhoodmonitor
 
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayInputStream
 
 class AppUnitTest {
 
@@ -186,5 +188,28 @@ class AppUnitTest {
         assertEquals(1444, last.getInt("depMinutes"))
         assertEquals("00:42", last.getString("arrTime"))
         assertFalse(last.getBoolean("isExpress"))
+    }
+
+    @Test
+    fun extractFirstJpegFrame_extractsSingleFrameFromMultipartStream() {
+        val header = "--myboundary\r\nContent-Type: image/jpeg\r\n\r\n".toByteArray()
+        val fakeJpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte(), 0x00, 0x10, 0x11, 0x22, 0xFF.toByte(), 0xD9.toByte())
+        val secondChunk = "--myboundary\r\nEXTRA_IGNORED_DATA".toByteArray()
+        val stream = ByteArrayInputStream(header + fakeJpeg + secondChunk)
+
+        val extracted = WebAssetRouting.extractFirstJpegFrame(stream)
+        assertArrayEquals(fakeJpeg, extracted)
+
+        val brokenStream = ByteArrayInputStream(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0x01, 0x02))
+        assertNull(WebAssetRouting.extractFirstJpegFrame(brokenStream))
+    }
+
+    @Test
+    fun readBoundedBytes_capsMaxReadAndHandlesEmpty() {
+        val sample = ByteArray(100) { (it and 0xFF).toByte() }
+        val capped = WebAssetRouting.readBoundedBytes(ByteArrayInputStream(sample), maxBytes = 32)
+        assertArrayEquals(sample.copyOfRange(0, 32), capped)
+
+        assertNull(WebAssetRouting.readBoundedBytes(ByteArrayInputStream(ByteArray(0))))
     }
 }

@@ -974,7 +974,11 @@ body {
 .compact-badge-dir-btn:focus-visible,
 .dir-toggle-btn:focus-visible,
 .nav-tool-btn:focus-visible,
-.schedule-tab-btn:focus-visible {
+.schedule-tab-btn:focus-visible,
+.disaster-compact-pill:focus-visible,
+.compact-info-stream:focus-visible,
+.hub-plan-item:focus-visible,
+.nearby-bus-card:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
@@ -8408,7 +8412,7 @@ body.native-tv-mode .filter-tag-pill:focus {
         <h1 id="brandTitle" class="brand-title">雙埔生活</h1>
       </div>
       <!-- 極簡即時環境安全與特報監測膠囊 (整合原側邊欄卡牌，節省空間) -->
-      <div id="disasterAlertBanner" class="disaster-compact-pill" title="雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中">
+      <div id="disasterAlertBanner" class="disaster-compact-pill" tabindex="0" role="button" title="雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中">
         <span class="pill-dot"></span>
         <span id="disasterAlertText" class="disaster-pill-text"><i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全</span>
       </div>
@@ -9413,6 +9417,14 @@ class CameraPlayerEngine {
     }
   }
 
+  // 共用產生臺北市交工處官方 iframe 播放器 HTML
+  static buildBoteIframeHtml(cam, idPrefix = 'iframe') {
+    const iframeSrc = (cam && (cam.sourceUrl || (cam.streamUrl && cam.streamUrl.includes('hls.bote.gov.taipei/live/') ? cam.streamUrl : null)))
+      || `https://hls.bote.gov.taipei/live/index.html?id=${cam?.ccdId || cam?.id}`;
+    const safeTitle = String(cam?.name || '臺北市交工處即時影像').replace(/"/g, '&quot;');
+    return `<iframe id="${idPrefix}-${cam?.id}" class="cam-feed bote-iframe" src="${iframeSrc}" title="${safeTitle}" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade" scrolling="no" frameborder="0" style="width:100%;height:100%;border:none;background:#000;"></iframe>`;
+  }
+
   // 台北市交工處 HLS 網路無法連通時自動降級為官方 iframe 播放
   fallbackBoteToIframe(cam, videoEl) {
     try {
@@ -9427,9 +9439,8 @@ class CameraPlayerEngine {
     this.clearWatchdog(cam.id);
     const wrapper = videoEl && videoEl.parentElement;
     if (!wrapper) return;
-    const iframeSrc = cam.sourceUrl || `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId || cam.id}`;
     wrapper.classList.add('bote-stream-wrapper', 'is-ready');
-    wrapper.innerHTML = `<iframe id="iframe-${cam.id}" class="cam-feed bote-iframe" src="${iframeSrc}" title="${cam.name}" allow="autoplay; fullscreen" referrerpolicy="no-referrer-when-downgrade" scrolling="no" frameborder="0" style="width:100%;height:100%;border:none;background:#000;"></iframe>`;
+    wrapper.innerHTML = CameraPlayerEngine.buildBoteIframeHtml(cam, 'iframe');
   }
 
   // 初始化所有可見的播放器 (HLS, FLV, MJPEG)
@@ -9740,7 +9751,11 @@ class CameraPlayerEngine {
                 hls.recoverMediaError();
                 break;
               default:
-                setTimeout(() => this.refreshSingleCamera(cam.id), 3000);
+                setTimeout(() => {
+                  if (this.hlsPlayers.get(cam.id) === hls) {
+                    this.refreshCamera(cam.id);
+                  }
+                }, 3000);
                 break;
             }
           }
@@ -10095,28 +10110,31 @@ class CameraPlayerEngine {
   // 刷新單一鏡頭
   refreshCamera(camId) {
     this.clearWatchdog(camId);
+    const cam = (window.monitorApp && window.monitorApp.currentCameras)
+      ? window.monitorApp.currentCameras.find(c => c.id === camId)
+      : null;
 
-    // 若為 HLS
-    if (this.hlsPlayers.has(camId)) {
-      const oldHls = this.hlsPlayers.get(camId);
-      try {
-        oldHls.stopLoad();
-        oldHls.detachMedia();
-        oldHls.destroy();
-      } catch(e){}
-      this.hlsPlayers.delete(camId);
+    // 若為 HLS (含實例尚未註冊但鏡頭類型為 hls 之狀況，防止誤轉 FLV 重載器)
+    if (this.hlsPlayers.has(camId) || (cam && cam.type === 'hls' && document.getElementById(`video-${camId}`))) {
+      if (this.hlsPlayers.has(camId)) {
+        const oldHls = this.hlsPlayers.get(camId);
+        try {
+          oldHls.stopLoad();
+          oldHls.detachMedia();
+          oldHls.destroy();
+        } catch(e){}
+        this.hlsPlayers.delete(camId);
+      }
 
       const videoEl = document.getElementById(`video-${camId}`);
-      if (videoEl) {
-        const cam = window.monitorApp.currentCameras.find(c => c.id === camId);
-        if (cam) this.initHlsPlayer(cam);
+      if (videoEl && cam) {
+        this.initHlsPlayer(cam);
       }
       return;
     }
 
     // 若為 FLV
-    if (this.flvPlayers.has(camId) || document.getElementById(`video-${camId}`)) {
-      const cam = (window.monitorApp && window.monitorApp.currentCameras) ? window.monitorApp.currentCameras.find(c => c.id === camId) : null;
+    if (this.flvPlayers.has(camId) || (cam && cam.type === 'flv' && document.getElementById(`video-${camId}`))) {
       if (cam) {
         this.reloadFlvCamera(cam);
         return;
@@ -10195,7 +10213,9 @@ class WeatherEnvironmentMonitor {
     this.youbikeFilter = 'all'; // 'all' | 'qp' | 'bp'
 
     this.lastFetchTimestamp = 0;
-    this.minDebounceMs = 2000; // 手動防刷冷卻 2 秒
+    this.minDebounceMs = 2000; // 同目標手動防刷冷卻 2 秒
+    this._envRequestToken = 0;
+    this._lastFetchKey = '';
 
     // 記錄當前執行參數，供定時輪詢與前景智慧喚醒使用
     this.activeMode = 'none'; // 'dual' | 'single'
@@ -10375,18 +10395,86 @@ class WeatherEnvironmentMonitor {
     }, { passive: false });
   }
 
-  // 格式化 API 資料時間 (例: "2026-09-06T14:45" -> "14:45")
+  // 明確以台北時區 (UTC+8) 解析無時區結尾之 Open-Meteo ISO 時間字串，免受裝置時區偏移影響
+  static parseTaipeiTimestampMs(isoStr) {
+    if (!isoStr || typeof isoStr !== 'string') return NaN;
+    const trimmed = isoStr.trim();
+    if (!trimmed) return NaN;
+    if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+      return Date.parse(trimmed);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return Date.parse(`${trimmed}T00:00:00+08:00`);
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)) {
+      return Date.parse(`${trimmed}:00+08:00`);
+    }
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
+      return Date.parse(`${trimmed}+08:00`);
+    }
+    return Date.parse(trimmed);
+  }
+
+  static getTaipeiDateParts(input = Date.now()) {
+    if (typeof input === 'string') {
+      const trimmed = input.trim();
+      const m = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+      if (m && !/[zZ]$|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+        const year = parseInt(m[1], 10);
+        const month = parseInt(m[2], 10);
+        const date = parseInt(m[3], 10);
+        const hour = m[4] != null ? parseInt(m[4], 10) : 0;
+        const minute = m[5] != null ? parseInt(m[5], 10) : 0;
+        const dayOfWeek = new Date(Date.UTC(year, month - 1, date)).getUTCDay();
+        return {
+          year,
+          month,
+          date,
+          hour,
+          minute,
+          dayOfWeek,
+          prefix: `${m[1]}-${m[2]}-${m[3]}T${String(hour).padStart(2, '0')}`
+        };
+      }
+    }
+    const ms = input instanceof Date
+      ? input.getTime()
+      : (typeof input === 'number' ? input : WeatherEnvironmentMonitor.parseTaipeiTimestampMs(input));
+    if (!Number.isFinite(ms)) return null;
+    const tw = new Date(ms + 8 * 3600000);
+    const year = tw.getUTCFullYear();
+    const month = tw.getUTCMonth() + 1;
+    const date = tw.getUTCDate();
+    const hour = tw.getUTCHours();
+    const minute = tw.getUTCMinutes();
+    return {
+      year,
+      month,
+      date,
+      hour,
+      minute,
+      dayOfWeek: tw.getUTCDay(),
+      prefix: `${year}-${String(month).padStart(2, '0')}-${String(date).padStart(2, '0')}T${String(hour).padStart(2, '0')}`
+    };
+  }
+
+  parseTaipeiTimestampMs(isoStr) {
+    return WeatherEnvironmentMonitor.parseTaipeiTimestampMs(isoStr);
+  }
+
+  getTaipeiDateParts(input = Date.now()) {
+    return WeatherEnvironmentMonitor.getTaipeiDateParts(input);
+  }
+
+  // 格式化 API 資料時間 (例: "2026-09-06T14:45" -> "14:45"，固定台北時區)
   formatApiTime(isoStr) {
     if (!isoStr) return '--:--';
     try {
-      if (typeof isoStr === 'string' && isoStr.includes('T')) {
-        const timePart = isoStr.split('T')[1];
-        const parts = timePart.split(':');
-        return `${parts[0]}:${parts[1]}`;
+      const parts = this.getTaipeiDateParts(isoStr);
+      if (parts) {
+        return `${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
       }
-      const d = new Date(isoStr);
-      if (isNaN(d.getTime())) return String(isoStr);
-      return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+      return '--:--';
     } catch {
       return '--:--';
     }
@@ -10402,26 +10490,21 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 取得當前時間往後推算之起始索引 (從當前小時開始往後預測，解決死板顯示過去時段之問題)
+  // 取得當前台北時間往後推算之起始索引 (與裝置系統時區脫鉤)
   getFutureStartIndex(timeList) {
     if (!Array.isArray(timeList) || timeList.length === 0) return 0;
-    const now = new Date();
-    
-    // 1. 優先比對台北時區之當前年月日與小時 (例: 2026-09-06T14)
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
-    const targetPrefix = `${y}-${m}-${d}T${h}`;
+    const nowParts = this.getTaipeiDateParts(Date.now());
+    const targetPrefix = nowParts ? nowParts.prefix : '';
 
-    const exactIdx = timeList.findIndex(t => typeof t === 'string' && t.startsWith(targetPrefix));
-    if (exactIdx !== -1) return exactIdx;
+    if (targetPrefix) {
+      const exactIdx = timeList.findIndex(t => typeof t === 'string' && t.startsWith(targetPrefix));
+      if (exactIdx !== -1) return exactIdx;
+    }
 
-    // 2. 次要比對：時間戳記最接近且大於等於 (現在時間 - 45分鐘) 的資料點
-    const nowMs = now.getTime();
+    const nowMs = Date.now();
     const approxIdx = timeList.findIndex(t => {
-      const tMs = new Date(t).getTime();
-      return !isNaN(tMs) && tMs >= (nowMs - 2700000);
+      const tMs = this.parseTaipeiTimestampMs(t);
+      return !Number.isNaN(tMs) && tMs >= (nowMs - 2700000);
     });
     if (approxIdx !== -1) return approxIdx;
 
@@ -10568,13 +10651,17 @@ class WeatherEnvironmentMonitor {
     return { isDay: true, text: '日間', icon: 'fa-sun', color: '#f59e0b' };
   }
 
-  // AQI 空氣品質等級判定 (全面繁體中文化)
+  // AQI 空氣品質等級判定 (全面繁體中文化，保留合法 0 與 null 區分)
   getAqiLevel(aqi) {
-    if (aqi <= 50) {
+    if (aqi == null || !Number.isFinite(Number(aqi))) {
+      return { level: '暫無測報', color: '#94a3b8', class: 'neutral', advice: '目前暫無空氣品質監測數據' };
+    }
+    const val = Number(aqi);
+    if (val <= 50) {
       return { level: '優良等級', color: '#10b981', class: 'success', advice: '空氣極佳，適宜開窗通風與戶外活動' };
-    } else if (aqi <= 100) {
+    } else if (val <= 100) {
       return { level: '普通等級', color: '#f59e0b', class: 'warning', advice: '空氣普通，過敏族群可微調開窗' };
-    } else if (aqi <= 150) {
+    } else if (val <= 150) {
       return { level: '對敏感族群不良', color: '#f97316', class: 'warning', advice: '敏感體質者應減少外出，建議啟動室內清淨機' };
     } else {
       return { level: '對所有族群不良', color: '#ef4444', class: 'danger', advice: '空氣不佳，建議緊閉門窗並全天開啟清淨機' };
@@ -10647,8 +10734,8 @@ class WeatherEnvironmentMonitor {
     const srText = this.formatApiTime(sunriseIso);
     const ssText = this.formatApiTime(sunsetIso);
     const now = Date.now();
-    const srMs = sunriseIso ? Date.parse(sunriseIso) : NaN;
-    const ssMs = sunsetIso ? Date.parse(sunsetIso) : NaN;
+    const srMs = sunriseIso ? this.parseTaipeiTimestampMs(sunriseIso) : NaN;
+    const ssMs = sunsetIso ? this.parseTaipeiTimestampMs(sunsetIso) : NaN;
     let progress = 0.5;
     let phaseLabel = '日照監測';
     let isDaylight = true;
@@ -10709,10 +10796,11 @@ class WeatherEnvironmentMonitor {
     `;
   }
 
-  // AQI 環形向量儀表 SVG
+  // AQI 環形向量儀表 SVG (支援合法 0 與缺值 '--' 正確呈現)
   renderAqiRadialGaugeSvg(aqiVal, color, size = 58) {
-    const num = Math.max(0, Number(aqiVal) || 0);
-    const ratio = Math.max(0.04, Math.min(1, num / 200));
+    const hasVal = aqiVal != null && Number.isFinite(Number(aqiVal));
+    const num = hasVal ? Math.max(0, Number(aqiVal)) : 0;
+    const ratio = hasVal ? Math.max(0.04, Math.min(1, num / 200)) : 0.04;
     const r = 24;
     const c = +(2 * Math.PI * r).toFixed(2);
     const offset = +(c * (1 - ratio)).toFixed(2);
@@ -10724,7 +10812,7 @@ class WeatherEnvironmentMonitor {
             stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}" />
         </svg>
         <div class="aqi-radial-center">
-          <span class="aqi-number" style="color:${color}; font-size:${size < 52 ? '1.05rem' : '1.22rem'};">${num || '--'}</span>
+          <span class="aqi-number" style="color:${color}; font-size:${size < 52 ? '1.05rem' : '1.22rem'};">${hasVal ? num : '--'}</span>
           <span class="aqi-radial-lbl">AQI</span>
         </div>
       </div>
@@ -10882,21 +10970,76 @@ class WeatherEnvironmentMonitor {
   }
 
   // 1. 單一中心載入環境資訊
+  // 共用渲染側邊欄不可用狀態占位卡片 (切換地區或離線失敗時清除前一次殘留數值)
+  renderUnavailableWidgetCard(card, title, iconClass, subtitle = '目前無法取得最新即時資訊，請稍後重試') {
+    if (!card) return;
+    card.innerHTML = `
+      <div class="widget-title-row">
+        <div class="widget-title">
+          <i class="fa-solid ${iconClass}"></i> ${title}
+        </div>
+        <div class="live-sync-badge" style="color:#94a3b8; border-color:rgba(148,163,184,0.28);">
+          <span>離線 / 暫無資料</span>
+        </div>
+      </div>
+      <div class="env-unavailable-box" style="padding:14px 10px; text-align:center; color:var(--text-dim); font-size:0.78rem; background:rgba(15,23,42,0.45); border:1px dashed rgba(148,163,184,0.22); border-radius:8px;">
+        <i class="fa-solid fa-cloud-exclamation" style="font-size:1.15rem; color:#64748b; display:block; margin-bottom:6px;"></i>
+        <div>${subtitle}</div>
+      </div>
+    `;
+  }
+
+  renderUnavailableState(locationLabel = '目前區域') {
+    if (typeof document === 'undefined') return;
+    const msg = `暫時無法取得「${locationLabel}」即時氣象與空品資料`;
+    const weatherCard = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
+    const aqiCard = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
+    const rainCard = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
+    this.renderUnavailableWidgetCard(weatherCard, `${locationLabel} 氣象`, 'fa-cloud-sun', msg);
+    this.renderUnavailableWidgetCard(aqiCard, '空氣品質指標 (AQI)', 'fa-mask-face', msg);
+    this.renderUnavailableWidgetCard(rainCard, '降雨機率走勢', 'fa-umbrella', msg);
+
+    const assistantList = document.getElementById('lifeAssistantList');
+    if (assistantList) {
+      assistantList.innerHTML = `
+        <div class="assistant-item" style="border-color:rgba(148,163,184,0.25);">
+          <i class="fa-solid fa-wifi assistant-icon" style="color:#64748b;"></i>
+          <div class="assistant-content">
+            <span class="assistant-title" style="color:var(--text-dim);">暫無「${locationLabel}」即時出行建議</span>
+          </div>
+        </div>
+      `;
+    }
+    const lifeContainer = document.getElementById('lifeIndexContainer');
+    if (lifeContainer) {
+      lifeContainer.innerHTML = `
+        <div style="padding:10px; text-align:center; color:var(--text-dim); font-size:0.76rem; border:1px dashed rgba(148,163,184,0.2); border-radius:8px;">
+          暫無「${locationLabel}」即時生活出行指標
+        </div>
+      `;
+    }
+    this.renderDisasterAlert(null, null);
+  }
+
   async fetchEnvironment(lat, lon, locationName = '當地環境', isAuto = false) {
     const safeLat = Number.isFinite(Number(lat)) ? Number(lat) : 25.0153;
     const safeLon = Number.isFinite(Number(lon)) ? Number(lon) : 121.2213;
     const now = Date.now();
-    if (!isAuto && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
+    const fetchKey = `single:${safeLat.toFixed(2)},${safeLon.toFixed(2)}`;
+    if (!isAuto && this._lastFetchKey === fetchKey && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
       console.log('[防刷保護] 距離上次更新不足 2 秒，已略過頻繁請求');
       return;
     }
     this.lastFetchTimestamp = now;
+    this._lastFetchKey = fetchKey;
+    const reqToken = (this._envRequestToken = (this._envRequestToken || 0) + 1);
     this.isDualMode = false;
     this.activeMode = 'single';
     this.activeSingleParams = { lat: safeLat, lon: safeLon, locationName };
 
     try {
       const data = await this.fetchLocationData(safeLat, safeLon);
+      if (reqToken !== this._envRequestToken) return;
       this.currentData = data;
       this.renderSingleWeather(this.currentData, locationName);
       this.renderSingleAqi(this.currentData);
@@ -10911,18 +11054,24 @@ class WeatherEnvironmentMonitor {
       this.refreshRadar();
       this.updateCountdownDisplay();
     } catch (err) {
+      if (reqToken !== this._envRequestToken) return;
       console.error('更新環境資訊失敗:', err);
+      this.currentData = null;
+      this.renderUnavailableState(locationName);
     }
   }
 
   // 2. 雙埔載入環境資訊 (青埔 + 新埔)
   async fetchDualEnvironment(qpInfo, bpInfo, isAuto = false) {
     const now = Date.now();
-    if (!isAuto && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
+    const fetchKey = 'dual';
+    if (!isAuto && this._lastFetchKey === fetchKey && (now - this.lastFetchTimestamp < this.minDebounceMs)) {
       console.log('[防刷保護] 距離上次更新不足 2 秒，已略過頻繁請求');
       return;
     }
     this.lastFetchTimestamp = now;
+    this._lastFetchKey = fetchKey;
+    const reqToken = (this._envRequestToken = (this._envRequestToken || 0) + 1);
     this.isDualMode = true;
     this.activeMode = 'dual';
     this.activeDualParams = { qpInfo, bpInfo };
@@ -10932,6 +11081,7 @@ class WeatherEnvironmentMonitor {
         this.fetchLocationData(qpInfo.lat, qpInfo.lon),
         this.fetchLocationData(bpInfo.lat, bpInfo.lon)
       ]);
+      if (reqToken !== this._envRequestToken) return;
 
       this.currentDualData = { qp: qpData, bp: bpData, qpInfo, bpInfo };
       this.renderDualWeather(qpData, bpData, qpInfo, bpInfo);
@@ -10947,7 +11097,10 @@ class WeatherEnvironmentMonitor {
       this.refreshRadar();
       this.updateCountdownDisplay();
     } catch (err) {
+      if (reqToken !== this._envRequestToken) return;
       console.error('更新雙埔生活資訊失敗:', err);
+      this.currentDualData = null;
+      this.renderUnavailableState('雙埔生活圈');
     }
   }
 
@@ -10957,9 +11110,12 @@ class WeatherEnvironmentMonitor {
     const card = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
     if (!card) return;
 
-    const qpCur = qpData.weather?.current;
-    const bpCur = bpData.weather?.current;
-    if (!qpCur || !bpCur) return;
+    const qpCur = qpData?.weather?.current;
+    const bpCur = bpData?.weather?.current;
+    if (!qpCur || !bpCur) {
+      this.renderUnavailableWidgetCard(card, '雙埔氣象', 'fa-cloud-sun', '雙埔即時氣象資料暫時不完整');
+      return;
+    }
 
     const qpW = this.getWeatherCodeInfo(qpCur.weather_code);
     const bpW = this.getWeatherCodeInfo(bpCur.weather_code);
@@ -11092,12 +11248,15 @@ class WeatherEnvironmentMonitor {
     const card = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
     if (!card) return;
 
-    const qpAqi = qpData.airQuality?.current;
-    const bpAqi = bpData.airQuality?.current;
-    if (!qpAqi || !bpAqi) return;
+    const qpAqi = qpData?.airQuality?.current;
+    const bpAqi = bpData?.airQuality?.current;
+    if (!qpAqi || !bpAqi) {
+      this.renderUnavailableWidgetCard(card, '雙埔空氣品質', 'fa-mask-face', '雙埔空氣品質資料暫時無法取得');
+      return;
+    }
 
-    const qpNum = qpAqi.us_aqi || 45;
-    const bpNum = bpAqi.us_aqi || 45;
+    const qpNum = qpAqi.us_aqi != null ? qpAqi.us_aqi : null;
+    const bpNum = bpAqi.us_aqi != null ? bpAqi.us_aqi : null;
     const qpL = this.getAqiLevel(qpNum);
     const bpL = this.getAqiLevel(bpNum);
 
@@ -11130,10 +11289,10 @@ class WeatherEnvironmentMonitor {
             </div>
           </div>
           <div class="dual-aqi-meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px 4px; font-size:0.62rem; white-space:nowrap; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:5px;">
-            <span>PM2.5 ${qpAqi.pm2_5 ? qpAqi.pm2_5.toFixed(1) : '--'}</span>
-            <span>PM10 ${qpAqi.pm10 ? qpAqi.pm10.toFixed(1) : '--'}</span>
-            <span>O3 ${qpAqi.ozone ? Math.round(qpAqi.ozone) : '--'}</span>
-            <span>NO2 ${qpAqi.nitrogen_dioxide ? qpAqi.nitrogen_dioxide.toFixed(1) : '--'}</span>
+            <span>PM2.5 ${qpAqi.pm2_5 != null ? Number(qpAqi.pm2_5).toFixed(1) : '--'}</span>
+            <span>PM10 ${qpAqi.pm10 != null ? Number(qpAqi.pm10).toFixed(1) : '--'}</span>
+            <span>O3 ${qpAqi.ozone != null ? Math.round(qpAqi.ozone) : '--'}</span>
+            <span>NO2 ${qpAqi.nitrogen_dioxide != null ? Number(qpAqi.nitrogen_dioxide).toFixed(1) : '--'}</span>
           </div>
         </div>
 
@@ -11151,10 +11310,10 @@ class WeatherEnvironmentMonitor {
             </div>
           </div>
           <div class="dual-aqi-meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:2px 4px; font-size:0.62rem; white-space:nowrap; color:var(--text-muted); border-top:1px solid rgba(255,255,255,0.06); padding-top:5px;">
-            <span>PM2.5 ${bpAqi.pm2_5 ? bpAqi.pm2_5.toFixed(1) : '--'}</span>
-            <span>PM10 ${bpAqi.pm10 ? bpAqi.pm10.toFixed(1) : '--'}</span>
-            <span>O3 ${bpAqi.ozone ? Math.round(bpAqi.ozone) : '--'}</span>
-            <span>NO2 ${bpAqi.nitrogen_dioxide ? bpAqi.nitrogen_dioxide.toFixed(1) : '--'}</span>
+            <span>PM2.5 ${bpAqi.pm2_5 != null ? Number(bpAqi.pm2_5).toFixed(1) : '--'}</span>
+            <span>PM10 ${bpAqi.pm10 != null ? Number(bpAqi.pm10).toFixed(1) : '--'}</span>
+            <span>O3 ${bpAqi.ozone != null ? Math.round(bpAqi.ozone) : '--'}</span>
+            <span>NO2 ${bpAqi.nitrogen_dioxide != null ? Number(bpAqi.nitrogen_dioxide).toFixed(1) : '--'}</span>
           </div>
         </div>
       </div>
@@ -11164,7 +11323,11 @@ class WeatherEnvironmentMonitor {
   // 渲染雙埔降雨走勢 (混合互動 SVG 24H 面積曲線 + 7 日可捲動柱狀列)
   renderDualHourly(qpHourly, bpHourly) {
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
-    if (!card || !qpHourly?.precipitation_probability || !bpHourly?.precipitation_probability) return;
+    if (!card) return;
+    if (!qpHourly?.precipitation_probability || !bpHourly?.precipitation_probability) {
+      this.renderUnavailableWidgetCard(card, '雙埔降雨走勢', 'fa-umbrella', '雙埔未來逐時降雨預報暫時無法取得');
+      return;
+    }
 
     const existingTrack = document.getElementById('dualHourlyRainTrack');
     const prevScrollLeft = (existingTrack && existingTrack.scrollLeft > 0)
@@ -11215,11 +11378,11 @@ class WeatherEnvironmentMonitor {
             const qpHeight = Math.max(4, Math.round(qp * 0.44));
             const bpHeight = Math.max(4, Math.round(bp * 0.44));
 
-            const d = new Date(timeStr);
-            const h = d.getHours();
-            const month = d.getMonth() + 1;
-            const date = d.getDate();
-            const dayOfWeek = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+            const parts = this.getTaipeiDateParts(timeStr);
+            const h = parts ? parts.hour : 0;
+            const month = parts ? parts.month : '--';
+            const date = parts ? parts.date : '--';
+            const dayOfWeek = parts ? ['日', '一', '二', '三', '四', '五', '六'][parts.dayOfWeek] : '-';
             const isMidnight = h === 0;
             const isNow = idx === 0;
 
@@ -11271,11 +11434,23 @@ class WeatherEnvironmentMonitor {
 
   // 渲染雙埔生活安全管家 - 直覺簡化排版
   renderDualLifeAssistant(qpData, bpData, qpInfo, bpInfo) {
+    if (typeof document === 'undefined') return;
     const container = document.getElementById('lifeAssistantList');
     if (!container) return;
 
-    const qpCur = qpData.weather?.current;
-    const bpCur = bpData.weather?.current;
+    const qpCur = qpData?.weather?.current;
+    const bpCur = bpData?.weather?.current;
+    if (!qpCur && !bpCur) {
+      container.innerHTML = `
+        <div class="assistant-item" style="border-color:rgba(148,163,184,0.25);">
+          <i class="fa-solid fa-wifi assistant-icon" style="color:#64748b;"></i>
+          <div class="assistant-content">
+            <span class="assistant-title" style="color:var(--text-dim);">暫無雙埔即時出行建議</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
     const qpStartIdx = this.getFutureStartIndex(qpData.weather?.hourly?.time);
     const bpStartIdx = this.getFutureStartIndex(bpData.weather?.hourly?.time);
     const qpRainProb = (qpData.weather?.hourly?.precipitation_probability || [])[qpStartIdx] || 0;
@@ -11315,8 +11490,11 @@ class WeatherEnvironmentMonitor {
     const card = document.getElementById('weatherWidgetCard') || document.querySelector('.sidebar-section .widget-card');
     if (!card) return;
 
-    const cur = data.weather?.current;
-    if (!cur) return;
+    const cur = data?.weather?.current;
+    if (!cur) {
+      this.renderUnavailableWidgetCard(card, `${locationName} 氣象`, 'fa-cloud-sun', `暫時無法取得「${locationName}」即時氣象資料`);
+      return;
+    }
     const weatherInfo = this.getWeatherCodeInfo(cur.weather_code);
     const uvInfo = this.getUvIndexInfo(cur.uv_index);
     const gustInfo = this.getWindGustInfo(cur.wind_gusts_10m);
@@ -11411,10 +11589,13 @@ class WeatherEnvironmentMonitor {
     const card = document.getElementById('aqiWidgetCard') || document.querySelectorAll('.sidebar-section .widget-card')[1];
     if (!card) return;
 
-    const curAqi = data.airQuality?.current;
-    if (!curAqi) return;
+    const curAqi = data?.airQuality?.current;
+    if (!curAqi) {
+      this.renderUnavailableWidgetCard(card, '空氣品質指標 (AQI)', 'fa-mask-face', '目前無法取得此區域空氣品質資料');
+      return;
+    }
 
-    const aqiNum = curAqi.us_aqi || 45;
+    const aqiNum = curAqi.us_aqi != null ? curAqi.us_aqi : null;
     const aqiInfo = this.getAqiLevel(aqiNum);
     const pm25 = Number(curAqi.pm2_5) || 0;
     const pm10 = Number(curAqi.pm10) || 0;
@@ -11446,21 +11627,21 @@ class WeatherEnvironmentMonitor {
         <div class="aqi-bar-item">
           <div class="aqi-bar-top">
             <span class="chip-name">PM2.5</span>
-            <span class="chip-val">${curAqi.pm2_5 ? curAqi.pm2_5.toFixed(1) : '--'}</span>
+            <span class="chip-val">${curAqi.pm2_5 != null ? Number(curAqi.pm2_5).toFixed(1) : '--'}</span>
           </div>
           <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${pm25Pct}%; background:${aqiInfo.color};"></div></div>
         </div>
         <div class="aqi-bar-item">
           <div class="aqi-bar-top">
             <span class="chip-name">PM10</span>
-            <span class="chip-val">${curAqi.pm10 ? curAqi.pm10.toFixed(1) : '--'}</span>
+            <span class="chip-val">${curAqi.pm10 != null ? Number(curAqi.pm10).toFixed(1) : '--'}</span>
           </div>
           <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${pm10Pct}%; background:#38bdf8;"></div></div>
         </div>
         <div class="aqi-bar-item">
           <div class="aqi-bar-top">
             <span class="chip-name">臭氧 O3</span>
-            <span class="chip-val">${curAqi.ozone ? Math.round(curAqi.ozone) : '--'}</span>
+            <span class="chip-val">${curAqi.ozone != null ? Math.round(curAqi.ozone) : '--'}</span>
           </div>
           <div class="aqi-bar-track"><div class="aqi-bar-fill" style="width:${o3Pct}%; background:#a78bfa;"></div></div>
         </div>
@@ -11469,15 +11650,15 @@ class WeatherEnvironmentMonitor {
       <div class="pollutant-chips" style="grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;">
         <div class="chip-item">
           <div class="chip-name">交通廢氣 (NO2)</div>
-          <div class="chip-val">${curAqi.nitrogen_dioxide ? curAqi.nitrogen_dioxide.toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
+          <div class="chip-val">${curAqi.nitrogen_dioxide != null ? Number(curAqi.nitrogen_dioxide).toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
         </div>
         <div class="chip-item">
           <div class="chip-name">一氧化碳 (CO)</div>
-          <div class="chip-val">${curAqi.carbon_monoxide ? Math.round(curAqi.carbon_monoxide) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
+          <div class="chip-val">${curAqi.carbon_monoxide != null ? Math.round(curAqi.carbon_monoxide) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
         </div>
         <div class="chip-item">
           <div class="chip-name">二氧化硫 (SO2)</div>
-          <div class="chip-val">${curAqi.sulphur_dioxide ? curAqi.sulphur_dioxide.toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
+          <div class="chip-val">${curAqi.sulphur_dioxide != null ? Number(curAqi.sulphur_dioxide).toFixed(1) : '--'} <span style="font-size:0.65rem;font-weight:normal;color:var(--text-dim);">µg/m³</span></div>
         </div>
       </div>
     `;
@@ -11487,7 +11668,11 @@ class WeatherEnvironmentMonitor {
   renderSingleHourly(hourly) {
     if (typeof document === 'undefined') return;
     const card = document.getElementById('rainForecastWidget') || document.querySelector('.sidebar-section .widget-card:nth-child(4)');
-    if (!card || !hourly?.precipitation_probability) return;
+    if (!card) return;
+    if (!hourly?.precipitation_probability) {
+      this.renderUnavailableWidgetCard(card, '降雨機率走勢', 'fa-umbrella', '暫無此區域逐時降雨預報資料');
+      return;
+    }
 
     const existingTrack = document.getElementById('singleHourlyRainTrack');
     const prevScrollLeft = (existingTrack && existingTrack.scrollLeft > 0)
@@ -11529,11 +11714,11 @@ class WeatherEnvironmentMonitor {
             const barHeight = Math.max(4, Math.round(p * 0.44));
             const barColor = p >= 70 ? '#ef4444' : p >= 40 ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
 
-            const d = new Date(rawTimes[idx]);
-            const h = d.getHours();
-            const month = d.getMonth() + 1;
-            const date = d.getDate();
-            const dayOfWeek = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+            const parts = this.getTaipeiDateParts(rawTimes[idx]);
+            const h = parts ? parts.hour : 0;
+            const month = parts ? parts.month : '--';
+            const date = parts ? parts.date : '--';
+            const dayOfWeek = parts ? ['日', '一', '二', '三', '四', '五', '六'][parts.dayOfWeek] : '-';
             const isMidnight = h === 0;
             const isNow = idx === 0;
 
@@ -11588,13 +11773,23 @@ class WeatherEnvironmentMonitor {
     const container = document.getElementById('lifeAssistantList');
     if (!container) return;
 
-    const cur = data.weather?.current;
-    const curAqi = data.airQuality?.current;
-    if (!cur) return;
+    const cur = data?.weather?.current;
+    const curAqi = data?.airQuality?.current;
+    if (!cur) {
+      container.innerHTML = `
+        <div class="assistant-item" style="border-color:rgba(148,163,184,0.25);">
+          <i class="fa-solid fa-wifi assistant-icon" style="color:#64748b;"></i>
+          <div class="assistant-content">
+            <span class="assistant-title" style="color:var(--text-dim);">暫無「${locationName}」即時出行建議</span>
+          </div>
+        </div>
+      `;
+      return;
+    }
 
     const startIdx = this.getFutureStartIndex(data.weather?.hourly?.time);
     const rainProb = (data.weather?.hourly?.precipitation_probability || [])[startIdx] || 0;
-    const aqiNum = curAqi?.us_aqi || 45;
+    const aqiNum = curAqi?.us_aqi != null ? curAqi.us_aqi : null;
 
     const uvInfo = this.getUvIndexInfo(cur.uv_index);
     const gustInfo = this.getWindGustInfo(cur.wind_gusts_10m);
@@ -11611,7 +11806,7 @@ class WeatherEnvironmentMonitor {
       level: rainSafety.level
     });
 
-    if (aqiNum > 100) {
+    if (aqiNum != null && aqiNum > 100) {
       tips.push({ text: `空品警戒 ‧ AQI 達 ${aqiNum}，建議緊閉門窗`, detail: `目前空氣品質 AQI 達 ${aqiNum}，建議開啟空氣清淨機。`, icon: 'fa-wind', level: 'danger' });
     }
 
@@ -11642,6 +11837,14 @@ class WeatherEnvironmentMonitor {
     if (typeof document === 'undefined') return;
     const container = document.getElementById('lifeIndexContainer');
     if (!container) return;
+    if (!cur) {
+      container.innerHTML = `
+        <div style="padding:10px; text-align:center; color:var(--text-dim); font-size:0.76rem; border:1px dashed rgba(148,163,184,0.2); border-radius:8px;">
+          暫無即時生活出行指標
+        </div>
+      `;
+      return;
+    }
 
     const rainProb = typeof hourlyProb === 'number' ? hourlyProb : 0;
     const rain = (cur?.precipitation || 0) + (cur?.rain || 0);
@@ -11760,12 +11963,12 @@ class WeatherEnvironmentMonitor {
     const gust = curWeather?.wind_gusts_10m || 0;
     const rain = (curWeather?.precipitation || 0) + (curWeather?.rain || 0);
     const code = curWeather?.weather_code || 0;
-    const aqi = curAqi?.us_aqi || 45;
+    const aqi = curAqi?.us_aqi != null ? curAqi.us_aqi : null;
 
     const isThunder = [95, 96].includes(code);
     const isHeavyRain = rain >= 3.0 || [65, 81, 82].includes(code);
     const isStrongWind = gust >= 50; // >= 7 級疾風
-    const isBadAqi = aqi >= 120;
+    const isBadAqi = aqi != null && aqi >= 120;
 
     if (isThunder) {
       banner.classList.add('has-warning', 'active');
@@ -13917,6 +14120,7 @@ class TwinCityTransitMonitor {
               const isSelected = activeRoute && activeRoute.code === r.code;
               return `
                 <div class="nearby-bus-card ${isSelected ? 'is-selected' : ''}" 
+                     tabindex="0" role="button"
                      onclick="window.transitMonitor && window.transitMonitor.selectNearbyBusRoute('${r.code}')" 
                      title="點擊查看 ${r.code} 往 ${r.dest} 沿途站點與公車去哪裡">
                   <span class="bus-badge-num">${r.code}</span>
@@ -15958,7 +16162,7 @@ class TwinCityTransitMonitor {
         ` : ''}
 
         <!-- 2. 中間：出門速查串流 (雨傘穿衣 + 氣候 + YouBike車況 + 高鐵/機捷班次) -->
-        <div class="compact-info-stream" onclick="window.transitMonitor.toggleCollapse()" title="點擊展開雙埔路網詳細路線與轉乘動線">
+        <div class="compact-info-stream" tabindex="0" role="button" onclick="window.transitMonitor.toggleCollapse()" title="點擊展開雙埔路網詳細路線與轉乘動線">
           <span class="stream-pill gear-pill" data-c-gear>${brief.umbrellaTip} ‧ ${brief.outfitTip}</span>
           <span class="stream-divider">│</span>
           <span class="stream-pill weather-pill" data-c-weather>${brief.weatherPart}</span>
@@ -16372,7 +16576,7 @@ class TwinCityTransitMonitor {
           return `
             <div class="hub-options-grid">
               <!-- 方案一：高鐵 (最速推薦 ‧ 月台看板等車風格 + 極簡導引) -->
-              <div class="hub-plan-item plan-thsr-fastest" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="查看今日全部高鐵班次表">
+              <div class="hub-plan-item plan-thsr-fastest" tabindex="0" role="button" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('thsr')" title="查看今日全部高鐵班次表">
                 <div class="plan-item-badge">
                   <span class="badge-label"><i class="fa-solid fa-bolt"></i> 🚄 高鐵</span>
                   <span class="badge-save-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstThsrPlan ? firstThsrPlan.totalDuration : '38分'}</strong></span>
@@ -16399,7 +16603,7 @@ class TwinCityTransitMonitor {
               </div>
 
               <!-- 方案二：機捷直通 (捷運替代 ‧ 月台看板等車風格 + 極簡導引) -->
-              <div class="hub-plan-item plan-tymetro-alt" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="查看今日全部機捷班次表">
+              <div class="hub-plan-item plan-tymetro-alt" tabindex="0" role="button" onclick="window.transitMonitor && window.transitMonitor.openScheduleTab('tymetro')" title="查看今日全部機捷班次表">
                 <div class="plan-item-badge">
                   <span class="badge-label"><i class="fa-solid fa-plane"></i> 🚇 機運</span>
                   <span class="badge-total-time"><i class="fa-regular fa-clock"></i> 全程約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : '64分'}</strong></span>
@@ -20366,6 +20570,9 @@ class MonitorApp {
     this.radarMap = null;
     this.modalFlvPlayer = null;
     this.modalHlsPlayer = null;
+    this._modalRefreshTimer = null;
+    this._modalRetryTimer = null;
+    this._nearbyRequestToken = 0;
     this.filterKeyword = '';
     this.filterTag = 'all';
     this.commuteCapsuleTimer = null;
@@ -21034,8 +21241,29 @@ class MonitorApp {
         return;
       }
       if (e.key === 'Escape') {
+        const eqOverlay = document.getElementById('earthquakeModalOverlay');
+        if (eqOverlay && eqOverlay.classList.contains('active')) {
+          if (window.earthquakeMonitor && typeof window.earthquakeMonitor.dismissAlert === 'function') {
+            window.earthquakeMonitor.dismissAlert();
+          } else {
+            eqOverlay.classList.remove('active');
+          }
+          return;
+        }
         if (isCpActive) this.closeCommandPalette();
         else this.closeModal();
+      }
+    });
+
+    // 全域鍵盤與 Android TV D-Pad Enter / Space 無障礙啟動委派 (安全膠囊、通勤摘要、班次案與附近公車卡)
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const target = e.target;
+      if (!target || typeof target.closest !== 'function') return;
+      const interactiveEl = target.closest('.disaster-compact-pill, .compact-info-stream, .hub-plan-item, .nearby-bus-card');
+      if (interactiveEl && target === interactiveEl) {
+        e.preventDefault();
+        interactiveEl.click();
       }
     });
 
@@ -21108,8 +21336,9 @@ class MonitorApp {
     }
   }
 
-  // ===== 附近即時生活圈處理核心 (自動定位 ‧ 隨選加載 ‧ 距離排序) =====
+  // ===== 附近即時生活圈處理核心 (自動定位 ‧ 隨選加載 ‧ 距離排序 ‧ 競態 Token 防護) =====
   async handleNearbyCenter() {
+    const nearbyToken = (this._nearbyRequestToken = (this._nearbyRequestToken || 0) + 1);
     const nearbyBtn = document.querySelector('.center-btn[data-center="nearby"]');
     if (nearbyBtn) nearbyBtn.classList.add('locating');
     this.isLocatingNearby = true;
@@ -21122,17 +21351,23 @@ class MonitorApp {
         if (cached) {
           const { lat, lon } = JSON.parse(cached);
           if (typeof lat === 'number' && typeof lon === 'number') {
-            await this.applyNearbyLocation(lat, lon, true);
-            hasRenderedFromCache = true;
+            hasRenderedFromCache = await this.applyNearbyLocation(lat, lon, true, nearbyToken);
           }
         }
       } catch (_e) {}
+    }
+
+    if (nearbyToken !== this._nearbyRequestToken || this.currentCenterId !== 'nearby') {
+      return;
     }
 
     // 2. 啟動非同步高精準地理定位
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          if (nearbyToken !== this._nearbyRequestToken || this.currentCenterId !== 'nearby') {
+            return;
+          }
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           if (typeof localStorage !== 'undefined') {
@@ -21140,15 +21375,20 @@ class MonitorApp {
               localStorage.setItem('dpu_last_coords', JSON.stringify({ lat, lon }));
             } catch (_e) {}
           }
-          await this.applyNearbyLocation(lat, lon, false);
-          if (nearbyBtn) nearbyBtn.classList.remove('locating');
-          this.isLocatingNearby = false;
+          await this.applyNearbyLocation(lat, lon, false, nearbyToken);
+          if (nearbyToken === this._nearbyRequestToken) {
+            if (nearbyBtn) nearbyBtn.classList.remove('locating');
+            this.isLocatingNearby = false;
+          }
         },
         (error) => {
+          if (nearbyToken !== this._nearbyRequestToken || this.currentCenterId !== 'nearby') {
+            return;
+          }
           console.warn('[Geolocation] 定位授權或逾時異常:', error.message);
           if (nearbyBtn) nearbyBtn.classList.remove('locating');
           this.isLocatingNearby = false;
-          // 若無快取，非阻塞提示並容錯退回預設雙埔中心
+          // 若無快取且使用者仍停留在附近分頁，非阻塞提示並容錯退回預設雙埔中心
           if (!hasRenderedFromCache) {
             if (window.showToast) {
               window.showToast('未能取得目前地理位置，已自動切換回「雙埔生活」中心', 'warning');
@@ -21165,21 +21405,30 @@ class MonitorApp {
     } else {
       if (nearbyBtn) nearbyBtn.classList.remove('locating');
       this.isLocatingNearby = false;
-      if (!hasRenderedFromCache) {
+      if (!hasRenderedFromCache && this.currentCenterId === 'nearby') {
         this.switchCenter('dual');
       }
     }
   }
 
   // 依經緯度計算空間距離並渲染附近生活圈視訊牆與生活資訊
-  async applyNearbyLocation(lat, lon, isCached = false) {
-    this.userLocation = { lat, lon };
+  async applyNearbyLocation(lat, lon, isCached = false, expectedToken = null) {
+    if ((expectedToken != null && expectedToken !== this._nearbyRequestToken) || this.currentCenterId !== 'nearby') {
+      return false;
+    }
 
     // 1. 識別最近之縣市生活圈
     const city = this.dynamicCameraLoader.detectCityByCoords(lat, lon);
 
     // 2. 按需非同步載入該縣市攝影機資料集與國道全線骨幹 (方案 B)
     const dynamicCams = await this.dynamicCameraLoader.loadCityCameras(city.id);
+
+    // await 後再次檢查競態條件：若使用者已切換至其他分頁或觸發新定位，立即中止渲染
+    if ((expectedToken != null && expectedToken !== this._nearbyRequestToken) || this.currentCenterId !== 'nearby') {
+      return false;
+    }
+
+    this.userLocation = { lat, lon };
 
     // 3. 聚合既有內建鏡頭池與動態加載鏡頭池
     const existingCams = this.getAllUniqueCameras();
@@ -21269,21 +21518,8 @@ class MonitorApp {
       this.radarMap.setCenterAndCameras(this.currentCenterData, this.currentCameras);
     }
 
-    // 10. 出門通勤建議膠囊在地化
-    const alertEl = document.getElementById('disasterAlertText');
-    if (alertEl && pool[0]) {
-      alertEl.innerHTML = `<i class="fa-solid fa-location-dot" style="color:#10b981; margin-right:2px;"></i> 已定位於 ${city.name} ‧ 最近鏡頭 ${nearestKm} km`;
-    }
-
     this.applyAdaptiveViewportFit();
-  }
-
-  // 全局立即刷新 (視訊影像、即時環境氣象、雙埔大眾運輸)
-  refreshAll() {
-    this.switchCenter(this.currentCenterId);
-    if (this.transitMonitor) {
-      this.transitMonitor.render();
-    }
+    return true;
   }
 
   // 同步各區域中心之介面在地化與專屬元件顯示狀態 (確保日本分頁隱藏台灣專屬資訊)
@@ -21359,6 +21595,12 @@ class MonitorApp {
     if (centerId === 'nearby') {
       await this.handleNearbyCenter();
       return;
+    } else {
+      // 切換離開「附近」分頁時使先前任何待回應之地理定位作廢並清除定位動畫狀態
+      this._nearbyRequestToken = (this._nearbyRequestToken || 0) + 1;
+      this.isLocatingNearby = false;
+      const nearbyBtn = document.querySelector('.center-btn[data-center="nearby"]');
+      if (nearbyBtn) nearbyBtn.classList.remove('locating');
     }
 
     try {
@@ -21693,11 +21935,14 @@ class MonitorApp {
   // 全域立即刷新
   refreshAll() {
     this.playerEngine.refreshSnapshots();
+    if (!this.weatherMonitor) return;
     if (this.currentCenterId === 'dual') {
       const qpInfo = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213 };
       const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
       this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
-    } else if (this.currentCenterData) {
+    } else if (this.currentCenterId === 'japan') {
+      this.weatherMonitor.fetchEnvironment(35.6895, 139.6917, '東京 (日本)');
+    } else if (this.currentCenterData && Number.isFinite(Number(this.currentCenterData.lat)) && Number.isFinite(Number(this.currentCenterData.lon))) {
       this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name);
     }
   }
@@ -21716,7 +21961,23 @@ class MonitorApp {
     this.playerEngine.refreshCamera(camId);
   }
 
-  // 截圖下載
+  // 共用將 Data URL 交付原生圖片庫或瀏覽器下載
+  dispatchImageDataUrlDownload(dataUrl, filename) {
+    if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.saveImageDataUrl === 'function') {
+      const ok = window.AndroidBridge.saveImageDataUrl(dataUrl, filename);
+      if (window.showToast) window.showToast(ok ? '截圖已儲存至圖片庫' : '截圖儲存失敗', ok ? 'success' : 'warning');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    if (window.showToast) window.showToast('截圖已儲存', 'success');
+  }
+
+  // 截圖下載 (支援 Video Canvas、Image Canvas 與跨網域 Android 原生下載備援)
   captureCamera(camId) {
     const cam = this.currentCameras.find(c => c.id === camId);
     if (!cam) return;
@@ -21725,6 +21986,7 @@ class MonitorApp {
       return;
     }
 
+    const filename = `${cam.id}_${Date.now()}.jpg`;
     if (cam.type === 'flv' || cam.type === 'hls') {
       const videoEl = document.getElementById(`video-${camId}`);
       if (videoEl) {
@@ -21735,33 +21997,49 @@ class MonitorApp {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
           const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-          const filename = `${cam.id}_${Date.now()}.jpg`;
-          if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.saveImageDataUrl === 'function') {
-            const ok = window.AndroidBridge.saveImageDataUrl(dataUrl, filename);
-            if (window.showToast) window.showToast(ok ? '截圖已儲存至圖片庫' : '截圖儲存失敗', ok ? 'success' : 'warning');
-            return;
-          }
-          const a = document.createElement('a');
-          a.href = dataUrl;
-          a.download = filename;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          if (window.showToast) window.showToast('截圖已儲存', 'success');
+          this.dispatchImageDataUrlDownload(dataUrl, filename);
           return;
         } catch (e) {
-          console.warn('Canvas 截圖受限:', e);
+          console.warn('Video Canvas 截圖受限:', e);
           if (window.showToast) window.showToast('因跨域安全限制，無法直接截圖下載', 'warning');
         }
       }
+      return;
     }
 
     const img = document.getElementById(`feed-${camId}`);
     if (img && img.src) {
+      const targetUrl = (img.dataset && img.dataset.rawUrl) ? img.dataset.rawUrl : img.src;
+      try {
+        const w = img.naturalWidth || 1280;
+        const h = img.naturalHeight || 720;
+        if (w > 0 && h > 0) {
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          this.dispatchImageDataUrlDownload(dataUrl, filename);
+          return;
+        }
+      } catch (_taintedErr) {
+        // 跨網域 MJPEG / 快照圖片導致 Canvas Tainted：改由原生橋接抓取目前影像網址儲存，或瀏覽器另開
+      }
+
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.saveImageFromUrl === 'function') {
+        const queued = window.AndroidBridge.saveImageFromUrl(targetUrl, filename);
+        if (queued) {
+          if (window.showToast) window.showToast('正在擷取並儲存影像至手機圖片庫...', 'info');
+          return;
+        }
+      }
+
       const a = document.createElement('a');
       a.href = img.src;
-      a.download = `${cam.id}_${Date.now()}.jpg`;
+      a.download = filename;
       a.target = '_blank';
+      a.rel = 'noopener noreferrer';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -21884,9 +22162,13 @@ class MonitorApp {
 
   // 備援彈窗檢視模式 (用於雷達圖特寫或不支援全螢幕之瀏覽器環境)
   openModalView(camId) {
+    // 開啟新彈窗前先徹底釋放前一次殘留播放器與刷新定時器
+    this.closeModal();
+
     const modal = document.getElementById('cameraModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
+    if (!modal || !modalTitle || !modalBody) return;
 
     // 氣象署雷達回波圖特寫
     if (camId === 'RADAR_CWA') {
@@ -21909,7 +22191,7 @@ class MonitorApp {
       </div>
     `;
 
-    // 桃園官方 HLS 全螢幕放大播放
+    // 桃園 / 臺北官方 HLS 彈窗放大播放 (含完整斷線重試與 BOTE iframe 備援)
     if (cam.type === 'hls') {
       modalBody.innerHTML = `
         <video id="modalVideo" style="width: 100%; max-height: 72vh; object-fit: contain; background: #000;" autoplay muted playsinline controls></video>
@@ -21917,30 +22199,94 @@ class MonitorApp {
       modal.classList.add('active');
 
       const modalVideo = document.getElementById('modalVideo');
+      let activeStreamUrl = cam.streamUrl;
+      if (activeStreamUrl && activeStreamUrl.startsWith('/api/') && window.location && window.location.protocol === 'file:') {
+        activeStreamUrl = 'http://localhost:3000' + activeStreamUrl;
+      }
+
       if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-        const isTaipeiBote = (cam.streamUrl && (cam.streamUrl.includes('bote.gov.taipei') || cam.streamUrl.includes('/api/bote/'))) || (cam.id && String(cam.id).startsWith('tpe-'));
-        this.modalHlsPlayer = new Hls({ 
-          enableWorker: true, 
-          lowLatencyMode: false, 
+        const isTaipeiBote = (activeStreamUrl && (activeStreamUrl.includes('bote.gov.taipei') || activeStreamUrl.includes('/api/bote/'))) || (cam.id && String(cam.id).startsWith('tpe-'));
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
           startFragPrefetch: isTaipeiBote,
-          liveSyncDurationCount: isTaipeiBote ? 1.0 : 2.5, 
+          liveSyncDurationCount: isTaipeiBote ? 1.0 : 2.5,
           maxBufferLength: isTaipeiBote ? 6 : 12,
           capLevelToPlayerSize: false,
           autoLevelCapping: -1
         });
-        this.modalHlsPlayer.loadSource(cam.streamUrl);
-        this.modalHlsPlayer.attachMedia(modalVideo);
-        this.modalHlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
-          if (this.modalHlsPlayer.levels && this.modalHlsPlayer.levels.length > 0) {
-            const maxIdx = this.modalHlsPlayer.levels.length - 1;
-            this.modalHlsPlayer.currentLevel = maxIdx;
-            this.modalHlsPlayer.loadLevel = maxIdx;
+        this.modalHlsPlayer = hls;
+        hls.loadSource(activeStreamUrl);
+        hls.attachMedia(modalVideo);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (hls.levels && hls.levels.length > 0) {
+            const maxIdx = hls.levels.length - 1;
+            hls.currentLevel = maxIdx;
+            hls.loadLevel = maxIdx;
           }
-          modalVideo.play();
+          if (modalVideo) modalVideo.play().catch(() => {});
+        });
+
+        let modalRetries = 0;
+        const switchModalToBoteIframe = () => {
+          if (this.modalHlsPlayer !== hls) return;
+          try {
+            hls.stopLoad();
+            hls.detachMedia();
+            hls.destroy();
+          } catch (_e) {}
+          this.modalHlsPlayer = null;
+          modalBody.innerHTML = `
+            <div style="width: 100%; height: 75vh; background: #000; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden;">
+              ${CameraPlayerEngine.buildBoteIframeHtml(cam, 'modal-iframe')}
+            </div>
+          `;
+        };
+
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (!data || !data.fatal || this.modalHlsPlayer !== hls) return;
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR: {
+              const statusCode = data.response ? data.response.code : 0;
+              modalRetries++;
+              if (activeStreamUrl && activeStreamUrl.includes('cctvatis') && this.playerEngine && modalRetries <= 6) {
+                activeStreamUrl = this.playerEngine.getNextFailoverUrl(activeStreamUrl);
+                hls.loadSource(activeStreamUrl);
+                hls.startLoad();
+                return;
+              }
+              if (isTaipeiBote && activeStreamUrl && (activeStreamUrl.startsWith('/api/bote/') || activeStreamUrl.includes('hls.bote.gov.taipei/hls/'))) {
+                if (statusCode === 404 || modalRetries > 3) {
+                  switchModalToBoteIframe();
+                  return;
+                }
+                this._modalRetryTimer = setTimeout(() => {
+                  if (this.modalHlsPlayer === hls) {
+                    hls.loadSource(activeStreamUrl);
+                    hls.startLoad();
+                  }
+                }, 350 * modalRetries);
+                return;
+              }
+              hls.startLoad();
+              break;
+            }
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+            default:
+              this._modalRetryTimer = setTimeout(() => {
+                if (this.modalHlsPlayer === hls) {
+                  hls.loadSource(activeStreamUrl);
+                  hls.startLoad();
+                }
+              }, 2000);
+              break;
+          }
         });
       } else if (modalVideo && modalVideo.canPlayType && modalVideo.canPlayType('application/vnd.apple.mpegurl')) {
-        modalVideo.src = cam.streamUrl;
-        modalVideo.play();
+        modalVideo.src = activeStreamUrl;
+        modalVideo.play().catch(() => {});
       }
       return;
     }
@@ -21987,35 +22333,49 @@ class MonitorApp {
 
     // 臺北市交工處官方原生即時串流 (直出大尺寸動態直播：直接播放，絕不點進去)
     if (cam.type === 'iframe') {
-      const streamSrc = cam.streamUrl || `https://hls.bote.gov.taipei/live/index.html?id=${cam.ccdId || cam.id}`;
       modalBody.innerHTML = `
         <div style="width: 100%; height: 75vh; background: #000; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 8px; overflow: hidden;">
-          <iframe src="${streamSrc}" allow="autoplay; fullscreen" 
-            referrerpolicy="no-referrer-when-downgrade" 
-            scrolling="no" frameborder="0"
-            style="width: 100%; height: 100%; border: none; background: #000;"></iframe>
+          ${CameraPlayerEngine.buildBoteIframeHtml(cam, 'modal-iframe')}
         </div>
       `;
       modal.classList.add('active');
       return;
     }
 
-    // 國道 MJPEG / 快照全螢幕
-    if (cam.type === 'mjpeg') {
-      modalBody.innerHTML = `
-        <img referrerpolicy="no-referrer" src="${cam.streamUrl}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
-      `;
-    } else {
-      const snapSep = String(cam.streamUrl || '').includes('?') ? '&' : '?';
-      modalBody.innerHTML = `
-        <img referrerpolicy="no-referrer" src="${cam.streamUrl}${snapSep}_t=${Date.now()}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
-      `;
-    }
-
+    // 國道 MJPEG / 快照彈窗 (支援錯誤自動重試與週期定時刷新，關閉彈窗時自動清除定時器)
+    const rawImgUrl = String(cam.streamUrl || '');
+    const imgSep = rawImgUrl.includes('?') ? '&' : '?';
+    const initialSrc = cam.type === 'mjpeg' ? rawImgUrl : `${rawImgUrl}${imgSep}_t=${Date.now()}`;
+    modalBody.innerHTML = `
+      <img id="modalImgFeed" referrerpolicy="no-referrer" src="${initialSrc}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
+    `;
     modal.classList.add('active');
+
+    const modalImg = document.getElementById('modalImgFeed');
+    if (modalImg && rawImgUrl) {
+      const refreshIntervalMs = cam.type === 'mjpeg' ? 15000 : 10000;
+      const reloadModalImg = () => {
+        if (!modal.classList.contains('active') || !document.getElementById('modalImgFeed')) return;
+        modalImg.src = `${rawImgUrl}${imgSep}_t=${Date.now()}`;
+      };
+      modalImg.onerror = () => {
+        if (this._modalRetryTimer) clearTimeout(this._modalRetryTimer);
+        this._modalRetryTimer = setTimeout(reloadModalImg, 1500);
+      };
+      this._modalRefreshTimer = setInterval(reloadModalImg, refreshIntervalMs);
+    }
   }
 
   closeModal() {
+    if (this._modalRefreshTimer) {
+      clearInterval(this._modalRefreshTimer);
+      this._modalRefreshTimer = null;
+    }
+    if (this._modalRetryTimer) {
+      clearTimeout(this._modalRetryTimer);
+      this._modalRetryTimer = null;
+    }
+
     const modal = document.getElementById('cameraModal');
     if (modal) modal.classList.remove('active');
 

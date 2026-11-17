@@ -50,6 +50,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FilterInputStream
 import java.io.InputStream
@@ -143,6 +144,15 @@ class MainActivity : ComponentActivity() {
                 webView.evaluateJavascript(
                     """
                     (function() {
+                        const eqModal = document.getElementById('earthquakeModalOverlay');
+                        if (eqModal && eqModal.classList.contains('active')) {
+                            if (window.earthquakeMonitor && typeof window.earthquakeMonitor.dismissAlert === 'function') {
+                                window.earthquakeMonitor.dismissAlert();
+                            } else {
+                                eqModal.classList.remove('active');
+                            }
+                            return true;
+                        }
                         const cp = document.getElementById('commandPaletteOverlay');
                         if (cp && cp.classList.contains('active')) {
                             cp.classList.remove('active');
@@ -715,11 +725,13 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
+        nativeBridge.setForegroundActive(true)
         // 前景喚醒時檢查節流後刷新最新資料 (避免剛啟動重複抓兩次)
         triggerForceRefreshAll(force = false)
     }
 
     override fun onPause() {
+        nativeBridge.setForegroundActive(false)
         super.onPause()
         webView.onPause()
     }
@@ -744,6 +756,12 @@ class AndroidNativeBridge(
     private val dataMemoryCache = ConcurrentHashMap<String, String>()
     private val isRefreshing = ConcurrentHashMap<String, Boolean>()
     private val lastFetchTimes = ConcurrentHashMap<String, Long>()
+    @Volatile
+    private var isForegroundActive: Boolean = true
+
+    fun setForegroundActive(active: Boolean) {
+        isForegroundActive = active
+    }
 
     /**
      * 取消所有背景協程，防止 Activity 銷毀後記憶體洩漏
@@ -775,6 +793,43 @@ class AndroidNativeBridge(
     }
 
     /**
+     * 共用圖片位元組寫入裝置相簿／圖片目錄工具
+     */
+    private fun writeImageBytesToGallery(bytes: ByteArray, mimeType: String, fileName: String): String? {
+        if (bytes.isEmpty()) return null
+        val ext = when {
+            mimeType.contains("png", ignoreCase = true) -> ".png"
+            mimeType.contains("webp", ignoreCase = true) -> ".webp"
+            else -> ".jpg"
+        }
+        val cleanBase = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank {
+            "snapshot_${System.currentTimeMillis()}$ext"
+        }
+        val safeName = if (cleanBase.contains('.')) cleanBase else "$cleanBase$ext"
+        val resolvedMime = when {
+            mimeType.contains("png", ignoreCase = true) -> "image/png"
+            mimeType.contains("webp", ignoreCase = true) -> "image/webp"
+            else -> "image/jpeg"
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, safeName)
+                put(MediaStore.Images.Media.MIME_TYPE, resolvedMime)
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TaiwanNeighborhoodMonitor")
+            }
+            val resolver = activity.contentResolver
+            val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return null
+            resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return null
+        } else {
+            val dir = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: activity.filesDir
+            if (!dir.exists()) dir.mkdirs()
+            File(dir, safeName).writeBytes(bytes)
+        }
+        return safeName
+    }
+
+    /**
      * 原生儲存 Canvas 截圖 (data:image/jpeg;base64,...) 至手機圖片庫 / App 相簿目錄
      */
     @JavascriptInterface
@@ -782,31 +837,61 @@ class AndroidNativeBridge(
         return try {
             val commaIdx = dataUrl.indexOf(',')
             if (commaIdx <= 0) return false
+            val header = dataUrl.substring(0, commaIdx)
+            val mimeType = header.substringAfter("data:", "image/jpeg").substringBefore(";").ifBlank { "image/jpeg" }
             val base64Part = dataUrl.substring(commaIdx + 1)
             val bytes = Base64.decode(base64Part, Base64.DEFAULT)
-            val safeName = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "snapshot_${System.currentTimeMillis()}.jpg" }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val values = ContentValues().apply {
-                    put(MediaStore.Images.Media.DISPLAY_NAME, safeName)
-                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TaiwanNeighborhoodMonitor")
-                }
-                val resolver = activity.contentResolver
-                val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
-                resolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
-            } else {
-                val dir = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: activity.filesDir
-                if (!dir.exists()) dir.mkdirs()
-                File(dir, safeName).writeBytes(bytes)
-            }
+            val savedName = writeImageBytesToGallery(bytes, mimeType, fileName) ?: return false
             activity.runOnUiThread {
-                Toast.makeText(activity, "截圖已儲存：$safeName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, "截圖已儲存：$savedName", Toast.LENGTH_SHORT).show()
             }
             true
         } catch (_: Exception) {
             false
         }
+    }
+
+    /**
+     * 原生非同步下載快照／MJPEG 影像網址並儲存至圖片庫 (解決跨網域 Canvas Taint 無法匯出問題)
+     */
+    @JavascriptInterface
+    fun saveImageFromUrl(imageUrl: String, fileName: String): Boolean {
+        val trimmed = imageUrl.trim()
+        if (!trimmed.startsWith("https://") && !trimmed.startsWith("http://")) {
+            return false
+        }
+        bridgeScope.launch {
+            var savedName: String? = null
+            try {
+                val request = Request.Builder()
+                    .url(trimmed)
+                    .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
+                    .build()
+                okHttpClient.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val contentType = response.header("Content-Type").orEmpty()
+                        val isMultipart = contentType.contains("multipart/x-mixed-replace", ignoreCase = true)
+                        response.body?.byteStream()?.use { stream ->
+                            val extracted = if (isMultipart) {
+                                WebAssetRouting.extractFirstJpegFrame(stream)
+                            } else {
+                                WebAssetRouting.readBoundedBytes(stream)
+                            }
+                            if (extracted != null && extracted.isNotEmpty()) {
+                                val mime = if (isMultipart) "image/jpeg" else contentType
+                                savedName = writeImageBytesToGallery(extracted, mime, fileName)
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+
+            activity.runOnUiThread {
+                val msg = if (savedName != null) "截圖已儲存：$savedName" else "無法下載攝影機影像進行儲存"
+                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
+            }
+        }
+        return true
     }
 
     /**
@@ -986,10 +1071,11 @@ class AndroidNativeBridge(
             launch { refreshThsrAsync() }
             launch { refreshTymetroAsync() }
 
-            // 常駐背景定時同步：捷運每 12 秒自動更新看板與擁擠度，YouBike 每 45 秒自動更新
+            // 常駐背景定時同步：捷運每 12 秒自動更新看板與擁擠度，YouBike 每 45 秒自動更新（背景暫停時休眠省電）
             launch {
                 while (isActive) {
                     delay(12000)
+                    if (!isForegroundActive) continue
                     try {
                         refreshMetroLiveAsync()
                     } catch (_: Exception) {}
@@ -998,6 +1084,7 @@ class AndroidNativeBridge(
             launch {
                 while (isActive) {
                     delay(45000)
+                    if (!isForegroundActive) continue
                     try {
                         refreshYouBikeAsync()
                     } catch (_: Exception) {}
@@ -1762,5 +1849,52 @@ internal object WebAssetRouting {
     fun extractBoteCamKey(urlString: String): String {
         val m = boteCamKeyRegex.find(urlString)
         return m?.groupValues?.getOrNull(1) ?: "global"
+    }
+
+    /**
+     * 從無盡 multipart/x-mixed-replace MJPEG 串流串流式擷取第一張完整 JPEG 畫格 (上限 8 MB 防溢位)
+     */
+    fun extractFirstJpegFrame(input: InputStream, maxScanBytes: Int = 8 * 1024 * 1024): ByteArray? {
+        val out = ByteArrayOutputStream()
+        var started = false
+        var prev = -1
+        var totalRead = 0
+        val buf = ByteArray(4096)
+        while (totalRead < maxScanBytes) {
+            val n = input.read(buf)
+            if (n <= 0) break
+            totalRead += n
+            for (i in 0 until n) {
+                val b = buf[i].toInt() and 0xFF
+                if (!started) {
+                    if (prev == 0xFF && b == 0xD8) {
+                        started = true
+                        out.write(0xFF)
+                        out.write(0xD8)
+                    }
+                } else {
+                    out.write(b)
+                    if (prev == 0xFF && b == 0xD9) {
+                        return out.toByteArray()
+                    }
+                }
+                prev = b
+            }
+        }
+        return null
+    }
+
+    fun readBoundedBytes(input: InputStream, maxBytes: Int = 8 * 1024 * 1024): ByteArray? {
+        val out = ByteArrayOutputStream()
+        val buf = ByteArray(8192)
+        var totalRead = 0
+        while (totalRead < maxBytes) {
+            val toRead = minOf(buf.size, maxBytes - totalRead)
+            val n = input.read(buf, 0, toRead)
+            if (n <= 0) break
+            out.write(buf, 0, n)
+            totalRead += n
+        }
+        return if (out.size() > 0) out.toByteArray() else null
     }
 }
