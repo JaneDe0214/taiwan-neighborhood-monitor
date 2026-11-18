@@ -17160,6 +17160,123 @@ if (typeof window !== 'undefined') {
   window.themeManager = new ThemeManager();
 }
 
+/* ==========================================================================
+   觀看螢幕常亮防休眠管理器 (ScreenWakeLockManager)
+   - 預設全程啟用：同步控制 Android 原生 FLAG_KEEP_SCREEN_ON 與瀏覽器 W3C Screen Wake Lock API
+   - 支援首次觸控自動補鎖（相容 iOS Safari / 行動版 Chrome 手勢要求）與返回前景自動重鎖
+   ========================================================================== */
+class ScreenWakeLockManager {
+  constructor() {
+    this.storageKey = 'dpu_keep_screen_on';
+    this.enabled = true;
+    this.sentinel = null;
+    this._requesting = false;
+    this.init();
+  }
+
+  init() {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(this.storageKey);
+        if (saved === 'false') {
+          this.enabled = false;
+        }
+      } catch (_) {}
+    }
+
+    this.syncAll();
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.enabled) {
+          this.acquireWebWakeLock();
+          this.syncNativeKeepScreenOn(true);
+        }
+      });
+
+      const gestureRetry = () => {
+        if (this.enabled && !this.sentinel) {
+          this.acquireWebWakeLock();
+        }
+      };
+      document.addEventListener('pointerdown', gestureRetry, { passive: true });
+      document.addEventListener('touchstart', gestureRetry, { passive: true });
+      document.addEventListener('keydown', gestureRetry, { passive: true });
+    }
+  }
+
+  syncNativeKeepScreenOn(flag) {
+    if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.setKeepScreenOn === 'function') {
+      try {
+        window.AndroidBridge.setKeepScreenOn(Boolean(flag));
+      } catch (_) {}
+    }
+  }
+
+  async acquireWebWakeLock() {
+    if (!this.enabled || this._requesting) return;
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    if (this.sentinel && !this.sentinel.released) return;
+    if (typeof navigator === 'undefined' || !('wakeLock' in navigator) || typeof navigator.wakeLock?.request !== 'function') {
+      return;
+    }
+    this._requesting = true;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      this.sentinel = lock;
+      lock.addEventListener('release', () => {
+        if (this.sentinel === lock) {
+          this.sentinel = null;
+        }
+      });
+    } catch (_) {
+      // 若瀏覽器要求首次使用者手勢，將於下一次輕觸畫面時自動靜默補鎖
+    } finally {
+      this._requesting = false;
+    }
+  }
+
+  async releaseWebWakeLock() {
+    if (this.sentinel) {
+      try {
+        await this.sentinel.release();
+      } catch (_) {}
+      this.sentinel = null;
+    }
+  }
+
+  syncAll() {
+    this.syncNativeKeepScreenOn(this.enabled);
+    if (this.enabled) {
+      this.acquireWebWakeLock();
+    } else {
+      this.releaseWebWakeLock();
+    }
+  }
+
+  toggle(showToastMsg = true) {
+    this.enabled = !this.enabled;
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.setItem(this.storageKey, String(this.enabled)); } catch (_) {}
+    }
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') {
+      window.triggerHaptic();
+    }
+    this.syncAll();
+    if (showToastMsg && typeof window !== 'undefined' && typeof window.showToast === 'function') {
+      window.showToast(
+        this.enabled ? '🔆 已開啟「觀看時螢幕常亮不休眠」' : '🌙 已恢復跟隨系統自動休眠時間',
+        this.enabled ? 'success' : 'info'
+      );
+    }
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.ScreenWakeLockManager = ScreenWakeLockManager;
+  window.wakeLockManager = new ScreenWakeLockManager();
+}
+
 
 /* 雷達地圖模組 */
 /**
@@ -32709,7 +32826,9 @@ class MonitorApp {
     ];
 
     const isIntl = this.isInternationalCenter();
+    const isScreenAwake = window.wakeLockManager ? window.wakeLockManager.enabled : true;
     const quickOps = [
+      { title: isScreenAwake ? '螢幕常亮防休眠：目前「開啟中」（點擊改為系統預設休眠）' : '開啟「觀看時螢幕常亮不休眠」模式', sub: '觀看即時路況與跨國 4K 直播時保持手機螢幕常亮，防止自動變暗或黑畫面關閉', badge: '螢幕常亮', icon: 'fa-lightbulb', run: () => window.wakeLockManager?.toggle(true) },
       { title: '手機 ⇄ Google TV 跨裝置掃碼／配對碼同步收藏牆', sub: '產生 QR Code 與 4 位數配對碼，一鍵將收藏與多組情境視訊牆同步至電視或另一台手機', badge: '跨裝置同步', icon: 'fa-qrcode', run: () => this.openWallSyncModal() },
       { title: '切換收藏情境：「上班路況」視訊牆', sub: '快速切換至上班通勤重點路口與國道情境組合', badge: '情境預設集', icon: 'fa-briefcase', run: () => { this.switchScenePreset('commute_am'); this.switchCenter('favorites'); } },
       { title: '切換收藏情境：「下班回家」視訊牆', sub: '快速切換至下班返家交通與車站周邊情境組合', badge: '情境預設集', icon: 'fa-house-chimney', run: () => { this.switchScenePreset('commute_pm'); this.switchCenter('favorites'); } },

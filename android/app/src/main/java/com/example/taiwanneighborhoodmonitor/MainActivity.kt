@@ -107,6 +107,8 @@ class MainActivity : ComponentActivity() {
     private var hadNetworkLoss: Boolean = false
     @Volatile
     private var inNativePipMode: Boolean = false
+    @Volatile
+    private var keepScreenOnPreferred: Boolean = true
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -128,21 +130,21 @@ class MainActivity : ComponentActivity() {
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO
         val initialBgColor = if (initialSystemLight) "#f1f5f9".toColorInt() else "#05080f".toColorInt()
 
-        // 電視模式下啟用常亮保持，防止電視牆休眠黑畫面
-        if (isTvDevice) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        }
+        // 手機版與電視版觀看即時影像時預設全程啟用螢幕常亮，防止觀看途中變暗或休眠關閉
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         // 3. 建立並配置全硬體加速的原生 WebView 視圖 (使用 LAYER_TYPE_NONE 交由 Chromium 內建管線加速，避免雙重離屏緩衝破圖黑塊)
         webView = WebView(this).apply {
             setLayerType(View.LAYER_TYPE_NONE, null)
             setBackgroundColor(initialBgColor)
+            keepScreenOn = true
             isFocusable = true
             isFocusableInTouchMode = true
         }
 
         val rootLayout = FrameLayout(this).apply {
             setBackgroundColor(initialBgColor)
+            keepScreenOn = true
             addView(
                 webView,
                 FrameLayout.LayoutParams(
@@ -355,6 +357,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val container = FrameLayout(this@MainActivity).apply {
                     setBackgroundColor(Color.BLACK)
+                    keepScreenOn = keepScreenOnPreferred
                     addView(
                         view,
                         FrameLayout.LayoutParams(
@@ -870,8 +873,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    internal fun applyKeepScreenOn(enable: Boolean, updatePreference: Boolean = false) {
+        if (updatePreference) {
+            keepScreenOnPreferred = enable
+        }
+        try {
+            if (enable) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+            rootLayoutRef?.keepScreenOn = enable
+            customFullscreenContainer?.keepScreenOn = enable
+            if (::webView.isInitialized) {
+                webView.keepScreenOn = enable
+            }
+        } catch (_: Exception) {}
+    }
+
+    internal fun isKeepScreenOnEnabled(): Boolean = keepScreenOnPreferred
+
     override fun onStart() {
         super.onStart()
+        applyKeepScreenOn(keepScreenOnPreferred)
         if (::webView.isInitialized) {
             webView.onResume()
         }
@@ -882,6 +906,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        applyKeepScreenOn(keepScreenOnPreferred)
         webView.onResume()
         nativeBridge.setForegroundActive(true)
         // 前景喚醒時檢查節流後刷新最新資料 (避免剛啟動重複抓兩次)
@@ -898,6 +923,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        applyKeepScreenOn(false, updatePreference = false)
         nativeBridge.setForegroundActive(false)
         webView.onPause()
         super.onStop()
@@ -964,6 +990,21 @@ class AndroidNativeBridge(
         activity.runOnUiThread {
             (activity as? MainActivity)?.applyNativeSystemBarTheme(isLight)
         }
+    }
+
+    /**
+     * 設定或查詢觀看時螢幕常亮防休眠狀態（預設開啟，確保手機與電視觀看即時影像時不會自動黑畫面關閉）
+     */
+    @JavascriptInterface
+    fun setKeepScreenOn(enabled: Boolean) {
+        activity.runOnUiThread {
+            (activity as? MainActivity)?.applyKeepScreenOn(enabled, updatePreference = true)
+        }
+    }
+
+    @JavascriptInterface
+    fun isKeepScreenOn(): Boolean {
+        return (activity as? MainActivity)?.isKeepScreenOnEnabled() ?: true
     }
 
     /**
