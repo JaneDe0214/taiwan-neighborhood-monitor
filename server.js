@@ -61,7 +61,13 @@ const cache = {
   metroLive: { data: null, expireAt: 0 },
   metroCarWeight: { data: null, expireAt: 0 },
   parkingThsr: { data: null, expireAt: 0 },
-  weatherMap: new Map()
+  weatherMap: new Map(),
+  geocodeMap: new Map(),
+  busStationMap: new Map(),
+  busEtaMap: new Map(),
+  busRouteMetaMap: new Map(),
+  busRouteStopsMap: new Map(),
+  youbikeCityMap: new Map()
 };
 
 // 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
@@ -966,6 +972,676 @@ async function handleParkingThsrProxy(req, res) {
   }
 }
 
+// ============================================================================
+// 台灣精準村里行政區定位 (NLSC 內政部國土測繪中心) 與 TDX 即時最近公車站牌代理引擎
+// ============================================================================
+const TAIWAN_COUNTIES = [
+  { county: '臺北市', alias: '台北市', tdxCity: 'Taipei', cityId: 'taipei', lat: 25.0375, lon: 121.5637 },
+  { county: '新北市', alias: '新北市', tdxCity: 'NewTaipei', cityId: 'newtaipei', lat: 25.0125, lon: 121.4658 },
+  { county: '基隆市', alias: '基隆市', tdxCity: 'Keelung', cityId: 'newtaipei', lat: 25.1276, lon: 121.7392 },
+  { county: '桃園市', alias: '桃園市', tdxCity: 'Taoyuan', cityId: 'taoyuan', lat: 24.9936, lon: 121.3010 },
+  { county: '新竹市', alias: '新竹市', tdxCity: 'Hsinchu', cityId: 'hsinchu', lat: 24.8138, lon: 120.9675 },
+  { county: '新竹縣', alias: '新竹縣', tdxCity: 'HsinchuCounty', cityId: 'hsinchu', lat: 24.8387, lon: 121.0177 },
+  { county: '苗栗縣', alias: '苗栗縣', tdxCity: 'MiaoliCounty', cityId: 'hsinchu', lat: 24.5602, lon: 120.8214 },
+  { county: '臺中市', alias: '台中市', tdxCity: 'Taichung', cityId: 'taichung', lat: 24.1624, lon: 120.6472 },
+  { county: '彰化縣', alias: '彰化縣', tdxCity: 'ChanghuaCounty', cityId: 'taichung', lat: 24.0518, lon: 120.5161 },
+  { county: '南投縣', alias: '南投縣', tdxCity: 'NantouCounty', cityId: 'taichung', lat: 23.9610, lon: 120.9719 },
+  { county: '雲林縣', alias: '雲林縣', tdxCity: 'YunlinCounty', cityId: 'tainan', lat: 23.7092, lon: 120.4313 },
+  { county: '嘉義市', alias: '嘉義市', tdxCity: 'Chiayi', cityId: 'tainan', lat: 23.4801, lon: 120.4491 },
+  { county: '嘉義縣', alias: '嘉義縣', tdxCity: 'ChiayiCounty', cityId: 'tainan', lat: 23.4518, lon: 120.2555 },
+  { county: '臺南市', alias: '台南市', tdxCity: 'Tainan', cityId: 'tainan', lat: 22.9972, lon: 120.2025 },
+  { county: '高雄市', alias: '高雄市', tdxCity: 'Kaohsiung', cityId: 'kaohsiung', lat: 22.6312, lon: 120.3022 },
+  { county: '屏東縣', alias: '屏東縣', tdxCity: 'PingtungCounty', cityId: 'kaohsiung', lat: 22.6761, lon: 120.4929 },
+  { county: '宜蘭縣', alias: '宜蘭縣', tdxCity: 'YilanCounty', cityId: 'yilan', lat: 24.7558, lon: 121.7512 },
+  { county: '花蓮縣', alias: '花蓮縣', tdxCity: 'HualienCounty', cityId: 'hualien', lat: 23.9932, lon: 121.6015 },
+  { county: '臺東縣', alias: '台東縣', tdxCity: 'TaitungCounty', cityId: 'hualien', lat: 22.7583, lon: 121.1444 },
+  { county: '澎湖縣', alias: '澎湖縣', tdxCity: 'PenghuCounty', cityId: 'tainan', lat: 23.5712, lon: 119.5793 },
+  { county: '金門縣', alias: '金門縣', tdxCity: 'KinmenCounty', cityId: 'tainan', lat: 24.4327, lon: 118.3171 },
+  { county: '連江縣', alias: '連江縣', tdxCity: 'LienchiangCounty', cityId: 'taipei', lat: 26.1505, lon: 119.9499 }
+];
+
+const VALID_TDX_CITIES = new Set(TAIWAN_COUNTIES.map(c => c.tdxCity));
+
+function calcDistanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+function fallbackCountyByCoords(lat, lon) {
+  let best = TAIWAN_COUNTIES[1];
+  let minD = Infinity;
+  for (const item of TAIWAN_COUNTIES) {
+    const d = calcDistanceMeters(lat, lon, item.lat, item.lon);
+    if (d < minD) {
+      minD = d;
+      best = item;
+    }
+  }
+  return {
+    county: best.alias,
+    town: '',
+    village: '',
+    tdxCity: best.tdxCity,
+    cityId: best.cityId,
+    fullLabel: best.alias,
+    source: 'coords-fallback'
+  };
+}
+
+async function resolveTaiwanAdminArea(lat, lon) {
+  const key = `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
+  const now = Date.now();
+  const cached = cache.geocodeMap.get(key);
+  if (cached && now < cached.expireAt) {
+    return cached.data;
+  }
+  try {
+    const nlscUrl = `https://api.nlsc.gov.tw/other/TownVillagePointQuery/${Number(lon).toFixed(6)}/${Number(lat).toFixed(6)}/4326`;
+    const xml = await fetchRemoteText(nlscUrl, 'application/xml, text/xml, */*', 3500);
+    const extractXmlTag = (tag) => {
+      const m = xml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`, 'i'));
+      return m ? m[1].trim() : '';
+    };
+    const rawCty = extractXmlTag('ctyName');
+    const town = extractXmlTag('townName');
+    const village = extractXmlTag('villageName');
+    if (rawCty) {
+      const matched = TAIWAN_COUNTIES.find(c => c.county === rawCty || c.alias === rawCty || rawCty.replace(/臺/g, '台') === c.alias);
+      if (matched) {
+        const cleanCounty = rawCty.replace(/臺/g, '台');
+        const info = {
+          county: cleanCounty,
+          town,
+          village,
+          tdxCity: matched.tdxCity,
+          cityId: matched.cityId,
+          fullLabel: `${cleanCounty}${town}${village}`,
+          shortLabel: `${cleanCounty}${town}`,
+          source: 'nlsc'
+        };
+        setBoundedMap(cache.geocodeMap, key, { data: info, expireAt: now + 30 * 60 * 1000 }, 240);
+        return info;
+      }
+    }
+  } catch (_) {}
+  return fallbackCountyByCoords(lat, lon);
+}
+
+let _tdxLastCallMs = 0;
+let _tdxChain = Promise.resolve();
+
+async function fetchTdxProxyJson(tdxPath, params = {}, timeoutMs = 6000) {
+  const u = new URL('https://www.opendata.vip/tdx/proxy');
+  u.searchParams.set('path', tdxPath);
+  for (const [k, v] of Object.entries(params)) {
+    u.searchParams.set(k, v);
+  }
+  const targetUrl = u.toString();
+
+  // 輕量佇列節流 (間隔 110ms)，避免短時間高併發觸發上游 TDX 代理 429 限流
+  const runPaced = async () => {
+    const waitMs = Math.max(0, 110 - (Date.now() - _tdxLastCallMs));
+    if (waitMs > 0) {
+      await new Promise(r => setTimeout(r, waitMs));
+    }
+    _tdxLastCallMs = Date.now();
+    try {
+      return await fetchJsonWithRetry(targetUrl, 0, timeoutMs);
+    } catch (err) {
+      await new Promise(r => setTimeout(r, 320));
+      _tdxLastCallMs = Date.now();
+      return fetchJsonWithRetry(targetUrl, 0, timeoutMs);
+    }
+  };
+
+  const next = _tdxChain.then(runPaced, runPaced);
+  _tdxChain = next.catch(() => {});
+  return next;
+}
+
+function getTaiwanTimeHHMMSS() {
+  const d = new Date(Date.now() + 8 * 3600000);
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  const ss = String(d.getUTCSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+async function handleGeocodeTaiwanProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = Number(parsedUrl.searchParams.get('lat'));
+  const lon = Number(parsedUrl.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < 20 || lat > 27 || lon < 117 || lon > 123.5) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的台灣經緯度座標' }));
+    return;
+  }
+  const info = await resolveTaiwanAdminArea(lat, lon);
+  res.writeHead(200);
+  res.end(JSON.stringify({ success: true, ...info }));
+}
+
+async function handleYouBikeCityProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const city = String(parsedUrl.searchParams.get('city') || '').trim();
+  if (!VALID_TDX_CITIES.has(city)) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '不支援的縣市參數' }));
+    return;
+  }
+  const now = Date.now();
+  const cached = cache.youbikeCityMap.get(city);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.data);
+    return;
+  }
+  try {
+    const arr = await fetchJsonWithRetry(`https://www.opendata.vip/tdx/youbikeApi/${encodeURIComponent(city)}`, 1, 4500);
+    const serialized = JSON.stringify(Array.isArray(arr) ? arr : []);
+    setBoundedMap(cache.youbikeCityMap, city, { data: serialized, expireAt: now + 20000 }, 30);
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cached && cached.data) {
+      res.writeHead(200);
+      res.end(cached.data);
+    } else {
+      res.writeHead(200);
+      res.end('[]');
+    }
+  }
+}
+
+async function discoverNearbyBusStations(lat, lon, primaryTdxCity, extraHub = null) {
+  const stationCacheKey = `${lat.toFixed(4)},${lon.toFixed(4)},${primaryTdxCity},${extraHub ? `${extraHub.lat.toFixed(4)}_${extraHub.lon.toFixed(4)}` : ''}`;
+  const now = Date.now();
+  const cached = cache.busStationMap.get(stationCacheKey);
+  if (cached && now < cached.expireAt) {
+    return cached.data;
+  }
+
+  const queryCities = [primaryTdxCity];
+  if (primaryTdxCity === 'NewTaipei') queryCities.push('Taipei');
+  else if (primaryTdxCity === 'Taipei') queryCities.push('NewTaipei');
+
+  const fetchRadiusBatch = async (cLat, cLon, radius, includeInterCity = false) => {
+    const out = [];
+    for (const c of queryCities) {
+      const arr = await fetchTdxProxyJson(`/v2/Bus/Station/City/${c}`, {
+        '$spatialFilter': `nearby(${cLat},${cLon},${radius})`,
+        '$top': '18',
+        '$format': 'JSON'
+      }, 5500).catch(() => []);
+      out.push({ city: c, arr: Array.isArray(arr) ? arr : [] });
+    }
+    const cityStopCount = out.reduce((s, b) => s + b.arr.length, 0);
+    if (includeInterCity || cityStopCount < 4) {
+      const icArr = await fetchTdxProxyJson('/v2/Bus/Station/InterCity', {
+        '$spatialFilter': `nearby(${cLat},${cLon},${radius})`,
+        '$top': '10',
+        '$format': 'JSON'
+      }, 5000).catch(() => []);
+      out.push({ city: 'InterCity', arr: Array.isArray(icArr) ? icArr : [] });
+    }
+    return out;
+  };
+
+  let batches = await fetchRadiusBatch(lat, lon, 480, false);
+  const totalRaw = batches.reduce((s, b) => s + b.arr.length, 0);
+  if (totalRaw < 2) {
+    batches = await fetchRadiusBatch(lat, lon, 980, true);
+  }
+  if (extraHub && Number.isFinite(extraHub.lat) && Number.isFinite(extraHub.lon)) {
+    const hubBatch = await fetchRadiusBatch(extraHub.lat, extraHub.lon, 350, false);
+    batches.push(...hubBatch);
+  }
+
+  const groups = new Map();
+  for (const { city, arr } of batches) {
+    for (const st of arr) {
+      const name = String(st?.StationName?.Zh_tw || '').trim();
+      const sLat = Number(st?.StationPosition?.PositionLat);
+      const sLon = Number(st?.StationPosition?.PositionLon);
+      if (!name || !Number.isFinite(sLat) || !Number.isFinite(sLon)) continue;
+      const distMeters = calcDistanceMeters(lat, lon, sLat, sLon);
+      const baseClean = name.replace(/[（(].*?[）)]/g, '').trim();
+      let grp = groups.get(name);
+      if (!grp && baseClean) {
+        for (const existing of groups.values()) {
+          const exBase = existing.name.replace(/[（(].*?[）)]/g, '').trim();
+          if (exBase === baseClean && calcDistanceMeters(sLat, sLon, existing.lat, existing.lon) <= 45) {
+            grp = existing;
+            break;
+          }
+        }
+      }
+      if (!grp) {
+        grp = {
+          name,
+          lat: sLat,
+          lon: sLon,
+          distMeters,
+          address: String(st.StationAddress || '').trim(),
+          stops: []
+        };
+        groups.set(name, grp);
+      } else if (distMeters < grp.distMeters) {
+        grp.distMeters = distMeters;
+        grp.lat = sLat;
+        grp.lon = sLon;
+        if (st.StationAddress) grp.address = String(st.StationAddress).trim();
+      }
+      const seenStopUid = new Set(grp.stops.map(x => `${x.city}|${x.stopUid}|${x.routeUid}`));
+      for (const sp of (st.Stops || [])) {
+        const stopUid = String(sp?.StopUID || '').trim();
+        const routeName = String(sp?.RouteName?.Zh_tw || '').trim();
+        const routeUid = String(sp?.RouteUID || sp?.RouteID || routeName).trim();
+        if (!stopUid || !routeName) continue;
+        const dedup = `${city}|${stopUid}|${routeUid}`;
+        if (seenStopUid.has(dedup)) continue;
+        seenStopUid.add(dedup);
+        grp.stops.push({
+          city,
+          stopUid,
+          routeUid,
+          routeId: String(sp?.RouteID || '').trim(),
+          routeName
+        });
+      }
+    }
+  }
+
+  const sorted = [...groups.values()]
+    .filter(g => g.stops.length > 0)
+    .sort((a, b) => a.distMeters - b.distMeters);
+
+  let topList = sorted.slice(0, 5);
+  if (extraHub && extraHub.keyword) {
+    const hubStation = sorted.find(s => s.name.includes(extraHub.keyword));
+    if (hubStation && !topList.some(s => s.name === hubStation.name)) {
+      topList = [...topList.slice(0, 4), hubStation];
+    }
+  }
+
+  if (topList.length > 0) {
+    setBoundedMap(cache.busStationMap, stationCacheKey, { data: topList, expireAt: now + 10 * 60 * 1000 }, 160);
+  }
+  return topList;
+}
+
+function formatBusStatusInfo(estimateSec, stopStatus, nextBusTime) {
+  if (typeof estimateSec === 'number' && estimateSec >= 0 && (stopStatus === 0 || stopStatus === undefined || stopStatus === null)) {
+    if (estimateSec <= 60) return { text: '進站中', state: 'arriving', sortKey: estimateSec };
+    if (estimateSec <= 180) return { text: `即將進站 (${Math.ceil(estimateSec / 60)}分)`, state: 'soon', sortKey: estimateSec };
+    return { text: `${Math.round(estimateSec / 60)} 分`, state: estimateSec <= 420 ? 'soon' : 'normal', sortKey: estimateSec };
+  }
+  const cleanNext = (typeof nextBusTime === 'string' && nextBusTime.includes('T')) ? nextBusTime.slice(11, 16) : '';
+  if (cleanNext) {
+    return { text: `${cleanNext} 發車`, state: 'scheduled', sortKey: 100000 };
+  }
+  if (stopStatus === 1) return { text: '尚未發車', state: 'waiting', sortKey: 200000 };
+  if (stopStatus === 2) return { text: '交管不停靠', state: 'muted', sortKey: 300000 };
+  if (stopStatus === 3) return { text: '末班車已過', state: 'ended', sortKey: 400000 };
+  if (stopStatus === 4) return { text: '今日未營運', state: 'ended', sortKey: 500000 };
+  return { text: '待發車', state: 'waiting', sortKey: 250000 };
+}
+
+async function handleBusNearbyProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = Number(parsedUrl.searchParams.get('lat'));
+  const lon = Number(parsedUrl.searchParams.get('lon'));
+  const rawCity = String(parsedUrl.searchParams.get('city') || '').trim();
+  const stopIdxReq = Math.max(0, Math.min(4, parseInt(parsedUrl.searchParams.get('stopIdx') || '0', 10) || 0));
+  const hubLat = Number(parsedUrl.searchParams.get('hubLat'));
+  const hubLon = Number(parsedUrl.searchParams.get('hubLon'));
+  const hubKeyword = String(parsedUrl.searchParams.get('hubKeyword') || '').trim();
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '缺少有效經緯度座標' }));
+    return;
+  }
+
+  const etaCacheKey = `${lat.toFixed(4)},${lon.toFixed(4)},${rawCity},${stopIdxReq},${hubKeyword}`;
+  const now = Date.now();
+  const cachedEta = cache.busEtaMap.get(etaCacheKey);
+  if (cachedEta && now < cachedEta.expireAt) {
+    res.writeHead(200);
+    res.end(cachedEta.data);
+    return;
+  }
+
+  try {
+    const adminInfo = await resolveTaiwanAdminArea(lat, lon);
+    const primaryTdxCity = VALID_TDX_CITIES.has(rawCity) ? rawCity : adminInfo.tdxCity;
+    const extraHub = (Number.isFinite(hubLat) && Number.isFinite(hubLon))
+      ? { lat: hubLat, lon: hubLon, keyword: hubKeyword }
+      : null;
+
+    const stations = await discoverNearbyBusStations(lat, lon, primaryTdxCity, extraHub);
+    if (!stations.length) {
+      const emptyPayload = JSON.stringify({
+        success: true,
+        admin: adminInfo,
+        tdxCity: primaryTdxCity,
+        stations: [],
+        activeStopIndex: 0,
+        activeStop: null,
+        buses: [],
+        updatedAt: new Date().toISOString(),
+        updateTimeDisplay: getTaiwanTimeHHMMSS()
+      });
+      res.writeHead(200);
+      res.end(emptyPayload);
+      return;
+    }
+
+    const activeStopIndex = Math.min(stopIdxReq, stations.length - 1);
+    const activeStop = stations[activeStopIndex];
+
+    // Group activeStop StopUIDs & RouteUIDs by city, chunking <= 18 per OData $filter
+    const byCity = {};
+    for (const sp of activeStop.stops) {
+      if (!byCity[sp.city]) byCity[sp.city] = { stopUids: new Set(), routeUids: new Set() };
+      byCity[sp.city].stopUids.add(sp.stopUid);
+      if (sp.routeUid) byCity[sp.city].routeUids.add(sp.routeUid);
+    }
+
+    const chunkArray = (arr, size) => {
+      const out = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out;
+    };
+
+    const etaByStopUid = new Map();
+
+    await Promise.all(Object.entries(byCity).map(async ([city, sets]) => {
+      const uidChunks = chunkArray([...sets.stopUids], 18).slice(0, 3);
+      const missingRouteUids = [...sets.routeUids].filter(rid => !cache.busRouteMetaMap.has(`${city}|${rid}`));
+      const routeChunks = chunkArray(missingRouteUids, 18).slice(0, 3);
+
+      const etaTasks = uidChunks.map(chunk => {
+        const f = chunk.map(u => `StopUID eq '${u.replace(/'/g, "''")}'`).join(' or ');
+        const p = city === 'InterCity' ? '/v2/Bus/EstimatedTimeOfArrival/InterCity' : `/v2/Bus/EstimatedTimeOfArrival/City/${city}/`;
+        return fetchTdxProxyJson(p, {
+          '$filter': f,
+          '$select': 'StopUID,RouteUID,RouteID,RouteName,SubRouteName,Direction,EstimateTime,StopStatus,NextBusTime,PlateNumb,SrcUpdateTime',
+          '$top': '150',
+          '$format': 'JSON'
+        }, 5500).catch(() => []);
+      });
+
+      const routeTasks = routeChunks.map(chunk => {
+        const f = chunk.map(r => `RouteUID eq '${r.replace(/'/g, "''")}'`).join(' or ');
+        const p = city === 'InterCity' ? '/v2/Bus/Route/InterCity' : `/v2/Bus/Route/City/${city}`;
+        return fetchTdxProxyJson(p, {
+          '$filter': f,
+          '$select': 'RouteUID,RouteID,RouteName,DepartureStopNameZh,DestinationStopNameZh',
+          '$top': '80',
+          '$format': 'JSON'
+        }, 5500).catch(() => []);
+      });
+
+      const [etaResults, routeResults] = await Promise.all([
+        Promise.all(etaTasks),
+        Promise.all(routeTasks)
+      ]);
+
+      for (const rArr of routeResults) {
+        if (!Array.isArray(rArr)) continue;
+        for (const rt of rArr) {
+          if (rt && rt.RouteUID) {
+            setBoundedMap(cache.busRouteMetaMap, `${city}|${rt.RouteUID}`, rt, 800);
+            if (rt.RouteName?.Zh_tw) {
+              setBoundedMap(cache.busRouteMetaMap, `${city}|name:${rt.RouteName.Zh_tw}`, rt, 800);
+            }
+          }
+        }
+      }
+
+      for (const eArr of etaResults) {
+        if (!Array.isArray(eArr)) continue;
+        for (const eItem of eArr) {
+          if (!eItem?.StopUID) continue;
+          const list = etaByStopUid.get(eItem.StopUID) || [];
+          list.push({ ...eItem, _city: city });
+          etaByStopUid.set(eItem.StopUID, list);
+        }
+      }
+    }));
+
+    // Merge station routes + real-time ETAs, deduplicating by (routeName, direction)
+    const mergedRouteMap = new Map();
+    const registerCandidate = (cand) => {
+      const key = `${cand.routeName}|${cand.direction}`;
+      const existing = mergedRouteMap.get(key);
+      if (!existing || cand._sortKey < existing._sortKey) {
+        mergedRouteMap.set(key, cand);
+      }
+    };
+
+    for (const sp of activeStop.stops) {
+      const etaList = etaByStopUid.get(sp.stopUid) || [];
+      if (etaList.length > 0) {
+        for (const e of etaList) {
+          const rName = String(e.SubRouteName?.Zh_tw || e.RouteName?.Zh_tw || sp.routeName).trim();
+          const rUid = String(e.RouteUID || sp.routeUid || '').trim();
+          const dir = typeof e.Direction === 'number' ? e.Direction : 0;
+          const rtMeta = cache.busRouteMetaMap.get(`${sp.city}|${rUid}`) ||
+                         cache.busRouteMetaMap.get(`${sp.city}|${sp.routeUid}`) ||
+                         cache.busRouteMetaMap.get(`${sp.city}|name:${sp.routeName}`);
+          let dest = '';
+          if (rtMeta) {
+            dest = dir === 1
+              ? (rtMeta.DepartureStopNameZh || rtMeta.DestinationStopNameZh || '')
+              : (rtMeta.DestinationStopNameZh || rtMeta.DepartureStopNameZh || '');
+          }
+          const statusObj = formatBusStatusInfo(e.EstimateTime, e.StopStatus, e.NextBusTime);
+          const plate = e.PlateNumb || '';
+          registerCandidate({
+            city: sp.city,
+            stopUid: sp.stopUid,
+            routeUid: rUid || sp.routeUid,
+            routeId: String(e.RouteID || sp.routeId || rName),
+            BaseRouteName: sp.routeName,
+            routeName: rName,
+            direction: dir,
+            destination: dest || activeStop.address || '市區方向',
+            estimateSec: typeof e.EstimateTime === 'number' ? e.EstimateTime : null,
+            stopStatus: typeof e.StopStatus === 'number' ? e.StopStatus : null,
+            nextBusTime: e.NextBusTime || null,
+            plateNumb: plate && !plate.startsWith('-') ? plate : '',
+            statusText: statusObj.text,
+            state: statusObj.state,
+            _sortKey: statusObj.sortKey
+          });
+        }
+      } else {
+        const rtMeta = cache.busRouteMetaMap.get(`${sp.city}|${sp.routeUid}`) ||
+                       cache.busRouteMetaMap.get(`${sp.city}|name:${sp.routeName}`);
+        const dest = rtMeta ? (rtMeta.DestinationStopNameZh || rtMeta.DepartureStopNameZh || '') : '';
+        registerCandidate({
+          city: sp.city,
+          stopUid: sp.stopUid,
+          routeUid: sp.routeUid,
+          routeId: sp.routeId || sp.routeName,
+          BaseRouteName: sp.routeName,
+          routeName: sp.routeName,
+          direction: 0,
+          destination: dest || activeStop.address || '市區方向',
+          estimateSec: null,
+          stopStatus: 1,
+          nextBusTime: null,
+          plateNumb: '',
+          statusText: '尚未發車',
+          state: 'waiting',
+          _sortKey: 220000
+        });
+      }
+    }
+
+    const buses = [...mergedRouteMap.values()]
+      .sort((a, b) => (a._sortKey - b._sortKey) || a.routeName.localeCompare(b.routeName, 'zh-Hant'))
+      .map(({ _sortKey, ...rest }) => rest);
+
+    const responseObj = {
+      success: true,
+      isDirectTdx: true,
+      admin: adminInfo,
+      tdxCity: primaryTdxCity,
+      stations: stations.map(s => ({
+        name: s.name,
+        distMeters: s.distMeters,
+        address: s.address,
+        lat: s.lat,
+        lon: s.lon,
+        routeCount: new Set(s.stops.map(x => x.routeName)).size
+      })),
+      activeStopIndex,
+      activeStop: {
+        name: activeStop.name,
+        distMeters: activeStop.distMeters,
+        address: activeStop.address,
+        lat: activeStop.lat,
+        lon: activeStop.lon
+      },
+      buses,
+      updatedAt: new Date().toISOString(),
+      updateTimeDisplay: getTaiwanTimeHHMMSS()
+    };
+
+    const serialized = JSON.stringify(responseObj);
+    setBoundedMap(cache.busEtaMap, etaCacheKey, { data: serialized, expireAt: now + 15000 }, 160);
+    res.writeHead(200);
+    res.end(serialized);
+  } catch (err) {
+    if (cachedEta && cachedEta.data) {
+      res.writeHead(200);
+      res.end(cachedEta.data);
+    } else {
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法取得即時公車站牌資料', detail: err.message }));
+    }
+  }
+}
+
+async function handleBusRouteStopsProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const city = String(parsedUrl.searchParams.get('city') || '').trim();
+  const routeName = String(parsedUrl.searchParams.get('routeName') || '').trim();
+  const baseRouteName = String(parsedUrl.searchParams.get('baseRouteName') || routeName).trim();
+  const routeId = String(parsedUrl.searchParams.get('routeId') || '').trim();
+  const direction = parseInt(parsedUrl.searchParams.get('direction') || '0', 10) || 0;
+  const currentStopName = String(parsedUrl.searchParams.get('stopName') || '').trim();
+
+  if (!city || !routeName || (city !== 'InterCity' && !VALID_TDX_CITIES.has(city))) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '缺少有效路線參數' }));
+    return;
+  }
+
+  const cacheKey = `${city}|${baseRouteName}|${routeId}|${direction}|${currentStopName}`;
+  const now = Date.now();
+  const cached = cache.busRouteStopsMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.data);
+    return;
+  }
+
+  try {
+    const fetchSorForCity = async (targetCity) => {
+      const isIC = targetCity === 'InterCity';
+      const sorPath = isIC
+        ? `/v2/Bus/StopOfRoute/InterCity/${encodeURIComponent(baseRouteName)}`
+        : `/v2/Bus/StopOfRoute/City/${targetCity}/${encodeURIComponent(baseRouteName)}`;
+      const etaPath = isIC
+        ? `/v2/Bus/EstimatedTimeOfArrival/InterCity/${encodeURIComponent(baseRouteName)}`
+        : `/v2/Bus/EstimatedTimeOfArrival/City/${targetCity}/${encodeURIComponent(baseRouteName)}`;
+
+      const [sorRaw, etaRaw] = await Promise.all([
+        fetchTdxProxyJson(sorPath, { '$select': 'RouteUID,RouteID,RouteName,SubRouteName,Direction,Stops', '$top': '30', '$format': 'JSON' }, 5500),
+        fetchTdxProxyJson(etaPath, { '$select': 'StopUID,Direction,EstimateTime,StopStatus,NextBusTime,PlateNumb', '$top': '300', '$format': 'JSON' }, 5500).catch(() => [])
+      ]);
+      return { sorList: Array.isArray(sorRaw) ? sorRaw : [], etaRaw: Array.isArray(etaRaw) ? etaRaw : [] };
+    };
+
+    let { sorList, etaRaw } = await fetchSorForCity(city);
+    // 雙北聯營公車自動跨市查找備援
+    if (sorList.length === 0 && (city === 'NewTaipei' || city === 'Taipei')) {
+      const altCity = city === 'NewTaipei' ? 'Taipei' : 'NewTaipei';
+      ({ sorList, etaRaw } = await fetchSorForCity(altCity));
+    }
+
+    const matchedSor = sorList.find(s => (s.Direction ?? 0) === direction && (s.RouteID === routeId || s.SubRouteName?.Zh_tw === routeName))
+      || sorList.find(s => (s.Direction ?? 0) === direction)
+      || sorList[0];
+
+    const etaMap = new Map();
+    if (Array.isArray(etaRaw)) {
+      for (const e of etaRaw) {
+        if ((e.Direction ?? 0) === (matchedSor?.Direction ?? direction) && e.StopUID) {
+          etaMap.set(e.StopUID, e);
+        }
+      }
+    }
+
+    const rawStops = Array.isArray(matchedSor?.Stops) ? matchedSor.Stops : [];
+    const stops = rawStops.map((st, idx) => {
+      const sName = String(st?.StopName?.Zh_tw || '').trim();
+      const uid = String(st?.StopUID || '');
+      const e = etaMap.get(uid);
+      const stInfo = e ? formatBusStatusInfo(e.EstimateTime, e.StopStatus, e.NextBusTime) : { text: '', state: 'none' };
+      return {
+        seq: idx + 1,
+        stopUid: uid,
+        name: sName,
+        isCurrent: Boolean(currentStopName && (sName === currentStopName || sName.includes(currentStopName) || currentStopName.includes(sName))),
+        statusText: stInfo.text,
+        state: stInfo.state,
+        plateNumb: (e?.PlateNumb && !e.PlateNumb.startsWith('-')) ? e.PlateNumb : ''
+      };
+    });
+
+    const payload = JSON.stringify({
+      success: true,
+      city,
+      routeName,
+      direction: matchedSor?.Direction ?? direction,
+      totalStops: stops.length,
+      stops
+    });
+    setBoundedMap(cache.busRouteStopsMap, cacheKey, { data: payload, expireAt: now + 18000 }, 120);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得路線沿途站序', detail: err.message }));
+  }
+}
+
 // 抓取單一 JSON 並附帶一次重試機制 (優先採用現代內建 fetch / Happy Eyeballs 消除 Open-Meteo TLS 連線重置)
 // 抓取單一 JSON 並附帶重試機制 (支援自訂逾時秒數)
 async function fetchJsonWithRetry(url, retries = 1, timeoutMs = 4500) {
@@ -1277,6 +1953,22 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/api/parking/thsr') {
     handleParkingThsrProxy(req, res);
+    return;
+  }
+  if (pathname === '/api/geocode/taiwan') {
+    handleGeocodeTaiwanProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/youbike/city') {
+    handleYouBikeCityProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/bus/nearby') {
+    handleBusNearbyProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/bus/route-stops') {
+    handleBusRouteStopsProxy(req, res, parsedUrl);
     return;
   }
   if (pathname === '/api/bote/prewarm') {

@@ -2044,6 +2044,7 @@ internal object WebAssetRouting {
         "janede0214.github.io",
         "opendata.vip",
         "transportdata.tw",
+        "nlsc.gov.tw",
         "data.ntpc.gov.tw",
         "opendata.tycg.gov.tw",
         "cwa.gov.tw",

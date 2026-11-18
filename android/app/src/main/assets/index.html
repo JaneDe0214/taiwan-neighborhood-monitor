@@ -8621,6 +8621,160 @@ body.native-tv-mode .filter-tag-pill:focus {
   display: none !important;
 }
 
+/* 最近公車站牌即時到站動態看板與站牌切換膠囊 (TDX 空間定位即時串接) */
+.bus-stop-switcher {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.bus-stop-switcher::-webkit-scrollbar {
+  display: none;
+}
+.bus-stop-pill {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.68);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.16s ease;
+  flex-shrink: 0;
+}
+.bus-stop-pill:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  color: #f8fafc;
+}
+.bus-stop-pill.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: rgba(56, 189, 248, 0.72);
+  color: #f8fafc;
+  font-weight: 700;
+}
+.bus-stop-dist {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: #38bdf8;
+  font-variant-numeric: tabular-nums;
+}
+.bus-widget-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.bus-widget-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+.bus-widget-row:hover,
+.bus-widget-row.is-selected {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(56, 189, 248, 0.42);
+}
+.bus-row-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+}
+.bus-route-chip {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #0f172a;
+  background: linear-gradient(135deg, #38bdf8, #22d3ee);
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bus-dest-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.bus-dest-title {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bus-plate-sub {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  color: #94a3b8;
+}
+.nearby-bus-badge.badge-scheduled {
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  color: #7dd3fc;
+}
+.nearby-bus-badge.badge-waiting {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #94a3b8;
+}
+.bus-seq-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 7px;
+  max-height: 148px;
+  overflow-y: auto;
+  padding: 4px 2px;
+}
+.bus-seq-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  color: #cbd5e1;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.bus-seq-node.is-current {
+  background: rgba(34, 211, 238, 0.18);
+  border-color: rgba(34, 211, 238, 0.65);
+  color: #f8fafc;
+  font-weight: 800;
+}
+.bus-seq-node.is-arriving {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.16);
+}
+.bus-seq-eta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #fbbf24;
+  font-weight: 700;
+}
+
 </style>
 </head>
 <body>
@@ -8998,6 +9152,29 @@ body.native-tv-mode .filter-tag-pill:focus {
         </div>
         <div id="hourlyRainContainer" style="display: flex; gap: 4px; padding: 4px 0;">
           <!-- 由 JS 繪製柱狀圖 -->
+        </div>
+      </div>
+
+      <!-- 全台與雙埔最近公車站牌即時到站動態看板 (TDX 空間座標精準串接) -->
+      <div id="busWidgetCard" class="widget-card">
+        <div class="widget-title-row">
+          <div class="widget-title">
+            <i class="fa-solid fa-bus" style="color: #38bdf8;"></i> <span id="busWidgetTitleText">最近公車站牌</span>
+          </div>
+          <div class="live-sync-badge" style="cursor:pointer;" onclick="window.localBusService?.refreshNow(true)" title="點擊立即重新同步最新公車到站秒數">
+            <span class="pulse-live-dot" id="busWidgetLiveDot"></span>
+            <span id="busWidgetSyncText">定位站牌中...</span>
+          </div>
+        </div>
+        <div id="busDualAreaBar" class="youbike-filter-pills" style="display:none;">
+          <button type="button" class="youbike-filter-btn active" data-bus-area="qp" onclick="window.localBusService?.switchDualArea('qp')">青埔最近站牌</button>
+          <button type="button" class="youbike-filter-btn" data-bus-area="bp" onclick="window.localBusService?.switchDualArea('bp')">新埔最近站牌</button>
+        </div>
+        <div id="busStopSwitcherBar" class="bus-stop-switcher"></div>
+        <div id="busWidgetBody" class="bus-widget-list">
+          <div style="padding:14px 10px; text-align:center; color:var(--text-dim); font-size:0.78rem;">
+            <i class="fa-solid fa-spinner fa-spin" style="color:#38bdf8; margin-right:6px;"></i> 正在串接附近最近公車站牌與即時到站動態...
+          </div>
         </div>
       </div>
 
@@ -12981,10 +13158,12 @@ class WeatherEnvironmentMonitor {
     }
 
     const activeCtr = typeof window !== 'undefined' && window.monitorApp?.currentCenterId ? window.monitorApp.currentCenterId : 'dual';
-    const regionTitles = { japan: '日本實況', korea: '韓國實況', europe: '歐洲實況', americas: '美洲實況' };
+    const regionTitles = { world: '全球 4K 實況', japan: '日本實況', korea: '韓國實況', apac: '亞太實況', europe: '歐洲實況', americas: '美洲實況' };
     const regionSafeBadges = {
+      world: { text: '全球板塊安全', title: '全球主要板塊即時監測中 ‧ 當地氣象與強震即時監測正常' },
       japan: { text: '日本全域安全', title: '日本列島即時監測中 ‧ 當地氣象與強震即時監測正常' },
       korea: { text: '韓國全域安全', title: '韓國全境即時監測中 ‧ 當地氣象與地震即時監測正常' },
+      apac: { text: '亞太全域安全', title: '亞太重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
       europe: { text: '歐洲全域安全', title: '歐洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
       americas: { text: '美洲全域安全', title: '美洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' }
     };
@@ -13351,33 +13530,58 @@ class WeatherEnvironmentMonitor {
     }
   }
 
-  // 全台「附近」生活圈：自動依 GPS 座標查詢所在縣市離使用者最近的 6 座即時 YouBike 2.0 站點
-  async fetchAndRenderNearbyYouBike(lat, lon, cityId = 'newtaipei') {
+  // 全台「附近／觀光／在地景點」生活圈：依真實座標跨縣市查詢周邊 2.5km 內最近的 6 座即時 YouBike 2.0 站點
+  async fetchAndRenderNearbyYouBike(lat, lon, cityOrTdx = 'newtaipei', targetCenterId = 'nearby', spotLabel = '') {
     if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) return;
-    this.currentCenterId = 'nearby';
+    this.currentCenterId = targetCenterId;
+    this.nearbyYouBikeSpotLabel = spotLabel || '';
 
-    const tdxEndpointsMap = {
-      taipei: { label: '北市', urls: ['https://www.opendata.vip/tdx/youbikeApi/Taipei'] },
-      newtaipei: { label: '新北', urls: ['https://www.opendata.vip/tdx/youbikeApi/NewTaipei'] },
-      taoyuan: { label: '桃園', urls: ['https://www.opendata.vip/tdx/youbikeApi/Taoyuan'] },
-      hsinchu: { label: '竹市竹縣', urls: ['https://www.opendata.vip/tdx/youbikeApi/Hsinchu', 'https://www.opendata.vip/tdx/youbikeApi/HsinchuCounty'] },
-      taichung: { label: '台中', urls: ['https://www.opendata.vip/tdx/youbikeApi/Taichung'] },
-      tainan: { label: '台南', urls: ['https://www.opendata.vip/tdx/youbikeApi/Tainan'] },
-      kaohsiung: { label: '高雄', urls: ['https://www.opendata.vip/tdx/youbikeApi/Kaohsiung'] }
+    const cityToTdxGroups = {
+      taipei: { label: '雙北', cities: ['Taipei', 'NewTaipei'] },
+      Taipei: { label: '雙北', cities: ['Taipei', 'NewTaipei'] },
+      newtaipei: { label: '雙北', cities: ['NewTaipei', 'Taipei'] },
+      NewTaipei: { label: '雙北', cities: ['NewTaipei', 'Taipei'] },
+      Keelung: { label: '基北', cities: ['NewTaipei', 'Taipei'] },
+      taoyuan: { label: '桃園', cities: ['Taoyuan', 'NewTaipei'] },
+      Taoyuan: { label: '桃園', cities: ['Taoyuan', 'NewTaipei'] },
+      hsinchu: { label: '竹竹苗', cities: ['Hsinchu', 'HsinchuCounty', 'MiaoliCounty'] },
+      Hsinchu: { label: '新竹市', cities: ['Hsinchu', 'HsinchuCounty'] },
+      HsinchuCounty: { label: '新竹縣', cities: ['HsinchuCounty', 'Hsinchu'] },
+      MiaoliCounty: { label: '苗栗', cities: ['MiaoliCounty', 'HsinchuCounty'] },
+      taichung: { label: '中彰', cities: ['Taichung', 'ChanghuaCounty'] },
+      Taichung: { label: '台中', cities: ['Taichung', 'ChanghuaCounty'] },
+      ChanghuaCounty: { label: '彰化', cities: ['ChanghuaCounty', 'Taichung'] },
+      NantouCounty: { label: '南投周邊', cities: ['Taichung', 'ChanghuaCounty'] },
+      YunlinCounty: { label: '雲林', cities: ['YunlinCounty', 'ChiayiCounty'] },
+      Chiayi: { label: '嘉義', cities: ['Chiayi', 'ChiayiCounty'] },
+      ChiayiCounty: { label: '嘉義', cities: ['ChiayiCounty', 'Chiayi'] },
+      tainan: { label: '台南', cities: ['Tainan', 'ChiayiCounty', 'Kaohsiung'] },
+      Tainan: { label: '台南', cities: ['Tainan', 'Kaohsiung'] },
+      kaohsiung: { label: '高屏', cities: ['Kaohsiung', 'PingtungCounty'] },
+      Kaohsiung: { label: '高雄', cities: ['Kaohsiung', 'PingtungCounty'] },
+      PingtungCounty: { label: '屏東', cities: ['PingtungCounty', 'Kaohsiung'] },
+      TaitungCounty: { label: '台東', cities: ['TaitungCounty'] }
     };
 
-    const cfg = tdxEndpointsMap[cityId];
+    const cfg = cityToTdxGroups[cityOrTdx];
     if (!cfg) {
       this.nearbyYouBikeStations = [];
-      this.nearbyYouBikeCityLabel = '';
+      this.nearbyYouBikeCityLabel = spotLabel || '';
       this.nearbyYouBikeLoading = false;
-      this.renderYouBikeStatus('nearby');
+      this.nearbyYouBikeEmptyReason = '此縣市目前無 YouBike 2.0 開放站點，請參考上方最近公車站牌即時動態';
+      this.renderYouBikeStatus(targetCenterId);
       return;
     }
 
+    const isAndroidApp = typeof window !== 'undefined' &&
+      (window.AndroidBridge != null || (window.location && window.location.protocol === 'file:'));
+    const isLocalNodeServer = typeof window !== 'undefined' && !isAndroidApp &&
+      (window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+
     this.nearbyYouBikeLoading = true;
-    this.nearbyYouBikeCityLabel = cfg.label;
-    this.renderYouBikeStatus('nearby');
+    this.nearbyYouBikeEmptyReason = '';
+    this.nearbyYouBikeCityLabel = spotLabel || cfg.label;
+    this.renderYouBikeStatus(targetCenterId);
 
     const calcDistKm = (lat1, lon1, lat2, lon2) => {
       const R = 6371;
@@ -13387,12 +13591,26 @@ class WeatherEnvironmentMonitor {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
+    const fetchSingleCityPool = async (tdxCity) => {
+      const ts = Date.now();
+      const urls = isLocalNodeServer
+        ? [`/api/youbike/city?city=${encodeURIComponent(tdxCity)}&_t=${ts}`, `https://www.opendata.vip/tdx/youbikeApi/${encodeURIComponent(tdxCity)}?_t=${ts}`]
+        : [`https://www.opendata.vip/tdx/youbikeApi/${encodeURIComponent(tdxCity)}?_t=${ts}`];
+      for (const u of urls) {
+        try {
+          const r = await fetch(u, { cache: 'no-store', signal: AbortSignal.timeout(3800) });
+          if (r.ok) {
+            const arr = await r.json();
+            if (Array.isArray(arr) && arr.length > 0) return arr.map(it => ({ ...it, _tdxCity: tdxCity }));
+          }
+        } catch (_) {}
+      }
+      return [];
+    };
+
     let rawPool = [];
     try {
-      const ts = Date.now();
-      const responses = await Promise.allSettled(
-        cfg.urls.map(u => fetch(`${u}?_t=${ts}`, { cache: 'no-store', signal: AbortSignal.timeout(3500) }).then(r => r.ok ? r.json() : []))
-      );
+      const responses = await Promise.allSettled(cfg.cities.slice(0, 2).map(fetchSingleCityPool));
       responses.forEach(r => {
         if (r.status === 'fulfilled' && Array.isArray(r.value)) {
           rawPool.push(...r.value);
@@ -13402,12 +13620,19 @@ class WeatherEnvironmentMonitor {
 
     // 若新北／桃園直連逾時，退回使用記憶體快取中之站點清單（含精簡座標）
     if (rawPool.length === 0) {
-      if (cityId === 'newtaipei' && Array.isArray(this._rawNtpcCache)) rawPool = this._rawNtpcCache;
-      else if (cityId === 'taoyuan' && Array.isArray(this._rawTycgCache)) rawPool = this._rawTycgCache;
+      if (cfg.cities.includes('NewTaipei') && Array.isArray(this._rawNtpcCache)) rawPool.push(...this._rawNtpcCache);
+      if (cfg.cities.includes('Taoyuan') && Array.isArray(this._rawTycgCache)) rawPool.push(...this._rawTycgCache);
     }
 
     const parsedList = [];
+    const seenIds = new Set();
     let latestTime = '';
+    const cityShortName = {
+      Taipei: '北市', NewTaipei: '新北', Taoyuan: '桃園', Hsinchu: '竹市', HsinchuCounty: '竹縣',
+      MiaoliCounty: '苗栗', Taichung: '台中', ChanghuaCounty: '彰化', YunlinCounty: '雲林',
+      Chiayi: '嘉市', ChiayiCounty: '嘉縣', Tainan: '台南', Kaohsiung: '高雄', PingtungCounty: '屏東', TaitungCounty: '台東'
+    };
+
     for (const item of rawPool) {
       if (!item || item.status === 0 || item.act === 0 || item.act === '0') continue;
       const sLat = parseFloat(item.lat);
@@ -13415,8 +13640,13 @@ class WeatherEnvironmentMonitor {
       if (!Number.isFinite(sLat) || !Number.isFinite(sLon)) continue;
 
       const distKm = calcDistKm(lat, lon, sLat, sLon);
+      if (distKm > 2.5) continue; // 嚴格限定周邊 2.5 公里步行／短程可達範圍，絕不混入遠處無關站點
+
       const cleanName = String(item.name || item.sna || '').replace(/^YouBike2\.0_/i, '').trim();
       if (!cleanName) continue;
+      const stKey = String(item.uid || item.sno || `${cleanName}_${sLat.toFixed(4)}`);
+      if (seenIds.has(stKey)) continue;
+      seenIds.add(stKey);
 
       const bikes = item.bikes != null ? Number(item.bikes) : parseInt(item.sbi_quantity != null ? item.sbi_quantity : (item.sbi || '0'), 10);
       const spaces = item.empty != null ? Number(item.empty) : parseInt(item.bemp || '0', 10);
@@ -13429,9 +13659,9 @@ class WeatherEnvironmentMonitor {
       if (t && t > latestTime) latestTime = t;
 
       parsedList.push({
-        id: item.uid || item.sno || cleanName,
-        city: cityId === 'taoyuan' ? 'qp' : 'bp',
-        cityName: cfg.label,
+        id: stKey,
+        city: item._tdxCity === 'Taoyuan' ? 'qp' : 'bp',
+        cityName: cityShortName[item._tdxCity] || cfg.label,
         name: cleanName,
         location: item.address || item.ar || '',
         lat: sLat,
@@ -13448,14 +13678,17 @@ class WeatherEnvironmentMonitor {
     parsedList.sort((a, b) => a.distKm - b.distKm);
     this.nearbyYouBikeStations = parsedList.slice(0, 6);
     this.nearbyYouBikeLoading = false;
+    if (this.nearbyYouBikeStations.length === 0) {
+      this.nearbyYouBikeEmptyReason = `「${spotLabel || cfg.label}」周邊 2.5 公里內無 YouBike 2.0 租賃站（可參考上方最近公車站牌即時動態）`;
+    }
     if (latestTime && latestTime.includes('T')) {
       const parts = WeatherEnvironmentMonitor.getTaipeiDateParts(latestTime, 8);
       if (parts) {
         this.nearbyYouBikeUpdateTime = `${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`;
       }
     }
-    if (this.currentCenterId === 'nearby') {
-      this.renderYouBikeStatus('nearby');
+    if (this.currentCenterId === targetCenterId) {
+      this.renderYouBikeStatus(targetCenterId);
     }
   }
 
@@ -13488,7 +13721,7 @@ class WeatherEnvironmentMonitor {
     const prevCenterId = this.currentCenterId;
     this.currentCenterId = centerId;
     const youbikeCard = document.getElementById('youbikeWidgetCard');
-    const isIntlCenter = ['japan', 'korea', 'europe', 'americas'].includes(centerId) ||
+    const isIntlCenter = ['world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(centerId) ||
       (typeof window !== 'undefined' && typeof window.monitorApp?.isInternationalCenter === 'function' && window.monitorApp.isInternationalCenter());
     if (isIntlCenter) {
       if (youbikeCard) youbikeCard.style.display = 'none';
@@ -13507,15 +13740,16 @@ class WeatherEnvironmentMonitor {
 
     const titleEl = document.getElementById('youbikeTitleText');
     const filterBarEl = document.getElementById('youbikeFilterBar');
-    const isNearbyMode = centerId === 'nearby' && (this.nearbyYouBikeLoading || this.nearbyYouBikeStations.length > 0);
+    const isSpatialNearbyMode = (centerId === 'nearby' || centerId === 'tourist' || centerId === 'favorites') &&
+      (this.nearbyYouBikeLoading || this.nearbyYouBikeStations.length > 0 || Boolean(this.nearbyYouBikeEmptyReason));
 
     if (titleEl) {
-      titleEl.textContent = isNearbyMode
-        ? `附近 YouBike (${this.nearbyYouBikeCityLabel || '鄰近'})`
+      titleEl.textContent = isSpatialNearbyMode
+        ? `最近 YouBike (${this.nearbyYouBikeCityLabel || '周邊'})`
         : 'YouBike車況';
     }
     if (filterBarEl) {
-      if (isNearbyMode) {
+      if (isSpatialNearbyMode) {
         filterBarEl.style.display = 'none';
       } else {
         filterBarEl.style.display = '';
@@ -13525,10 +13759,22 @@ class WeatherEnvironmentMonitor {
       }
     }
 
-    if (centerId === 'nearby' && this.nearbyYouBikeLoading && this.nearbyYouBikeStations.length === 0) {
+    if (isSpatialNearbyMode && this.nearbyYouBikeLoading && this.nearbyYouBikeStations.length === 0) {
       container.innerHTML = `
         <div style="padding:18px 12px; text-align:center; color:var(--text-dim); font-size:0.78rem;">
-          <i class="fa-solid fa-spinner fa-spin" style="color:#22d3ee; margin-right:6px;"></i> 正在搜尋附近最近的 YouBike 2.0 站點...
+          <i class="fa-solid fa-spinner fa-spin" style="color:#22d3ee; margin-right:6px;"></i> 正在搜尋周邊最近的 YouBike 2.0 站點...
+        </div>
+      `;
+      return;
+    }
+
+    if (isSpatialNearbyMode && !this.nearbyYouBikeLoading && this.nearbyYouBikeStations.length === 0) {
+      const syncBadgeEmpty = document.getElementById('youbikeSyncText');
+      if (syncBadgeEmpty) syncBadgeEmpty.textContent = '周邊無站點';
+      container.innerHTML = `
+        <div style="padding:14px 10px; text-align:center; color:var(--text-muted); font-size:0.76rem; background:rgba(15,23,42,0.5); border:1px dashed rgba(148,163,184,0.22); border-radius:8px; line-height:1.5;">
+          <i class="fa-solid fa-circle-info" style="color:#38bdf8; margin-right:4px;"></i>
+          ${this.nearbyYouBikeEmptyReason || '周邊 2.5 公里內無 YouBike 2.0 租賃站點'}
         </div>
       `;
       return;
@@ -13536,7 +13782,7 @@ class WeatherEnvironmentMonitor {
 
     // 取得當前站點陣列 (純真實資料，若未連線則為 null)
     let filtered = [];
-    if (isNearbyMode && this.nearbyYouBikeStations.length > 0) {
+    if (isSpatialNearbyMode && this.nearbyYouBikeStations.length > 0) {
       filtered = this.nearbyYouBikeStations;
     } else {
       const list = this.youbikeStations.map(st => ({
@@ -13557,12 +13803,12 @@ class WeatherEnvironmentMonitor {
     // 更新頂部連線狀態徽章文字
     const syncBadgeEl = document.getElementById('youbikeSyncText');
     if (syncBadgeEl) {
-      const timeSrc = isNearbyMode ? (this.nearbyYouBikeUpdateTime || this.youbikeUpdateTime) : this.youbikeUpdateTime;
+      const timeSrc = isSpatialNearbyMode ? (this.nearbyYouBikeUpdateTime || this.youbikeUpdateTime) : this.youbikeUpdateTime;
       const cleanTime = (timeSrc || '').replace(/[^0-9:]/g, '').trim();
       syncBadgeEl.textContent = cleanTime
-        ? ((isNearbyMode || this.youbikeRealtimeFetched) ? `${cleanTime} 更新` : `${cleanTime} 離線快照`)
+        ? ((isSpatialNearbyMode || this.youbikeRealtimeFetched) ? `${cleanTime} 更新` : `${cleanTime} 離線快照`)
         : '同步中...';
-      syncBadgeEl.title = (isNearbyMode || this.youbikeRealtimeFetched) ? '官方即時連線更新' : '等待即時資料連線';
+      syncBadgeEl.title = (isSpatialNearbyMode || this.youbikeRealtimeFetched) ? '官方即時連線更新' : '等待即時資料連線';
       if (syncBadgeEl.style) syncBadgeEl.style.cursor = 'default';
       syncBadgeEl.onclick = null;
     }
@@ -13726,6 +13972,926 @@ if (typeof window !== 'undefined') {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { WeatherEnvironmentMonitor };
+}
+
+/* ==========================================================================
+   台灣精準村里行政區定位 (NLSC) 與 TDX 空間最近公車站牌即時到站引擎
+   - 支援 Node.js 本地反向代理 (/api/bus/nearby) 與 Android APK 原生直透雙通道
+   - 自動合併雙北聯營公車與公路客運，精確計算公尺距離並每秒真實遞減到站秒數
+   ========================================================================== */
+class LocalGeoBusService {
+  constructor() {
+    this.centerId = 'dual';
+    this.dualArea = 'qp'; // 'qp' | 'bp'
+    this.dualAreaPinned = false;
+    this.target = null; // { lat, lon, tdxCity, label, hubLat, hubLon, hubKeyword }
+    this.activeStopIndex = 0;
+    this.stations = [];
+    this.activeStop = null;
+    this.buses = [];
+    this.adminInfo = null;
+    this.selectedRouteKey = '';
+    this.routeStopsMap = new Map(); // routeKey -> { loading, stops, error }
+    this.fetchedAtMs = 0;
+    this.updateTimeDisplay = '';
+    this.isLoading = false;
+    this.errorText = '';
+    this.pollTimer = null;
+    this.tickTimer = null;
+    this._reqToken = 0;
+    this._geocodeCache = new Map();
+    this._stationCache = new Map();
+    this._routeMetaCache = new Map();
+    this._tdxLastMs = 0;
+    this._tdxChain = Promise.resolve();
+
+    this.taiwanCounties = [
+      { county: '臺北市', alias: '台北市', tdxCity: 'Taipei', cityId: 'taipei', lat: 25.0375, lon: 121.5637 },
+      { county: '新北市', alias: '新北市', tdxCity: 'NewTaipei', cityId: 'newtaipei', lat: 25.0125, lon: 121.4658 },
+      { county: '基隆市', alias: '基隆市', tdxCity: 'Keelung', cityId: 'newtaipei', lat: 25.1276, lon: 121.7392 },
+      { county: '桃園市', alias: '桃園市', tdxCity: 'Taoyuan', cityId: 'taoyuan', lat: 24.9936, lon: 121.3010 },
+      { county: '新竹市', alias: '新竹市', tdxCity: 'Hsinchu', cityId: 'hsinchu', lat: 24.8138, lon: 120.9675 },
+      { county: '新竹縣', alias: '新竹縣', tdxCity: 'HsinchuCounty', cityId: 'hsinchu', lat: 24.8387, lon: 121.0177 },
+      { county: '苗栗縣', alias: '苗栗縣', tdxCity: 'MiaoliCounty', cityId: 'hsinchu', lat: 24.5602, lon: 120.8214 },
+      { county: '臺中市', alias: '台中市', tdxCity: 'Taichung', cityId: 'taichung', lat: 24.1624, lon: 120.6472 },
+      { county: '彰化縣', alias: '彰化縣', tdxCity: 'ChanghuaCounty', cityId: 'taichung', lat: 24.0518, lon: 120.5161 },
+      { county: '南投縣', alias: '南投縣', tdxCity: 'NantouCounty', cityId: 'taichung', lat: 23.9610, lon: 120.9719 },
+      { county: '雲林縣', alias: '雲林縣', tdxCity: 'YunlinCounty', cityId: 'tainan', lat: 23.7092, lon: 120.4313 },
+      { county: '嘉義市', alias: '嘉義市', tdxCity: 'Chiayi', cityId: 'tainan', lat: 23.4801, lon: 120.4491 },
+      { county: '嘉義縣', alias: '嘉義縣', tdxCity: 'ChiayiCounty', cityId: 'tainan', lat: 23.4518, lon: 120.2555 },
+      { county: '臺南市', alias: '台南市', tdxCity: 'Tainan', cityId: 'tainan', lat: 22.9972, lon: 120.2025 },
+      { county: '高雄市', alias: '高雄市', tdxCity: 'Kaohsiung', cityId: 'kaohsiung', lat: 22.6312, lon: 120.3022 },
+      { county: '屏東縣', alias: '屏東縣', tdxCity: 'PingtungCounty', cityId: 'kaohsiung', lat: 22.6761, lon: 120.4929 },
+      { county: '宜蘭縣', alias: '宜蘭縣', tdxCity: 'YilanCounty', cityId: 'yilan', lat: 24.7558, lon: 121.7512 },
+      { county: '花蓮縣', alias: '花蓮縣', tdxCity: 'HualienCounty', cityId: 'hualien', lat: 23.9932, lon: 121.6015 },
+      { county: '臺東縣', alias: '台東縣', tdxCity: 'TaitungCounty', cityId: 'hualien', lat: 22.7583, lon: 121.1444 },
+      { county: '澎湖縣', alias: '澎湖縣', tdxCity: 'PenghuCounty', cityId: 'tainan', lat: 23.5712, lon: 119.5793 },
+      { county: '金門縣', alias: '金門縣', tdxCity: 'KinmenCounty', cityId: 'tainan', lat: 24.4327, lon: 118.3171 },
+      { county: '連江縣', alias: '連江縣', tdxCity: 'LienchiangCounty', cityId: 'taipei', lat: 26.1505, lon: 119.9499 }
+    ];
+
+    if (typeof document !== 'undefined' && document.addEventListener) {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          this.stopTimers();
+        } else if (document.visibilityState === 'visible' && this.target) {
+          this.startTimers();
+          if (Date.now() - this.fetchedAtMs > 12000) {
+            this.refreshNow(false);
+          }
+        }
+      });
+    }
+  }
+
+  static calcMeters(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) ** 2;
+    return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
+  static isTaiwanCoords(lat, lon) {
+    const la = Number(lat);
+    const lo = Number(lon);
+    return Number.isFinite(la) && Number.isFinite(lo) && la >= 21.5 && la <= 26.5 && lo >= 118.0 && lo <= 122.5;
+  }
+
+  isLocalProxyAvailable() {
+    if (typeof window === 'undefined') return false;
+    const isAndroid = window.AndroidBridge != null || (window.location && window.location.protocol === 'file:');
+    return !isAndroid && Boolean(window.location && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+  }
+
+  fallbackCountyByCoords(lat, lon) {
+    let best = this.taiwanCounties[1];
+    let minD = Infinity;
+    for (const c of this.taiwanCounties) {
+      const d = LocalGeoBusService.calcMeters(lat, lon, c.lat, c.lon);
+      if (d < minD) {
+        minD = d;
+        best = c;
+      }
+    }
+    return {
+      county: best.alias,
+      town: '',
+      village: '',
+      tdxCity: best.tdxCity,
+      cityId: best.cityId,
+      shortLabel: best.alias,
+      fullLabel: best.alias,
+      source: 'coords'
+    };
+  }
+
+  async resolveTaiwanAdminArea(lat, lon) {
+    const key = `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
+    if (this._geocodeCache.has(key)) return this._geocodeCache.get(key);
+
+    if (this.isLocalProxyAvailable()) {
+      try {
+        const res = await fetch(`/api/geocode/taiwan?lat=${Number(lat).toFixed(6)}&lon=${Number(lon).toFixed(6)}`, {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(3500)
+        });
+        if (res.ok) {
+          const j = await res.json();
+          if (j && j.success && j.tdxCity) {
+            this._geocodeCache.set(key, j);
+            return j;
+          }
+        }
+      } catch (_) {}
+    }
+
+    try {
+      const nlscUrl = `https://api.nlsc.gov.tw/other/TownVillagePointQuery/${Number(lon).toFixed(6)}/${Number(lat).toFixed(6)}/4326`;
+      const res = await fetch(nlscUrl, { signal: AbortSignal.timeout(3800) });
+      if (res.ok) {
+        const xml = await res.text();
+        const getTag = (t) => {
+          const m = xml.match(new RegExp(`<${t}>([^<]*)</${t}>`, 'i'));
+          return m ? m[1].trim() : '';
+        };
+        const rawCty = getTag('ctyName');
+        const town = getTag('townName');
+        const village = getTag('villageName');
+        if (rawCty) {
+          const cleanCounty = rawCty.replace(/臺/g, '台');
+          const matched = this.taiwanCounties.find(c => c.alias === cleanCounty || c.county === rawCty);
+          if (matched) {
+            const info = {
+              county: cleanCounty,
+              town,
+              village,
+              tdxCity: matched.tdxCity,
+              cityId: matched.cityId,
+              shortLabel: `${cleanCounty}${town}`,
+              fullLabel: `${cleanCounty}${town}${village}`,
+              source: 'nlsc'
+            };
+            this._geocodeCache.set(key, info);
+            return info;
+          }
+        }
+      }
+    } catch (_) {}
+
+    return this.fallbackCountyByCoords(lat, lon);
+  }
+
+  async fetchTdxDirect(tdxPath, params = {}, timeoutMs = 5500) {
+    const u = new URL('https://www.opendata.vip/tdx/proxy');
+    u.searchParams.set('path', tdxPath);
+    for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+    const targetUrl = u.toString();
+
+    const execCall = async () => {
+      const waitMs = Math.max(0, 110 - (Date.now() - this._tdxLastMs));
+      if (waitMs > 0) await new Promise(r => setTimeout(r, waitMs));
+      this._tdxLastMs = Date.now();
+      const res = await fetch(targetUrl, {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    };
+
+    const next = this._tdxChain.then(execCall, execCall);
+    this._tdxChain = next.catch(() => {});
+    return next;
+  }
+
+  static computeBusBadgeState(estimateSec, stopStatus, nextBusTime) {
+    if (typeof estimateSec === 'number' && estimateSec >= 0 && (stopStatus === 0 || stopStatus == null)) {
+      if (estimateSec <= 60) return { text: '進站中', badgeClass: 'badge-arriving', sortKey: estimateSec };
+      if (estimateSec <= 180) return { text: `即將進站 (${Math.ceil(estimateSec / 60)}分)`, badgeClass: 'badge-soon', sortKey: estimateSec };
+      return { text: `${Math.round(estimateSec / 60)} 分`, badgeClass: estimateSec <= 420 ? 'badge-soon' : 'badge-normal', sortKey: estimateSec };
+    }
+    const cleanNext = (typeof nextBusTime === 'string' && nextBusTime.includes('T')) ? nextBusTime.slice(11, 16) : '';
+    if (cleanNext) return { text: `${cleanNext} 發車`, badgeClass: 'badge-scheduled', sortKey: 100000 };
+    if (stopStatus === 1) return { text: '尚未發車', badgeClass: 'badge-waiting', sortKey: 200000 };
+    if (stopStatus === 2) return { text: '交管不停', badgeClass: 'badge-waiting', sortKey: 300000 };
+    if (stopStatus === 3) return { text: '末班已過', badgeClass: 'badge-waiting', sortKey: 400000 };
+    if (stopStatus === 4) return { text: '未營運', badgeClass: 'badge-waiting', sortKey: 500000 };
+    return { text: '待發車', badgeClass: 'badge-waiting', sortKey: 250000 };
+  }
+
+  async fetchNearbyDirectClient(lat, lon, primaryTdxCity, stopIdx, extraHub) {
+    const adminInfo = await this.resolveTaiwanAdminArea(lat, lon);
+    const tdxCity = primaryTdxCity || adminInfo.tdxCity || 'NewTaipei';
+    const stCacheKey = `${lat.toFixed(4)},${lon.toFixed(4)},${tdxCity},${extraHub ? extraHub.keyword : ''}`;
+    let stations = this._stationCache.get(stCacheKey);
+
+    if (!stations) {
+      const queryCities = [tdxCity];
+      if (tdxCity === 'NewTaipei') queryCities.push('Taipei');
+      else if (tdxCity === 'Taipei') queryCities.push('NewTaipei');
+
+      const fetchBatch = async (cLat, cLon, radius, forceIc = false) => {
+        const out = [];
+        for (const c of queryCities) {
+          const arr = await this.fetchTdxDirect(`/v2/Bus/Station/City/${c}`, {
+            '$spatialFilter': `nearby(${cLat},${cLon},${radius})`,
+            '$top': '18',
+            '$format': 'JSON'
+          }).catch(() => []);
+          out.push({ city: c, arr: Array.isArray(arr) ? arr : [] });
+        }
+        const cnt = out.reduce((s, b) => s + b.arr.length, 0);
+        if (forceIc || cnt < 4) {
+          const ic = await this.fetchTdxDirect('/v2/Bus/Station/InterCity', {
+            '$spatialFilter': `nearby(${cLat},${cLon},${radius})`,
+            '$top': '10',
+            '$format': 'JSON'
+          }).catch(() => []);
+          out.push({ city: 'InterCity', arr: Array.isArray(ic) ? ic : [] });
+        }
+        return out;
+      };
+
+      let batches = await fetchBatch(lat, lon, 480, false);
+      if (batches.reduce((s, b) => s + b.arr.length, 0) < 2) {
+        batches = await fetchBatch(lat, lon, 980, true);
+      }
+      if (extraHub && Number.isFinite(extraHub.lat) && Number.isFinite(extraHub.lon)) {
+        const hb = await fetchBatch(extraHub.lat, extraHub.lon, 350, false);
+        batches.push(...hb);
+      }
+
+      const groups = new Map();
+      for (const { city, arr } of batches) {
+        for (const st of arr) {
+          const name = String(st?.StationName?.Zh_tw || '').trim();
+          const sLat = Number(st?.StationPosition?.PositionLat);
+          const sLon = Number(st?.StationPosition?.PositionLon);
+          if (!name || !Number.isFinite(sLat) || !Number.isFinite(sLon)) continue;
+          const distMeters = LocalGeoBusService.calcMeters(lat, lon, sLat, sLon);
+          const baseClean = name.replace(/[（(].*?[）)]/g, '').trim();
+          let grp = groups.get(name);
+          if (!grp && baseClean) {
+            for (const ex of groups.values()) {
+              if (ex.name.replace(/[（(].*?[）)]/g, '').trim() === baseClean && LocalGeoBusService.calcMeters(sLat, sLon, ex.lat, ex.lon) <= 45) {
+                grp = ex;
+                break;
+              }
+            }
+          }
+          if (!grp) {
+            grp = { name, lat: sLat, lon: sLon, distMeters, address: String(st.StationAddress || '').trim(), stops: [] };
+            groups.set(name, grp);
+          } else if (distMeters < grp.distMeters) {
+            grp.distMeters = distMeters;
+            grp.lat = sLat;
+            grp.lon = sLon;
+          }
+          const seen = new Set(grp.stops.map(x => `${x.city}|${x.stopUid}|${x.routeUid}`));
+          for (const sp of (st.Stops || [])) {
+            const stopUid = String(sp?.StopUID || '').trim();
+            const routeName = String(sp?.RouteName?.Zh_tw || '').trim();
+            const routeUid = String(sp?.RouteUID || sp?.RouteID || routeName).trim();
+            if (!stopUid || !routeName) continue;
+            const k = `${city}|${stopUid}|${routeUid}`;
+            if (seen.has(k)) continue;
+            seen.add(k);
+            grp.stops.push({ city, stopUid, routeUid, routeId: String(sp?.RouteID || '').trim(), routeName });
+          }
+        }
+      }
+
+      const sorted = [...groups.values()].filter(g => g.stops.length > 0).sort((a, b) => a.distMeters - b.distMeters);
+      stations = sorted.slice(0, 5);
+      if (extraHub && extraHub.keyword) {
+        const hubSt = sorted.find(s => s.name.includes(extraHub.keyword));
+        if (hubSt && !stations.some(s => s.name === hubSt.name)) {
+          stations = [...stations.slice(0, 4), hubSt];
+        }
+      }
+      if (stations.length > 0) this._stationCache.set(stCacheKey, stations);
+    }
+
+    if (!stations.length) {
+      return { success: true, admin: adminInfo, tdxCity, stations: [], activeStopIndex: 0, activeStop: null, buses: [], updateTimeDisplay: '' };
+    }
+
+    const activeStopIndex = Math.min(stopIdx, stations.length - 1);
+    const activeStop = stations[activeStopIndex];
+    const byCity = {};
+    for (const sp of activeStop.stops) {
+      if (!byCity[sp.city]) byCity[sp.city] = { stopUids: new Set(), routeUids: new Set() };
+      byCity[sp.city].stopUids.add(sp.stopUid);
+      if (sp.routeUid) byCity[sp.city].routeUids.add(sp.routeUid);
+    }
+
+    const chunkArr = (arr, n) => {
+      const out = [];
+      for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+      return out;
+    };
+
+    const etaByStopUid = new Map();
+    for (const [city, sets] of Object.entries(byCity)) {
+      const uidChunks = chunkArr([...sets.stopUids], 18).slice(0, 3);
+      const missingRoutes = [...sets.routeUids].filter(r => !this._routeMetaCache.has(`${city}|${r}`));
+      const routeChunks = chunkArr(missingRoutes, 18).slice(0, 3);
+
+      for (const rc of routeChunks) {
+        const f = rc.map(r => `RouteUID eq '${r.replace(/'/g, "''")}'`).join(' or ');
+        const p = city === 'InterCity' ? '/v2/Bus/Route/InterCity' : `/v2/Bus/Route/City/${city}`;
+        const rArr = await this.fetchTdxDirect(p, {
+          '$filter': f,
+          '$select': 'RouteUID,RouteID,RouteName,DepartureStopNameZh,DestinationStopNameZh',
+          '$top': '80',
+          '$format': 'JSON'
+        }).catch(() => []);
+        if (Array.isArray(rArr)) {
+          for (const rt of rArr) {
+            if (rt?.RouteUID) {
+              this._routeMetaCache.set(`${city}|${rt.RouteUID}`, rt);
+              if (rt.RouteName?.Zh_tw) this._routeMetaCache.set(`${city}|name:${rt.RouteName.Zh_tw}`, rt);
+            }
+          }
+        }
+      }
+
+      for (const uc of uidChunks) {
+        const f = uc.map(u => `StopUID eq '${u.replace(/'/g, "''")}'`).join(' or ');
+        const p = city === 'InterCity' ? '/v2/Bus/EstimatedTimeOfArrival/InterCity' : `/v2/Bus/EstimatedTimeOfArrival/City/${city}/`;
+        const eArr = await this.fetchTdxDirect(p, {
+          '$filter': f,
+          '$select': 'StopUID,RouteUID,RouteID,RouteName,SubRouteName,Direction,EstimateTime,StopStatus,NextBusTime,PlateNumb',
+          '$top': '150',
+          '$format': 'JSON'
+        }).catch(() => []);
+        if (Array.isArray(eArr)) {
+          for (const e of eArr) {
+            if (!e?.StopUID) continue;
+            const list = etaByStopUid.get(e.StopUID) || [];
+            list.push(e);
+            etaByStopUid.set(e.StopUID, list);
+          }
+        }
+      }
+    }
+
+    const merged = new Map();
+    const putCand = (c) => {
+      const k = `${c.routeName}|${c.direction}`;
+      const prev = merged.get(k);
+      if (!prev || c._sortKey < prev._sortKey) merged.set(k, c);
+    };
+
+    for (const sp of activeStop.stops) {
+      const etaList = etaByStopUid.get(sp.stopUid) || [];
+      if (etaList.length > 0) {
+        for (const e of etaList) {
+          const rName = String(e.SubRouteName?.Zh_tw || e.RouteName?.Zh_tw || sp.routeName).trim();
+          const rUid = String(e.RouteUID || sp.routeUid || '').trim();
+          const dir = typeof e.Direction === 'number' ? e.Direction : 0;
+          const meta = this._routeMetaCache.get(`${sp.city}|${rUid}`) ||
+                       this._routeMetaCache.get(`${sp.city}|${sp.routeUid}`) ||
+                       this._routeMetaCache.get(`${sp.city}|name:${sp.routeName}`);
+          const dest = meta ? (dir === 1 ? (meta.DepartureStopNameZh || meta.DestinationStopNameZh) : (meta.DestinationStopNameZh || meta.DepartureStopNameZh)) : '';
+          const badge = LocalGeoBusService.computeBusBadgeState(e.EstimateTime, e.StopStatus, e.NextBusTime);
+          putCand({
+            city: sp.city,
+            stopUid: sp.stopUid,
+            routeUid: rUid || sp.routeUid,
+            routeId: String(e.RouteID || sp.routeId || rName),
+            BaseRouteName: sp.routeName,
+            routeName: rName,
+            direction: dir,
+            destination: dest || activeStop.address || '市區方向',
+            estimateSec: typeof e.EstimateTime === 'number' ? e.EstimateTime : null,
+            stopStatus: typeof e.StopStatus === 'number' ? e.StopStatus : null,
+            nextBusTime: e.NextBusTime || null,
+            plateNumb: (e.PlateNumb && !e.PlateNumb.startsWith('-')) ? e.PlateNumb : '',
+            statusText: badge.text,
+             _sortKey: badge.sortKey
+          });
+        }
+      } else {
+        const meta = this._routeMetaCache.get(`${sp.city}|${sp.routeUid}`) || this._routeMetaCache.get(`${sp.city}|name:${sp.routeName}`);
+        const dest = meta ? (meta.DestinationStopNameZh || meta.DepartureStopNameZh || '') : '';
+        putCand({
+          city: sp.city,
+          stopUid: sp.stopUid,
+          routeUid: sp.routeUid,
+          routeId: sp.routeId || sp.routeName,
+          BaseRouteName: sp.routeName,
+          routeName: sp.routeName,
+          direction: 0,
+          destination: dest || activeStop.address || '市區方向',
+          estimateSec: null,
+          stopStatus: 1,
+          nextBusTime: null,
+          plateNumb: '',
+          statusText: '尚未發車',
+          _sortKey: 220000
+        });
+      }
+    }
+
+    const nowTw = new Date(Date.now() + 8 * 3600000);
+    const hhmmss = `${String(nowTw.getUTCHours()).padStart(2, '0')}:${String(nowTw.getUTCMinutes()).padStart(2, '0')}:${String(nowTw.getUTCSeconds()).padStart(2, '0')}`;
+    return {
+      success: true,
+      admin: adminInfo,
+      tdxCity,
+      stations: stations.map(s => ({ name: s.name, distMeters: s.distMeters, address: s.address, lat: s.lat, lon: s.lon })),
+      activeStopIndex,
+      activeStop: { name: activeStop.name, distMeters: activeStop.distMeters, address: activeStop.address, lat: activeStop.lat, lon: activeStop.lon },
+      buses: [...merged.values()].sort((a, b) => (a._sortKey - b._sortKey) || a.routeName.localeCompare(b.routeName, 'zh-Hant')).map(({ _sortKey, ...r }) => r),
+      updateTimeDisplay: hhmmss
+    };
+  }
+
+  stopTimers() {
+    if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
+    if (this.tickTimer) { clearInterval(this.tickTimer); this.tickTimer = null; }
+  }
+
+  startTimers() {
+    this.stopTimers();
+    this.pollTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      this.refreshNow(false);
+    }, 20000);
+    this.tickTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      this.tickLiveCountdownsInPlace();
+    }, 1000);
+  }
+
+  // 每秒依據真實擷取時間差精確更新倒數秒數 (絕不亂數模擬，僅針對 StopStatus===0 之真實發車班次遞減)
+  tickLiveCountdownsInPlace() {
+    if (typeof document === 'undefined' || !this.fetchedAtMs || !this.buses.length) return;
+    const elapsedSec = Math.max(0, Math.floor((Date.now() - this.fetchedAtMs) / 1000));
+    for (const b of this.buses) {
+      if (typeof b.estimateSec !== 'number' || (b.stopStatus !== 0 && b.stopStatus != null)) continue;
+      const remain = Math.max(0, b.estimateSec - elapsedSec);
+      const badge = LocalGeoBusService.computeBusBadgeState(remain, 0, b.nextBusTime);
+      const key = `${b.routeName}|${b.direction}`;
+      document.querySelectorAll(`[data-bus-eta-key="${key.replace(/"/g, '\\"')}"]`).forEach(el => {
+        el.className = `nearby-bus-badge ${badge.badgeClass}`;
+        el.innerHTML = `<i class="fa-solid ${remain <= 60 ? 'fa-bus' : 'fa-clock'}"></i> ${badge.text}`;
+      });
+    }
+  }
+
+  switchDualArea(area = 'qp', fromAutoSync = false) {
+    if (area !== 'qp' && area !== 'bp') return;
+    if (!fromAutoSync) {
+      this.dualAreaPinned = true;
+      if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    }
+    this.dualArea = area;
+    this.activeStopIndex = 0;
+    this.selectedRouteKey = '';
+    if (area === 'qp') {
+      this.target = {
+        lat: 25.0153,
+        lon: 121.2213,
+        tdxCity: 'Taoyuan',
+        label: '桃園市中壢區青埔',
+        hubLat: 25.0131,
+        hubLon: 121.2148,
+        hubKeyword: '高鐵桃園站'
+      };
+    } else {
+      this.target = {
+        lat: 25.0232,
+        lon: 121.4688,
+        tdxCity: 'NewTaipei',
+        label: '新北市板橋區新埔'
+      };
+    }
+    this.renderSidebarWidget();
+    this.refreshNow(true);
+  }
+
+  syncForCenter(centerId, opts = {}) {
+    this.centerId = centerId;
+    const busCard = typeof document !== 'undefined' ? document.getElementById('busWidgetCard') : null;
+    const isIntl = ['world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(centerId);
+    if (isIntl) {
+      this.stopTimers();
+      this.target = null;
+      if (busCard) busCard.style.display = 'none';
+      return;
+    }
+
+    if (centerId === 'dual') {
+      if (busCard) busCard.style.display = '';
+      const defaultArea = (!this.dualAreaPinned && window.transitMonitor && window.transitMonitor.direction === 'to_qingpu') ? 'bp' : (this.dualArea || 'qp');
+      this.switchDualArea(defaultArea, true);
+      this.startTimers();
+      return;
+    }
+
+    if (centerId === 'qingpu') {
+      if (busCard) busCard.style.display = '';
+      this.activeStopIndex = 0;
+      this.selectedRouteKey = '';
+      this.target = {
+        lat: 25.0153,
+        lon: 121.2213,
+        tdxCity: 'Taoyuan',
+        label: '桃園市中壢區青埔',
+        hubLat: 25.0131,
+        hubLon: 121.2148,
+        hubKeyword: '高鐵桃園站'
+      };
+      this.startTimers();
+      this.renderSidebarWidget();
+      this.refreshNow(true);
+      return;
+    }
+
+    if (centerId === 'banqiao') {
+      if (busCard) busCard.style.display = '';
+      this.activeStopIndex = 0;
+      this.selectedRouteKey = '';
+      this.target = {
+        lat: 25.0232,
+        lon: 121.4688,
+        tdxCity: 'NewTaipei',
+        label: '新北市板橋區新埔'
+      };
+      this.startTimers();
+      this.renderSidebarWidget();
+      this.refreshNow(true);
+      return;
+    }
+
+    const lat = Number(opts.lat);
+    const lon = Number(opts.lon);
+    if (!LocalGeoBusService.isTaiwanCoords(lat, lon)) {
+      this.stopTimers();
+      this.target = null;
+      if (busCard) busCard.style.display = 'none';
+      return;
+    }
+
+    if (busCard) busCard.style.display = '';
+    const sameSpot = this.target && Math.abs(this.target.lat - lat) < 0.0005 && Math.abs(this.target.lon - lon) < 0.0005;
+    if (!sameSpot) {
+      this.activeStopIndex = 0;
+      this.selectedRouteKey = '';
+    }
+    this.target = {
+      lat,
+      lon,
+      tdxCity: opts.tdxCity || '',
+      label: opts.label || ''
+    };
+    this.startTimers();
+    this.renderSidebarWidget();
+    this.refreshNow(true);
+  }
+
+  selectStopIndex(idx) {
+    const nextIdx = Number(idx);
+    if (!Number.isFinite(nextIdx) || nextIdx < 0 || nextIdx === this.activeStopIndex) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.activeStopIndex = nextIdx;
+    this.selectedRouteKey = '';
+    this.refreshNow(true);
+  }
+
+  async selectRoute(routeKey) {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    if (this.selectedRouteKey === routeKey) {
+      this.selectedRouteKey = '';
+      this.renderSidebarWidget();
+      if (window.transitMonitor) window.transitMonitor.render();
+      return;
+    }
+    this.selectedRouteKey = routeKey;
+    const bus = this.buses.find(b => `${b.routeName}|${b.direction}` === routeKey);
+    if (bus && !this.routeStopsMap.has(routeKey)) {
+      this.routeStopsMap.set(routeKey, { loading: true, stops: [] });
+      this.renderSidebarWidget();
+      if (window.transitMonitor) window.transitMonitor.render();
+      await this.fetchRouteSequenceForBus(bus, routeKey);
+    }
+    this.renderSidebarWidget();
+    if (window.transitMonitor) window.transitMonitor.render();
+  }
+
+  async fetchRouteSequenceForBus(bus, routeKey) {
+    const curStopName = this.activeStop ? this.activeStop.name : '';
+    try {
+      if (this.isLocalProxyAvailable()) {
+        const q = new URLSearchParams({
+          city: bus.city || this.target?.tdxCity || 'NewTaipei',
+          routeName: bus.routeName,
+          baseRouteName: bus.BaseRouteName || bus.routeName,
+          routeId: bus.routeId || '',
+          direction: String(bus.direction ?? 0),
+          stopName: curStopName
+        });
+        const res = await fetch(`/api/bus/route-stops?${q.toString()}`, { cache: 'no-store', signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const j = await res.json();
+          if (j && j.success && Array.isArray(j.stops)) {
+            this.routeStopsMap.set(routeKey, { loading: false, stops: j.stops });
+            return;
+          }
+        }
+      }
+
+      // Direct TDX StopOfRoute client (Android APK WebView native CORS pass-through)
+      const baseName = bus.BaseRouteName || bus.routeName;
+      const tryCity = async (c) => {
+        const isIC = c === 'InterCity';
+        const sorPath = isIC ? `/v2/Bus/StopOfRoute/InterCity/${encodeURIComponent(baseName)}` : `/v2/Bus/StopOfRoute/City/${c}/${encodeURIComponent(baseName)}`;
+        const etaPath = isIC ? `/v2/Bus/EstimatedTimeOfArrival/InterCity/${encodeURIComponent(baseName)}` : `/v2/Bus/EstimatedTimeOfArrival/City/${c}/${encodeURIComponent(baseName)}`;
+        const [sorRaw, etaRaw] = await Promise.all([
+          this.fetchTdxDirect(sorPath, { '$select': 'RouteUID,RouteID,RouteName,SubRouteName,Direction,Stops', '$top': '30', '$format': 'JSON' }),
+          this.fetchTdxDirect(etaPath, { '$select': 'StopUID,Direction,EstimateTime,StopStatus,NextBusTime', '$top': '300', '$format': 'JSON' }).catch(() => [])
+        ]);
+        return { sorList: Array.isArray(sorRaw) ? sorRaw : [], etaList: Array.isArray(etaRaw) ? etaRaw : [] };
+      };
+
+      let { sorList, etaList } = await tryCity(bus.city || 'NewTaipei');
+      if (sorList.length === 0 && (bus.city === 'NewTaipei' || bus.city === 'Taipei')) {
+        ({ sorList, etaList } = await tryCity(bus.city === 'NewTaipei' ? 'Taipei' : 'NewTaipei'));
+      }
+      const matched = sorList.find(s => (s.Direction ?? 0) === (bus.direction ?? 0) && (s.RouteID === bus.routeId || s.SubRouteName?.Zh_tw === bus.routeName))
+        || sorList.find(s => (s.Direction ?? 0) === (bus.direction ?? 0))
+        || sorList[0];
+      const etaMap = new Map();
+      etaList.forEach(e => {
+        if ((e.Direction ?? 0) === (matched?.Direction ?? bus.direction ?? 0) && e.StopUID) etaMap.set(e.StopUID, e);
+      });
+      const stops = (matched?.Stops || []).map((st, idx) => {
+        const nm = String(st?.StopName?.Zh_tw || '').trim();
+        const e = etaMap.get(st?.StopUID);
+        const bInfo = e ? LocalGeoBusService.computeBusBadgeState(e.EstimateTime, e.StopStatus, e.NextBusTime) : { text: '', badgeClass: '' };
+        return {
+          seq: idx + 1,
+          name: nm,
+          isCurrent: Boolean(curStopName && (nm === curStopName || nm.includes(curStopName) || curStopName.includes(nm))),
+          statusText: bInfo.text,
+          state: bInfo.badgeClass === 'badge-arriving' ? 'arriving' : ''
+        };
+      });
+      this.routeStopsMap.set(routeKey, { loading: false, stops });
+    } catch (e) {
+      this.routeStopsMap.set(routeKey, { loading: false, stops: [], error: '暫無法載入沿途站序' });
+    }
+  }
+
+  async refreshNow(force = false) {
+    if (!this.target) return;
+    if (!force && this.isLoading) return;
+    const token = ++this._reqToken;
+    this.isLoading = true;
+    this.errorText = '';
+    if (this.stations.length === 0) {
+      this.renderSidebarWidget();
+      if (window.transitMonitor && (this.centerId === 'nearby' || this.centerId === 'tourist' || this.centerId === 'favorites')) {
+        window.transitMonitor.render();
+      }
+    }
+
+    const { lat, lon, tdxCity, hubLat, hubLon, hubKeyword } = this.target;
+    try {
+      let data = null;
+      if (this.isLocalProxyAvailable()) {
+        const q = new URLSearchParams({
+          lat: Number(lat).toFixed(6),
+          lon: Number(lon).toFixed(6),
+          city: tdxCity || '',
+          stopIdx: String(this.activeStopIndex)
+        });
+        if (Number.isFinite(hubLat) && Number.isFinite(hubLon)) {
+          q.set('hubLat', Number(hubLat).toFixed(6));
+          q.set('hubLon', Number(hubLon).toFixed(6));
+          if (hubKeyword) q.set('hubKeyword', hubKeyword);
+        }
+        try {
+          const res = await fetch(`/api/bus/nearby?${q.toString()}&_t=${Date.now()}`, {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(7000)
+          });
+          if (res.ok) {
+            const j = await res.json();
+            if (j && j.success) data = j;
+          }
+        } catch (_) {}
+      }
+
+      if (!data) {
+        const extraHub = (Number.isFinite(hubLat) && Number.isFinite(hubLon))
+          ? { lat: hubLat, lon: hubLon, keyword: hubKeyword || '' }
+          : null;
+        data = await this.fetchNearbyDirectClient(lat, lon, tdxCity, this.activeStopIndex, extraHub);
+      }
+
+      if (token !== this._reqToken) return;
+      this.isLoading = false;
+      this.fetchedAtMs = Date.now();
+      this.adminInfo = data.admin || this.adminInfo;
+      this.stations = Array.isArray(data.stations) ? data.stations : [];
+      this.activeStopIndex = typeof data.activeStopIndex === 'number' ? data.activeStopIndex : 0;
+      this.activeStop = data.activeStop || null;
+      this.buses = Array.isArray(data.buses) ? data.buses : [];
+      this.updateTimeDisplay = data.updateTimeDisplay || '';
+    } catch (err) {
+      if (token !== this._reqToken) return;
+      this.isLoading = false;
+      this.errorText = '即時公車動態連線逾時，可點擊右上角重試或開啟 Google 地圖即時公車';
+    }
+
+    this.renderSidebarWidget();
+    if (window.transitMonitor && (this.centerId === 'nearby' || this.centerId === 'tourist' || this.centerId === 'favorites')) {
+      window.transitMonitor.lastNearbySignature = null;
+      window.transitMonitor.render();
+    }
+  }
+
+  formatLiveBadgeHtml(bus) {
+    const elapsed = this.fetchedAtMs ? Math.max(0, Math.floor((Date.now() - this.fetchedAtMs) / 1000)) : 0;
+    const effSec = (typeof bus.estimateSec === 'number' && (bus.stopStatus === 0 || bus.stopStatus == null))
+      ? Math.max(0, bus.estimateSec - elapsed)
+      : bus.estimateSec;
+    const info = LocalGeoBusService.computeBusBadgeState(effSec, bus.stopStatus, bus.nextBusTime);
+    const key = `${bus.routeName}|${bus.direction}`.replace(/"/g, '&quot;');
+    const icon = info.badgeClass === 'badge-arriving' ? 'fa-bus' : 'fa-clock';
+    return `<span class="nearby-bus-badge ${info.badgeClass}" data-bus-eta-key="${key}"><i class="fa-solid ${icon}"></i> ${info.text}</span>`;
+  }
+
+  renderRouteSequenceHtml(bus, routeKey) {
+    const seqState = this.routeStopsMap.get(routeKey);
+    const stopName = this.activeStop ? this.activeStop.name : '';
+    const gmapUrl = this.activeStop
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${this.adminInfo?.county || ''} 公車 ${bus.routeName} ${stopName}`)}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`公車 ${bus.routeName}`)}`;
+
+    let seqInner = '';
+    if (!seqState || seqState.loading) {
+      seqInner = `<div style="padding:8px; color:var(--text-dim); font-size:0.76rem;"><i class="fa-solid fa-spinner fa-spin" style="color:#38bdf8; margin-right:5px;"></i> 正在讀取 TDX 官方沿途停靠站序與即時進站位置...</div>`;
+    } else if (seqState.stops && seqState.stops.length > 0) {
+      // 聚焦顯示本站前後重點區間（本站前 2 站至終點站，最多 18 站），讓長輩一眼看懂接下來開往哪裡
+      const curIdx = seqState.stops.findIndex(s => s.isCurrent);
+      const startIdx = curIdx > 2 ? curIdx - 2 : 0;
+      const slice = seqState.stops.slice(startIdx, startIdx + 20);
+      seqInner = `
+        <div class="bus-seq-strip">
+          ${slice.map((s, idx) => `
+            <span class="bus-seq-node ${s.isCurrent ? 'is-current' : ''} ${s.state === 'arriving' ? 'is-arriving' : ''}">
+              ${s.isCurrent ? '<i class="fa-solid fa-location-dot" style="color:#22d3ee;"></i>' : ''}
+              <span>${s.name}</span>
+              ${(s.statusText && (s.state === 'arriving' || s.statusText.includes('即將') || s.isCurrent)) ? `<span class="bus-seq-eta">${s.statusText}</span>` : ''}
+            </span>
+            ${idx < slice.length - 1 ? '<span class="flow-arrow">➔</span>' : ''}
+          `).join('')}
+        </div>
+      `;
+    } else {
+      seqInner = `<div style="padding:6px; color:var(--text-dim); font-size:0.75rem;">請點擊右上方按鈕透過 Google 地圖檢視完整路線動態。</div>`;
+    }
+
+    return `
+      <div class="nearby-bus-detail-drawer" style="margin-top:4px;">
+        <div class="drawer-header-banner">
+          <div class="drawer-title-box">
+            <span class="drawer-bus-chip">${bus.routeName}</span>
+            <div class="drawer-title-meta">
+              <strong class="drawer-dest-title">往 ${bus.destination}</strong>
+              <span class="drawer-sub-meta">
+                📍 上車站牌：${stopName || '最近站牌'}${this.activeStop ? ` (距 ${this.activeStop.distMeters}m)` : ''}
+                ${bus.plateNumb ? ` ‧ 車號 ${bus.plateNumb}` : ''}
+              </span>
+            </div>
+          </div>
+          <div class="drawer-action-badges">
+            ${this.formatLiveBadgeHtml(bus)}
+            <a class="btn-external-google-bus" href="${gmapUrl}" target="_blank" rel="noopener noreferrer" onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, '${gmapUrl}');}">
+              <i class="fa-solid fa-map-location-dot"></i> 地圖路線
+            </a>
+          </div>
+        </div>
+        <div class="drawer-route-flow">
+          <div class="flow-label"><i class="fa-solid fa-route"></i> 官方即時沿途停靠站序（高亮處為目前最近上車站牌）：</div>
+          ${seqInner}
+        </div>
+      </div>
+    `;
+  }
+
+  renderSidebarWidget() {
+    if (typeof document === 'undefined') return;
+    const card = document.getElementById('busWidgetCard');
+    const titleEl = document.getElementById('busWidgetTitleText');
+    const syncEl = document.getElementById('busWidgetSyncText');
+    const dualBar = document.getElementById('busDualAreaBar');
+    const switcherBar = document.getElementById('busStopSwitcherBar');
+    const bodyEl = document.getElementById('busWidgetBody');
+    if (!card || !bodyEl) return;
+
+    if (dualBar) {
+      if (this.centerId === 'dual') {
+        dualBar.style.display = '';
+        dualBar.querySelectorAll('[data-bus-area]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.busArea === this.dualArea);
+        });
+      } else {
+        dualBar.style.display = 'none';
+      }
+    }
+
+    const areaShort = this.adminInfo?.town
+      ? `${this.adminInfo.county}${this.adminInfo.town}`
+      : (this.target?.label || '附近');
+    if (titleEl) {
+      titleEl.textContent = this.activeStop
+        ? `最近公車 ‧ ${this.activeStop.name}`
+        : `最近公車站牌 (${areaShort})`;
+    }
+    if (syncEl) {
+      syncEl.textContent = this.isLoading
+        ? '即時同步中...'
+        : (this.updateTimeDisplay ? `${this.updateTimeDisplay.slice(0, 5)} 即時` : 'TDX 即時');
+    }
+
+    if (switcherBar) {
+      if (this.stations.length > 0) {
+        switcherBar.style.display = 'flex';
+        switcherBar.innerHTML = this.stations.map((st, idx) => `
+          <button type="button" class="bus-stop-pill ${idx === this.activeStopIndex ? 'active' : ''}"
+                  onclick="window.localBusService?.selectStopIndex(${idx})"
+                  title="切換查看「${st.name}」即時公車到站（距離約 ${st.distMeters} 公尺）">
+            <i class="fa-solid fa-location-dot" style="font-size:0.65rem;color:${idx === this.activeStopIndex ? '#22d3ee' : '#94a3b8'};"></i>
+            <span>${st.name}</span>
+            <span class="bus-stop-dist">${st.distMeters}m</span>
+          </button>
+        `).join('');
+      } else {
+        switcherBar.style.display = 'none';
+        switcherBar.innerHTML = '';
+      }
+    }
+
+    if (this.isLoading && this.buses.length === 0) {
+      bodyEl.innerHTML = `
+        <div style="padding:16px 10px; text-align:center; color:var(--text-dim); font-size:0.78rem;">
+          <i class="fa-solid fa-spinner fa-spin" style="color:#38bdf8; margin-right:6px;"></i> 正在搜尋最近公車站牌與 TDX 即時到站秒數...
+        </div>
+      `;
+      return;
+    }
+
+    if (this.stations.length === 0 || this.buses.length === 0) {
+      const fallbackQuery = encodeURIComponent(`${this.target?.lat || 25.0232},${this.target?.lon || 121.4688} 公車站`);
+      bodyEl.innerHTML = `
+        <div style="padding:12px 10px; text-align:center; color:var(--text-muted); font-size:0.76rem; background:rgba(15,23,42,0.48); border:1px dashed rgba(148,163,184,0.22); border-radius:8px; line-height:1.5;">
+          <div>${this.errorText || '此座標周邊 950 公尺內查無公車站牌或目前無班次資料'}</div>
+          <a href="https://www.google.com/maps/search/?api=1&query=${fallbackQuery}" target="_blank" rel="noopener noreferrer"
+             style="display:inline-flex;align-items:center;gap:5px;margin-top:7px;padding:4px 10px;border-radius:6px;background:rgba(56,189,248,0.16);border:1px solid rgba(56,189,248,0.4);color:#7dd3fc;text-decoration:none;font-weight:600;font-size:0.74rem;">
+            <i class="fa-solid fa-map-location-dot"></i> 開啟 Google 地圖鄰近公車站
+          </a>
+        </div>
+      `;
+      return;
+    }
+
+    bodyEl.innerHTML = this.buses.slice(0, 14).map(b => {
+      const rKey = `${b.routeName}|${b.direction}`;
+      const isSel = this.selectedRouteKey === rKey;
+      const safeKeyJs = rKey.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return `
+        <div>
+          <div class="bus-widget-row ${isSel ? 'is-selected' : ''}" tabindex="0" role="button"
+               onclick="window.localBusService?.selectRoute('${safeKeyJs}')"
+               title="點擊展開「${b.routeName} 往 ${b.destination}」官方沿途停靠站序">
+            <div class="bus-row-left">
+              <span class="bus-route-chip">${b.routeName}</span>
+              <div class="bus-dest-meta">
+                <span class="bus-dest-title">往 ${b.destination}</span>
+                ${b.plateNumb ? `<span class="bus-plate-sub"><i class="fa-solid fa-bus-simple"></i> ${b.plateNumb}</span>` : ''}
+              </div>
+            </div>
+            ${this.formatLiveBadgeHtml(b)}
+          </div>
+          ${isSel ? this.renderRouteSequenceHtml(b, rKey) : ''}
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.LocalGeoBusService = LocalGeoBusService;
+  window.localBusService = new LocalGeoBusService();
 }
 
 
@@ -15220,6 +16386,9 @@ class TwinCityTransitMonitor {
     if (typeof localStorage !== 'undefined') {
       try { localStorage.setItem('dpu_transit_direction', this.direction); } catch(e) {}
     }
+    if (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'dual' && window.localBusService && !window.localBusService.dualAreaPinned) {
+      window.localBusService.switchDualArea(this.direction === 'to_qingpu' ? 'bp' : 'qp', true);
+    }
     this.lastScheduleKey = null;
     this.render();
     this.triggerViewportResize();
@@ -15235,6 +16404,9 @@ class TwinCityTransitMonitor {
       this.direction = dir;
       if (typeof localStorage !== 'undefined') {
         try { localStorage.setItem('dpu_transit_direction', this.direction); } catch(e) {}
+      }
+      if (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'dual' && window.localBusService && !window.localBusService.dualAreaPinned) {
+        window.localBusService.switchDualArea(this.direction === 'to_qingpu' ? 'bp' : 'qp', true);
       }
       this.lastScheduleKey = null;
       this.render();
@@ -15399,23 +16571,136 @@ class TwinCityTransitMonitor {
     this.render();
   }
 
-  // 渲染附近公車站牌與路線去向動態看板 HTML（誠實標示路線班距參考，不偽造即時倒數）
+  // 渲染附近與觀光景點最近公車站牌即時動態看板 HTML（串接 TDX 空間最近站牌、公尺距離與真實到站秒數）
   renderNearbyTransitHtml(cityId = 'newtaipei') {
+    const svc = (typeof window !== 'undefined' && window.localBusService) ? window.localBusService : null;
+    if (svc && (svc.isLoading || svc.stations.length > 0 || svc.target)) {
+      const adminCounty = svc.adminInfo?.county || '';
+      const adminTown = svc.adminInfo?.town || '';
+      const adminVillage = svc.adminInfo?.village || '';
+      const areaLabel = adminCounty
+        ? (adminTown ? `${adminCounty} ‧ ${adminTown}${adminVillage ? ' ' + adminVillage : ''}` : adminCounty)
+        : (svc.target?.label || '目前位置');
+
+      if (svc.isLoading && svc.stations.length === 0) {
+        return `
+          <div class="transit-nearby-wrapper is-bar-compact">
+            <div class="transit-nearby-card-box" style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <div style="display:flex; align-items:center; gap:8px; color:var(--text-main); font-size:0.82rem;">
+                <i class="fa-solid fa-spinner fa-spin" style="color:#22d3ee;"></i>
+                <span>正在串接 TDX 空間最近公車站牌與即時到站秒數（<strong>${areaLabel}</strong>）...</span>
+              </div>
+              <span style="font-size:0.72rem; color:#38bdf8;">TDX 即時連線中</span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (!svc.isLoading && svc.stations.length === 0) {
+        const gmapQ = encodeURIComponent(`${svc.target?.lat || 25.0232},${svc.target?.lon || 121.4688} 公車站`);
+        return `
+          <div class="transit-nearby-wrapper is-bar-compact">
+            <div class="transit-nearby-card-box" style="padding:9px 14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:0.8rem;">
+                <i class="fa-solid fa-bus-simple" style="color:#94a3b8;"></i>
+                <span><strong>${areaLabel}</strong> ── ${svc.errorText || '周邊 950 公尺內查無 TDX 公車站牌'}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <button type="button" class="nearby-guide-btn" onclick="window.localBusService?.refreshNow(true)">
+                  <i class="fa-solid fa-rotate"></i><span>重新查詢</span>
+                </button>
+                <a class="btn-external-google-bus" href="https://www.google.com/maps/search/?api=1&query=${gmapQ}" target="_blank" rel="noopener noreferrer">
+                  <i class="fa-solid fa-map-location-dot"></i> Google 地圖公車站
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      const activeStop = svc.activeStop || svc.stations[0];
+      const walkMin = Math.max(1, Math.ceil((activeStop?.distMeters || 70) / 70));
+      const selectedBus = svc.selectedRouteKey
+        ? svc.buses.find(b => `${b.routeName}|${b.direction}` === svc.selectedRouteKey)
+        : null;
+
+      return `
+        <div class="transit-nearby-wrapper ${selectedBus ? 'is-detail-expanded' : 'is-bar-compact'}">
+          <div class="transit-nearby-card-box">
+            <div class="nearby-top-nav-row">
+              <div class="nearby-stop-pill" title="${areaLabel} 最近公車站牌 TDX 即時到站動態">
+                <i class="fa-solid fa-bus-simple" style="color: #22d3ee; font-size: 0.85em;"></i>
+                <span class="pill-city-tag">${areaLabel}</span>
+                <strong class="pill-stop-name">${activeStop.name}</strong>
+                <span style="font-size:0.75em;color:#38bdf8;font-weight:700;margin-left:4px;">距 ${activeStop.distMeters}m (步行約 ${walkMin} 分)</span>
+                <span style="font-size:0.7em;color:#34d399;margin-left:6px;"><i class="fa-solid fa-satellite-dish"></i> TDX 即時 ${svc.updateTimeDisplay ? svc.updateTimeDisplay.slice(0, 5) : ''}</span>
+              </div>
+
+              <div class="nearby-actions-group">
+                <button type="button" class="nearby-guide-btn" onclick="window.localBusService?.refreshNow(true)" title="立即重新同步最新公車到站秒數">
+                  <i class="fa-solid fa-rotate"></i>
+                  <span>即時更新</span>
+                </button>
+              </div>
+            </div>
+
+            ${svc.stations.length > 1 ? `
+              <div class="bus-stop-switcher" style="margin:6px 0 4px;">
+                ${svc.stations.map((st, idx) => `
+                  <button type="button" class="bus-stop-pill ${idx === svc.activeStopIndex ? 'active' : ''}"
+                          onclick="window.localBusService?.selectStopIndex(${idx})"
+                          title="切換檢視「${st.name}」即時公車到站（距離 ${st.distMeters} 公尺）">
+                    <i class="fa-solid fa-location-dot" style="font-size:0.65rem;color:${idx === svc.activeStopIndex ? '#22d3ee' : '#94a3b8'};"></i>
+                    <span>${st.name}</span>
+                    <span class="bus-stop-dist">${st.distMeters}m</span>
+                  </button>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <div class="nearby-bus-grid" title="點擊任一公車路線展開官方沿途停靠站序與即時進站位置">
+              ${svc.buses.length > 0 ? svc.buses.slice(0, 12).map(b => {
+                const rKey = `${b.routeName}|${b.direction}`;
+                const safeKeyJs = rKey.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const isSelected = svc.selectedRouteKey === rKey;
+                return `
+                  <div class="nearby-bus-card ${isSelected ? 'is-selected' : ''}"
+                       tabindex="0" role="button"
+                       onclick="window.localBusService?.selectRoute('${safeKeyJs}')"
+                       title="點擊查看 ${b.routeName} 往 ${b.destination} 沿途停靠站序${b.plateNumb ? ' ‧ 車號 ' + b.plateNumb : ''}">
+                    <span class="bus-badge-num">${b.routeName}</span>
+                    <span class="bus-dest-text">往 ${b.destination}</span>
+                    ${svc.formatLiveBadgeHtml(b)}
+                    <span class="bus-action-tag">${isSelected ? '收合 ▲' : '站序 🗺️'}</span>
+                  </div>
+                `;
+              }).join('') : `
+                <div style="padding:8px 10px; color:var(--text-muted); font-size:0.78rem;">
+                  目前「${activeStop.name}」暫無營運中路線回報，可切換上方相鄰站牌檢視。
+                </div>
+              `}
+            </div>
+          </div>
+
+          ${selectedBus ? svc.renderRouteSequenceHtml(selectedBus, svc.selectedRouteKey) : ''}
+        </div>
+      `;
+    }
+
+    // 純離線無即時服務時之靜態班距參考備援
     const hub = this.getNearbyHub(cityId);
     const routes = hub.routes || [];
     const activeRoute = routes.find(r => r.code === this.selectedNearbyBusCode) || routes[0];
 
     return `
       <div class="transit-nearby-wrapper ${this.isNearbyDetailOpen ? 'is-detail-expanded' : 'is-bar-compact'}">
-        <!-- 附近公車站牌與路線全覽盒 (自適應彈性折行 ‧ 所有公車100%完整呈現絕不遮擋) -->
         <div class="transit-nearby-card-box">
-          <!-- 1. 頂部站牌資訊與操作列 -->
           <div class="nearby-top-nav-row">
-            <div class="nearby-stop-pill" title="${hub.cityLabel} ${hub.district} 周邊公車路線參考 (非即時動態)">
+            <div class="nearby-stop-pill" title="${hub.cityLabel} ${hub.district} 周邊公車路線參考 (離線備援)">
               <i class="fa-solid fa-bus-simple" style="color: #60a5fa; font-size: 0.85em;"></i>
               <span class="pill-city-tag">${hub.cityLabel} ‧ ${hub.district}</span>
               <strong class="pill-stop-name">${hub.stopName}</strong>
-              <span style="font-size:0.72em;color:var(--text-muted);margin-left:4px;">(路線班距參考)</span>
+              <span style="font-size:0.72em;color:var(--text-muted);margin-left:4px;">(離線路線班距參考)</span>
             </div>
 
             <div class="nearby-actions-group">
@@ -15429,7 +16714,6 @@ class TwinCityTransitMonitor {
             </div>
           </div>
 
-          <!-- 2. 全部公車路線晶片網格 (自適應彈性折行，顯示官方班距參考) -->
           <div class="nearby-bus-grid" title="點擊公車路線卡牌查看公車開往哪裡與沿途地標">
             ${routes.map(r => {
               const isSelected = activeRoute && activeRoute.code === r.code;
@@ -15448,7 +16732,6 @@ class TwinCityTransitMonitor {
           </div>
         </div>
 
-        <!-- 4. 公車去哪裡？路線與地標詳細指南面板 (點擊展開) -->
         ${this.isNearbyDetailOpen && activeRoute ? `
           <div class="nearby-bus-detail-drawer">
             <div class="drawer-header-banner">
@@ -15474,7 +16757,6 @@ class TwinCityTransitMonitor {
               </div>
             </div>
 
-            <!-- 沿途停靠重點地標流程 (長輩大字 ➔ 箭頭) -->
             <div class="drawer-route-flow">
               <div class="flow-label"><i class="fa-solid fa-route"></i> 這班公車開往哪裡？沿途停靠重點站點與地標：</div>
               <div class="flow-nodes-track">
@@ -15488,7 +16770,6 @@ class TwinCityTransitMonitor {
               </div>
             </div>
 
-            <!-- 乘車叮嚀與實用指南 -->
             <div class="drawer-tips-box">
               <i class="fa-solid fa-lightbulb"></i>
               <span><strong>搭車實用指南：</strong>${activeRoute.guide}</span>
@@ -15499,18 +16780,34 @@ class TwinCityTransitMonitor {
     `;
   }
 
-  // 渲染附近交通面板至容器 (結構指紋比對，僅結構變更時重繪)
+  // 渲染附近／觀光即時公車站牌面板至容器 (結構指紋比對，每秒倒數由 LocalGeoBusService 原地更新)
   renderNearbyTransit(cityId, container) {
     if (!container) return;
-    const hub = this.getNearbyHub(cityId);
-    const routes = hub.routes || [];
-    const activeRoute = routes.find(r => r.code === this.selectedNearbyBusCode) || routes[0];
-    const activeCode = activeRoute ? activeRoute.code : 'none';
-    const structureSignature = `${cityId}::${this.isNearbyDetailOpen}::${activeCode}`;
+    const svc = (typeof window !== 'undefined' && window.localBusService) ? window.localBusService : null;
+    let structureSignature = '';
+    if (svc && (svc.isLoading || svc.stations.length > 0 || svc.target)) {
+      const seqState = svc.selectedRouteKey ? svc.routeStopsMap.get(svc.selectedRouteKey) : null;
+      structureSignature = [
+        'live',
+        svc.centerId,
+        svc.isLoading ? '1' : '0',
+        svc.adminInfo?.fullLabel || svc.target?.label || '',
+        svc.activeStopIndex,
+        svc.activeStop?.name || '',
+        svc.buses.length,
+        svc.selectedRouteKey || '',
+        seqState ? `${seqState.loading ? 1 : 0}:${(seqState.stops || []).length}` : 'none',
+        svc.updateTimeDisplay || ''
+      ].join('::');
+    } else {
+      const hub = this.getNearbyHub(cityId);
+      const routes = hub.routes || [];
+      const activeRoute = routes.find(r => r.code === this.selectedNearbyBusCode) || routes[0];
+      const activeCode = activeRoute ? activeRoute.code : 'none';
+      structureSignature = `${cityId}::${this.isNearbyDetailOpen}::${activeCode}`;
+    }
 
     const existingWrapper = container.querySelector('.transit-nearby-wrapper');
-
-    // 若 DOM 骨架不存在，或結構發生實質改變 (切換縣市、展開/收合抽屜、切換選中路線)，才替換 innerHTML
     if (!existingWrapper || this.lastNearbySignature !== structureSignature) {
       container.innerHTML = this.renderNearbyTransitHtml(cityId);
       this.lastNearbySignature = structureSignature;
@@ -17194,19 +18491,25 @@ class TwinCityTransitMonitor {
   render() {
     try {
 
-      // 附近模式下切換呈現當前生活圈即時大眾運輸與公車站牌到站看板
-      const isNearbyMode = (typeof window !== 'undefined' && window.monitorApp && window.monitorApp.currentCenterId === 'nearby');
-      if (isNearbyMode) {
+      // 附近、觀光與台灣收藏模式下切換呈現當前座標最近公車站牌即時到站看板
+      const curCenterId = (typeof window !== 'undefined' && window.monitorApp) ? window.monitorApp.currentCenterId : '';
+      if (curCenterId === 'favorites' && !(window.localBusService && window.localBusService.target)) {
+        const favContainer = document.getElementById(this.containerId);
+        if (favContainer) favContainer.style.display = 'none';
+        return;
+      }
+      const isNearbyBusMode = curCenterId === 'nearby' || curCenterId === 'tourist' || (curCenterId === 'favorites' && Boolean(window.localBusService && window.localBusService.target));
+      if (isNearbyBusMode) {
         const container = document.getElementById(this.containerId);
         if (container) {
           container.style.display = '';
-          let cityId = 'newtaipei';
-          if (window.monitorApp && window.monitorApp.userLocation && window.monitorApp.dynamicCameraLoader) {
+          let cityId = window.localBusService?.adminInfo?.cityId || 'newtaipei';
+          if (!window.localBusService?.adminInfo && window.monitorApp && window.monitorApp.userLocation && window.monitorApp.dynamicCameraLoader) {
             const city = window.monitorApp.dynamicCameraLoader.detectCityByCoords(
               window.monitorApp.userLocation.lat,
               window.monitorApp.userLocation.lon
             );
-            if (city && city.id) cityId = city.id;
+            if (city && (city.datasetId || city.id)) cityId = city.datasetId || city.id;
           }
           this.renderNearbyTransit(cityId, container);
         }
@@ -24757,15 +26060,28 @@ class DynamicCameraLoader {
     this.freewayLoaded = false;
     this.freewayCams = [];
     this.cityMetrics = [
-      { id: 'taipei', name: '台北市', center: { lat: 25.0375, lon: 121.5168 } },
-      { id: 'newtaipei', name: '新北市', center: { lat: 25.0125, lon: 121.4658 } },
-      { id: 'taoyuan', name: '桃園市', center: { lat: 24.9936, lon: 121.2510 } },
-      { id: 'hsinchu', name: '新竹縣市', center: { lat: 24.8138, lon: 121.0075 } },
-      { id: 'taichung', name: '台中市', center: { lat: 24.1624, lon: 120.6472 } },
-      { id: 'tainan', name: '台南市', center: { lat: 22.9972, lon: 120.2025 } },
-      { id: 'kaohsiung', name: '高雄市', center: { lat: 22.6312, lon: 120.3022 } },
-      { id: 'yilan', name: '宜蘭縣', center: { lat: 24.7558, lon: 121.7512 } },
-      { id: 'hualien', name: '花蓮縣', center: { lat: 23.9932, lon: 121.6015 } }
+      { id: 'taipei', datasetId: 'taipei', tdxCity: 'Taipei', name: '台北市', center: { lat: 25.0375, lon: 121.5637 } },
+      { id: 'newtaipei', datasetId: 'newtaipei', tdxCity: 'NewTaipei', name: '新北市', center: { lat: 25.0125, lon: 121.4658 } },
+      { id: 'keelung', datasetId: 'newtaipei', tdxCity: 'Keelung', name: '基隆市', center: { lat: 25.1276, lon: 121.7392 } },
+      { id: 'taoyuan', datasetId: 'taoyuan', tdxCity: 'Taoyuan', name: '桃園市', center: { lat: 24.9936, lon: 121.3010 } },
+      { id: 'hsinchu', datasetId: 'hsinchu', tdxCity: 'Hsinchu', name: '新竹市', center: { lat: 24.8138, lon: 120.9675 } },
+      { id: 'hsinchu_county', datasetId: 'hsinchu', tdxCity: 'HsinchuCounty', name: '新竹縣', center: { lat: 24.8387, lon: 121.0177 } },
+      { id: 'miaoli', datasetId: 'hsinchu', tdxCity: 'MiaoliCounty', name: '苗栗縣', center: { lat: 24.5602, lon: 120.8214 } },
+      { id: 'taichung', datasetId: 'taichung', tdxCity: 'Taichung', name: '台中市', center: { lat: 24.1624, lon: 120.6472 } },
+      { id: 'changhua', datasetId: 'taichung', tdxCity: 'ChanghuaCounty', name: '彰化縣', center: { lat: 24.0518, lon: 120.5161 } },
+      { id: 'nantou', datasetId: 'taichung', tdxCity: 'NantouCounty', name: '南投縣', center: { lat: 23.9610, lon: 120.9719 } },
+      { id: 'yunlin', datasetId: 'tainan', tdxCity: 'YunlinCounty', name: '雲林縣', center: { lat: 23.7092, lon: 120.4313 } },
+      { id: 'chiayi', datasetId: 'tainan', tdxCity: 'Chiayi', name: '嘉義市', center: { lat: 23.4801, lon: 120.4491 } },
+      { id: 'chiayi_county', datasetId: 'tainan', tdxCity: 'ChiayiCounty', name: '嘉義縣', center: { lat: 23.4518, lon: 120.2555 } },
+      { id: 'tainan', datasetId: 'tainan', tdxCity: 'Tainan', name: '台南市', center: { lat: 22.9972, lon: 120.2025 } },
+      { id: 'kaohsiung', datasetId: 'kaohsiung', tdxCity: 'Kaohsiung', name: '高雄市', center: { lat: 22.6312, lon: 120.3022 } },
+      { id: 'pingtung', datasetId: 'kaohsiung', tdxCity: 'PingtungCounty', name: '屏東縣', center: { lat: 22.6761, lon: 120.4929 } },
+      { id: 'yilan', datasetId: 'yilan', tdxCity: 'YilanCounty', name: '宜蘭縣', center: { lat: 24.7558, lon: 121.7512 } },
+      { id: 'hualien', datasetId: 'hualien', tdxCity: 'HualienCounty', name: '花蓮縣', center: { lat: 23.9932, lon: 121.6015 } },
+      { id: 'taitung', datasetId: 'hualien', tdxCity: 'TaitungCounty', name: '台東縣', center: { lat: 22.7583, lon: 121.1444 } },
+      { id: 'penghu', datasetId: 'tainan', tdxCity: 'PenghuCounty', name: '澎湖縣', center: { lat: 23.5712, lon: 119.5793 } },
+      { id: 'kinmen', datasetId: 'tainan', tdxCity: 'KinmenCounty', name: '金門縣', center: { lat: 24.4327, lon: 118.3171 } },
+      { id: 'lienchiang', datasetId: 'taipei', tdxCity: 'LienchiangCounty', name: '連江縣', center: { lat: 26.1505, lon: 119.9499 } }
     ];
   }
 
@@ -24785,21 +26101,23 @@ class DynamicCameraLoader {
 
   // 依需求隨選載入指定縣市與國道攝影機資料集 (方案 B)
   async loadCityCameras(cityId) {
+    const matched = this.cityMetrics.find(c => c.id === cityId);
+    const dsId = (matched && matched.datasetId) || cityId;
     const results = [];
-    if (!this.loadedCities[cityId]) {
+    if (!this.loadedCities[dsId]) {
       try {
-        const res = await fetch(`data/cameras/${cityId}.json`);
+        const res = await fetch(`data/cameras/${dsId}.json`);
         if (res.ok) {
           const data = await res.json();
-          this.loadedCities[cityId] = Array.isArray(data.cameras) ? data.cameras : [];
-          console.log(`[DynamicCameraLoader] 隨選載入 ${cityId}.json 成功 (${this.loadedCities[cityId].length} 處鏡頭)`);
+          this.loadedCities[dsId] = Array.isArray(data.cameras) ? data.cameras : [];
+          console.log(`[DynamicCameraLoader] 隨選載入 ${dsId}.json 成功 (${this.loadedCities[dsId].length} 處鏡頭)`);
         }
       } catch (e) {
-        console.warn(`[DynamicCameraLoader] 隨選載入 ${cityId}.json 失敗，使用內建資料庫備援:`, e.message);
+        console.warn(`[DynamicCameraLoader] 隨選載入 ${dsId}.json 失敗，使用內建資料庫備援:`, e.message);
       }
     }
-    if (this.loadedCities[cityId]) {
-      results.push(...this.loadedCities[cityId]);
+    if (this.loadedCities[dsId]) {
+      results.push(...this.loadedCities[dsId]);
     }
 
     // 同步隨選載入國道全線骨幹
@@ -26034,10 +27352,17 @@ class MonitorApp {
     const tasks = [];
     if (!this.isInternationalCenter()) {
       if (this.currentCenterId === 'nearby' && this.userLocation && this.weatherMonitor && typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
-        const city = this.dynamicCameraLoader ? this.dynamicCameraLoader.detectCityByCoords(this.userLocation.lat, this.userLocation.lon) : { id: 'newtaipei' };
-        tasks.push(this.weatherMonitor.fetchAndRenderNearbyYouBike(this.userLocation.lat, this.userLocation.lon, city ? city.id : 'newtaipei'));
+        const city = this.dynamicCameraLoader ? this.dynamicCameraLoader.detectCityByCoords(this.userLocation.lat, this.userLocation.lon) : { id: 'newtaipei', tdxCity: 'NewTaipei' };
+        const tdxOrId = window.localBusService?.adminInfo?.tdxCity || city?.tdxCity || city?.id || 'newtaipei';
+        tasks.push(this.weatherMonitor.fetchAndRenderNearbyYouBike(this.userLocation.lat, this.userLocation.lon, tdxOrId, 'nearby', window.localBusService?.adminInfo?.shortLabel || city?.name || '附近'));
+      } else if ((this.currentCenterId === 'tourist' || this.currentCenterId === 'favorites') && window.localBusService?.target && this.weatherMonitor && typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
+        const t = window.localBusService.target;
+        tasks.push(this.weatherMonitor.fetchAndRenderNearbyYouBike(t.lat, t.lon, window.localBusService.adminInfo?.tdxCity || t.tdxCity || 'NewTaipei', this.currentCenterId, t.label || '景點周邊'));
       } else if (this.weatherMonitor && typeof this.weatherMonitor.fetchRealtimeYouBike === 'function') {
         tasks.push(this.weatherMonitor.fetchRealtimeYouBike(true));
+      }
+      if (window.localBusService && window.localBusService.target) {
+        tasks.push(window.localBusService.refreshNow(true));
       }
       if (this.transitMonitor && typeof this.transitMonitor.forceRefreshAll === 'function') {
         tasks.push(this.transitMonitor.forceRefreshAll());
@@ -26271,11 +27596,19 @@ class MonitorApp {
       return false;
     }
 
-    // 1. 識別最近之縣市生活圈
+    // 1. 透過內政部國土測繪中心 NLSC 多邊形定位精確識別縣市／鄉鎮市區／村里（支援跨縣市交界 100% 準確判別）
     const city = this.dynamicCameraLoader.detectCityByCoords(lat, lon);
+    const admin = (typeof window !== 'undefined' && window.localBusService)
+      ? await window.localBusService.resolveTaiwanAdminArea(lat, lon)
+      : null;
+
+    if ((expectedToken != null && expectedToken !== this._nearbyRequestToken) || this.currentCenterId !== 'nearby') {
+      return false;
+    }
 
     // 2. 按需非同步載入該縣市攝影機資料集與國道全線骨幹 (方案 B)
-    const dynamicCams = await this.dynamicCameraLoader.loadCityCameras(city.id);
+    const camDatasetId = (admin && admin.cityId) || city.datasetId || city.id;
+    const dynamicCams = await this.dynamicCameraLoader.loadCityCameras(camDatasetId);
 
     // await 後再次檢查競態條件：若使用者已切換至其他分頁或觸發新定位，立即中止渲染
     if ((expectedToken != null && expectedToken !== this._nearbyRequestToken) || this.currentCenterId !== 'nearby') {
@@ -26283,6 +27616,9 @@ class MonitorApp {
     }
 
     this.userLocation = { lat, lon };
+    const locShortLabel = (admin && admin.shortLabel) ? admin.shortLabel : city.name;
+    const locFullLabel = (admin && admin.fullLabel) ? admin.fullLabel : locShortLabel;
+    const locTdxCity = (admin && admin.tdxCity) || city.tdxCity || 'NewTaipei';
 
     // 3. 聚合既有內建鏡頭池與動態載入鏡頭池
     const existingCams = this.getAllUniqueCameras();
@@ -26309,10 +27645,10 @@ class MonitorApp {
     this.currentCameras = pool;
     this.currentCenterData = {
       id: 'nearby',
-      name: `附近 (${city.name})`,
+      name: `附近 (${locShortLabel})`,
       lat,
       lon,
-      description: `依目前位置 (${city.name}) 由近到遠即時排序呈現`
+      description: `依目前位置 (${locFullLabel}) 由近到遠即時排序呈現`
     };
 
     // 臺北市交工處鏡頭急速 HLS 直出相容
@@ -26324,7 +27660,7 @@ class MonitorApp {
     const nameEl = document.getElementById('currentCenterName');
     const addrEl = document.getElementById('currentAddressText');
     const countEl = document.getElementById('totalCamCount');
-    if (nameEl) nameEl.innerText = `附近生活圈 (${city.name})`;
+    if (nameEl) nameEl.innerText = `附近生活圈 (${locShortLabel})`;
     if (addrEl) {
       addrEl.innerText = '';
       addrEl.style.display = 'none';
@@ -26343,7 +27679,7 @@ class MonitorApp {
 
     const sortIndicator = document.querySelector('.sort-indicator span');
     if (sortIndicator) {
-      sortIndicator.innerText = `附近模式：依空間距離由近到遠呈現 ‧ 最近路口距 ${nearestKm} km${isCached ? ' (快取快速開)' : ''}`;
+      sortIndicator.innerText = `附近定位 (${locFullLabel})：依空間距離由近到遠呈現 ‧ 最近路口距 ${nearestKm} km${isCached ? ' (快取快速開)' : ''}`;
     }
 
     // 預設宮格：六分割標準視角 (grid-6)
@@ -26361,13 +27697,25 @@ class MonitorApp {
     // 7. 渲染視訊牆
     this.renderVideoMatrix();
 
-    // 8. 載入即時環境氣象、空氣品質與鄰近 6 站 YouBike 2.0 (Open-Meteo 自動提供所在地天氣)
+    // 8. 載入即時環境氣象、空氣品質、鄰近 YouBike 2.0 與 TDX 空間最近公車站牌即時到站
     if (this.weatherMonitor) {
-      this.weatherMonitor.fetchEnvironment(lat, lon, `附近 (${city.name})`, 'Asia/Taipei');
-      this.weatherMonitor.startAutoRefresh(lat, lon, `附近 (${city.name})`, 'Asia/Taipei');
+      this.weatherMonitor.fetchEnvironment(lat, lon, locShortLabel, false, 'Asia/Taipei');
+      this.weatherMonitor.startAutoRefresh(lat, lon, locShortLabel, 'Asia/Taipei');
       if (typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
-        this.weatherMonitor.fetchAndRenderNearbyYouBike(lat, lon, city.id);
+        this.weatherMonitor.fetchAndRenderNearbyYouBike(lat, lon, locTdxCity, 'nearby', locShortLabel);
       }
+    }
+    if (typeof window !== 'undefined' && window.localBusService) {
+      window.localBusService.syncForCenter('nearby', {
+        lat,
+        lon,
+        tdxCity: locTdxCity,
+        label: locFullLabel
+      });
+    }
+    if (this.transitMonitor) {
+      this.transitMonitor.lastNearbySignature = null;
+      this.transitMonitor.render();
     }
 
     // 9. 更新雷達地圖中心至使用者位置
@@ -26394,6 +27742,9 @@ class MonitorApp {
     const brandTitleEl = document.getElementById('brandTitle');
     if (brandTitleEl) brandTitleEl.textContent = brandTitleMap[centerId] || '雙埔生活';
 
+    const busCard = document.getElementById('busWidgetCard');
+    if (busCard) busCard.style.display = isIntl ? 'none' : '';
+
     const youbikeCard = document.getElementById('youbikeWidgetCard');
     if (youbikeCard) youbikeCard.style.display = isIntl ? 'none' : '';
 
@@ -26405,7 +27756,7 @@ class MonitorApp {
 
     const transitBar = document.getElementById('transitTransitBar');
     if (transitBar) {
-      transitBar.style.display = (centerId === 'tourist' || isIntl) ? 'none' : '';
+      transitBar.style.display = isIntl ? 'none' : '';
     }
 
     // 依當前分頁顯示對應之區域特色篩選膠囊
@@ -26453,10 +27804,11 @@ class MonitorApp {
     }
   }
 
-  // 切換監控中心 (nearby / dual / qingpu / banqiao / tourist / japan / korea / europe / americas / favorites)
+  // 切換監控中心 (nearby / dual / qingpu / banqiao / tourist / world / japan / korea / apac / europe / americas / favorites)
   async switchCenter(centerId) {
     this.currentCenterId = centerId;
     this.currentPage = 0;
+    this._lastScenicAnchorKey = '';
     if (typeof document !== 'undefined' && document.body) {
       document.body.dataset.themeCenter = centerId;
     }
@@ -26625,13 +27977,25 @@ class MonitorApp {
       // 渲染視訊牆
       this.renderVideoMatrix();
 
-      // 載入即時環境氣象與空氣品質
+      // 載入即時環境氣象、空氣品質、大眾運輸方向與最近公車站牌
       if (centerId === 'dual') {
         const qpInfo = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213 };
         const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
         this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
         this.weatherMonitor.startAutoRefreshDual(qpInfo, bpInfo);
+        if (typeof window !== 'undefined' && window.localBusService) {
+          window.localBusService.syncForCenter('dual');
+        }
+        if (this.transitMonitor) {
+          this.transitMonitor.render();
+        }
+        if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
+          this.weatherMonitor.renderYouBikeStatus('dual');
+        }
       } else if (this.isInternationalCenter(centerId)) {
+        if (typeof window !== 'undefined' && window.localBusService) {
+          window.localBusService.syncForCenter(centerId);
+        }
         // 跨國模式：載入當前選定重點觀測城市之即時氣象、空氣品質與當地時區
         const savedCityKey = centerId === 'japan'
           ? (this.weatherMonitor.currentJapanCityKey || 'tokyo')
@@ -26643,14 +28007,39 @@ class MonitorApp {
           this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, false, tz);
           this.weatherMonitor.startAutoRefresh(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, tz);
         }
-      } else {
-        this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, 'Asia/Taipei');
+        if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
+          this.weatherMonitor.renderYouBikeStatus(centerId);
+        }
+      } else if (centerId === 'qingpu' || centerId === 'banqiao') {
+        if (this.transitMonitor && !this.transitMonitor.isAutoLocationActive) {
+          this.transitMonitor.direction = centerId === 'qingpu' ? 'to_xinpu' : 'to_qingpu';
+          this.transitMonitor.lastScheduleKey = null;
+          this.transitMonitor.render();
+        } else if (this.transitMonitor) {
+          this.transitMonitor.render();
+        }
+        if (typeof window !== 'undefined' && window.localBusService) {
+          window.localBusService.syncForCenter(centerId);
+        }
+        this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, false, 'Asia/Taipei');
         this.weatherMonitor.startAutoRefresh(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, 'Asia/Taipei');
-      }
-
-      // 連動更新 YouBike 2.0 即時動態看板
-      if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
-        this.weatherMonitor.renderYouBikeStatus(centerId);
+        if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
+          this.weatherMonitor.renderYouBikeStatus(centerId);
+        }
+      } else if (!this._lastScenicAnchorKey) {
+        // 觀光或收藏空清單時之預設座標保底（有鏡頭時已由 renderVideoMatrix -> syncScenicSpotLocalContext 即時同步）
+        this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, false, 'Asia/Taipei');
+        this.weatherMonitor.startAutoRefresh(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, 'Asia/Taipei');
+        if (typeof window !== 'undefined' && window.localBusService) {
+          window.localBusService.syncForCenter(centerId, {
+            lat: this.currentCenterData.lat,
+            lon: this.currentCenterData.lon,
+            label: this.currentCenterData.name
+          });
+        }
+        if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
+          this.weatherMonitor.renderYouBikeStatus(centerId);
+        }
       }
 
       // 更新地圖
@@ -26887,12 +28276,102 @@ class MonitorApp {
     // 啟動所有可見鏡頭的播放引擎 (HLS / FLV / MJPEG / YouTube)
     this.playerEngine.initPlayersForVisibleCards(visibleCams);
 
+    // 觀光與收藏模式：動態將右側當地氣象、AQI、最近公車站牌與 YouBike 錨定至目前首格可見鏡頭座標
+    if ((this.currentCenterId === 'tourist' || this.currentCenterId === 'favorites') && visibleCams[0]) {
+      this.syncScenicSpotLocalContext(visibleCams[0]);
+    }
+
     // 閒置時預先快取下一頁前 4 支鏡頭之即時預覽縮圖，確保翻頁與自動巡播零等待秒開
     if (this.totalPages > 1 && this.currentCameras.length > maxDisplay) {
       const ordered = this.getOrderedCameras(this.currentCameras);
       const nextStart = ((this.currentPage + 1) % this.totalPages) * maxDisplay;
       const nextSlice = ordered.slice(nextStart, nextStart + Math.min(6, maxDisplay));
       setTimeout(() => this.prewarmCameras(nextSlice), 350);
+    }
+  }
+
+  // 觀光與收藏模式動態錨定當前首格鏡頭所在地（即時同步景點當地氣象、AQI、最近公車站牌與 YouBike）
+  async syncScenicSpotLocalContext(leadCam) {
+    if (!leadCam || !Number.isFinite(Number(leadCam.lat)) || !Number.isFinite(Number(leadCam.lon))) return;
+    const cid = this.currentCenterId;
+    if (cid !== 'tourist' && cid !== 'favorites') return;
+    const anchorKey = `${cid}:${leadCam.id}`;
+    if (this._lastScenicAnchorKey === anchorKey) return;
+    this._lastScenicAnchorKey = anchorKey;
+
+    const lat = Number(leadCam.lat);
+    const lon = Number(leadCam.lon);
+    const rawTitle = String(leadCam.name || '').split(/[‧｜|（(]/)[0].trim() || leadCam.areaTag || '景點周邊';
+    const spotLabel = rawTitle.length > 10 ? rawTitle.slice(0, 10) : rawTitle;
+    const isTw = typeof LocalGeoBusService !== 'undefined' && LocalGeoBusService.isTaiwanCoords(lat, lon);
+
+    if (this.currentCenterData) {
+      this.currentCenterData.lat = lat;
+      this.currentCenterData.lon = lon;
+      this.currentCenterData.name = cid === 'tourist' ? `觀光 (${spotLabel})` : `收藏 (${spotLabel})`;
+    }
+
+    if (!isTw) {
+      if (typeof window !== 'undefined' && window.localBusService) {
+        window.localBusService.stopTimers();
+        window.localBusService.target = null;
+      }
+      const busCard = document.getElementById('busWidgetCard');
+      const ybCard = document.getElementById('youbikeWidgetCard');
+      const cwaCard = document.getElementById('cwaRadarWidgetCard');
+      const transitBar = document.getElementById('transitTransitBar');
+      if (busCard) busCard.style.display = 'none';
+      if (ybCard) ybCard.style.display = 'none';
+      if (cwaCard) cwaCard.style.display = 'none';
+      if (transitBar) transitBar.style.display = 'none';
+      if (this.weatherMonitor) {
+        this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, 'auto');
+        this.weatherMonitor.startAutoRefresh(lat, lon, spotLabel, 'auto');
+      }
+      if (this.radarMap && this.currentCenterData) {
+        this.radarMap.setCenterAndCameras(this.currentCenterData, this.getOrderedCameras(this.currentCameras));
+      }
+      return;
+    }
+
+    const busCard = document.getElementById('busWidgetCard');
+    const ybCard = document.getElementById('youbikeWidgetCard');
+    const cwaCard = document.getElementById('cwaRadarWidgetCard');
+    const transitBar = document.getElementById('transitTransitBar');
+    if (busCard) busCard.style.display = '';
+    if (ybCard) ybCard.style.display = '';
+    if (cwaCard) cwaCard.style.display = '';
+    if (transitBar) transitBar.style.display = '';
+
+    const admin = (typeof window !== 'undefined' && window.localBusService)
+      ? await window.localBusService.resolveTaiwanAdminArea(lat, lon)
+      : null;
+    if (this.currentCenterId !== cid || this._lastScenicAnchorKey !== anchorKey) return;
+
+    const areaDisplay = (admin && admin.shortLabel) ? `${spotLabel} ‧ ${admin.shortLabel}` : spotLabel;
+    const tdxCity = (admin && admin.tdxCity) || 'NewTaipei';
+
+    if (this.weatherMonitor) {
+      this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, 'Asia/Taipei');
+      this.weatherMonitor.startAutoRefresh(lat, lon, spotLabel, 'Asia/Taipei');
+      if (typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
+        this.weatherMonitor.fetchAndRenderNearbyYouBike(lat, lon, tdxCity, cid, spotLabel);
+      }
+    }
+    if (typeof window !== 'undefined' && window.localBusService) {
+      window.localBusService.syncForCenter(cid, {
+        lat,
+        lon,
+        tdxCity,
+        label: areaDisplay
+      });
+    }
+    if (this.transitMonitor) {
+      this.transitMonitor.lastNearbySignature = null;
+      this.transitMonitor.render();
+    }
+    if (this.radarMap && this.currentCenterData) {
+      this.radarMap.setCenterAndCameras(this.currentCenterData, this.getOrderedCameras(this.currentCameras));
     }
   }
 
@@ -26915,7 +28394,9 @@ class MonitorApp {
         this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, false, this.getActiveTimezone());
       }
     } else if (this.currentCenterData && Number.isFinite(Number(this.currentCenterData.lat)) && Number.isFinite(Number(this.currentCenterData.lon))) {
-      this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, 'Asia/Taipei');
+      const isTw = typeof LocalGeoBusService === 'undefined' || LocalGeoBusService.isTaiwanCoords(this.currentCenterData.lat, this.currentCenterData.lon);
+      const label = (this.weatherMonitor.activeSingleParams && this.weatherMonitor.activeSingleParams.locationName) || this.currentCenterData.name;
+      this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, label, false, isTw ? 'Asia/Taipei' : 'auto');
     }
   }
 
