@@ -242,6 +242,7 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("www.tymetro.com.tw"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.rainviewer.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("air-quality-api.open-meteo.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.met.no"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("cwaopendata.s3.ap-northeast-1.amazonaws.com"))
 
         assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
@@ -253,5 +254,19 @@ class AppUnitTest {
         val manifestSpec = WebAssetRouting.assetContentSpec("manifest.webmanifest")
         assertEquals("application/manifest+json", manifestSpec.mimeType)
         assertFalse(manifestSpec.isBinary)
+    }
+
+    @Test
+    fun buildSnapshotFallbackUrls_generatesYoutubeMultiResolutionChainAndRejectsInvalidSchemes() {
+        val ytChain = WebAssetRouting.buildSnapshotFallbackUrls("https://i.ytimg.com/vi/5gVrWGRZo9s/maxresdefault_live.jpg")
+        assertEquals(5, ytChain.size)
+        assertEquals("https://i.ytimg.com/vi/5gVrWGRZo9s/maxresdefault_live.jpg", ytChain.first())
+        assertEquals("https://i.ytimg.com/vi/5gVrWGRZo9s/hqdefault.jpg", ytChain.last())
+
+        val regularUrl = WebAssetRouting.buildSnapshotFallbackUrls("https://cctv.freeway.gov.tw/abs2mjpg/bmjpg?camera=100")
+        assertEquals(listOf("https://cctv.freeway.gov.tw/abs2mjpg/bmjpg?camera=100"), regularUrl)
+
+        assertTrue(WebAssetRouting.buildSnapshotFallbackUrls("javascript:alert(1)").isEmpty())
+        assertTrue(WebAssetRouting.buildSnapshotFallbackUrls(null).isEmpty())
     }
 }

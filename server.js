@@ -967,18 +967,19 @@ async function handleParkingThsrProxy(req, res) {
 }
 
 // 抓取單一 JSON 並附帶一次重試機制 (優先採用現代內建 fetch / Happy Eyeballs 消除 Open-Meteo TLS 連線重置)
-async function fetchJsonWithRetry(url, retries = 1) {
+// 抓取單一 JSON 並附帶重試機制 (支援自訂逾時秒數)
+async function fetchJsonWithRetry(url, retries = 1, timeoutMs = 4500) {
   let lastErr;
   for (let i = 0; i <= retries; i++) {
     try {
       if (typeof fetch === 'function') {
         const res = await fetch(url, {
           headers: {
-            'User-Agent': 'TaiwanNeighborhoodMonitor/1.0',
+            'User-Agent': 'TaiwanNeighborhoodMonitor/1.0 (https://github.com/JaneDe0214/taiwan-neighborhood-monitor)',
             'Accept': 'application/json'
           },
           signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
-            ? AbortSignal.timeout(8000)
+            ? AbortSignal.timeout(timeoutMs)
             : undefined
         });
         if (!res.ok) throw new Error(`HTTP Status ${res.status}`);
@@ -993,7 +994,159 @@ async function fetchJsonWithRetry(url, retries = 1) {
   throw lastErr;
 }
 
-// 氣象與空氣品質代理 (Open-Meteo 雙端點並發查詢 + 120 秒記憶體快取與過期容錯)
+// 解析 IANA 時區當前真實 UTC 小時偏移量 (自動涵蓋歐美日光節約時間 DST 與 UTC+0)
+function resolveIanaTzOffsetHours(timeZone = 'Asia/Taipei', refDate = new Date()) {
+  if (!timeZone || timeZone === 'auto' || timeZone === 'Asia/Taipei') return 8;
+  if (timeZone === 'Asia/Tokyo' || timeZone === 'Asia/Seoul') return 9;
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'shortOffset'
+    }).formatToParts(refDate);
+    const tzPart = (parts.find(p => p.type === 'timeZoneName') || {}).value || '';
+    if (tzPart === 'GMT' || tzPart === 'UTC') return 0;
+    const m = tzPart.match(/(?:GMT|UTC)([+-])(\d{1,2})(?::(\d{2}))?/);
+    if (m) {
+      const sign = m[1] === '-' ? -1 : 1;
+      return sign * ((parseInt(m[2], 10) || 0) + (parseInt(m[3] || '0', 10) || 0) / 60);
+    }
+  } catch (_) {}
+  return 8;
+}
+
+// 挪威國家氣象局 (MET Norway) 全球官方即時數值預報備援轉換器 (當 Open-Meteo 主節點瞬斷或維護時無縫接手)
+async function fetchMetNorwayWeatherFallback(lat, lon, tz = 'Asia/Taipei') {
+  const offsetHours = resolveIanaTzOffsetHours(tz, new Date());
+  const sign = offsetHours >= 0 ? '+' : '-';
+  const totalMin = Math.round(Math.abs(offsetHours) * 60);
+  const offsetStr = `${sign}${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
+  const toLocalIso = (utcMs) => new Date(utcMs + offsetHours * 3600000).toISOString().slice(0, 16);
+  const localToday = toLocalIso(Date.now()).slice(0, 10);
+
+  const forecastUrl = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${Number(lat).toFixed(4)}&lon=${Number(lon).toFixed(4)}`;
+  const sunUrl = `https://api.met.no/weatherapi/sunrise/3.0/sun?lat=${Number(lat).toFixed(4)}&lon=${Number(lon).toFixed(4)}&date=${localToday}&offset=${encodeURIComponent(offsetStr)}`;
+
+  const [fcRes, sunRes] = await Promise.allSettled([
+    fetchJsonWithRetry(forecastUrl, 0, 5000),
+    fetchJsonWithRetry(sunUrl, 0, 4000)
+  ]);
+  if (fcRes.status !== 'fulfilled' || !fcRes.value?.properties?.timeseries?.length) {
+    throw fcRes.reason || new Error('MET Norway 全球預報無回應');
+  }
+
+  const series = fcRes.value.properties.timeseries;
+  const symbolToWmo = (sym = '') => {
+    const s = String(sym).toLowerCase();
+    if (s.includes('thunder')) return 95;
+    if (s.includes('heavyrainshowers')) return 82;
+    if (s.includes('heavyrain')) return 65;
+    if (s.includes('rainshowers')) return 80;
+    if (s.includes('lightrain') || s.includes('drizzle')) return 61;
+    if (s.includes('rain') || s.includes('sleet') || s.includes('snow')) return 63;
+    if (s.includes('fog')) return 45;
+    if (s.includes('cloudy') && !s.includes('partly')) return 3;
+    if (s.includes('partlycloudy')) return 2;
+    if (s.includes('fair')) return 1;
+    return 0;
+  };
+  const estimateRainProb = (step) => {
+    const n1 = step?.data?.next_1_hours || step?.data?.next_6_hours || {};
+    const det = n1.details || {};
+    if (typeof det.probability_of_precipitation === 'number') {
+      return Math.round(det.probability_of_precipitation);
+    }
+    const amt = Number(det.precipitation_amount) || 0;
+    const sym = String(n1.summary?.symbol_code || '').toLowerCase();
+    const cloud = Number(step?.data?.instant?.details?.cloud_area_fraction) || 0;
+    if (amt >= 3.0) return 90;
+    if (amt >= 1.0) return 75;
+    if (amt >= 0.2) return 55;
+    if (amt > 0 || sym.includes('rain') || sym.includes('shower') || sym.includes('thunder')) return 40;
+    if (cloud >= 85) return 20;
+    if (cloud >= 55) return 10;
+    return 0;
+  };
+
+  const nowMs = Date.now();
+  let curStep = series[0];
+  let bestDiff = Infinity;
+  for (const item of series.slice(0, 12)) {
+    const tMs = Date.parse(item.time);
+    const diff = Math.abs(tMs - nowMs);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      curStep = item;
+    }
+  }
+
+  const inst = curStep?.data?.instant?.details || {};
+  const next1 = curStep?.data?.next_1_hours || curStep?.data?.next_6_hours || {};
+  const windKmh = (Number(inst.wind_speed) || 0) * 3.6;
+  const gustKmh = typeof inst.wind_speed_of_gust === 'number'
+    ? inst.wind_speed_of_gust * 3.6
+    : windKmh * 1.35;
+  const fogPct = Number(inst.fog_area_fraction) || 0;
+  const precipAmt = Number(next1?.details?.precipitation_amount) || 0;
+
+  const hourlyTimes = [];
+  const hourlyProbs = [];
+  const hourlyTemps = [];
+  const hourlyUvs = [];
+  for (const step of series.slice(0, 168)) {
+    const ms = Date.parse(step.time);
+    if (!Number.isFinite(ms)) continue;
+    const d = step.data?.instant?.details || {};
+    hourlyTimes.push(toLocalIso(ms));
+    hourlyProbs.push(estimateRainProb(step));
+    hourlyTemps.push(Number(d.air_temperature ?? 20));
+    hourlyUvs.push(Number(d.ultraviolet_index_clear_sky ?? 0));
+  }
+
+  let sunriseLocal = `${localToday}T06:00`;
+  let sunsetLocal = `${localToday}T18:00`;
+  if (sunRes.status === 'fulfilled' && sunRes.value?.properties) {
+    const srRaw = sunRes.value.properties.sunrise?.time;
+    const ssRaw = sunRes.value.properties.sunset?.time;
+    if (typeof srRaw === 'string' && srRaw.length >= 16) sunriseLocal = srRaw.slice(0, 16);
+    if (typeof ssRaw === 'string' && ssRaw.length >= 16) sunsetLocal = ssRaw.slice(0, 16);
+  }
+
+  return {
+    latitude: lat,
+    longitude: lon,
+    timezone: tz === 'auto' ? 'Asia/Taipei' : tz,
+    utc_offset_seconds: Math.round(offsetHours * 3600),
+    sourceProvider: 'met-norway-fallback',
+    current: {
+      time: toLocalIso(Date.parse(curStep.time) || nowMs),
+      temperature_2m: Number(inst.air_temperature ?? 20),
+      relative_humidity_2m: Math.round(Number(inst.relative_humidity ?? 70)),
+      apparent_temperature: Number(inst.apparent_air_temperature ?? inst.air_temperature ?? 20),
+      precipitation: precipAmt,
+      rain: precipAmt,
+      showers: 0,
+      weather_code: symbolToWmo(next1?.summary?.symbol_code),
+      wind_speed_10m: +(windKmh.toFixed(1)),
+      wind_direction_10m: Math.round(Number(inst.wind_from_direction ?? 0)),
+      wind_gusts_10m: +(gustKmh.toFixed(1)),
+      surface_pressure: Number(inst.air_pressure_at_sea_level ?? 1013),
+      uv_index: Number(inst.ultraviolet_index_clear_sky ?? 0),
+      visibility: Math.round(Math.max(1200, 10000 - fogPct * 160))
+    },
+    daily: {
+      sunrise: [sunriseLocal],
+      sunset: [sunsetLocal]
+    },
+    hourly: {
+      time: hourlyTimes,
+      precipitation_probability: hourlyProbs,
+      temperature_2m: hourlyTemps,
+      uv_index: hourlyUvs
+    }
+  };
+}
+
+// 氣象與空氣品質代理 (Open-Meteo 主線路 + MET Norway 官方全球數值預報雙引擎容錯 + 120 秒記憶體快取)
 async function handleWeatherProxy(req, res, latRaw, lonRaw, tzRaw) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -1006,8 +1159,9 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw, tzRaw) {
     return;
   }
 
-  const allowedTz = new Set(['Asia/Taipei', 'Asia/Tokyo', 'auto']);
-  const tz = allowedTz.has(tzRaw) ? tzRaw : 'Asia/Taipei';
+  const isValidIanaTz = typeof tzRaw === 'string' && tzRaw.length <= 40 &&
+    (/^auto$/i.test(tzRaw) || /^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+){1,2}$/.test(tzRaw));
+  const tz = isValidIanaTz ? tzRaw : 'Asia/Taipei';
   const encodedTz = encodeURIComponent(tz);
 
   const key = `${lat.toFixed(2)},${lon.toFixed(2)},${tz}`;
@@ -1023,10 +1177,15 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw, tzRaw) {
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=${encodedTz}`;
 
   try {
-    const [weather, airQuality] = await Promise.all([
-      fetchJsonWithRetry(weatherUrl, 1),
-      fetchJsonWithRetry(aqiUrl, 1)
+    const [weatherSettled, aqiSettled] = await Promise.allSettled([
+      fetchJsonWithRetry(weatherUrl, 0, 3800).catch(() => fetchMetNorwayWeatherFallback(lat, lon, tz)),
+      fetchJsonWithRetry(aqiUrl, 1, 4500)
     ]);
+    const weather = weatherSettled.status === 'fulfilled' ? weatherSettled.value : null;
+    const airQuality = aqiSettled.status === 'fulfilled' ? aqiSettled.value : null;
+    if (!weather || !weather.current) {
+      throw weatherSettled.reason || new Error('主要與備援氣象服務均暫無回應');
+    }
     const payload = JSON.stringify({
       success: true,
       weather,

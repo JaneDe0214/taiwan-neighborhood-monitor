@@ -112,6 +112,9 @@ body[data-theme-center="banqiao"]  { --ambient-accent: 167, 139, 250; --ambient-
 body[data-theme-center="nearby"]   { --ambient-accent: 16, 185, 129;  --ambient-secondary: 34, 211, 238; }
 body[data-theme-center="tourist"]  { --ambient-accent: 245, 158, 11;  --ambient-secondary: 56, 189, 248; }
 body[data-theme-center="japan"]    { --ambient-accent: 244, 63, 94;   --ambient-secondary: 245, 158, 11; }
+body[data-theme-center="korea"]    { --ambient-accent: 56, 189, 248;  --ambient-secondary: 244, 63, 94; }
+body[data-theme-center="europe"]   { --ambient-accent: 99, 102, 241;  --ambient-secondary: 45, 212, 191; }
+body[data-theme-center="americas"] { --ambient-accent: 249, 115, 22;  --ambient-secondary: 56, 189, 248; }
 body[data-theme-center="favorites"]{ --ambient-accent: 251, 191, 36;  --ambient-secondary: 249, 115, 22; }
 
 /* 前庭覺障礙無障礙保護與低功耗偏好 */
@@ -264,7 +267,7 @@ body {
   text-transform: uppercase;
 }
 
-/* 中心切換選擇器 (附近 / 雙埔 / 青埔 / 新埔 / 觀光 / 日本 / 收藏) */
+/* 中心切換選擇器 (附近 / 雙埔 / 青埔 / 新埔 / 觀光 / 日本 / 韓國 / 歐洲 / 美洲 / 收藏) */
 .center-switch-group {
   display: inline-flex;
   align-items: center;
@@ -274,8 +277,9 @@ body {
   border: 1px solid var(--hairline);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
   gap: 2px;
+  flex: 0 1 auto;
   min-width: 0;
-  flex-shrink: 0;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -959,18 +963,88 @@ body {
   color: #e0f2fe;
 }
 
+.filter-meta-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.matrix-pager-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(8, 12, 22, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 2px 4px;
+  border-radius: 9px;
+}
+
+.matrix-pager-group.is-hidden {
+  display: none !important;
+}
+
+.pager-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.71rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, transform 0.14s ease;
+}
+
+.pager-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pager-btn:active {
+  transform: scale(0.95);
+}
+
+.pager-page-label {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  padding: 0 5px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.pager-tour-btn.active {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.48);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.18);
+}
+
 .filter-count-meta {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   font-size: 0.72rem;
   color: var(--text-dim);
   white-space: nowrap;
-  margin-left: auto;
 }
 
 /* 鍵盤無障礙焦點指示器 */
 .center-btn:focus-visible,
 .grid-btn:focus-visible,
+.pager-btn:focus-visible,
+.filter-tag-pill:focus-visible,
+.jp-city-pill:focus-visible,
 .mode-toggle-btn:focus-visible,
 .cmd-palette-trigger:focus-visible,
 .compact-btn:focus-visible,
@@ -7160,7 +7234,7 @@ body {
   }
 }
 
-@media (max-width: 1220px) {
+@media (max-width: 1540px) {
   .top-nav {
     flex-wrap: wrap;
     row-gap: 6px;
@@ -8444,7 +8518,7 @@ body.native-tv-mode .filter-tag-pill:focus {
   flex-shrink: 0;
 }
 
-/* ===== 日本實況多城市即時氣象快速切換列 ===== */
+/* ===== 國際實況多城市即時氣象快速切換列 ===== */
 .jp-weather-switcher {
   display: flex;
   align-items: center;
@@ -8459,7 +8533,7 @@ body.native-tv-mode .filter-tag-pill:focus {
 }
 .jp-city-pill {
   appearance: none;
-  border: 1px solid rgba(244, 63, 94, 0.22);
+  border: 1px solid rgba(var(--ambient-accent), 0.24);
   background: rgba(15, 23, 42, 0.62);
   color: var(--text-muted);
   font-family: inherit;
@@ -8473,13 +8547,13 @@ body.native-tv-mode .filter-tag-pill:focus {
   flex-shrink: 0;
 }
 .jp-city-pill:hover {
-  color: #fecdd3;
-  border-color: rgba(244, 63, 94, 0.5);
+  color: #f8fafc;
+  border-color: rgba(var(--ambient-accent), 0.55);
 }
 .jp-city-pill.active {
-  background: rgba(244, 63, 94, 0.18);
-  border-color: rgba(244, 63, 94, 0.65);
-  color: #fda4af;
+  background: rgba(var(--ambient-accent), 0.2);
+  border-color: rgba(var(--ambient-accent), 0.72);
+  color: #f8fafc;
   font-weight: 700;
 }
 
@@ -8591,6 +8665,18 @@ body.native-tv-mode .filter-tag-pill:focus {
         <i class="fa-solid fa-torii-gate"></i>
         <span>日本</span>
       </button>
+      <button class="center-btn" data-center="korea" title="韓國精選 18 處：首爾漢江4K ‧ 景福宮 ‧ 光化門 ‧ 弘大商圈 ‧ 樂天世界塔 ‧ 釜山廣安大橋 ‧ 濟州城山日出峰">
+        <i class="fa-solid fa-landmark"></i>
+        <span>韓國</span>
+      </button>
+      <button class="center-btn" data-center="europe" title="歐洲絕景 22 處：瑞士阿爾卑斯雪山 ‧ 威尼斯大運河4K ‧ 巴黎艾菲爾鐵塔 ‧ 倫敦泰晤士河 ‧ 芬蘭聖誕老人村 ‧ 挪威峽灣與冰島極光">
+        <i class="fa-solid fa-mountain-sun"></i>
+        <span>歐洲</span>
+      </button>
+      <button class="center-btn" data-center="americas" title="美洲奇觀 18 處：紐約時代廣場 ‧ 尼加拉大瀑布 ‧ 夏威夷威基基海灘 ‧ 洛杉磯威尼斯海灘4K ‧ 洛磯山脈 ‧ 阿拉斯加棕熊溪流 ‧ 里約海灘">
+        <i class="fa-solid fa-earth-americas"></i>
+        <span>美洲</span>
+      </button>
       <button class="center-btn" data-center="favorites" title="我的最愛：自選跨區跨國專屬監視器收藏牆">
         <i class="fa-solid fa-star" style="color:#fbbf24;"></i>
         <span>收藏</span>
@@ -8671,10 +8757,33 @@ body.native-tv-mode .filter-tag-pill:focus {
           <button class="filter-tag-pill" data-filter-tag="風景" type="button">風景地標</button>
           <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
           <button class="filter-tag-pill" data-filter-tag="4k" type="button">4K 超清</button>
-          <button class="filter-tag-pill" data-filter-tag="富士山" type="button">富士山</button>
-          <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" type="button" style="display:none;">溫泉名勝</button>
+          <button id="filterPillFuji" class="filter-tag-pill" data-filter-tag="富士山" data-region-scope="japan,favorites" type="button" style="display:none;">富士山</button>
+          <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" data-region-scope="japan,favorites" type="button" style="display:none;">溫泉名勝</button>
+          <button class="filter-tag-pill" data-filter-tag="漢江海灣" data-region-scope="korea" type="button" style="display:none;">漢江海灣</button>
+          <button class="filter-tag-pill" data-filter-tag="阿爾卑斯" data-region-scope="europe" type="button" style="display:none;">阿爾卑斯</button>
+          <button class="filter-tag-pill" data-filter-tag="極光" data-region-scope="europe" type="button" style="display:none;">極光峽灣</button>
+          <button class="filter-tag-pill" data-filter-tag="運河" data-region-scope="europe" type="button" style="display:none;">古都運河</button>
+          <button class="filter-tag-pill" data-filter-tag="海灘" data-region-scope="americas" type="button" style="display:none;">海灘衝浪</button>
+          <button class="filter-tag-pill" data-filter-tag="國家公園" data-region-scope="americas" type="button" style="display:none;">國家公園</button>
         </div>
-        <span id="cameraFilterCount" class="filter-count-meta">載入鏡頭中</span>
+        <div class="filter-meta-controls">
+          <div id="matrixPagerGroup" class="matrix-pager-group is-hidden" role="group" aria-label="視訊牆分頁與自動巡播控制">
+            <button id="btnPagePrev" class="pager-btn" type="button" title="上一頁視訊牆 (快捷鍵 [ 或 PageUp)">
+              <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <span id="matrixPageLabel" class="pager-page-label">1 / 1</span>
+            <button id="btnPageNext" class="pager-btn" type="button" title="下一頁視訊牆 (快捷鍵 ] 或 PageDown)">
+              <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </button>
+            <button id="btnPageRandom" class="pager-btn" type="button" title="隨機漫遊切換一組精選視角">
+              <i class="fa-solid fa-shuffle" aria-hidden="true"></i> <span>隨機</span>
+            </button>
+            <button id="btnAutoTour" class="pager-btn pager-tour-btn" type="button" aria-pressed="false" title="開啟電視牆自動巡播 (每 25 秒自動輪播下一頁)">
+              <i class="fa-solid fa-play" aria-hidden="true"></i> <span>巡播</span>
+            </button>
+          </div>
+          <span id="cameraFilterCount" class="filter-count-meta">載入鏡頭中</span>
+        </div>
       </div>
 
       <!-- 攝影機視訊卡片網格 -->
@@ -9217,17 +9326,21 @@ class CameraPlayerEngine {
     }
   }
 
-  // 啟動集中化攝影機即時日期時間秒級動態時鐘 (單一定時器統一更新所有卡片，降低 CPU 喚醒頻率)
+  // 啟動集中化攝影機即時日期時間秒級動態時鐘 (僅在 DOM 存在時間徽章時啟動，避免空轉輪詢耗電)
   startLiveClock(camId) {
     if (typeof document === 'undefined') return;
     const timeEl = document.getElementById(`time-${camId}`);
     if (timeEl) {
       timeEl.innerHTML = `<i class="fa-regular fa-clock"></i> ${this.getFormattedDateTime()}`;
     }
-    if (!this.centralLiveClockTimer) {
+    if (!this.centralLiveClockTimer && (timeEl || document.querySelector('.cam-time-badge'))) {
       this.centralLiveClockTimer = setInterval(() => {
         const timeBadges = document.querySelectorAll('.cam-time-badge');
-        if (timeBadges.length === 0) return;
+        if (timeBadges.length === 0) {
+          clearInterval(this.centralLiveClockTimer);
+          this.centralLiveClockTimer = null;
+          return;
+        }
         const nowFormatted = `<i class="fa-regular fa-clock"></i> ${this.getFormattedDateTime()}`;
         timeBadges.forEach(badge => {
           badge.innerHTML = nowFormatted;
@@ -9495,7 +9608,7 @@ class CameraPlayerEngine {
           <span class="live-dot" id="wm-${cam.id}" title="${statusDotTitle}"></span>
           ${cam.areaTag ? `<span class="area-tag ${cam.areaTag === '青埔' ? 'tag-qp' : 'tag-bp'}">${cam.areaTag}</span>` : ''}
           ${(window.monitorApp && window.monitorApp.currentCenterId === 'nearby' && typeof cam.distanceKm === 'number') ? `<span class="distance-pill" title="距離您的目前位置約 ${cam.distanceKm} 公里"><i class="fa-solid fa-location-arrow"></i> ${cam.distanceKm} km</span>` : ''}
-          <span class="cam-name-text" title="${cam.name}">#${index + 1} ${cam.name}</span>
+          <span class="cam-name-text" title="${cam.name}">#${cam._matrixNumber || (index + 1)} ${cam.name}</span>
         </div>
         <div class="cam-card-tools">
           <button class="tool-icon-btn fav-star-btn ${isFav ? 'active' : ''}" data-cam-id="${cam.id}" title="${isFav ? '已在我的最愛 (點擊取消收藏)' : '加入我的最愛 (自選專屬視訊牆)'}" onclick="event.stopPropagation(); window.monitorApp.toggleCamFavorite('${cam.id}', this)">
@@ -9512,8 +9625,8 @@ class CameraPlayerEngine {
           <span class="authority-tag" title="${cam.authority}"><i class="fa-solid fa-shield-halved"></i> ${shortAuthority}</span>
           <span class="format-res-badge" id="res-${cam.id}"><i class="fa-solid fa-video"></i> ${this.getInitialFormatText(cam)}</span>
           <div class="cam-footer-actions">
-            ${cam.type === 'iframe' ? `
-              <a class="tool-icon-btn" href="${cam.sourceUrl || cam.streamUrl}" target="_blank" rel="noopener noreferrer" title="在新分頁開啟官方即時視訊">
+            ${(cam.type === 'iframe' || (cam.type === 'youtube' && cam.videoId)) ? `
+              <a class="tool-icon-btn" href="${cam.type === 'youtube' ? `https://www.youtube.com/watch?v=${cam.videoId}` : (cam.sourceUrl || cam.streamUrl)}" target="_blank" rel="noopener noreferrer" title="${cam.type === 'youtube' ? '在新分頁開啟 YouTube 官方直播' : '在新分頁開啟官方即時視訊'}">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
               </a>
             ` : ''}
@@ -10378,14 +10491,44 @@ class WeatherEnvironmentMonitor {
     this.activeTimezone = 'Asia/Taipei';
     this.activeTzOffsetHours = 8;
 
-    // 日本實況多區域即時氣象快速切換配置
-    this.japanCities = [
-      { key: 'tokyo', label: '東京', fullName: '東京 (關東)', lat: 35.6895, lon: 139.6917 },
-      { key: 'fuji', label: '富士山', fullName: '富士山河口湖', lat: 35.5015, lon: 138.7636 },
-      { key: 'kansai', label: '京阪', fullName: '大阪 ‧ 京都', lat: 34.6937, lon: 135.5023 },
-      { key: 'hokkaido', label: '北海道', fullName: '北海道札幌', lat: 43.0618, lon: 141.3545 },
-      { key: 'okinawa', label: '沖繩', fullName: '沖繩那霸', lat: 26.2124, lon: 127.6809 }
-    ];
+    // 跨國實況分頁多區域即時氣象與當地時區快速切換配置 (日本 / 韓國 / 歐洲 / 美洲)
+    this.regionCities = {
+      japan: [
+        { key: 'tokyo', label: '東京', fullName: '東京 (關東)', lat: 35.6895, lon: 139.6917, tz: 'Asia/Tokyo' },
+        { key: 'fuji', label: '富士山', fullName: '富士山河口湖', lat: 35.5015, lon: 138.7636, tz: 'Asia/Tokyo' },
+        { key: 'kansai', label: '京阪', fullName: '大阪 ‧ 京都', lat: 34.6937, lon: 135.5023, tz: 'Asia/Tokyo' },
+        { key: 'hokkaido', label: '北海道', fullName: '北海道札幌', lat: 43.0618, lon: 141.3545, tz: 'Asia/Tokyo' },
+        { key: 'okinawa', label: '沖繩', fullName: '沖繩那霸', lat: 26.2124, lon: 127.6809, tz: 'Asia/Tokyo' }
+      ],
+      korea: [
+        { key: 'seoul', label: '首爾', fullName: '首爾漢江', lat: 37.5665, lon: 126.9780, tz: 'Asia/Seoul' },
+        { key: 'busan', label: '釜山', fullName: '釜山海雲台', lat: 35.1587, lon: 129.1604, tz: 'Asia/Seoul' },
+        { key: 'jeju', label: '濟州島', fullName: '濟州城山日出峰', lat: 33.4581, lon: 126.9425, tz: 'Asia/Seoul' },
+        { key: 'incheon', label: '仁川', fullName: '仁川松島港灣', lat: 37.4563, lon: 126.7052, tz: 'Asia/Seoul' },
+        { key: 'suwon', label: '水原', fullName: '京畿光教湖水', lat: 37.2827, lon: 127.0658, tz: 'Asia/Seoul' }
+      ],
+      europe: [
+        { key: 'alps', label: '瑞士雪山', fullName: '瑞士阿爾卑斯', lat: 46.5594, lon: 7.8925, tz: 'Europe/Zurich' },
+        { key: 'venice', label: '威尼斯', fullName: '義大利威尼斯', lat: 45.4408, lon: 12.3155, tz: 'Europe/Rome' },
+        { key: 'paris', label: '巴黎', fullName: '法國巴黎', lat: 48.8566, lon: 2.3522, tz: 'Europe/Paris' },
+        { key: 'london', label: '倫敦', fullName: '英國倫敦', lat: 51.5074, lon: -0.1278, tz: 'Europe/London' },
+        { key: 'lapland', label: '極光北歐', fullName: '芬蘭羅瓦涅米', lat: 66.5436, lon: 25.8472, tz: 'Europe/Helsinki' }
+      ],
+      americas: [
+        { key: 'nyc', label: '紐約', fullName: '美國紐約', lat: 40.7580, lon: -73.9855, tz: 'America/New_York' },
+        { key: 'hawaii', label: '夏威夷', fullName: '夏威夷檀香山', lat: 21.2736, lon: -157.8229, tz: 'Pacific/Honolulu' },
+        { key: 'la', label: '洛杉磯', fullName: '加州洛杉磯', lat: 33.9850, lon: -118.4695, tz: 'America/Los_Angeles' },
+        { key: 'rockies', label: '洛磯山脈', fullName: '班夫洛磯山脈', lat: 51.0892, lon: -115.3585, tz: 'America/Edmonton' },
+        { key: 'rio', label: '里約', fullName: '巴西里約海灘', lat: -22.9848, lon: -43.1892, tz: 'America/Sao_Paulo' }
+      ]
+    };
+    this.japanCities = this.regionCities.japan;
+    this.currentRegionCityKeys = {
+      japan: 'tokyo',
+      korea: 'seoul',
+      europe: 'alps',
+      americas: 'nyc'
+    };
     this.currentJapanCityKey = 'tokyo';
 
     // 附近生活圈即時鄰近 YouBike 站點狀態
@@ -10581,7 +10724,42 @@ class WeatherEnvironmentMonitor {
     }, { passive: false });
   }
 
-  // 明確以指定區域時區 (預設台北 UTC+8，日本為 UTC+9) 解析無時區結尾之 Open-Meteo ISO 時間字串，免受裝置時區偏移影響
+  // 動態推算任意 IANA 時區之當前真實 UTC 小時偏移量 (自動涵蓋歐美日光節約時間 DST 與 UTC+0 倫敦零偏移)
+  static resolveTimezoneOffsetHours(timeZone = 'Asia/Taipei', refDate = new Date()) {
+    if (!timeZone || timeZone === 'Asia/Taipei') return 8;
+    if (timeZone === 'Asia/Tokyo' || timeZone === 'Asia/Seoul') return 9;
+    try {
+      const d = refDate instanceof Date ? refDate : new Date(refDate);
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        timeZoneName: 'shortOffset'
+      }).formatToParts(d);
+      const tzPart = parts.find(p => p.type === 'timeZoneName')?.value || '';
+      if (tzPart === 'GMT' || tzPart === 'UTC') return 0;
+      const m = tzPart.match(/(?:GMT|UTC)([+-])(\d{1,2})(?::(\d{2}))?/);
+      if (m) {
+        const sign = m[1] === '-' ? -1 : 1;
+        const hh = parseInt(m[2], 10) || 0;
+        const mm = parseInt(m[3] || '0', 10) || 0;
+        return sign * (hh + mm / 60);
+      }
+    } catch (_) {}
+    const fallbackOffsets = {
+      'Europe/London': 0,
+      'Europe/Paris': 1,
+      'Europe/Zurich': 1,
+      'Europe/Rome': 1,
+      'Europe/Helsinki': 2,
+      'America/Sao_Paulo': -3,
+      'America/New_York': -5,
+      'America/Edmonton': -7,
+      'America/Los_Angeles': -8,
+      'Pacific/Honolulu': -10
+    };
+    return fallbackOffsets[timeZone] !== undefined ? fallbackOffsets[timeZone] : 8;
+  }
+
+  // 明確以指定區域時區 (支援負時區、UTC+0 與半小時時區) 解析無時區結尾之 Open-Meteo ISO 時間字串，免受裝置時區偏移影響
   static parseTaipeiTimestampMs(isoStr, offsetHours = 8) {
     if (!isoStr || typeof isoStr !== 'string') return NaN;
     const trimmed = isoStr.trim();
@@ -10589,8 +10767,12 @@ class WeatherEnvironmentMonitor {
     if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
       return Date.parse(trimmed);
     }
-    const sign = offsetHours >= 0 ? '+' : '-';
-    const tzSuffix = `${sign}${String(Math.abs(offsetHours)).padStart(2, '0')}:00`;
+    const safeOffset = Number.isFinite(Number(offsetHours)) ? Number(offsetHours) : 8;
+    const sign = safeOffset >= 0 ? '+' : '-';
+    const totalMinutes = Math.round(Math.abs(safeOffset) * 60);
+    const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+    const mm = String(totalMinutes % 60).padStart(2, '0');
+    const tzSuffix = `${sign}${hh}:${mm}`;
     if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
       return Date.parse(`${trimmed}T00:00:00${tzSuffix}`);
     }
@@ -10646,11 +10828,11 @@ class WeatherEnvironmentMonitor {
     };
   }
 
-  parseTaipeiTimestampMs(isoStr, offsetHours = this.activeTzOffsetHours || 8) {
+  parseTaipeiTimestampMs(isoStr, offsetHours = (this.activeTzOffsetHours ?? 8)) {
     return WeatherEnvironmentMonitor.parseTaipeiTimestampMs(isoStr, offsetHours);
   }
 
-  getTaipeiDateParts(input = Date.now(), offsetHours = this.activeTzOffsetHours || 8) {
+  getTaipeiDateParts(input = Date.now(), offsetHours = (this.activeTzOffsetHours ?? 8)) {
     return WeatherEnvironmentMonitor.getTaipeiDateParts(input, offsetHours);
   }
 
@@ -10727,8 +10909,10 @@ class WeatherEnvironmentMonitor {
         if (elapsed >= 15) {
           this.triggerAutoRefresh();
         }
-        const isJapanMode = typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan';
-        if (!isJapanMode) {
+        const isIntlMode = typeof window !== 'undefined' && typeof window.monitorApp?.isInternationalCenter === 'function'
+          ? window.monitorApp.isInternationalCenter()
+          : (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan');
+        if (!isIntlMode) {
           this.fetchRealtimeYouBike(true);
         }
       }
@@ -10740,8 +10924,10 @@ class WeatherEnvironmentMonitor {
     this.countdownSec = this.refreshIntervalSec;
     this.updateCountdownDisplay();
 
-    const isJapanMode = typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan';
-    if (!isJapanMode && !skipTransit) {
+    const isIntlMode = typeof window !== 'undefined' && typeof window.monitorApp?.isInternationalCenter === 'function'
+      ? window.monitorApp.isInternationalCenter()
+      : (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan');
+    if (!isIntlMode && !skipTransit) {
       // 週期觸發 YouBike 2.0 即時動態同步 (內建防抖保護)
       this.fetchRealtimeYouBike();
 
@@ -11080,7 +11266,148 @@ class WeatherEnvironmentMonitor {
     if (el) el.innerHTML = labelText;
   }
 
-  // 取得單一座標資料底層方法 (含區域時區支援、單次重試、本機 Proxy Fallback 與 localStorage SWR 快取)
+  // 挪威國家氣象局 (MET Norway) 官方全球即時數值預報備援引擎 (支援 CORS 直連與 Android 原生攔截，於 Open-Meteo 瞬斷時無縫接手)
+  async fetchMetNorwayWeather(lat, lon, timezone = 'Asia/Taipei') {
+    const offsetHours = WeatherEnvironmentMonitor.resolveTimezoneOffsetHours(timezone, new Date());
+    const sign = offsetHours >= 0 ? '+' : '-';
+    const totalMin = Math.round(Math.abs(offsetHours) * 60);
+    const offsetStr = `${sign}${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
+    const toLocalIso = (utcMs) => new Date(utcMs + offsetHours * 3600000).toISOString().slice(0, 16);
+    const localToday = toLocalIso(Date.now()).slice(0, 10);
+
+    const fcUrl = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${Number(lat).toFixed(4)}&lon=${Number(lon).toFixed(4)}`;
+    const sunUrl = `https://api.met.no/weatherapi/sunrise/3.0/sun?lat=${Number(lat).toFixed(4)}&lon=${Number(lon).toFixed(4)}&date=${localToday}&offset=${encodeURIComponent(offsetStr)}`;
+
+    const fetchFastJson = async (u, ms = 4800) => {
+      const opts = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+        ? { signal: AbortSignal.timeout(ms), cache: 'no-store' }
+        : { cache: 'no-store' };
+      const r = await fetch(u, opts);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    };
+
+    const [fcRes, sunRes] = await Promise.allSettled([
+      fetchFastJson(fcUrl, 4800),
+      fetchFastJson(sunUrl, 4000)
+    ]);
+    if (fcRes.status !== 'fulfilled' || !fcRes.value?.properties?.timeseries?.length) {
+      throw fcRes.reason || new Error('MET Norway 備援無資料');
+    }
+
+    const series = fcRes.value.properties.timeseries;
+    const symbolToWmo = (sym = '') => {
+      const s = String(sym).toLowerCase();
+      if (s.includes('thunder')) return 95;
+      if (s.includes('heavyrainshowers')) return 82;
+      if (s.includes('heavyrain')) return 65;
+      if (s.includes('rainshowers')) return 80;
+      if (s.includes('lightrain') || s.includes('drizzle')) return 61;
+      if (s.includes('rain') || s.includes('sleet') || s.includes('snow')) return 63;
+      if (s.includes('fog')) return 45;
+      if (s.includes('cloudy') && !s.includes('partly')) return 3;
+      if (s.includes('partlycloudy')) return 2;
+      if (s.includes('fair')) return 1;
+      return 0;
+    };
+    const estimateRainProb = (step) => {
+      const n1 = step?.data?.next_1_hours || step?.data?.next_6_hours || {};
+      const det = n1.details || {};
+      if (typeof det.probability_of_precipitation === 'number') {
+        return Math.round(det.probability_of_precipitation);
+      }
+      const amt = Number(det.precipitation_amount) || 0;
+      const sym = String(n1.summary?.symbol_code || '').toLowerCase();
+      const cloud = Number(step?.data?.instant?.details?.cloud_area_fraction) || 0;
+      if (amt >= 3.0) return 90;
+      if (amt >= 1.0) return 75;
+      if (amt >= 0.2) return 55;
+      if (amt > 0 || sym.includes('rain') || sym.includes('shower') || sym.includes('thunder')) return 40;
+      if (cloud >= 85) return 20;
+      if (cloud >= 55) return 10;
+      return 0;
+    };
+
+    const nowMs = Date.now();
+    let curStep = series[0];
+    let bestDiff = Infinity;
+    for (const item of series.slice(0, 12)) {
+      const tMs = Date.parse(item.time);
+      const diff = Math.abs(tMs - nowMs);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        curStep = item;
+      }
+    }
+
+    const inst = curStep?.data?.instant?.details || {};
+    const next1 = curStep?.data?.next_1_hours || curStep?.data?.next_6_hours || {};
+    const windKmh = (Number(inst.wind_speed) || 0) * 3.6;
+    const gustKmh = typeof inst.wind_speed_of_gust === 'number'
+      ? inst.wind_speed_of_gust * 3.6
+      : windKmh * 1.35;
+    const fogPct = Number(inst.fog_area_fraction) || 0;
+    const precipAmt = Number(next1?.details?.precipitation_amount) || 0;
+
+    const hourlyTimes = [];
+    const hourlyProbs = [];
+    const hourlyTemps = [];
+    const hourlyUvs = [];
+    for (const step of series.slice(0, 168)) {
+      const ms = Date.parse(step.time);
+      if (!Number.isFinite(ms)) continue;
+      const d = step.data?.instant?.details || {};
+      hourlyTimes.push(toLocalIso(ms));
+      hourlyProbs.push(estimateRainProb(step));
+      hourlyTemps.push(Number(d.air_temperature ?? 20));
+      hourlyUvs.push(Number(d.ultraviolet_index_clear_sky ?? 0));
+    }
+
+    let sunriseLocal = `${localToday}T06:00`;
+    let sunsetLocal = `${localToday}T18:00`;
+    if (sunRes.status === 'fulfilled' && sunRes.value?.properties) {
+      const srRaw = sunRes.value.properties.sunrise?.time;
+      const ssRaw = sunRes.value.properties.sunset?.time;
+      if (typeof srRaw === 'string' && srRaw.length >= 16) sunriseLocal = srRaw.slice(0, 16);
+      if (typeof ssRaw === 'string' && ssRaw.length >= 16) sunsetLocal = ssRaw.slice(0, 16);
+    }
+
+    return {
+      latitude: lat,
+      longitude: lon,
+      timezone: timezone || 'Asia/Taipei',
+      utc_offset_seconds: Math.round(offsetHours * 3600),
+      sourceProvider: 'met-norway-fallback',
+      current: {
+        time: toLocalIso(Date.parse(curStep.time) || nowMs),
+        temperature_2m: Number(inst.air_temperature ?? 20),
+        relative_humidity_2m: Math.round(Number(inst.relative_humidity ?? 70)),
+        apparent_temperature: Number(inst.apparent_air_temperature ?? inst.air_temperature ?? 20),
+        precipitation: precipAmt,
+        rain: precipAmt,
+        showers: 0,
+        weather_code: symbolToWmo(next1?.summary?.symbol_code),
+        wind_speed_10m: +(windKmh.toFixed(1)),
+        wind_direction_10m: Math.round(Number(inst.wind_from_direction ?? 0)),
+        wind_gusts_10m: +(gustKmh.toFixed(1)),
+        surface_pressure: Number(inst.air_pressure_at_sea_level ?? 1013),
+        uv_index: Number(inst.ultraviolet_index_clear_sky ?? 0),
+        visibility: Math.round(Math.max(1200, 10000 - fogPct * 160))
+      },
+      daily: {
+        sunrise: [sunriseLocal],
+        sunset: [sunsetLocal]
+      },
+      hourly: {
+        time: hourlyTimes,
+        precipitation_probability: hourlyProbs,
+        temperature_2m: hourlyTemps,
+        uv_index: hourlyUvs
+      }
+    };
+  }
+
+  // 取得單一座標資料底層方法 (Open-Meteo 主線路 + MET Norway 官方全球預報雙引擎容錯 + 本機 Proxy 與 localStorage SWR 快取)
   async fetchLocationData(lat, lon, timezone = 'Asia/Taipei') {
     const encodedTz = encodeURIComponent(timezone || 'Asia/Taipei');
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=${encodedTz}`;
@@ -11099,22 +11426,23 @@ class WeatherEnvironmentMonitor {
 
     const writeCached = (weather, airQuality) => {
       try {
-        if (typeof localStorage !== 'undefined' && weather && airQuality) {
+        if (typeof localStorage !== 'undefined' && weather && weather.current) {
+          const prev = readCached();
           localStorage.setItem(cacheKey, JSON.stringify({
             weather,
-            airQuality,
+            airQuality: airQuality || (prev ? prev.airQuality : null),
             ts: Date.now()
           }));
         }
       } catch (_e) {}
     };
 
-    const fetchWithRetry = async (url, retries = 1) => {
+    const fetchWithRetry = async (url, retries = 0, timeoutMs = 3800) => {
       let lastErr;
       for (let i = 0; i <= retries; i++) {
         try {
           const opts = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
-            ? { signal: AbortSignal.timeout(5500), cache: 'no-store' }
+            ? { signal: AbortSignal.timeout(timeoutMs), cache: 'no-store' }
             : { cache: 'no-store' };
           const res = await fetch(url, opts);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -11127,19 +11455,26 @@ class WeatherEnvironmentMonitor {
     };
 
     try {
-      // 透過非同步 fetch 並行抓取天氣與空氣品質，避免在 WebView 主執行緒同步呼叫橋接方法造成阻塞
-      const [weather, airQuality] = await Promise.all([
-        fetchWithRetry(weatherUrl, 1),
-        fetchWithRetry(aqiUrl, 1)
+      const [weatherSettled, aqiSettled] = await Promise.allSettled([
+        fetchWithRetry(weatherUrl, 0, 3800).catch(() => this.fetchMetNorwayWeather(lat, lon, timezone)),
+        fetchWithRetry(aqiUrl, 1, 4500)
       ]);
 
-      if (weather && airQuality && weather.current) {
-        writeCached(weather, airQuality);
+      const weather = weatherSettled.status === 'fulfilled' ? weatherSettled.value : null;
+      const stale = readCached();
+      const airQuality = aqiSettled.status === 'fulfilled'
+        ? aqiSettled.value
+        : (stale ? stale.airQuality : null);
+
+      if (!weather || !weather.current) {
+        throw weatherSettled.reason || new Error('氣象雙引擎連線逾時');
       }
 
+      writeCached(weather, airQuality);
       return { weather, airQuality, syncTime: new Date(), isStale: false };
     } catch (_directErr) {
       const canUseHttpProxy = typeof window !== 'undefined' && window.location &&
+        window.location.hostname !== 'appassets.androidplatform.net' &&
         (window.location.protocol === 'http:' || window.location.protocol === 'https:');
       if (canUseHttpProxy) {
         try {
@@ -11149,19 +11484,19 @@ class WeatherEnvironmentMonitor {
           const localRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}&tz=${encodedTz}`, proxyOpts);
           if (localRes.ok) {
             const localJson = await localRes.json();
-            if (localJson && localJson.weather && localJson.airQuality) {
+            if (localJson && localJson.weather && localJson.weather.current) {
               writeCached(localJson.weather, localJson.airQuality);
-              return { weather: localJson.weather, airQuality: localJson.airQuality, syncTime: new Date(), isStale: false };
+              return { weather: localJson.weather, airQuality: localJson.airQuality || null, syncTime: new Date(), isStale: false };
             }
           }
         } catch (_proxyErr) {}
       }
 
       const stale = readCached();
-      if (stale && stale.weather && stale.airQuality) {
+      if (stale && stale.weather) {
         return {
           weather: stale.weather,
-          airQuality: stale.airQuality,
+          airQuality: stale.airQuality || null,
           syncTime: new Date(stale.ts || Date.now()),
           isStale: true
         };
@@ -11222,16 +11557,32 @@ class WeatherEnvironmentMonitor {
     this.renderDisasterAlert(null, null);
   }
 
-  // 日本實況分頁：快速切換日本五大重點觀測城市氣象 (東京 / 富士山河口湖 / 京阪 / 北海道 / 沖繩)
-  switchJapanWeatherCity(cityKey) {
-    const found = (this.japanCities || []).find(c => c.key === cityKey);
+  // 跨國實況分頁：快速切換各國重點觀測城市即時氣象與當地時區 (日本 / 韓國 / 歐洲 / 美洲)
+  switchRegionWeatherCity(regionId, cityKey) {
+    const cities = (this.regionCities && this.regionCities[regionId]) || [];
+    const found = cities.find(c => c.key === cityKey) || cities[0];
     if (!found) return;
-    this.currentJapanCityKey = found.key;
+    if (!this.currentRegionCityKeys) this.currentRegionCityKeys = {};
+    this.currentRegionCityKeys[regionId] = found.key;
+    if (regionId === 'japan') {
+      this.currentJapanCityKey = found.key;
+    }
     if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') {
       window.triggerHaptic();
     }
-    this.fetchEnvironment(found.lat, found.lon, found.fullName, false, 'Asia/Tokyo');
-    this.startAutoRefresh(found.lat, found.lon, found.fullName, 'Asia/Tokyo');
+    const targetTz = found.tz || 'Asia/Taipei';
+    this.activeTimezone = targetTz;
+    this.activeTzOffsetHours = WeatherEnvironmentMonitor.resolveTimezoneOffsetHours(targetTz);
+    if (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.updateClockDisplay === 'function') {
+      window.monitorApp.updateClockDisplay();
+    }
+    this.fetchEnvironment(found.lat, found.lon, found.fullName, false, targetTz);
+    this.startAutoRefresh(found.lat, found.lon, found.fullName, targetTz);
+  }
+
+  // 向後相容：日本實況五大重點觀測城市切換入口
+  switchJapanWeatherCity(cityKey) {
+    this.switchRegionWeatherCity('japan', cityKey);
   }
 
   // 雙城聯防風險融合：綜合青埔與新埔雙城最嚴峻天候與空氣品質，避免單一區域暴雨或空品不良時漏報
@@ -11323,10 +11674,12 @@ class WeatherEnvironmentMonitor {
     }
     const safeLat = Number.isFinite(Number(lat)) ? Number(lat) : 25.0153;
     const safeLon = Number.isFinite(Number(lon)) ? Number(lon) : 121.2213;
-    const isJapanCoord = timezoneOverride === 'Asia/Tokyo' ||
-      (timezoneOverride == null && safeLat >= 24.0 && safeLat <= 46.5 && safeLon >= 123.5 && safeLon <= 149.0 && String(locationName).match(/日本|東京|富士山|大阪|京都|北海道|札幌|沖繩|那霸/));
-    const targetTz = isJapanCoord ? 'Asia/Tokyo' : 'Asia/Taipei';
-    const targetOffset = isJapanCoord ? 9 : 8;
+    let targetTz = (typeof timezoneOverride === 'string' && timezoneOverride.trim()) ? timezoneOverride.trim() : null;
+    if (!targetTz) {
+      const isJapanCoord = safeLat >= 24.0 && safeLat <= 46.5 && safeLon >= 123.5 && safeLon <= 149.0 && String(locationName).match(/日本|東京|富士山|大阪|京都|北海道|札幌|沖繩|那霸/);
+      targetTz = isJapanCoord ? 'Asia/Tokyo' : 'Asia/Taipei';
+    }
+    const targetOffset = WeatherEnvironmentMonitor.resolveTimezoneOffsetHours(targetTz);
 
     const now = Date.now();
     const fetchKey = `single:${safeLat.toFixed(2)},${safeLon.toFixed(2)}:${targetTz}`;
@@ -11346,6 +11699,9 @@ class WeatherEnvironmentMonitor {
     try {
       const data = await this.fetchLocationData(safeLat, safeLon, targetTz);
       if (reqToken !== this._envRequestToken) return;
+      if (typeof data?.weather?.utc_offset_seconds === 'number' && Number.isFinite(data.weather.utc_offset_seconds)) {
+        this.activeTzOffsetHours = data.weather.utc_offset_seconds / 3600;
+      }
       this.currentData = data;
       this.renderSingleWeather(this.currentData, locationName);
       this.renderSingleAqi(this.currentData);
@@ -11815,13 +12171,19 @@ class WeatherEnvironmentMonitor {
     const sunsetIso = data.weather?.daily?.sunset?.[0];
     const apparentVal = Number(cur.apparent_temperature ?? cur.temperature_2m ?? 0).toFixed(1);
     const syncLabel = data.isStale ? '快取備援' : '即時同步';
-    const isJapanMode = (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan') || this.activeTimezone === 'Asia/Tokyo';
-    const jpSwitcherHtml = isJapanMode ? `
-      <div class="jp-weather-switcher" role="tablist" aria-label="日本區域氣象切換">
-        ${(this.japanCities || []).map(c => `
-          <button type="button" class="jp-city-pill ${this.currentJapanCityKey === c.key ? 'active' : ''}"
-                  onclick="window.weatherMonitor?.switchJapanWeatherCity('${c.key}')"
-                  title="切換檢視「${c.fullName}」當地即時氣象、能見度與降雨曲線">
+    const activeCenterId = typeof window !== 'undefined' && window.monitorApp?.currentCenterId
+      ? window.monitorApp.currentCenterId
+      : (this.activeTimezone === 'Asia/Tokyo' ? 'japan' : '');
+    const regionCitiesList = (this.regionCities && this.regionCities[activeCenterId]) || null;
+    const activeCityKey = activeCenterId === 'japan'
+      ? (this.currentJapanCityKey || 'tokyo')
+      : ((this.currentRegionCityKeys && this.currentRegionCityKeys[activeCenterId]) || '');
+    const regionSwitcherHtml = Array.isArray(regionCitiesList) && regionCitiesList.length > 0 ? `
+      <div class="jp-weather-switcher" role="tablist" aria-label="跨國區域氣象切換">
+        ${regionCitiesList.map(c => `
+          <button type="button" class="jp-city-pill ${activeCityKey === c.key ? 'active' : ''}"
+                  onclick="window.weatherMonitor?.switchRegionWeatherCity('${activeCenterId}', '${c.key}')"
+                  title="切換檢視「${c.fullName}」當地即時氣象、空氣品質與日照曲線">
             ${c.label}
           </button>
         `).join('')}
@@ -11838,7 +12200,7 @@ class WeatherEnvironmentMonitor {
           <span>${syncLabel} (<span class="sync-countdown-text" id="weatherCountdown">${this.countdownSec}s</span>)</span>
         </div>
       </div>
-      ${jpSwitcherHtml}
+      ${regionSwitcherHtml}
 
       <div class="weather-hero">
         <div>
@@ -12282,8 +12644,15 @@ class WeatherEnvironmentMonitor {
       return;
     }
 
-    const isJapan = typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan';
-    const areaTitle = scopeLabel || (isJapan ? '日本實況' : '雙埔生活');
+    const activeCtr = typeof window !== 'undefined' && window.monitorApp?.currentCenterId ? window.monitorApp.currentCenterId : 'dual';
+    const regionTitles = { japan: '日本實況', korea: '韓國實況', europe: '歐洲實況', americas: '美洲實況' };
+    const regionSafeBadges = {
+      japan: { text: '日本全域安全', title: '日本列島即時監測中 ‧ 當地氣象與強震即時監測正常' },
+      korea: { text: '韓國全域安全', title: '韓國全境即時監測中 ‧ 當地氣象與地震即時監測正常' },
+      europe: { text: '歐洲全域安全', title: '歐洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
+      americas: { text: '美洲全域安全', title: '美洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' }
+    };
+    const areaTitle = scopeLabel || regionTitles[activeCtr] || '雙埔生活';
     const shortScope = (scopeLabel === '青埔' || scopeLabel === '新埔') ? `${scopeLabel}` : '';
     const gust = curWeather?.wind_gusts_10m || 0;
     const rain = (curWeather?.precipitation || 0) + (curWeather?.rain || 0);
@@ -12313,9 +12682,10 @@ class WeatherEnvironmentMonitor {
       banner.title = `【空品提醒】${areaTitle}周邊空氣品質指標達 ${aqi}，敏感族群建議佩戴口罩並緊閉門窗。`;
     } else {
       banner.classList.remove('has-warning', 'active');
-      if (isJapan) {
-        textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 日本全域安全`;
-        banner.title = '日本列島即時監測中 ‧ 當地氣象與強震即時監測正常';
+      const intlSafe = regionSafeBadges[activeCtr];
+      if (intlSafe) {
+        textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> ${intlSafe.text}`;
+        banner.title = intlSafe.title;
       } else {
         textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全`;
         banner.title = '雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中';
@@ -12782,7 +13152,9 @@ class WeatherEnvironmentMonitor {
     const prevCenterId = this.currentCenterId;
     this.currentCenterId = centerId;
     const youbikeCard = document.getElementById('youbikeWidgetCard');
-    if (centerId === 'japan' || (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan')) {
+    const isIntlCenter = ['japan', 'korea', 'europe', 'americas'].includes(centerId) ||
+      (typeof window !== 'undefined' && typeof window.monitorApp?.isInternationalCenter === 'function' && window.monitorApp.isInternationalCenter());
+    if (isIntlCenter) {
       if (youbikeCard) youbikeCard.style.display = 'none';
       return;
     }
@@ -12966,7 +13338,10 @@ class WeatherEnvironmentMonitor {
   // 刷新中央氣象署雷達圖 (對齊氣象署 10 分鐘產圖間隔，大幅減少頻寬浪費並確保命中快取)
   refreshRadar() {
     if (typeof document === 'undefined') return;
-    if (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan') return;
+    const isIntl = typeof window !== 'undefined' && typeof window.monitorApp?.isInternationalCenter === 'function'
+      ? window.monitorApp.isInternationalCenter()
+      : (typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan');
+    if (isIntl) return;
     const radarImg = document.getElementById('radarImg');
     if (radarImg) {
       const radarBucket = Math.floor(Date.now() / 600000) * 600000;
@@ -12989,11 +13364,13 @@ class WeatherEnvironmentMonitor {
     }, this.refreshIntervalSec * 1000);
   }
 
-  // 啟動定時自動刷新 (單城高頻極速同步：30 秒週期，支援自訂時區)
+  // 啟動定時自動刷新 (單城高頻極速同步：30 秒週期，支援自訂跨國時區)
   startAutoRefresh(lat, lon, locationName, timezoneOverride = null) {
-    const isJapanCoord = timezoneOverride === 'Asia/Tokyo' ||
-      (timezoneOverride == null && Number(lat) >= 24.0 && Number(lat) <= 46.5 && Number(lon) >= 123.5 && Number(lon) <= 149.0 && String(locationName).match(/日本|東京|富士山|大阪|京都|北海道|札幌|沖繩|那霸/));
-    const targetTz = isJapanCoord ? 'Asia/Tokyo' : 'Asia/Taipei';
+    let targetTz = (typeof timezoneOverride === 'string' && timezoneOverride.trim()) ? timezoneOverride.trim() : null;
+    if (!targetTz) {
+      const isJapanCoord = Number(lat) >= 24.0 && Number(lat) <= 46.5 && Number(lon) >= 123.5 && Number(lon) <= 149.0 && String(locationName).match(/日本|東京|富士山|大阪|京都|北海道|札幌|沖繩|那霸/);
+      targetTz = isJapanCoord ? 'Asia/Tokyo' : 'Asia/Taipei';
+    }
     this.activeMode = 'single';
     this.activeSingleParams = { lat, lon, locationName, timezone: targetTz };
     this.stopAutoRefresh();
@@ -13143,13 +13520,15 @@ class NeighborhoodRadarMap {
       });
       this.radarLayer.addTo(this.map);
 
-      // 更新雷達時間標籤（依當前區域時區顯示）
+      // 更新雷達時間標籤（依當前選定區域／城市時區顯示）
       const dt = new Date(pastFrames[pastFrames.length - 1].time * 1000);
-      const isJp = typeof window !== 'undefined' && window.monitorApp && window.monitorApp.currentCenterId === 'japan';
+      const activeTz = (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.getActiveTimezone === 'function')
+        ? window.monitorApp.getActiveTimezone()
+        : ((typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan') ? 'Asia/Tokyo' : 'Asia/Taipei');
       let timeStr = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
       try {
         timeStr = new Intl.DateTimeFormat('zh-TW', {
-          timeZone: isJp ? 'Asia/Tokyo' : 'Asia/Taipei',
+          timeZone: activeTz,
           hour: '2-digit',
           minute: '2-digit',
           hour12: false
@@ -13181,10 +13560,17 @@ class NeighborhoodRadarMap {
       : (validCamList.length > 0 ? Number(validCamList[0].lon) : 121.3450);
 
     const isTourist = safeCenter.id === 'tourist';
-    const isJapan = safeCenter.id === 'japan';
+    const isIntl = ['japan', 'korea', 'europe', 'americas'].includes(safeCenter.id);
     const isFavorites = safeCenter.id === 'favorites';
-    const initialZoom = isJapan ? 5 : (isTourist ? 10 : (isFavorites ? 12 : 14));
-    const centerPos = isJapan ? [36.2, 137.8] : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
+    const regionMapPresets = {
+      japan: { pos: [36.2, 137.8], zoom: 5 },
+      korea: { pos: [36.0, 127.9], zoom: 6 },
+      europe: { pos: [53.5, 11.0], zoom: 3 },
+      americas: { pos: [32.0, -98.0], zoom: 3 }
+    };
+    const preset = regionMapPresets[safeCenter.id];
+    const initialZoom = preset ? preset.zoom : (isTourist ? 10 : (isFavorites ? 12 : 14));
+    const centerPos = preset ? preset.pos : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
 
     if (!this.map) {
       this.init(centerPos[0], centerPos[1], initialZoom);
@@ -13249,7 +13635,7 @@ class NeighborhoodRadarMap {
         }).addTo(this.map);
         this.centerCircles.push(c500);
       });
-    } else if (!isJapan) {
+    } else if (!isIntl) {
       // 單一中心模式 (台灣本地才顯示預設位置標記與 500m / 1km 防護圈)
       this.centerMarker = L.marker([centerLat, centerLon], { icon: makeCenterIcon('#ef4444') })
         .addTo(this.map)
@@ -13351,9 +13737,10 @@ class EarthquakeEmergencyMonitor {
     this.bindBannerInteraction();
   }
 
-  // 切換地震監測區域 ('taiwan' | 'japan')
+  // 切換地震監測區域 ('taiwan' | 'japan' | 'korea' | 'europe' | 'americas')
   setRegion(mode = 'taiwan') {
-    const nextMode = mode === 'japan' ? 'japan' : 'taiwan';
+    const validModes = ['taiwan', 'japan', 'korea', 'europe', 'americas'];
+    const nextMode = validModes.includes(mode) ? mode : 'taiwan';
     if (this.regionMode === nextMode) return;
     this.regionMode = nextMode;
     this.latestEarthquake = null;
@@ -13369,9 +13756,16 @@ class EarthquakeEmergencyMonitor {
     const textEl = document.getElementById('disasterAlertText');
     if (!banner || !textEl) return;
     banner.classList.remove('has-warning', 'active');
-    if (this.regionMode === 'japan') {
-      textEl.innerHTML = '<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 日本全域安全';
-      banner.title = '日本列島地震即時監測中 ‧ 30 分鐘內無顯著強震通報';
+    const bannerMap = {
+      japan: { text: '日本全域安全', title: '日本列島地震即時監測中 ‧ 30 分鐘內無顯著強震通報' },
+      korea: { text: '韓國全域安全', title: '朝鮮半島周邊地震監測中 ‧ 30 分鐘內無顯著強震通報' },
+      europe: { text: '歐洲全域安全', title: '歐洲與冰島火山地震帶監測中 ‧ 30 分鐘內無顯著強震通報' },
+      americas: { text: '美洲全域安全', title: '美洲環太平洋與斷層帶監測中 ‧ 30 分鐘內無顯著強震通報' }
+    };
+    const cfg = bannerMap[this.regionMode];
+    if (cfg) {
+      textEl.innerHTML = `<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> ${cfg.text}`;
+      banner.title = cfg.title;
     } else {
       textEl.innerHTML = '<i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全';
       banner.title = '雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中';
@@ -13389,9 +13783,13 @@ class EarthquakeEmergencyMonitor {
           this.showOverlay(this.latestEarthquake);
         } else {
           if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
-            const msg = this.regionMode === 'japan'
-              ? '日本列島全域安全 ‧ 30 分鐘內無顯著強震通報'
-              : '雙埔生活全域安全 ‧ 30分鐘內無顯著有感地震';
+            const toastMap = {
+              japan: '日本列島全域安全 ‧ 30 分鐘內無顯著強震通報',
+              korea: '韓國全境安全 ‧ 30 分鐘內無顯著有感地震通報',
+              europe: '歐洲重點觀測區安全 ‧ 30 分鐘內無顯著強震通報',
+              americas: '美洲重點觀測區安全 ‧ 30 分鐘內無顯著強震通報'
+            };
+            const msg = toastMap[this.regionMode] || '雙埔生活全域安全 ‧ 30分鐘內無顯著有感地震';
             window.showToast(msg, 'info');
           }
         }
@@ -13411,13 +13809,18 @@ class EarthquakeEmergencyMonitor {
     if (this.timerId) clearInterval(this.timerId);
   }
 
-  // 非同步抓取最新地震資訊 (依區域模式查詢 USGS 台灣或日本網格)
+  // 非同步抓取最新地震資訊 (依區域模式查詢 USGS 各洲際板塊網格)
   async fetchEarthquakeData() {
     const reqRegion = this.regionMode;
     try {
-      const usgsUrl = reqRegion === 'japan'
-        ? 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=24.0&maxlatitude=46.0&minlongitude=122.0&maxlongitude=148.0&minmagnitude=4.5&limit=3'
-        : 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=21.5&maxlatitude=26.0&minlongitude=119.5&maxlongitude=123.0&minmagnitude=3.0&limit=3';
+      const usgsUrlMap = {
+        taiwan: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=21.5&maxlatitude=26.0&minlongitude=119.5&maxlongitude=123.0&minmagnitude=3.0&limit=3',
+        japan: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=24.0&maxlatitude=46.0&minlongitude=122.0&maxlongitude=148.0&minmagnitude=4.5&limit=3',
+        korea: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=32.5&maxlatitude=39.5&minlongitude=124.0&maxlongitude=131.5&minmagnitude=3.8&limit=3',
+        europe: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=35.0&maxlatitude=71.0&minlongitude=-26.0&maxlongitude=32.0&minmagnitude=4.8&limit=3',
+        americas: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-35.0&maxlatitude=65.0&minlongitude=-165.0&maxlongitude=-35.0&minmagnitude=5.0&limit=3'
+      };
+      const usgsUrl = usgsUrlMap[reqRegion] || usgsUrlMap.taiwan;
       const res = await fetch(usgsUrl, { signal: AbortSignal.timeout(4000) });
       if (!res.ok) return;
       const data = await res.json();
@@ -13430,7 +13833,14 @@ class EarthquakeEmergencyMonitor {
 
       const latestFeature = data.features[0];
       const props = latestFeature.properties;
-      const coords = latestFeature.geometry?.coordinates || (reqRegion === 'japan' ? [139.7, 35.7, 15] : [121.5, 24.0, 10]);
+      const fallbackCoordsMap = {
+        taiwan: [121.5, 24.0, 10],
+        japan: [139.7, 35.7, 15],
+        korea: [127.0, 37.5, 10],
+        europe: [8.5, 47.4, 10],
+        americas: [-118.2, 34.0, 10]
+      };
+      const coords = latestFeature.geometry?.coordinates || fallbackCoordsMap[reqRegion] || [121.5, 24.0, 10];
       const eventTime = props.time;
       const now = Date.now();
       const ageMinutes = (now - eventTime) / (60 * 1000);
@@ -13441,6 +13851,13 @@ class EarthquakeEmergencyMonitor {
       // 估算參考中心受影響震度 (依震源距離與規模進行衰減簡化估算)
       const estIntensity = this.estimateLocalIntensity(props.mag, coords[1], coords[0], coords[2], reqRegion);
 
+      const regionLabels = {
+        taiwan: '雙埔',
+        japan: '日本當地',
+        korea: '韓國當地',
+        europe: '歐洲當地',
+        americas: '美洲當地'
+      };
       const eqObj = {
         id: latestFeature.id || `eq-${eventTime}`,
         mag: props.mag ? props.mag.toFixed(1) : '4.0',
@@ -13451,7 +13868,7 @@ class EarthquakeEmergencyMonitor {
         url: props.url || '#',
         estIntensity: estIntensity,
         regionMode: reqRegion,
-        regionLabel: reqRegion === 'japan' ? '日本當地' : '雙埔'
+        regionLabel: regionLabels[reqRegion] || '雙埔'
       };
 
       // 檢查是否為 30 分鐘內之近期有感地震
@@ -13459,9 +13876,9 @@ class EarthquakeEmergencyMonitor {
         this.latestEarthquake = eqObj;
         this.updateDisasterPill(eqObj);
 
-        // 顯著強震 (台灣規模 >= 4.5 或震度 >= 3；日本規模 >= 5.0 或東京估計震度 >= 3)
-        const triggerThreshold = reqRegion === 'japan'
-          ? (parseFloat(eqObj.mag) >= 5.0 || estIntensity >= 3)
+        const isIntl = reqRegion !== 'taiwan';
+        const triggerThreshold = isIntl
+          ? (parseFloat(eqObj.mag) >= 5.2 || estIntensity >= 3)
           : (parseFloat(eqObj.mag) >= 4.5 || estIntensity >= 3);
         if (triggerThreshold && !this.dismissedIds.has(eqObj.id)) {
           this.showOverlay(eqObj);
@@ -13478,12 +13895,18 @@ class EarthquakeEmergencyMonitor {
     }
   }
 
-  // 估算參考中心受影響震度 (雙埔 25.0,121.3 / 日本關東 35.69,139.69)
+  // 估算參考中心受影響震度
   estimateLocalIntensity(mag, lat, lon, depth = 10, regionMode = this.regionMode) {
-    const refLat = regionMode === 'japan' ? 35.6895 : 25.0;
-    const refLon = regionMode === 'japan' ? 139.6917 : 121.3;
-    const dLat = (lat - refLat) * 110.574;
-    const dLon = (lon - refLon) * (regionMode === 'japan' ? 90.2 : 100.86);
+    const refMap = {
+      taiwan: { lat: 25.0, lon: 121.3, lonScale: 100.86 },
+      japan: { lat: 35.6895, lon: 139.6917, lonScale: 90.2 },
+      korea: { lat: 37.5665, lon: 126.9780, lonScale: 88.2 },
+      europe: { lat: 46.8, lon: 8.2, lonScale: 76.0 },
+      americas: { lat: 34.05, lon: -118.24, lonScale: 92.0 }
+    };
+    const ref = refMap[regionMode] || refMap.taiwan;
+    const dLat = (lat - ref.lat) * 110.574;
+    const dLon = (lon - ref.lon) * ref.lonScale;
     const epicentralDist = Math.sqrt(dLat * dLat + dLon * dLon);
     const hypoDist = Math.sqrt(epicentralDist * epicentralDist + depth * depth);
     let localPga = Math.pow(10, 0.0056 * Math.pow(mag, 2) + 0.17 * mag - 1.25 * Math.log10(hypoDist + 0.006 * Math.pow(10, 0.5 * mag)) - 0.0016 * hypoDist + 0.85);
@@ -13507,6 +13930,26 @@ class EarthquakeEmergencyMonitor {
       if (placeStr.includes('Kyushu') || placeStr.includes('Kagoshima') || placeStr.includes('Kumamoto')) return '九州地方近海';
       if (placeStr.includes('Okinawa') || placeStr.includes('Ryukyu')) return '沖繩・琉球海域';
       return placeStr.replace(/,\s*Japan/i, ' (日本)');
+    }
+    if (regionMode === 'korea') {
+      if (!placeStr) return '朝鮮半島近海';
+      if (placeStr.includes('South Korea')) return placeStr.replace(/,\s*South Korea/i, ' (韓國)');
+      if (placeStr.includes('Jeju')) return '濟州島周邊海域';
+      return placeStr;
+    }
+    if (regionMode === 'europe') {
+      if (!placeStr) return '歐洲地震帶';
+      if (placeStr.includes('Iceland') || placeStr.includes('Reykjanes')) return '冰島火山地熱帶';
+      if (placeStr.includes('Italy')) return placeStr.replace(/,\s*Italy/i, ' (義大利)');
+      if (placeStr.includes('Greece')) return placeStr.replace(/,\s*Greece/i, ' (希臘近海)');
+      return placeStr;
+    }
+    if (regionMode === 'americas') {
+      if (!placeStr) return '美洲環太平洋帶';
+      if (placeStr.includes('California')) return placeStr.replace(/,\s*CA|,\s*California/i, ' (美國加州)');
+      if (placeStr.includes('Alaska')) return placeStr.replace(/,\s*Alaska/i, ' (美國阿拉斯加)');
+      if (placeStr.includes('Hawaii')) return placeStr.replace(/,\s*Hawaii/i, ' (夏威夷群島)');
+      return placeStr;
     }
     if (!placeStr) return '台灣近海';
     let place = placeStr;
@@ -13548,14 +13991,17 @@ class EarthquakeEmergencyMonitor {
     const depthEl = document.getElementById('eqDepthText');
     const timeEl = document.getElementById('eqTimeText');
     const linkEl = document.getElementById('eqDetailLink');
-    const isJapan = (eq.regionMode || this.regionMode) === 'japan';
+    const rMode = eq.regionMode || this.regionMode || 'taiwan';
+    const defaultReportUrl = rMode === 'japan'
+      ? 'https://www.jma.go.jp/bosai/map.html#contents=earthquake_map'
+      : (rMode === 'taiwan' ? 'https://www.cwa.gov.tw/V8/C/E/index.html' : 'https://earthquake.usgs.gov/earthquakes/map/');
 
     if (numEl) numEl.textContent = eq.estIntensity || 4;
-    if (placeEl) placeEl.textContent = eq.place || (isJapan ? '日本近海' : '台灣東部近海');
+    if (placeEl) placeEl.textContent = eq.place || (rMode === 'japan' ? '日本近海' : '台灣東部近海');
     if (magEl) magEl.textContent = eq.mag || '5.8';
     if (depthEl) depthEl.textContent = `${eq.depth || 15}km`;
     if (timeEl) timeEl.textContent = `${eq.ageMinutes <= 1 ? '剛剛' : eq.ageMinutes + '分鐘前'} 發震 (${eq.time.toLocaleTimeString('zh-TW', { hour12: false })})`;
-    if (linkEl) linkEl.href = eq.url || (isJapan ? 'https://www.jma.go.jp/bosai/map.html#contents=earthquake_map' : 'https://www.cwa.gov.tw/V8/C/E/index.html');
+    if (linkEl) linkEl.href = (eq.url && eq.url !== '#') ? eq.url : defaultReportUrl;
 
     overlay.classList.add('active');
     this.isAlertActive = true;
@@ -17896,6 +18342,30 @@ window.CAMERAS_DATA = {
       "lat": 35.6895,
       "lon": 139.6917,
       "description": "日本全境 80 處精選：東京澀谷 ‧ 富士山 4K ‧ 京都大阪 ‧ 立山高山 ‧ 北海道 ‧ 九州 ‧ 沖繩"
+    },
+    {
+      "id": "korea",
+      "name": "韓國",
+      "address": "首爾漢江 ‧ 釜山海灣 ‧ 濟州世遺精選實況",
+      "lat": 37.5665,
+      "lon": 126.9780,
+      "description": "韓國全境 18 處精選：首爾漢江 4K ‧ 景福宮 ‧ 光化門 ‧ 弘大商圈 ‧ 樂天世界塔 ‧ 釜山廣安大橋 ‧ 濟州城山日出峰"
+    },
+    {
+      "id": "europe",
+      "name": "歐洲",
+      "address": "阿爾卑斯雪山 ‧ 古都運河 ‧ 極光峽灣精選實況",
+      "lat": 46.5594,
+      "lon": 7.8925,
+      "description": "歐洲絕景 22 處精選：瑞士阿爾卑斯雪山 ‧ 威尼斯大運河 4K ‧ 巴黎艾菲爾鐵塔 ‧ 倫敦泰晤士河 ‧ 芬蘭聖誕老人村 ‧ 挪威峽灣與冰島極光"
+    },
+    {
+      "id": "americas",
+      "name": "美洲",
+      "address": "紐約摩天樓 ‧ 夏威夷海灘 ‧ 國家公園精選實況",
+      "lat": 40.7580,
+      "lon": -73.9855,
+      "description": "美洲奇觀 18 處精選：紐約時代廣場 ‧ 尼加拉大瀑布 ‧ 夏威夷威基基海灘 ‧ 洛杉磯威尼斯海灘 4K ‧ 洛磯山脈 ‧ 阿拉斯加棕熊溪流 ‧ 里約海灘"
     }
   ],
   "cameras": {
@@ -19786,18 +20256,18 @@ window.CAMERAS_DATA = {
       },
       {
         "id": "jp-14-harajuku",
-        "cctvCode": "JP-HARAJUKU-4K",
-        "name": "東京原宿 ‧ 表參道口與明治神宮林蔭大道 4K (Harajuku 4K)",
-        "authority": "原宿表参道 ライブ 官方 4K 實況",
+        "cctvCode": "JP-SHINJUKU-SOUTH",
+        "name": "東京新宿 ‧ 新宿站前南口與甲州街道實況 (Shinjuku Station)",
+        "authority": "TBS NEWS DIG Powered by JNN 官方實況",
         "type": "youtube",
-        "videoId": "st2p8BQAJhE",
-        "lat": 35.6702,
-        "lon": 139.7027,
-        "streamUrl": "https://www.youtube.com/watch?v=st2p8BQAJhE",
-        "sourceUrl": "https://www.youtube.com/watch?v=st2p8BQAJhE",
+        "videoId": "u7kCTaCX_J4",
+        "lat": 35.6896,
+        "lon": 139.7006,
+        "streamUrl": "https://www.youtube.com/watch?v=u7kCTaCX_J4",
+        "sourceUrl": "https://www.youtube.com/watch?v=u7kCTaCX_J4",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "原宿表參道",
+        "tag": "新宿車站",
         "distanceMeters": 0,
         "distanceKm": 0
       },
@@ -20923,6 +21393,998 @@ window.CAMERAS_DATA = {
         "distanceMeters": 0,
         "distanceKm": 0
       }
+    ],
+    "korea": [
+      {
+        "id": "kr-01-hangang-skyline",
+        "cctvCode": "KR-HANGANG-4K",
+        "name": "首爾漢江 ‧ 全景天際線與跨江大橋 4K (Seoul Hangang Skyline 4K)",
+        "authority": "한강 라이브 365 官方實況",
+        "type": "youtube",
+        "videoId": "5gVrWGRZo9s",
+        "lat": 37.5283,
+        "lon": 126.9328,
+        "streamUrl": "https://www.youtube.com/watch?v=5gVrWGRZo9s",
+        "sourceUrl": "https://www.youtube.com/watch?v=5gVrWGRZo9s",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-02-banpo-bridge",
+        "cctvCode": "KR-BANPO-4K",
+        "name": "首爾盤浦 ‧ 盤浦大橋與漢江夜景 4K (Banpo Bridge Hangang 4K)",
+        "authority": "데일리서울 한강 라이브캠 官方實況",
+        "type": "youtube",
+        "videoId": "RVvYQghFCXk",
+        "lat": 37.5152,
+        "lon": 126.9958,
+        "streamUrl": "https://www.youtube.com/watch?v=RVvYQghFCXk",
+        "sourceUrl": "https://www.youtube.com/watch?v=RVvYQghFCXk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣夜景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-03-gyeongbokgung",
+        "cctvCode": "KR-GYEONGBOKGUNG",
+        "name": "首爾鐘路 ‧ 景福宮古宮與北岳山全景 (Gyeongbokgung Palace)",
+        "authority": "GiGAeyes Live TV 官方實況",
+        "type": "youtube",
+        "videoId": "IcTMxC_k57A",
+        "lat": 37.5796,
+        "lon": 126.977,
+        "streamUrl": "https://www.youtube.com/watch?v=IcTMxC_k57A",
+        "sourceUrl": "https://www.youtube.com/watch?v=IcTMxC_k57A",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "景福宮風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-04-gwanghwamun",
+        "cctvCode": "KR-GWANGHWAMUN",
+        "name": "首爾中心 ‧ 光化門廣場與世宗大路 (Gwanghwamun Square)",
+        "authority": "GiGAeyesliveTV City View 官方實況",
+        "type": "youtube",
+        "videoId": "536M1XZGzIs",
+        "lat": 37.5725,
+        "lon": 126.9769,
+        "streamUrl": "https://www.youtube.com/watch?v=536M1XZGzIs",
+        "sourceUrl": "https://www.youtube.com/watch?v=536M1XZGzIs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "光化門商圈交通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-05-hongdae-4k",
+        "cctvCode": "KR-HONGDAE-4K",
+        "name": "首爾麻浦 ‧ 弘大年輕步行街潮流商圈 4K (Hongdae Street 4K)",
+        "authority": "홍대라이브 Hongdae Live 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "rHj1PNSOw_4",
+        "lat": 37.5563,
+        "lon": 126.9236,
+        "streamUrl": "https://www.youtube.com/watch?v=rHj1PNSOw_4",
+        "sourceUrl": "https://www.youtube.com/watch?v=rHj1PNSOw_4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "弘大商圈 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-06-busan-gwangan-4k",
+        "cctvCode": "KR-GWANGAN-4K",
+        "name": "釜山廣安里 ‧ 廣安大橋鑽石海灣 4K UHD (Busan Gwangan Bridge 4K)",
+        "authority": "Busan Live Cam 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "GZ8MwCX_n14",
+        "lat": 35.1532,
+        "lon": 129.1186,
+        "streamUrl": "https://www.youtube.com/watch?v=GZ8MwCX_n14",
+        "sourceUrl": "https://www.youtube.com/watch?v=GZ8MwCX_n14",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣釜山風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-07-lotte-world-tower",
+        "cctvCode": "KR-LOTTE-TOWER",
+        "name": "首爾蠶室 ‧ 樂天世界塔 555m 摩天樓天際線 (Lotte World Tower)",
+        "authority": "GiGAeyesliveTV City View 官方實況",
+        "type": "youtube",
+        "videoId": "G1oHv3PyNLc",
+        "lat": 37.5126,
+        "lon": 127.1025,
+        "streamUrl": "https://www.youtube.com/watch?v=G1oHv3PyNLc",
+        "sourceUrl": "https://www.youtube.com/watch?v=G1oHv3PyNLc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "樂天世界塔商圈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-08-seoul-station",
+        "cctvCode": "KR-SEOUL-STN",
+        "name": "首爾中區 ‧ 首爾車站站前廣場交通門戶 (Seoul Station)",
+        "authority": "GiGAeyes Live TV 官方實況",
+        "type": "youtube",
+        "videoId": "C3hW1VrwmNc",
+        "lat": 37.5547,
+        "lon": 126.9707,
+        "streamUrl": "https://www.youtube.com/watch?v=C3hW1VrwmNc",
+        "sourceUrl": "https://www.youtube.com/watch?v=C3hW1VrwmNc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "首爾車站交通商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-09-seokchon-lake",
+        "cctvCode": "KR-SEOKCHON-LAKE",
+        "name": "首爾松坡 ‧ 樂天世界城堡與石村湖風景 (Seokchon Lake)",
+        "authority": "GiGAeyes Live TV 官方實況",
+        "type": "youtube",
+        "videoId": "GRwcf4_ZDYo",
+        "lat": 37.5111,
+        "lon": 127.0982,
+        "streamUrl": "https://www.youtube.com/watch?v=GRwcf4_ZDYo",
+        "sourceUrl": "https://www.youtube.com/watch?v=GRwcf4_ZDYo",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "石村湖風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-10-seogang-bridge",
+        "cctvCode": "KR-SEOGANG-BRIDGE",
+        "name": "首爾汝矣島 ‧ 西江大橋與漢江水岸全景 (Seogang Bridge)",
+        "authority": "GiGAeyesliveTV City View 官方實況",
+        "type": "youtube",
+        "videoId": "Hr3wOOZSaeg",
+        "lat": 37.5408,
+        "lon": 126.9277,
+        "streamUrl": "https://www.youtube.com/watch?v=Hr3wOOZSaeg",
+        "sourceUrl": "https://www.youtube.com/watch?v=Hr3wOOZSaeg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣大橋交通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-11-worldcup-bridge-4k",
+        "cctvCode": "KR-WORLDCUP-4K",
+        "name": "首爾麻浦 ‧ 世界盃大橋與漢江公園綠帶 4K (World Cup Bridge 4K)",
+        "authority": "RIVERWORKER 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "vk5BHoDxXf0",
+        "lat": 37.5568,
+        "lon": 126.8973,
+        "streamUrl": "https://www.youtube.com/watch?v=vk5BHoDxXf0",
+        "sourceUrl": "https://www.youtube.com/watch?v=vk5BHoDxXf0",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣公園風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-12-yeouido-skyline",
+        "cctvCode": "KR-YEOUIDO",
+        "name": "首爾汝矣島 ‧ 金融摩天樓群與漢江夕照 (Yeouido Skyline)",
+        "authority": "RIVERWORKER 官方實況",
+        "type": "youtube",
+        "videoId": "-G99Sz86WzA",
+        "lat": 37.5262,
+        "lon": 126.9272,
+        "streamUrl": "https://www.youtube.com/watch?v=-G99Sz86WzA",
+        "sourceUrl": "https://www.youtube.com/watch?v=-G99Sz86WzA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣汝矣島商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-13-gwanggyo-lake",
+        "cctvCode": "KR-GWANGGYO-LAKE",
+        "name": "京畿水原 ‧ 光教湖水公園百萬水岸夜景 (Gwanggyo Lake Park)",
+        "authority": "GiGAeyesliveTV City View 官方實況",
+        "type": "youtube",
+        "videoId": "eG54m1b4l2k",
+        "lat": 37.2827,
+        "lon": 127.0658,
+        "streamUrl": "https://www.youtube.com/watch?v=eG54m1b4l2k",
+        "sourceUrl": "https://www.youtube.com/watch?v=eG54m1b4l2k",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "湖水公園風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-14-gwangalli-beach",
+        "cctvCode": "KR-GWANGALLI",
+        "name": "釜山游泳區 ‧ 廣安里海水浴場與大橋海景 (Gwangalli Beach)",
+        "authority": "GiGAeyes Live TV 官方實況",
+        "type": "youtube",
+        "videoId": "UYUDqPD8uCM",
+        "lat": 35.1538,
+        "lon": 129.1195,
+        "streamUrl": "https://www.youtube.com/watch?v=UYUDqPD8uCM",
+        "sourceUrl": "https://www.youtube.com/watch?v=UYUDqPD8uCM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣釜山風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-15-gwangan-panorama",
+        "cctvCode": "KR-GWANGAN-PANO",
+        "name": "釜山海濱 ‧ 廣安大橋跨海全景眺望 (Gwangan Bridge Panorama)",
+        "authority": "광안대교 LIVE CAM 官方實況",
+        "type": "youtube",
+        "videoId": "m_EmGDe_P84",
+        "lat": 35.1485,
+        "lon": 129.1292,
+        "streamUrl": "https://www.youtube.com/watch?v=m_EmGDe_P84",
+        "sourceUrl": "https://www.youtube.com/watch?v=m_EmGDe_P84",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣釜山大橋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-16-songjeong-beach",
+        "cctvCode": "KR-SONGJEONG",
+        "name": "釜山海雲台 ‧ 松亭海水浴場衝浪海灣 (Songjeong Surf Beach)",
+        "authority": "올라호텔 官方實況",
+        "type": "youtube",
+        "videoId": "NBZdNZYF1gI",
+        "lat": 35.1786,
+        "lon": 129.1997,
+        "streamUrl": "https://www.youtube.com/watch?v=NBZdNZYF1gI",
+        "sourceUrl": "https://www.youtube.com/watch?v=NBZdNZYF1gI",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣海雲台風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-17-gwangan-traffic",
+        "cctvCode": "KR-GWANGAN-TRAFFIC",
+        "name": "釜山跨海動脈 ‧ 廣安大橋雙層橋面車流與海景 (Gwangan Traffic)",
+        "authority": "광안대교 교통정보 官方實況",
+        "type": "youtube",
+        "videoId": "D06mQkm0sgs",
+        "lat": 35.1462,
+        "lon": 129.1265,
+        "streamUrl": "https://www.youtube.com/watch?v=D06mQkm0sgs",
+        "sourceUrl": "https://www.youtube.com/watch?v=D06mQkm0sgs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣大橋交通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "kr-18-jeju-seongsan",
+        "cctvCode": "KR-JEJU-SEONGSAN",
+        "name": "濟州島西歸浦 ‧ 世界自然遺產城山日出峰 (Jeju Seongsan Ilchulbong)",
+        "authority": "GiGAeyes Live TV 官方實況",
+        "type": "youtube",
+        "videoId": "udRDI1uDdvQ",
+        "lat": 33.4581,
+        "lon": 126.9425,
+        "streamUrl": "https://www.youtube.com/watch?v=udRDI1uDdvQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=udRDI1uDdvQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "漢江海灣濟州島風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      }
+    ],
+    "europe": [
+      {
+        "id": "eu-01-swiss-alps",
+        "cctvCode": "EU-SWISS-ALPS",
+        "name": "瑞士阿爾卑斯 ‧ 壯麗雪峰群山全景巡禮 (Swiss Alps Panorama)",
+        "authority": "feratel Swiss Alps 官方實況",
+        "type": "youtube",
+        "videoId": "enYFXf8u7Lc",
+        "lat": 46.5594,
+        "lon": 7.8925,
+        "streamUrl": "https://www.youtube.com/watch?v=enYFXf8u7Lc",
+        "sourceUrl": "https://www.youtube.com/watch?v=enYFXf8u7Lc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "阿爾卑斯雪山風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-02-venice-grand-canal-4k",
+        "cctvCode": "EU-VENICE-4K",
+        "name": "義大利威尼斯 ‧ 大運河水上貢多拉船景 4K (Venice Grand Canal 4K)",
+        "authority": "I Love You Venice 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "r8N6IsoIkTk",
+        "lat": 45.4414,
+        "lon": 12.3228,
+        "streamUrl": "https://www.youtube.com/watch?v=r8N6IsoIkTk",
+        "sourceUrl": "https://www.youtube.com/watch?v=r8N6IsoIkTk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "運河古都風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-03-paris-eiffel",
+        "cctvCode": "EU-PARIS-EIFFEL",
+        "name": "法國巴黎 ‧ 艾菲爾鐵塔與戰神廣場天際線 (Paris Eiffel Tower)",
+        "authority": "Paris75Webcam 官方實況",
+        "type": "youtube",
+        "videoId": "QI-PPEW2Bgc",
+        "lat": 48.8584,
+        "lon": 2.2945,
+        "streamUrl": "https://www.youtube.com/watch?v=QI-PPEW2Bgc",
+        "sourceUrl": "https://www.youtube.com/watch?v=QI-PPEW2Bgc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "巴黎鐵塔風景商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-04-lapland-santa-village",
+        "cctvCode": "EU-ROVANIEMI-SANTA",
+        "name": "芬蘭羅瓦涅米 ‧ 北極圈聖誕老人村極光雪景 (Santa Claus Village)",
+        "authority": "City of Rovaniemi 官方實況",
+        "type": "youtube",
+        "videoId": "Cp4RRAEgpeU",
+        "lat": 66.5436,
+        "lon": 25.8472,
+        "streamUrl": "https://www.youtube.com/watch?v=Cp4RRAEgpeU",
+        "sourceUrl": "https://www.youtube.com/watch?v=Cp4RRAEgpeU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光北歐雪景風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-05-norway-geirangerfjord",
+        "cctvCode": "EU-GEIRANGERFJORD",
+        "name": "挪威蓋朗厄爾 ‧ 世界自然遺產壯麗峽灣 (Geirangerfjord)",
+        "authority": "Hotel Union Geiranger 官方實況",
+        "type": "youtube",
+        "videoId": "wAdTV6Uc5eA",
+        "lat": 62.1008,
+        "lon": 7.2059,
+        "streamUrl": "https://www.youtube.com/watch?v=wAdTV6Uc5eA",
+        "sourceUrl": "https://www.youtube.com/watch?v=wAdTV6Uc5eA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光峽灣風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-06-london-thames-4k",
+        "cctvCode": "EU-LONDON-THAMES-4K",
+        "name": "英國倫敦 ‧ 泰晤士河與倫敦塔橋水岸 4K (London River Thames 4K)",
+        "authority": "Beach Life Cams 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "MXmzsjABC-U",
+        "lat": 51.5079,
+        "lon": -0.0877,
+        "streamUrl": "https://www.youtube.com/watch?v=MXmzsjABC-U",
+        "sourceUrl": "https://www.youtube.com/watch?v=MXmzsjABC-U",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "運河倫敦泰晤士河風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-07-swiss-st-moritz",
+        "cctvCode": "EU-ST-MORITZ",
+        "name": "瑞士聖莫里茲 ‧ 阿爾卑斯高山湖城渡假實況 (St. Moritz Alps)",
+        "authority": "St.Moritz 官方實況",
+        "type": "youtube",
+        "videoId": "9b5evZuY47c",
+        "lat": 46.4908,
+        "lon": 9.8355,
+        "streamUrl": "https://www.youtube.com/watch?v=9b5evZuY47c",
+        "sourceUrl": "https://www.youtube.com/watch?v=9b5evZuY47c",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "阿爾卑斯湖泊風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-08-swiss-morteratsch",
+        "cctvCode": "EU-BERNINA-TRAIN",
+        "name": "瑞士莫爾特拉奇 ‧ 伯爾尼納冰河山谷紅色列車鐵道 (Bernina Railway)",
+        "authority": "Viva Morteratsch 官方實況",
+        "type": "youtube",
+        "videoId": "_MIhoFc5F2I",
+        "lat": 46.4539,
+        "lon": 9.9369,
+        "streamUrl": "https://www.youtube.com/watch?v=_MIhoFc5F2I",
+        "sourceUrl": "https://www.youtube.com/watch?v=_MIhoFc5F2I",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "阿爾卑斯鐵道交通風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-09-swiss-grimentz",
+        "cctvCode": "EU-GRIMENTZ",
+        "name": "瑞士瓦萊州 ‧ 格里門茨阿爾卑斯百年木屋山村 (Grimentz Village)",
+        "authority": "Grimentz Live 官方實況",
+        "type": "youtube",
+        "videoId": "iCxfe27HpaY",
+        "lat": 46.1802,
+        "lon": 7.5739,
+        "streamUrl": "https://www.youtube.com/watch?v=iCxfe27HpaY",
+        "sourceUrl": "https://www.youtube.com/watch?v=iCxfe27HpaY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "阿爾卑斯山村風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-10-swiss-lucerne",
+        "cctvCode": "EU-LUCERNE",
+        "name": "瑞士琉森 ‧ 琉森湖與卡貝爾橋古都山湖全景 (Lucerne Lake)",
+        "authority": "Tele1 Luzern 官方實況",
+        "type": "youtube",
+        "videoId": "QIt1FaDMnQc",
+        "lat": 47.0502,
+        "lon": 8.3093,
+        "streamUrl": "https://www.youtube.com/watch?v=QIt1FaDMnQc",
+        "sourceUrl": "https://www.youtube.com/watch?v=QIt1FaDMnQc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "阿爾卑斯琉森湖風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-11-venice-san-marco",
+        "cctvCode": "EU-VENICE-SANMARCO",
+        "name": "義大利威尼斯 ‧ 聖馬可海灣與古橋漫遊視角 (Venice San Marco)",
+        "authority": "I Love You Venice 官方實況",
+        "type": "youtube",
+        "videoId": "a1mcaV3Sf9U",
+        "lat": 45.4342,
+        "lon": 12.3388,
+        "streamUrl": "https://www.youtube.com/watch?v=a1mcaV3Sf9U",
+        "sourceUrl": "https://www.youtube.com/watch?v=a1mcaV3Sf9U",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "運河威尼斯風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-12-paris-sacre-coeur",
+        "cctvCode": "EU-PARIS-MONTMARTRE",
+        "name": "法國巴黎 ‧ 蒙馬特聖心堂白色圓頂全景 (Paris Sacré-Cœur)",
+        "authority": "PARIS TV 官方實況",
+        "type": "youtube",
+        "videoId": "-xzg3wujOVM",
+        "lat": 48.8867,
+        "lon": 2.3431,
+        "streamUrl": "https://www.youtube.com/watch?v=-xzg3wujOVM",
+        "sourceUrl": "https://www.youtube.com/watch?v=-xzg3wujOVM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "巴黎聖心堂風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-13-london-abbey-road",
+        "cctvCode": "EU-ABBEY-ROAD",
+        "name": "英國倫敦 ‧ 艾比路披頭四經典斑馬線街景 (London Abbey Road)",
+        "authority": "EarthCam 官方實況",
+        "type": "youtube",
+        "videoId": "zMCea32gpmg",
+        "lat": 51.532,
+        "lon": -0.1773,
+        "streamUrl": "https://www.youtube.com/watch?v=zMCea32gpmg",
+        "sourceUrl": "https://www.youtube.com/watch?v=zMCea32gpmg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "倫敦商圈交通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-14-london-heathrow",
+        "cctvCode": "EU-HEATHROW-LHR",
+        "name": "英國倫敦 ‧ 希斯洛國際機場巨無霸客機起降 (Heathrow Airport)",
+        "authority": "BIG JET TV 官方實況",
+        "type": "youtube",
+        "videoId": "uDBYuEV4zjI",
+        "lat": 51.47,
+        "lon": -0.4543,
+        "streamUrl": "https://www.youtube.com/watch?v=uDBYuEV4zjI",
+        "sourceUrl": "https://www.youtube.com/watch?v=uDBYuEV4zjI",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "倫敦機場交通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-15-amsterdam-dam-4k",
+        "cctvCode": "EU-AMSTERDAM-DAM-4K",
+        "name": "荷蘭阿姆斯特丹 ‧ 水壩廣場與王宮電車街景 4K (Amsterdam Dam Square 4K)",
+        "authority": "Now4Rent.NL 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "Gd9d4q6WvUY",
+        "lat": 52.3731,
+        "lon": 4.8926,
+        "streamUrl": "https://www.youtube.com/watch?v=Gd9d4q6WvUY",
+        "sourceUrl": "https://www.youtube.com/watch?v=Gd9d4q6WvUY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "運河阿姆斯特丹商圈 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-16-amsterdam-damrak-4k",
+        "cctvCode": "EU-AMSTERDAM-CANAL-4K",
+        "name": "荷蘭阿姆斯特丹 ‧ 達姆拉克運河港灣大道 4K (Amsterdam Damrak 4K)",
+        "authority": "WebCam.NL 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "43qH0tDA6lM",
+        "lat": 52.3762,
+        "lon": 4.8968,
+        "streamUrl": "https://www.youtube.com/watch?v=43qH0tDA6lM",
+        "sourceUrl": "https://www.youtube.com/watch?v=43qH0tDA6lM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "運河古都風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-17-prague-vltava",
+        "cctvCode": "EU-PRAGUE-VLTAVA",
+        "name": "捷克布拉格 ‧ 百塔之城紅瓦古都與伏爾塔瓦河 (Prague Old Town)",
+        "authority": "CamStreamer Prague 官方實況",
+        "type": "youtube",
+        "videoId": "kvYMIaXclIE",
+        "lat": 50.0865,
+        "lon": 14.4114,
+        "streamUrl": "https://www.youtube.com/watch?v=kvYMIaXclIE",
+        "sourceUrl": "https://www.youtube.com/watch?v=kvYMIaXclIE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "運河布拉格古都風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-18-finland-levi",
+        "cctvCode": "EU-LEVI-LAPLAND",
+        "name": "芬蘭拉普蘭 ‧ 列維極地滑雪場與北極天空 (Levi Lapland)",
+        "authority": "Levi Ski Resort 官方實況",
+        "type": "youtube",
+        "videoId": "LwihxyJ4V20",
+        "lat": 67.804,
+        "lon": 24.8087,
+        "streamUrl": "https://www.youtube.com/watch?v=LwihxyJ4V20",
+        "sourceUrl": "https://www.youtube.com/watch?v=LwihxyJ4V20",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光拉普蘭雪景風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-19-norway-tromso",
+        "cctvCode": "EU-TROMSO-ARCTIC",
+        "name": "挪威特羅姆瑟 ‧ 北極門戶峽灣港灣與雪山 (Tromsø Arctic Harbor)",
+        "authority": "Vervet Tromsø 官方實況",
+        "type": "youtube",
+        "videoId": "3y7_fkAzzps",
+        "lat": 69.6542,
+        "lon": 18.9639,
+        "streamUrl": "https://www.youtube.com/watch?v=3y7_fkAzzps",
+        "sourceUrl": "https://www.youtube.com/watch?v=3y7_fkAzzps",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光峽灣風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-20-iceland-aurora",
+        "cctvCode": "EU-REYKJAVIK-AURORA",
+        "name": "冰島雷克雅維克 ‧ 北極光觀測中心夜空實況 (Aurora Reykjavík)",
+        "authority": "Aurora Reykjavík 官方實況",
+        "type": "youtube",
+        "videoId": "exshoGpNXZk",
+        "lat": 64.1538,
+        "lon": -21.9519,
+        "streamUrl": "https://www.youtube.com/watch?v=exshoGpNXZk",
+        "sourceUrl": "https://www.youtube.com/watch?v=exshoGpNXZk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光冰島風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-21-iceland-perlan",
+        "cctvCode": "EU-REYKJAVIK-PERLAN",
+        "name": "冰島雷克雅維克 ‧ 珍珠樓俯瞰首都與山海全景 (Reykjavík Perlan)",
+        "authority": "mbl.is Perlan 官方實況",
+        "type": "youtube",
+        "videoId": "WuBmLBuvKYA",
+        "lat": 64.1292,
+        "lon": -21.9189,
+        "streamUrl": "https://www.youtube.com/watch?v=WuBmLBuvKYA",
+        "sourceUrl": "https://www.youtube.com/watch?v=WuBmLBuvKYA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光冰島風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "eu-22-iceland-volcano",
+        "cctvCode": "EU-ICELAND-VOLCANO",
+        "name": "冰島雷克雅內斯 ‧ 活火山地熱熔岩帶多視角監測 (Iceland Volcano)",
+        "authority": "afarTV Volcano 官方實況",
+        "type": "youtube",
+        "videoId": "qkSvU9j4kqM",
+        "lat": 63.8825,
+        "lon": -22.4328,
+        "streamUrl": "https://www.youtube.com/watch?v=qkSvU9j4kqM",
+        "sourceUrl": "https://www.youtube.com/watch?v=qkSvU9j4kqM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "極光冰島火山風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      }
+    ],
+    "americas": [
+      {
+        "id": "am-01-nyc-times-square",
+        "cctvCode": "AM-NYC-TIMESSQ",
+        "name": "美國紐約 ‧ 時代廣場霓虹看板與曼哈頓天際線 (NYC Times Square)",
+        "authority": "FOX 5 New York 官方實況",
+        "type": "youtube",
+        "videoId": "VGnFLdQW39A",
+        "lat": 40.758,
+        "lon": -73.9855,
+        "streamUrl": "https://www.youtube.com/watch?v=VGnFLdQW39A",
+        "sourceUrl": "https://www.youtube.com/watch?v=VGnFLdQW39A",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "紐約時代廣場商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-02-niagara-falls-panorama",
+        "cctvCode": "AM-NIAGARA-FALLS",
+        "name": "美加邊境 ‧ 尼加拉大瀑布壯闊水霧全景 (Niagara Falls Panorama)",
+        "authority": "EarthCam 官方實況",
+        "type": "youtube",
+        "videoId": "qx7gry390YA",
+        "lat": 43.0799,
+        "lon": -79.0747,
+        "streamUrl": "https://www.youtube.com/watch?v=qx7gry390YA",
+        "sourceUrl": "https://www.youtube.com/watch?v=qx7gry390YA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園瀑布風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-03-waikiki-beach",
+        "cctvCode": "AM-HAWAII-WAIKIKI",
+        "name": "美國夏威夷檀香山 ‧ 威基基海灘與鑽石頭山 (Waikiki Beach)",
+        "authority": "Park Shore Waikiki 官方實況",
+        "type": "youtube",
+        "videoId": "kCPppYpcY_s",
+        "lat": 21.2736,
+        "lon": -157.8229,
+        "streamUrl": "https://www.youtube.com/watch?v=kCPppYpcY_s",
+        "sourceUrl": "https://www.youtube.com/watch?v=kCPppYpcY_s",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "海灘夏威夷衝浪風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-04-la-venice-beach-4k",
+        "cctvCode": "AM-LA-VENICE-4K",
+        "name": "美國加州洛杉磯 ‧ 威尼斯海濱步道與太平洋日落 4K (LA Venice Beach 4K)",
+        "authority": "Venice Vive 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "0IgjqQzibqE",
+        "lat": 33.985,
+        "lon": -118.4695,
+        "streamUrl": "https://www.youtube.com/watch?v=0IgjqQzibqE",
+        "sourceUrl": "https://www.youtube.com/watch?v=0IgjqQzibqE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "海灘洛杉磯商圈風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-05-banff-canmore-rockies",
+        "cctvCode": "AM-BANFF-ROCKIES",
+        "name": "加拿大亞伯達 ‧ 班夫門戶坎莫爾洛磯山脈雪峰 (Banff Canmore Rockies)",
+        "authority": "Canmore Rockies 官方實況",
+        "type": "youtube",
+        "videoId": "_0wPODlF9wU",
+        "lat": 51.0892,
+        "lon": -115.3585,
+        "streamUrl": "https://www.youtube.com/watch?v=_0wPODlF9wU",
+        "sourceUrl": "https://www.youtube.com/watch?v=_0wPODlF9wU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園洛磯山脈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-06-nyc-brooklyn-bridge",
+        "cctvCode": "AM-NYC-BROOKLYN",
+        "name": "美國紐約 ‧ 布魯克林大橋與東河摩天樓群 (Brooklyn Bridge)",
+        "authority": "EarthCam 官方實況",
+        "type": "youtube",
+        "videoId": "tErYxn2UM5Y",
+        "lat": 40.7061,
+        "lon": -73.9969,
+        "streamUrl": "https://www.youtube.com/watch?v=tErYxn2UM5Y",
+        "sourceUrl": "https://www.youtube.com/watch?v=tErYxn2UM5Y",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "紐約大橋交通風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-07-nyc-harbor",
+        "cctvCode": "AM-NYC-HARBOR",
+        "name": "美國紐約 ‧ 下曼哈頓金融區與紐約港渡輪海灣 (Lower Manhattan Harbor)",
+        "authority": "St. George Tower 官方實況",
+        "type": "youtube",
+        "videoId": "1kvGNR_A3DY",
+        "lat": 40.6975,
+        "lon": -73.9935,
+        "streamUrl": "https://www.youtube.com/watch?v=1kvGNR_A3DY",
+        "sourceUrl": "https://www.youtube.com/watch?v=1kvGNR_A3DY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "紐約港海灘風景交通",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-08-nyc-skyline",
+        "cctvCode": "AM-NYC-SKYLINE",
+        "name": "美國紐約 ‧ 曼哈頓日出日落城市全景天際線 (Manhattan Skyline)",
+        "authority": "ms36K NYC Live 官方實況",
+        "type": "youtube",
+        "videoId": "dD5BV_lH-0w",
+        "lat": 40.7484,
+        "lon": -73.9857,
+        "streamUrl": "https://www.youtube.com/watch?v=dD5BV_lH-0w",
+        "sourceUrl": "https://www.youtube.com/watch?v=dD5BV_lH-0w",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "紐約商圈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-09-niagara-horseshoe",
+        "cctvCode": "AM-NIAGARA-HORSESHOE",
+        "name": "加拿大安大略 ‧ 尼加拉馬蹄瀑布澎湃近景 (Niagara Horseshoe Falls)",
+        "authority": "Niagara Falls Live 官方實況",
+        "type": "youtube",
+        "videoId": "7gBzLGlJnwk",
+        "lat": 43.0828,
+        "lon": -79.0742,
+        "streamUrl": "https://www.youtube.com/watch?v=7gBzLGlJnwk",
+        "sourceUrl": "https://www.youtube.com/watch?v=7gBzLGlJnwk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園瀑布風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-10-hawaii-pipeline",
+        "cctvCode": "AM-HAWAII-PIPELINE",
+        "name": "美國夏威夷歐胡島 ‧ 北岸管浪國際衝浪聖地 (Banzai Pipeline)",
+        "authority": "explore.org Pipeline 官方實況",
+        "type": "youtube",
+        "videoId": "Fp7l8XASb9Y",
+        "lat": 21.6649,
+        "lon": -158.053,
+        "streamUrl": "https://www.youtube.com/watch?v=Fp7l8XASb9Y",
+        "sourceUrl": "https://www.youtube.com/watch?v=Fp7l8XASb9Y",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "海灘夏威夷衝浪風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-11-maui-kaanapali",
+        "cctvCode": "AM-MAUI-KAANAPALI",
+        "name": "美國夏威夷茂宜島 ‧ 卡阿納帕利蔚藍渡假海灘 (Maui Kaanapali Beach)",
+        "authority": "Sheraton Maui 官方實況",
+        "type": "youtube",
+        "videoId": "YXji6UQ0bwY",
+        "lat": 20.9261,
+        "lon": -156.6946,
+        "streamUrl": "https://www.youtube.com/watch?v=YXji6UQ0bwY",
+        "sourceUrl": "https://www.youtube.com/watch?v=YXji6UQ0bwY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "海灘夏威夷風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-12-maui-sanctuary-4k",
+        "cctvCode": "AM-MAUI-SANCTUARY-4K",
+        "name": "美國夏威夷茂宜島 ‧ 座頭鯨國家海洋保護區碧海 4K (Maui Sanctuary 4K)",
+        "authority": "afarTV 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "QzQ-7eiMw1w",
+        "lat": 20.7644,
+        "lon": -156.445,
+        "streamUrl": "https://www.youtube.com/watch?v=QzQ-7eiMw1w",
+        "sourceUrl": "https://www.youtube.com/watch?v=QzQ-7eiMw1w",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "海灘國家公園風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-13-la-hollywood",
+        "cctvCode": "AM-LA-HOLLYWOOD",
+        "name": "美國加州洛杉磯 ‧ 好萊塢山丘與天使之城全景 (Los Angeles Hollywood)",
+        "authority": "LA Times Studios 官方實況",
+        "type": "youtube",
+        "videoId": "YHWJd_DNgKY",
+        "lat": 34.0928,
+        "lon": -118.3287,
+        "streamUrl": "https://www.youtube.com/watch?v=YHWJd_DNgKY",
+        "sourceUrl": "https://www.youtube.com/watch?v=YHWJd_DNgKY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "洛杉磯商圈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-14-big-bear-eagle",
+        "cctvCode": "AM-BIG-BEAR-EAGLE",
+        "name": "美國加州大熊湖 ‧ 國鳥白頭海鵰高空松林巢穴 (Big Bear Bald Eagle)",
+        "authority": "FOBBV Big Bear 官方實況",
+        "type": "youtube",
+        "videoId": "B4-L2nfGcuE",
+        "lat": 34.2639,
+        "lon": -116.9114,
+        "streamUrl": "https://www.youtube.com/watch?v=B4-L2nfGcuE",
+        "sourceUrl": "https://www.youtube.com/watch?v=B4-L2nfGcuE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園生態風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-15-jackson-hole",
+        "cctvCode": "AM-JACKSON-HOLE",
+        "name": "美國懷俄明傑克森霍爾 ‧ 大提頓門戶鹿角拱門小鎮廣場 (Jackson Hole)",
+        "authority": "See Jackson Hole 官方實況",
+        "type": "youtube",
+        "videoId": "1EiC9bvVGnk",
+        "lat": 43.4799,
+        "lon": -110.7624,
+        "streamUrl": "https://www.youtube.com/watch?v=1EiC9bvVGnk",
+        "sourceUrl": "https://www.youtube.com/watch?v=1EiC9bvVGnk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園小鎮商圈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-16-telluride-rockies",
+        "cctvCode": "AM-TELLURIDE",
+        "name": "美國科羅拉多 ‧ 特柳賴德洛磯山脈高山山谷 (Telluride Rockies)",
+        "authority": "Telluride Live 官方實況",
+        "type": "youtube",
+        "videoId": "8Et9fVZld7E",
+        "lat": 37.9375,
+        "lon": -107.8123,
+        "streamUrl": "https://www.youtube.com/watch?v=8Et9fVZld7E",
+        "sourceUrl": "https://www.youtube.com/watch?v=8Et9fVZld7E",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園洛磯山脈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-17-alaska-katmai-falls",
+        "cctvCode": "AM-KATMAI-FALLS",
+        "name": "美國阿拉斯加 ‧ 卡特邁國家公園布魯克斯瀑布棕熊溪流 (Katmai Brooks Falls)",
+        "authority": "explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "J7ZrIDvqlic",
+        "lat": 58.5546,
+        "lon": -155.7786,
+        "streamUrl": "https://www.youtube.com/watch?v=J7ZrIDvqlic",
+        "sourceUrl": "https://www.youtube.com/watch?v=J7ZrIDvqlic",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "國家公園瀑布生態風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      },
+      {
+        "id": "am-18-rio-copacabana",
+        "cctvCode": "AM-RIO-COPACABANA",
+        "name": "巴西里約熱內盧 ‧ 科帕卡巴納新月海灘與山海景觀 (Rio Copacabana Beach)",
+        "authority": "Homes in Rio 官方實況",
+        "type": "youtube",
+        "videoId": "wyEi0OPai5g",
+        "lat": -22.9848,
+        "lon": -43.1892,
+        "streamUrl": "https://www.youtube.com/watch?v=wyEi0OPai5g",
+        "sourceUrl": "https://www.youtube.com/watch?v=wyEi0OPai5g",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "海灘里約衝浪風景",
+        "distanceMeters": 0,
+        "distanceKm": 0
+      }
     ]
   }
 };
@@ -21138,6 +22600,149 @@ class MonitorApp {
     this.filterKeyword = '';
     this.filterTag = 'all';
     this.commuteCapsuleTimer = null;
+    this.currentPage = 0;
+    this.totalPages = 1;
+    this.isAutoTourActive = false;
+    this.autoTourIntervalMs = 25000;
+    this.autoTourTimer = null;
+  }
+
+  // 判斷是否為跨國實況分頁 (日本 / 韓國 / 歐洲 / 美洲)
+  isInternationalCenter(centerId = this.currentCenterId) {
+    return ['japan', 'korea', 'europe', 'americas'].includes(centerId);
+  }
+
+  // 取得當前分頁與選定觀測城市對應之標準 IANA 時區
+  getActiveTimezone() {
+    const cid = this.currentCenterId;
+    if (this.isInternationalCenter(cid)) {
+      if (this.weatherMonitor && this.weatherMonitor.activeMode === 'single' && this.weatherMonitor.activeTimezone && this.weatherMonitor.activeTimezone !== 'Asia/Taipei') {
+        return this.weatherMonitor.activeTimezone;
+      }
+      const defaultTzMap = {
+        japan: 'Asia/Tokyo',
+        korea: 'Asia/Seoul',
+        europe: 'Europe/Zurich',
+        americas: 'America/New_York'
+      };
+      return defaultTzMap[cid] || 'Asia/Taipei';
+    }
+    return 'Asia/Taipei';
+  }
+
+  // 視訊牆分頁切換 (上一頁 / 下一頁，支援循環翻頁)
+  changePage(delta = 1) {
+    if (this.totalPages <= 1) return;
+    this.currentPage = ((this.currentPage + delta) % this.totalPages + this.totalPages) % this.totalPages;
+    this.renderVideoMatrix();
+    this.applyAdaptiveViewportFit();
+    if (this.isAutoTourActive) {
+      this.restartAutoTourTimer();
+    }
+  }
+
+  // 隨機漫遊切換一組不同頁面的即時視角
+  randomPage() {
+    if (this.totalPages <= 1) {
+      if (this.currentCameras.length > 4 && (this.currentGridMode === 'grid-all' || this.currentGridMode === 'grid-1')) {
+        const targetGrid = this.isInternationalCenter() ? 'grid-4' : 'grid-6';
+        this.setGridMode(targetGrid);
+        if (this.totalPages > 1) {
+          this.currentPage = Math.floor(Math.random() * this.totalPages);
+          this.renderVideoMatrix();
+          this.applyAdaptiveViewportFit();
+        }
+        if (window.showToast) window.showToast(`已切換隨機精選視角 (${this.currentPage + 1}/${this.totalPages} 頁)`, 'info');
+      }
+      return;
+    }
+    let nextPage = Math.floor(Math.random() * this.totalPages);
+    if (nextPage === this.currentPage) {
+      nextPage = (this.currentPage + 1) % this.totalPages;
+    }
+    this.currentPage = nextPage;
+    this.renderVideoMatrix();
+    this.applyAdaptiveViewportFit();
+    if (this.isAutoTourActive) {
+      this.restartAutoTourTimer();
+    }
+    if (window.showToast) window.showToast(`隨機漫遊：第 ${this.currentPage + 1} / ${this.totalPages} 頁`, 'info');
+  }
+
+  // 開關電視牆自動輪播巡守模式 (每 25 秒自動平滑翻頁，全螢幕或彈窗檢視時自動暫停)
+  toggleAutoTour(forceState = null) {
+    const nextState = typeof forceState === 'boolean' ? forceState : !this.isAutoTourActive;
+    if (nextState && this.totalPages <= 1 && this.currentCameras.length > 4) {
+      const targetGrid = this.isInternationalCenter() ? 'grid-4' : 'grid-6';
+      this.currentGridMode = targetGrid;
+      this.previousGridMode = targetGrid;
+      const gridContainer = document.getElementById('cameraGrid');
+      if (gridContainer) gridContainer.className = `camera-grid ${targetGrid}`;
+      document.querySelectorAll('.grid-btn').forEach(b => b.classList.toggle('active', b.dataset.grid === targetGrid));
+    }
+    this.isAutoTourActive = nextState;
+    if (this.isAutoTourActive) {
+      this.restartAutoTourTimer();
+      this.renderVideoMatrix();
+      this.applyAdaptiveViewportFit();
+      if (window.showToast) window.showToast('已開啟電視牆自動巡播 (每 25 秒輪播下一頁)', 'success');
+    } else {
+      if (this.autoTourTimer) {
+        clearInterval(this.autoTourTimer);
+        this.autoTourTimer = null;
+      }
+      this.updatePagerUI();
+      if (forceState === null && window.showToast) window.showToast('已停止電視牆自動巡播', 'info');
+    }
+  }
+
+  restartAutoTourTimer() {
+    if (this.autoTourTimer) {
+      clearInterval(this.autoTourTimer);
+      this.autoTourTimer = null;
+    }
+    if (!this.isAutoTourActive) return;
+    this.autoTourTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const fsEl = typeof document !== 'undefined' && (document.fullscreenElement || document.webkitFullscreenElement);
+      const modalEl = typeof document !== 'undefined' ? document.getElementById('cameraModal') : null;
+      if (fsEl || (modalEl && modalEl.classList.contains('active'))) return;
+      if (this.totalPages > 1) {
+        this.currentPage = (this.currentPage + 1) % this.totalPages;
+        this.renderVideoMatrix();
+        this.applyAdaptiveViewportFit();
+      }
+    }, this.autoTourIntervalMs);
+  }
+
+  updatePagerUI(visibleLen = null, totalFilteredLen = null) {
+    if (typeof document === 'undefined') return;
+    const pagerGroup = document.getElementById('matrixPagerGroup');
+    const pageLabel = document.getElementById('matrixPageLabel');
+    const tourBtn = document.getElementById('btnAutoTour');
+    const showPager = this.totalPages > 1 || this.isAutoTourActive;
+
+    if (pagerGroup) {
+      pagerGroup.classList.toggle('is-hidden', !showPager);
+    }
+    if (pageLabel) {
+      pageLabel.textContent = `${Math.min(this.currentPage + 1, this.totalPages)} / ${this.totalPages}`;
+    }
+    if (tourBtn) {
+      tourBtn.classList.toggle('active', this.isAutoTourActive);
+      tourBtn.setAttribute('aria-pressed', String(this.isAutoTourActive));
+      tourBtn.innerHTML = this.isAutoTourActive
+        ? '<i class="fa-solid fa-pause" aria-hidden="true"></i> <span>巡播中</span>'
+        : '<i class="fa-solid fa-play" aria-hidden="true"></i> <span>巡播</span>';
+    }
+    if (visibleLen != null && totalFilteredLen != null) {
+      const filterCountEl = document.getElementById('cameraFilterCount');
+      if (filterCountEl) {
+        filterCountEl.textContent = this.totalPages > 1
+          ? `第 ${this.currentPage + 1}/${this.totalPages} 頁 ‧ 共 ${totalFilteredLen} 處`
+          : `顯示 ${visibleLen} / ${totalFilteredLen} 處`;
+      }
+    }
   }
 
   // 初始化系統
@@ -21189,14 +22794,28 @@ class MonitorApp {
     console.log('雙埔生活資訊監控系統初始化完成 (最即時低延遲 ‧ 零切角自適應 ‧ 雙埔通勤走廊 ‧ 收藏專屬牆 ‧ TV導航)');
   }
 
-  // 數位時鐘 (依當前視角自動切換台灣標準時間 Asia/Taipei 或日本標準時間 Asia/Tokyo，不受跨國系統時區影響)
+  // 數位時鐘 (依當前視角與選定觀測城市自動切換台灣／日本／韓國／歐洲／美洲當地標準時間，不受跨國系統時區影響)
   initClock() {
+    const tzLabelMap = {
+      'Asia/Tokyo': '日本時間',
+      'Asia/Seoul': '韓國時間',
+      'Europe/Zurich': '瑞士時間',
+      'Europe/Rome': '威尼斯時間',
+      'Europe/Paris': '巴黎時間',
+      'Europe/London': '倫敦時間',
+      'Europe/Helsinki': '芬蘭時間',
+      'America/New_York': '紐約時間',
+      'Pacific/Honolulu': '夏威夷時間',
+      'America/Los_Angeles': '美西時間',
+      'America/Edmonton': '洛磯山時間',
+      'America/Sao_Paulo': '里約時間'
+    };
     const updateTime = () => {
       const now = new Date();
       const timeEl = document.getElementById('clockTime');
       const dateEl = document.getElementById('clockDate');
-      const isJapan = this.currentCenterId === 'japan';
-      const targetTz = isJapan ? 'Asia/Tokyo' : 'Asia/Taipei';
+      const isIntl = this.isInternationalCenter();
+      const targetTz = this.getActiveTimezone();
       try {
         const timeStr = new Intl.DateTimeFormat('zh-TW', {
           timeZone: targetTz,
@@ -21215,7 +22834,10 @@ class MonitorApp {
         const m = parts.find(p => p.type === 'month')?.value || '';
         const d = parts.find(p => p.type === 'day')?.value || '';
         if (timeEl) timeEl.innerText = timeStr;
-        if (dateEl) dateEl.innerText = isJapan ? `${y}年${m}月${d}日 (日本時間)` : `${y}年${m}月${d}日`;
+        if (dateEl) {
+          const suffix = isIntl ? ` (${tzLabelMap[targetTz] || '當地時間'})` : '';
+          dateEl.innerText = `${y}年${m}月${d}日${suffix}`;
+        }
         return;
       } catch (_) {}
       const timeStr = now.toTimeString().split(' ')[0];
@@ -21374,6 +22996,7 @@ class MonitorApp {
   clearFilters() {
     this.filterKeyword = '';
     this.filterTag = 'all';
+    this.currentPage = 0;
     const inputEl = document.getElementById('cameraSearchInput');
     const clearBtn = document.getElementById('cameraFilterClearBtn');
     if (inputEl) inputEl.value = '';
@@ -21492,18 +23115,20 @@ class MonitorApp {
       { title: '切換至「青埔」高鐵特區', sub: '高鐵桃園站、A18/A19 與周邊路口', badge: '區域中心', icon: 'fa-building-user', run: () => this.switchCenter('qingpu') },
       { title: '切換至「新埔」板橋商圈', sub: '新埔站、文化路與台64沿線', badge: '區域中心', icon: 'fa-house-signal', run: () => this.switchCenter('banqiao') },
       { title: '切換至「觀光」精選實況', sub: '九份、西門町、大稻埕、淡水', badge: '區域中心', icon: 'fa-plane-arrival', run: () => this.switchCenter('tourist') },
-      { title: '切換至「日本」80 處跨國實況', sub: '東京澀谷、富士山 4K、京都大阪、上高地、北海道、沖繩', badge: '區域中心', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
-      { title: '切換至「收藏」專屬視訊牆', sub: '自選常看跨區跨國攝影機 (${this.getFavorites().length})', badge: '收藏牆', icon: 'fa-star', run: () => this.switchCenter('favorites') }
-    ].map(item => ({
-      ...item,
-      sub: item.sub.replace('${this.getFavorites().length}', String(this.getFavorites().length))
-    }));
+      { title: '切換至「日本」80 處跨國實況', sub: '東京澀谷、富士山 4K、京都大阪、上高地、北海道、沖繩', badge: '國際實況', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
+      { title: '切換至「韓國」18 處跨國實況', sub: '首爾漢江 4K、景福宮、光化門、弘大商圈、釜山廣安大橋、濟州島', badge: '國際實況', icon: 'fa-landmark', run: () => this.switchCenter('korea') },
+      { title: '切換至「歐洲」22 處跨國絕景', sub: '瑞士阿爾卑斯、威尼斯運河 4K、巴黎鐵塔、倫敦泰晤士河、北歐極光峽灣', badge: '國際實況', icon: 'fa-mountain-sun', run: () => this.switchCenter('europe') },
+      { title: '切換至「美洲」18 處跨國奇觀', sub: '紐約時代廣場、尼加拉大瀑布、夏威夷海灘、洛杉磯 4K、洛磯山脈、里約', badge: '國際實況', icon: 'fa-earth-americas', run: () => this.switchCenter('americas') },
+      { title: '切換至「收藏」專屬視訊牆', sub: `自選常看跨區跨國攝影機 (${this.getFavorites().length})`, badge: '收藏牆', icon: 'fa-star', run: () => this.switchCenter('favorites') }
+    ];
 
-    const inJapan = this.currentCenterId === 'japan';
+    const isIntl = this.isInternationalCenter();
     const quickOps = [
+      { title: this.isAutoTourActive ? '停止電視牆自動巡播' : '開啟電視牆自動巡播 (每 25 秒翻頁)', sub: '多宮格模式下自動輪播全部攝影機視角', badge: '巡播控制', icon: this.isAutoTourActive ? 'fa-pause' : 'fa-play', run: () => this.toggleAutoTour() },
+      { title: '隨機漫遊切換一組精選視角', sub: '立即隨機跳轉至不同分頁探索世界與台灣實況', badge: '巡播控制', icon: 'fa-shuffle', run: () => this.randomPage() },
       { title: '一屏呈現免捲動模式切換', sub: '自動計算可視區域高度填滿視訊網格', badge: '版面控制', icon: 'fa-expand', run: () => document.getElementById('btnToggleAdaptive')?.click() },
-      { title: '展開／收合右側在地資訊面板', sub: inJapan ? '日本當地氣象、空氣品質與即時雷達' : '氣象、空氣品質、降雨走勢與 YouBike', badge: '版面控制', icon: 'fa-circle-info', run: () => document.getElementById('btnToggleSidebar')?.click() },
-      { title: '立即重新整理全部視訊與即時遙測', sub: inJapan ? '重新同步日本 80 處即時視訊與日本氣象遙測' : '同步高鐵、機捷、北捷與 Open-Meteo', badge: '系統操作', icon: 'fa-arrows-rotate', run: () => document.getElementById('btnRefreshAll')?.click() },
+      { title: '展開／收合右側在地資訊面板', sub: isIntl ? '跨國當地氣象、空氣品質與即時雷達' : '氣象、空氣品質、降雨走勢與 YouBike', badge: '版面控制', icon: 'fa-circle-info', run: () => document.getElementById('btnToggleSidebar')?.click() },
+      { title: '立即重新整理全部視訊與即時遙測', sub: isIntl ? '重新同步跨國即時視訊與當地氣象遙測' : '同步高鐵、機捷、北捷與 Open-Meteo', badge: '系統操作', icon: 'fa-arrows-rotate', run: () => document.getElementById('btnRefreshAll')?.click() },
       { title: '切換「16 格」廣域電視牆', sub: '同時監看最多 16 台攝影機畫面', badge: '網格模式', icon: 'fa-border-all', run: () => this.setGridMode('grid-16') },
       { title: '切換「12 格」廣域矩陣檢視', sub: '同時監看最多 12 台攝影機畫面', badge: '網格模式', icon: 'fa-grip', run: () => this.setGridMode('grid-12') },
       { title: '切換「6 格」黃金標準分割', sub: '預設均衡雙排視角', badge: '網格模式', icon: 'fa-table-cells', run: () => this.setGridMode('grid-6') }
@@ -21600,6 +23225,17 @@ class MonitorApp {
 
   // 綁定 UI 事件
   bindEvents() {
+    // 中心切換列滑鼠滾輪水平滑動輔助
+    const centerSwitchGroup = document.querySelector('.center-switch-group');
+    if (centerSwitchGroup) {
+      centerSwitchGroup.addEventListener('wheel', (e) => {
+        if (centerSwitchGroup.scrollWidth > centerSwitchGroup.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          centerSwitchGroup.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
+
     // 中心切換按鈕
     document.querySelectorAll('.center-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -21608,10 +23244,43 @@ class MonitorApp {
           if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
           document.querySelectorAll('.center-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
+          if (typeof btn.scrollIntoView === 'function') {
+            try { btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+          }
           this.switchCenter(center);
         }
       });
     });
+
+    // 視訊牆分頁與電視牆自動巡播控制按鈕
+    const btnPagePrev = document.getElementById('btnPagePrev');
+    const btnPageNext = document.getElementById('btnPageNext');
+    const btnPageRandom = document.getElementById('btnPageRandom');
+    const btnAutoTour = document.getElementById('btnAutoTour');
+    if (btnPagePrev) {
+      btnPagePrev.addEventListener('click', () => {
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
+        this.changePage(-1);
+      });
+    }
+    if (btnPageNext) {
+      btnPageNext.addEventListener('click', () => {
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
+        this.changePage(1);
+      });
+    }
+    if (btnPageRandom) {
+      btnPageRandom.addEventListener('click', () => {
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
+        this.randomPage();
+      });
+    }
+    if (btnAutoTour) {
+      btnAutoTour.addEventListener('click', () => {
+        if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
+        this.toggleAutoTour();
+      });
+    }
 
     // 網格模式切換按鈕 (1, 4, 6, 9, 10, 12, 16, all)
     document.querySelectorAll('.grid-btn').forEach(btn => {
@@ -21762,6 +23431,7 @@ class MonitorApp {
     if (filterInput) {
       filterInput.addEventListener('input', () => {
         this.filterKeyword = filterInput.value.trim();
+        this.currentPage = 0;
         if (filterClearBtn) {
           filterClearBtn.classList.toggle('is-visible', this.filterKeyword.length > 0);
         }
@@ -21780,9 +23450,20 @@ class MonitorApp {
         if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
         const tag = pill.dataset.filterTag || 'all';
         this.filterTag = tag;
+        this.currentPage = 0;
         document.querySelectorAll('.filter-tag-pill').forEach(p => p.classList.toggle('active', p === pill));
-        if (this.currentCenterId === 'japan' && tag === '富士山' && this.weatherMonitor && typeof this.weatherMonitor.switchJapanWeatherCity === 'function') {
-          this.weatherMonitor.switchJapanWeatherCity('fuji');
+        if (this.currentCenterId === 'japan' && tag === '富士山' && this.weatherMonitor && typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity('japan', 'fuji');
+        } else if (this.currentCenterId === 'europe' && tag === '極光' && this.weatherMonitor && typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity('europe', 'lapland');
+        } else if (this.currentCenterId === 'europe' && tag === '阿爾卑斯' && this.weatherMonitor && typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity('europe', 'alps');
+        } else if (this.currentCenterId === 'europe' && tag === '運河' && this.weatherMonitor && typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity('europe', 'venice');
+        } else if (this.currentCenterId === 'americas' && tag === '海灘' && this.weatherMonitor && typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity('americas', 'hawaii');
+        } else if (this.currentCenterId === 'americas' && tag === '國家公園' && this.weatherMonitor && typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity('americas', 'rockies');
         }
         this.renderVideoMatrix();
         this.applyAdaptiveViewportFit();
@@ -21810,6 +23491,21 @@ class MonitorApp {
         e.preventDefault();
         this.openCommandPalette();
         return;
+      }
+      if (!isInputFocused && !isCpActive && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === '[' || e.key === 'PageUp') {
+          if (this.totalPages > 1) {
+            e.preventDefault();
+            this.changePage(-1);
+            return;
+          }
+        } else if (e.key === ']' || e.key === 'PageDown') {
+          if (this.totalPages > 1) {
+            e.preventDefault();
+            this.changePage(1);
+            return;
+          }
+        }
       }
       if (e.key === 'Escape') {
         const eqOverlay = document.getElementById('earthquakeModalOverlay');
@@ -21863,6 +23559,10 @@ class MonitorApp {
           clearInterval(this.commuteCapsuleTimer);
           this.commuteCapsuleTimer = null;
         }
+        if (this.autoTourTimer) {
+          clearInterval(this.autoTourTimer);
+          this.autoTourTimer = null;
+        }
       } else if (document.visibilityState === 'visible') {
         if (this.playerEngine && typeof this.playerEngine.resume === 'function') {
           this.playerEngine.resume();
@@ -21876,6 +23576,9 @@ class MonitorApp {
         if (!this.commuteCapsuleTimer) {
           this.commuteCapsuleTimer = setInterval(() => this.updateCommuteCapsule(), 10000);
         }
+        if (this.isAutoTourActive) {
+          this.restartAutoTourTimer();
+        }
         this.refreshAll();
       }
     });
@@ -21885,14 +23588,16 @@ class MonitorApp {
   async performFullRefresh() {
     this.refreshAll();
     const tasks = [];
-    if (this.currentCenterId === 'nearby' && this.userLocation && this.weatherMonitor && typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
-      const city = this.dynamicCameraLoader ? this.dynamicCameraLoader.detectCityByCoords(this.userLocation.lat, this.userLocation.lon) : { id: 'newtaipei' };
-      tasks.push(this.weatherMonitor.fetchAndRenderNearbyYouBike(this.userLocation.lat, this.userLocation.lon, city ? city.id : 'newtaipei'));
-    } else if (this.weatherMonitor && typeof this.weatherMonitor.fetchRealtimeYouBike === 'function') {
-      tasks.push(this.weatherMonitor.fetchRealtimeYouBike(true));
-    }
-    if (this.transitMonitor && typeof this.transitMonitor.forceRefreshAll === 'function') {
-      tasks.push(this.transitMonitor.forceRefreshAll());
+    if (!this.isInternationalCenter()) {
+      if (this.currentCenterId === 'nearby' && this.userLocation && this.weatherMonitor && typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
+        const city = this.dynamicCameraLoader ? this.dynamicCameraLoader.detectCityByCoords(this.userLocation.lat, this.userLocation.lon) : { id: 'newtaipei' };
+        tasks.push(this.weatherMonitor.fetchAndRenderNearbyYouBike(this.userLocation.lat, this.userLocation.lon, city ? city.id : 'newtaipei'));
+      } else if (this.weatherMonitor && typeof this.weatherMonitor.fetchRealtimeYouBike === 'function') {
+        tasks.push(this.weatherMonitor.fetchRealtimeYouBike(true));
+      }
+      if (this.transitMonitor && typeof this.transitMonitor.forceRefreshAll === 'function') {
+        tasks.push(this.transitMonitor.forceRefreshAll());
+      }
     }
     await Promise.allSettled(tasks);
   }
@@ -22230,51 +23935,67 @@ class MonitorApp {
     return true;
   }
 
-  // 同步各區域中心之介面在地化與專屬元件顯示狀態 (確保日本分頁隱藏台灣專屬資訊)
+  // 同步各區域中心之介面在地化與專屬元件顯示狀態 (確保日本/韓國/歐洲/美洲跨國分頁隱藏台灣專屬資訊並呈現當地語境)
   syncCenterLocalization(centerId) {
-    const isJapan = centerId === 'japan';
-    const showOnsenPill = isJapan || centerId === 'favorites';
+    const isIntl = this.isInternationalCenter(centerId);
+    const brandTitleMap = {
+      japan: '日本實況',
+      korea: '韓國實況',
+      europe: '歐洲絕景',
+      americas: '美洲奇觀'
+    };
 
     const brandTitleEl = document.getElementById('brandTitle');
-    if (brandTitleEl) brandTitleEl.textContent = isJapan ? '日本實況' : '雙埔生活';
+    if (brandTitleEl) brandTitleEl.textContent = brandTitleMap[centerId] || '雙埔生活';
 
     const youbikeCard = document.getElementById('youbikeWidgetCard');
-    if (youbikeCard) youbikeCard.style.display = isJapan ? 'none' : '';
+    if (youbikeCard) youbikeCard.style.display = isIntl ? 'none' : '';
 
     const cwaCard = document.getElementById('cwaRadarWidgetCard');
-    if (cwaCard) cwaCard.style.display = isJapan ? 'none' : '';
-    if (!isJapan && this.weatherMonitor && typeof this.weatherMonitor.refreshRadar === 'function') {
+    if (cwaCard) cwaCard.style.display = isIntl ? 'none' : '';
+    if (!isIntl && this.weatherMonitor && typeof this.weatherMonitor.refreshRadar === 'function') {
       this.weatherMonitor.refreshRadar();
     }
 
     const transitBar = document.getElementById('transitTransitBar');
     if (transitBar) {
-      transitBar.style.display = (centerId === 'tourist' || isJapan) ? 'none' : '';
+      transitBar.style.display = (centerId === 'tourist' || isIntl) ? 'none' : '';
     }
 
-    const onsenPill = document.getElementById('filterPillOnsen');
-    if (onsenPill) onsenPill.style.display = showOnsenPill ? '' : 'none';
+    // 依當前分頁顯示對應之區域特色篩選膠囊 (富士山/溫泉、漢江海灣、阿爾卑斯/極光/運河、海灘/國家公園)
+    document.querySelectorAll('.filter-tag-pill[data-region-scope]').forEach(pill => {
+      const scopes = String(pill.dataset.regionScope || '').split(',').map(s => s.trim()).filter(Boolean);
+      pill.style.display = scopes.includes(centerId) ? '' : 'none';
+    });
 
     const searchInput = document.getElementById('cameraSearchInput');
     if (searchInput) {
-      searchInput.placeholder = isJapan
-        ? '快搜日本景點、富士山、溫泉、4K、東京大阪或機場...'
-        : '快搜路名、交流道、富士山、4K 或捷運周邊...';
+      const placeholderMap = {
+        japan: '快搜日本景點、富士山、溫泉、4K、東京大阪或機場...',
+        korea: '快搜首爾漢江、景福宮、弘大、釜山廣安大橋、濟州島或 4K...',
+        europe: '快搜瑞士阿爾卑斯、威尼斯運河、巴黎鐵塔、倫敦、極光峽灣或 4K...',
+        americas: '快搜紐約時代廣場、尼加拉瀑布、夏威夷海灘、洛杉磯、洛磯山或 4K...'
+      };
+      searchInput.placeholder = placeholderMap[centerId] || '快搜路名、交流道、九份、4K 或捷運周邊...';
     }
 
     const radarTitleEl = document.getElementById('radarMapTitle');
     if (radarTitleEl) {
-      radarTitleEl.innerHTML = isJapan
-        ? '<i class="fa-solid fa-map-location-dot"></i> 日本全境地理雷達'
-        : '<i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達';
+      const radarTitleMap = {
+        japan: '<i class="fa-solid fa-map-location-dot"></i> 日本全境地理雷達',
+        korea: '<i class="fa-solid fa-map-location-dot"></i> 韓國全境地理雷達',
+        europe: '<i class="fa-solid fa-map-location-dot"></i> 歐洲洲際地理雷達',
+        americas: '<i class="fa-solid fa-map-location-dot"></i> 美洲洲際地理雷達'
+      };
+      radarTitleEl.innerHTML = radarTitleMap[centerId] || '<i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達';
     }
     const radarScopeBadge = document.getElementById('radarScopeBadge');
     if (radarScopeBadge) {
-      radarScopeBadge.textContent = isJapan ? '全國即時座標' : '500m/1km 安全圈';
+      radarScopeBadge.textContent = isIntl ? '跨國即時座標' : '500m/1km 安全圈';
     }
 
     if (typeof window !== 'undefined' && window.earthquakeMonitor && typeof window.earthquakeMonitor.setRegion === 'function') {
-      window.earthquakeMonitor.setRegion(isJapan ? 'japan' : 'taiwan');
+      window.earthquakeMonitor.setRegion(isIntl ? centerId : 'taiwan');
     }
 
     if (typeof this.updateClockDisplay === 'function') {
@@ -22282,9 +24003,10 @@ class MonitorApp {
     }
   }
 
-  // 切換監控中心 (dual vs qingpu vs banqiao vs tourist vs japan)
+  // 切換監控中心 (nearby / dual / qingpu / banqiao / tourist / japan / korea / europe / americas / favorites)
   async switchCenter(centerId) {
     this.currentCenterId = centerId;
+    this.currentPage = 0;
     if (typeof document !== 'undefined' && document.body) {
       document.body.dataset.themeCenter = centerId;
     }
@@ -22356,10 +24078,13 @@ class MonitorApp {
       }
       if (countEl) countEl.innerText = `${this.currentCameras.length} 處即時視訊`;
 
-      // 更新中心導航按鈕高亮狀態
+      // 更新中心導航按鈕高亮狀態並自動平滑置中可視區
       document.querySelectorAll('.center-btn').forEach(btn => {
         if (btn.dataset.center === centerId) {
           btn.classList.add('active');
+          if (typeof btn.scrollIntoView === 'function') {
+            try { btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
+          }
         } else {
           btn.classList.remove('active');
         }
@@ -22371,22 +24096,24 @@ class MonitorApp {
           sortIndicator.innerText = '雙埔公平呈現：青埔與新埔各半均分 (零切角自適應)';
         } else if (centerId === 'japan') {
           sortIndicator.innerText = '日本全境 80 處即時實況：東京澀谷 ‧ 富士山 4K ‧ 大阪道頓堀 ‧ 京都嵐山 ‧ 上高地 ‧ 北海道 ‧ 沖繩';
+        } else if (centerId === 'korea') {
+          sortIndicator.innerText = '韓國全境 18 處即時實況：首爾漢江 4K ‧ 景福宮 ‧ 光化門 ‧ 弘大商圈 ‧ 樂天世界塔 ‧ 釜山廣安大橋 ‧ 濟州城山日出峰';
+        } else if (centerId === 'europe') {
+          sortIndicator.innerText = '歐洲絕景 22 處即時實況：瑞士阿爾卑斯雪山 ‧ 威尼斯大運河 4K ‧ 巴黎艾菲爾鐵塔 ‧ 倫敦泰晤士河 ‧ 北歐極光峽灣';
+        } else if (centerId === 'americas') {
+          sortIndicator.innerText = '美洲奇觀 18 處即時實況：紐約時代廣場 ‧ 尼加拉大瀑布 ‧ 夏威夷海灘 ‧ 洛杉磯威尼斯海灘 4K ‧ 洛磯山脈 ‧ 里約海灘';
         } else if (centerId === 'favorites') {
           sortIndicator.innerText = `自選專屬視訊牆：已收藏 ${this.currentCameras.length} 處即時鏡頭 (點擊畫面星號 ★ 自由增刪)`;
         } else if (centerId === 'tourist') {
-          sortIndicator.innerText = '觀光精選 58 處：急速 6 格即時起播（九份 ‧ 北車 ‧ 西門町，可切換全部）';
-        } else if (centerId === 'qingpu') {
-          sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
-        } else if (centerId === 'banqiao') {
-          sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
+          sortIndicator.innerText = '觀光精選 58 處：急速 6 格即時起播（九份 ‧ 北車 ‧ 西門町，支援翻頁與巡播）';
         } else {
           sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
         }
       }
 
-      // 依中心需求切換預設宮格：日本預設四分割 (grid-4)、觀光預設急速六宮格 (grid-6)，青埔/新埔預設全部宮格 (grid-all)
-      if (centerId === 'japan' || centerId === 'tourist') {
-        const defaultMode = centerId === 'japan' ? 'grid-4' : 'grid-6';
+      // 依中心需求切換預設宮格：跨國實況預設四分割 (grid-4)、觀光預設急速六宮格 (grid-6)，青埔/新埔預設全部宮格 (grid-all)
+      if (this.isInternationalCenter(centerId) || centerId === 'tourist') {
+        const defaultMode = this.isInternationalCenter(centerId) ? 'grid-4' : 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
         this.focusedCamId = null;
@@ -22395,11 +24122,7 @@ class MonitorApp {
           gridContainer.className = `camera-grid ${defaultMode}`;
         }
         document.querySelectorAll('.grid-btn').forEach(btn => {
-          if (btn.dataset.grid === defaultMode) {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
+          btn.classList.toggle('active', btn.dataset.grid === defaultMode);
         });
       } else if (centerId === 'favorites') {
         const defaultMode = this.currentCameras.length <= 4 ? 'grid-4' : (this.currentCameras.length <= 6 ? 'grid-6' : 'grid-all');
@@ -22409,8 +24132,7 @@ class MonitorApp {
         const gridContainer = document.getElementById('cameraGrid');
         if (gridContainer) gridContainer.className = `camera-grid ${defaultMode}`;
         document.querySelectorAll('.grid-btn').forEach(btn => {
-          if (btn.dataset.grid === defaultMode) btn.classList.add('active');
-          else btn.classList.remove('active');
+          btn.classList.toggle('active', btn.dataset.grid === defaultMode);
         });
       } else if (centerId === 'qingpu' || centerId === 'banqiao') {
         this.currentGridMode = 'grid-all';
@@ -22421,14 +24143,9 @@ class MonitorApp {
           gridContainer.className = 'camera-grid grid-all';
         }
         document.querySelectorAll('.grid-btn').forEach(btn => {
-          if (btn.dataset.grid === 'grid-all') {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
+          btn.classList.toggle('active', btn.dataset.grid === 'grid-all');
         });
       } else if (centerId === 'dual') {
-        // 從單一生活圈切回雙埔生活時，自動套用雙埔標準預設宮格 (雙埔預設 6 宮格：青埔 3 + 新埔 3 各半均分)
         const defaultMode = 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
@@ -22438,11 +24155,7 @@ class MonitorApp {
           gridContainer.className = `camera-grid ${defaultMode}`;
         }
         document.querySelectorAll('.grid-btn').forEach(btn => {
-          if (btn.dataset.grid === defaultMode) {
-            btn.classList.add('active');
-          } else {
-            btn.classList.remove('active');
-          }
+          btn.classList.toggle('active', btn.dataset.grid === defaultMode);
         });
       }
 
@@ -22455,13 +24168,17 @@ class MonitorApp {
         const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
         this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
         this.weatherMonitor.startAutoRefreshDual(qpInfo, bpInfo);
-      } else if (centerId === 'japan') {
-        // 日本模式：載入當前選定日本城市之即時氣象與空氣品質 (支援東京/富士山/關西/北海道/沖繩秒切與 JST 時區)
-        if (typeof this.weatherMonitor.switchJapanWeatherCity === 'function') {
-          this.weatherMonitor.switchJapanWeatherCity(this.weatherMonitor.currentJapanCityKey || 'tokyo');
+      } else if (this.isInternationalCenter(centerId)) {
+        // 跨國模式：載入當前選定重點觀測城市之即時氣象、空氣品質與當地時區
+        const savedCityKey = centerId === 'japan'
+          ? (this.weatherMonitor.currentJapanCityKey || 'tokyo')
+          : ((this.weatherMonitor.currentRegionCityKeys && this.weatherMonitor.currentRegionCityKeys[centerId]) || '');
+        if (typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+          this.weatherMonitor.switchRegionWeatherCity(centerId, savedCityKey);
         } else {
-          this.weatherMonitor.fetchEnvironment(35.6895, 139.6917, '東京 (日本)', 'Asia/Tokyo');
-          this.weatherMonitor.startAutoRefresh(35.6895, 139.6917, '東京 (日本)', 'Asia/Tokyo');
+          const tz = this.getActiveTimezone();
+          this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, false, tz);
+          this.weatherMonitor.startAutoRefresh(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, tz);
         }
       } else {
         this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, 'Asia/Taipei');
@@ -22492,6 +24209,7 @@ class MonitorApp {
       this.focusedCamId = null;
     }
     this.currentGridMode = gridClass;
+    this.currentPage = 0;
     const gridContainer = document.getElementById('cameraGrid');
     if (gridContainer) {
       gridContainer.className = `camera-grid ${gridClass}`;
@@ -22507,7 +24225,7 @@ class MonitorApp {
     this.applyAdaptiveViewportFit();
   }
 
-  // 渲染攝影機卡片矩陣
+  // 渲染攝影機卡片矩陣 (完整支援多宮格智慧分頁、雙埔各半公平分頁與電視牆自動巡播)
   renderVideoMatrix() {
     const gridContainer = document.getElementById('cameraGrid');
     if (!gridContainer) return;
@@ -22528,19 +24246,27 @@ class MonitorApp {
 
     let visibleCams = [];
     if (this.currentGridMode === 'grid-1') {
+      this.totalPages = 1;
+      this.currentPage = 0;
       // 單格放大特寫：若有指定雙擊之焦點鏡頭，優先聚焦該鏡頭
       if (this.focusedCamId) {
-        const focused = this.currentCameras.find(c => c.id === this.focusedCamId);
-        if (focused) visibleCams = [focused];
+        const focusedIdx = this.currentCameras.findIndex(c => c.id === this.focusedCamId);
+        if (focusedIdx !== -1) {
+          const focused = this.currentCameras[focusedIdx];
+          focused._matrixNumber = focusedIdx + 1;
+          visibleCams = [focused];
+        }
       }
-      if (visibleCams.length === 0) {
-        visibleCams = this.currentCameras.slice(0, 1);
+      if (visibleCams.length === 0 && this.currentCameras[0]) {
+        this.currentCameras[0]._matrixNumber = 1;
+        visibleCams = [this.currentCameras[0]];
       }
 
       const sortIndicator = document.querySelector('.sort-indicator span');
       if (sortIndicator && visibleCams[0]) {
         sortIndicator.innerText = `單格特寫模式：${visibleCams[0].name} (按兩下縮小回到原本多宮格)`;
       }
+      this.updatePagerUI();
     } else {
       // 依快搜關鍵字與標籤過濾鏡頭清單
       let filteredList = this.currentCameras;
@@ -22550,9 +24276,15 @@ class MonitorApp {
           const t = ((c.name || '') + ' ' + (c.tag || '') + ' ' + (c.authority || '') + ' ' + (c.description || '') + ' ' + (c.areaTag || '')).toLowerCase();
           if (tag === '富士山') return t.includes('富士山') || t.includes('fuji');
           if (tag === '溫泉') return t.includes('溫泉') || t.includes('湯畑') || t.includes('熱海') || t.includes('別府') || t.includes('白濱') || t.includes('箱根') || t.includes('草津') || t.includes('onsen');
-          if (tag === '商圈') return t.includes('商圈') || t.includes('十字路口') || t.includes('街') || t.includes('夜市') || t.includes('站前') || t.includes('歌舞伎町') || t.includes('澀谷') || t.includes('天神') || t.includes('西門') || t.includes('大稻埕') || t.includes('松山');
-          if (tag === '風景') return t.includes('湖') || t.includes('公園') || t.includes('園') || t.includes('海') || t.includes('山') || t.includes('寺') || t.includes('神社') || t.includes('橋') || t.includes('城') || t.includes('塔') || t.includes('峽') || t.includes('瀑') || t.includes('上高地') || t.includes('九份') || t.includes('淡水');
-          if (tag === '交通') return t.includes('路口') || t.includes('交流道') || t.includes('高鐵') || t.includes('捷運') || t.includes('機場') || t.includes('車站') || t.includes('公路') || t.includes('國道') || t.includes('鐵道') || t.includes('新幹線');
+          if (tag === '漢江海灣') return t.includes('漢江') || t.includes('海灣') || t.includes('釜山') || t.includes('濟州');
+          if (tag === '阿爾卑斯') return t.includes('阿爾卑斯') || t.includes('alps');
+          if (tag === '極光') return t.includes('極光') || t.includes('峽灣') || t.includes('冰島') || t.includes('拉普蘭');
+          if (tag === '運河') return t.includes('運河') || t.includes('威尼斯') || t.includes('阿姆斯特丹') || t.includes('泰晤士河') || t.includes('布拉格');
+          if (tag === '海灘') return t.includes('海灘') || t.includes('衝浪') || t.includes('夏威夷') || t.includes('里約');
+          if (tag === '國家公園') return t.includes('國家公園') || t.includes('瀑布') || t.includes('洛磯山') || t.includes('大提頓');
+          if (tag === '商圈') return t.includes('商圈') || t.includes('十字路口') || t.includes('街') || t.includes('夜市') || t.includes('站前') || t.includes('歌舞伎町') || t.includes('澀谷') || t.includes('天神') || t.includes('西門') || t.includes('大稻埕') || t.includes('松山') || t.includes('廣場') || t.includes('弘大') || t.includes('光化門');
+          if (tag === '風景') return t.includes('風景') || t.includes('湖') || t.includes('公園') || t.includes('園') || t.includes('海') || t.includes('山') || t.includes('寺') || t.includes('神社') || t.includes('橋') || t.includes('城') || t.includes('塔') || t.includes('峽') || t.includes('瀑') || t.includes('上高地') || t.includes('九份') || t.includes('淡水');
+          if (tag === '交通') return t.includes('交通') || t.includes('路口') || t.includes('交流道') || t.includes('高鐵') || t.includes('捷運') || t.includes('機場') || t.includes('車站') || t.includes('公路') || t.includes('國道') || t.includes('鐵道') || t.includes('新幹線');
           if (tag === '4k') return t.includes('4k');
           return t.includes(tag);
         });
@@ -22568,12 +24300,15 @@ class MonitorApp {
       // 收藏空狀態檢查
       const filterCountEl = document.getElementById('cameraFilterCount');
       if (this.currentCenterId === 'favorites' && this.getFavorites().length === 0) {
+        this.totalPages = 1;
+        this.currentPage = 0;
+        this.updatePagerUI();
         if (filterCountEl) filterCountEl.textContent = '0 處收藏';
         gridContainer.innerHTML = `
           <div class="fav-empty-placeholder">
             <i class="fa-solid fa-star fav-empty-icon"></i>
             <div class="fav-empty-title">尚未收藏任何即時視訊</div>
-            <div class="fav-empty-desc">在「雙埔」、「觀光」或「日本」視訊畫面的右上角<br>點擊 <i class="fa-solid fa-star" style="color:#fbbf24;"></i> 星號，即可自選建立專屬於您的跨區跨國視訊牆！</div>
+            <div class="fav-empty-desc">在「雙埔」、「觀光」或「日本 / 韓國 / 歐洲 / 美洲」視訊畫面的右上角<br>點擊 <i class="fa-solid fa-star" style="color:#fbbf24;"></i> 星號，即可自選建立專屬於您的跨區跨國視訊牆！</div>
             <button class="fav-quick-add-btn" onclick="window.monitorApp.switchCenter('dual')">
               <i class="fa-solid fa-compass"></i> 前往瀏覽熱門視訊
             </button>
@@ -22584,6 +24319,9 @@ class MonitorApp {
 
       // 搜尋無結果檢查
       if (filteredList.length === 0) {
+        this.totalPages = 1;
+        this.currentPage = 0;
+        this.updatePagerUI();
         if (filterCountEl) filterCountEl.textContent = `0 / ${this.currentCameras.length} 處`;
         const escQuery = String(this.filterKeyword || this.filterTag || '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         gridContainer.innerHTML = `
@@ -22600,16 +24338,45 @@ class MonitorApp {
       }
 
       if (this.currentCenterId === 'dual' && !this.filterKeyword && this.filterTag === 'all') {
-        const qpQuota = Math.ceil(maxDisplay / 2);
-        const bpQuota = Math.floor(maxDisplay / 2);
-        const qpList = filteredList.filter(c => c.areaTag === '青埔').slice(0, qpQuota);
-        const bpList = filteredList.filter(c => c.areaTag === '新埔').slice(0, bpQuota);
-        visibleCams = [...qpList, ...bpList];
+        const qpAll = filteredList.filter(c => c.areaTag === '青埔');
+        const bpAll = filteredList.filter(c => c.areaTag === '新埔');
+        const qpQuota = Math.max(1, Math.ceil(maxDisplay / 2));
+        const bpQuota = Math.max(1, Math.floor(maxDisplay / 2));
+        if (this.currentGridMode === 'grid-all') {
+          this.totalPages = 1;
+          this.currentPage = 0;
+          qpAll.forEach((c, i) => { c._matrixNumber = i + 1; });
+          bpAll.forEach((c, i) => { c._matrixNumber = qpAll.length + i + 1; });
+          visibleCams = [...qpAll, ...bpAll];
+        } else {
+          this.totalPages = Math.max(1, Math.ceil(qpAll.length / qpQuota), Math.ceil(bpAll.length / bpQuota));
+          if (this.currentPage >= this.totalPages) this.currentPage = 0;
+          const pickPageSlice = (arr, quota, pageIdx, baseOffset = 0) => {
+            if (arr.length <= quota) {
+              return arr.map((c, idx) => {
+                c._matrixNumber = baseOffset + idx + 1;
+                return c;
+              });
+            }
+            const out = [];
+            const start = (pageIdx * quota) % arr.length;
+            for (let k = 0; k < Math.min(quota, arr.length); k++) {
+              const realIdx = (start + k) % arr.length;
+              const cam = arr[realIdx];
+              cam._matrixNumber = baseOffset + realIdx + 1;
+              out.push(cam);
+            }
+            return out;
+          };
+          const qpList = pickPageSlice(qpAll, qpQuota, this.currentPage, 0);
+          const bpList = pickPageSlice(bpAll, bpQuota, this.currentPage, qpAll.length);
+          visibleCams = [...qpList, ...bpList];
+        }
 
         const sortIndicator = document.querySelector('.sort-indicator span');
         if (sortIndicator) {
-          const qpCount = qpList.length;
-          const bpCount = bpList.length;
+          const qpCount = visibleCams.filter(c => c.areaTag === '青埔').length;
+          const bpCount = visibleCams.filter(c => c.areaTag === '新埔').length;
           if (qpCount === bpCount) {
             sortIndicator.innerText = `雙埔公平呈現：青埔 (${qpCount}台) ‧ 新埔 (${bpCount}台) 各半均分`;
           } else {
@@ -22617,12 +24384,21 @@ class MonitorApp {
           }
         }
       } else {
-        visibleCams = filteredList.slice(0, maxDisplay);
+        if (this.currentGridMode === 'grid-all' || filteredList.length <= maxDisplay) {
+          this.totalPages = 1;
+          this.currentPage = 0;
+          visibleCams = filteredList.slice(0, maxDisplay);
+          visibleCams.forEach((c, idx) => { c._matrixNumber = idx + 1; });
+        } else {
+          this.totalPages = Math.max(1, Math.ceil(filteredList.length / maxDisplay));
+          if (this.currentPage >= this.totalPages) this.currentPage = 0;
+          const start = this.currentPage * maxDisplay;
+          visibleCams = filteredList.slice(start, start + maxDisplay);
+          visibleCams.forEach((c, idx) => { c._matrixNumber = start + idx + 1; });
+        }
       }
 
-      if (filterCountEl) {
-        filterCountEl.textContent = `顯示 ${visibleCams.length} / ${filteredList.length} 處`;
-      }
+      this.updatePagerUI(visibleCams.length, filteredList.length);
     }
 
     const filterCountSingle = document.getElementById('cameraFilterCount');
@@ -22652,11 +24428,15 @@ class MonitorApp {
       const qpInfo = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213 };
       const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
       this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
-    } else if (this.currentCenterId === 'japan') {
-      if (typeof this.weatherMonitor.switchJapanWeatherCity === 'function') {
-        this.weatherMonitor.switchJapanWeatherCity(this.weatherMonitor.currentJapanCityKey || 'tokyo');
-      } else {
-        this.weatherMonitor.fetchEnvironment(35.6895, 139.6917, '東京 (日本)', 'Asia/Tokyo');
+    } else if (this.isInternationalCenter()) {
+      const cid = this.currentCenterId;
+      const savedCityKey = cid === 'japan'
+        ? (this.weatherMonitor.currentJapanCityKey || 'tokyo')
+        : ((this.weatherMonitor.currentRegionCityKeys && this.weatherMonitor.currentRegionCityKeys[cid]) || '');
+      if (typeof this.weatherMonitor.switchRegionWeatherCity === 'function') {
+        this.weatherMonitor.switchRegionWeatherCity(cid, savedCityKey);
+      } else if (this.currentCenterData) {
+        this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, false, this.getActiveTimezone());
       }
     } else if (this.currentCenterData && Number.isFinite(Number(this.currentCenterData.lat)) && Number.isFinite(Number(this.currentCenterData.lon))) {
       this.weatherMonitor.fetchEnvironment(this.currentCenterData.lat, this.currentCenterData.lon, this.currentCenterData.name, 'Asia/Taipei');
@@ -22693,8 +24473,8 @@ class MonitorApp {
     if (window.showToast) window.showToast('截圖已儲存', 'success');
   }
 
-  // 截圖下載 (支援 Video Canvas、Image Canvas 與跨網域 Android 原生下載備援)
-  captureCamera(camId) {
+  // 截圖下載 (支援 Video Canvas、Image Canvas、YouTube 高畫質即時縮圖擷取與跨網域 Android 原生下載備援)
+  async captureCamera(camId) {
     const cam = this.currentCameras.find(c => c.id === camId);
     if (!cam) return;
     if (cam.type === 'iframe') {
@@ -22703,6 +24483,46 @@ class MonitorApp {
     }
 
     const filename = `${cam.id}_${Date.now()}.jpg`;
+    if (cam.type === 'youtube' && cam.videoId) {
+      const ytPrimaryUrl = `https://i.ytimg.com/vi/${cam.videoId}/maxresdefault_live.jpg`;
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.saveImageFromUrl === 'function') {
+        const queued = window.AndroidBridge.saveImageFromUrl(ytPrimaryUrl, filename);
+        if (queued) {
+          if (window.showToast) window.showToast('正在擷取直播高畫質快照至圖片庫...', 'info');
+          return;
+        }
+      }
+      const ytCandidates = [
+        ytPrimaryUrl,
+        `https://i.ytimg.com/vi/${cam.videoId}/sddefault_live.jpg`,
+        `https://i.ytimg.com/vi/${cam.videoId}/hqdefault_live.jpg`,
+        `https://i.ytimg.com/vi/${cam.videoId}/maxresdefault.jpg`,
+        `https://i.ytimg.com/vi/${cam.videoId}/hqdefault.jpg`
+      ];
+      for (const candidateUrl of ytCandidates) {
+        try {
+          const res = await fetch(candidateUrl, { mode: 'cors', cache: 'no-store' });
+          if (res.ok) {
+            const blob = await res.blob();
+            if (blob && blob.size > 512) {
+              const objUrl = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = objUrl;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+              if (window.showToast) window.showToast('直播快照已下載儲存', 'success');
+              return;
+            }
+          }
+        } catch (_ytFetchErr) {}
+      }
+      window.open(`https://i.ytimg.com/vi/${cam.videoId}/hqdefault_live.jpg`, '_blank', 'noopener,noreferrer');
+      if (window.showToast) window.showToast('已在新分頁開啟直播即時快照', 'info');
+      return;
+    }
     if (cam.type === 'flv' || cam.type === 'hls') {
       const videoEl = document.getElementById(`video-${camId}`);
       if (videoEl) {
@@ -23118,7 +24938,7 @@ class MonitorApp {
     if (modalBody) modalBody.innerHTML = '';
   }
 
-  // 地圖或指令面板跳轉捲動並突顯特定攝影機
+  // 地圖或指令面板跳轉捲動並突顯特定攝影機 (優先維持當前多宮格大小並智慧跳轉至目標分頁，避免強制撐開全部鏡頭)
   scrollToCamera(camId) {
     const highlightCard = (targetEl) => {
       targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -23131,13 +24951,52 @@ class MonitorApp {
     const el = document.getElementById(`cam-card-${camId}`);
     if (el) {
       highlightCard(el);
-    } else {
-      this.setGridMode('grid-all');
-      setTimeout(() => {
-        const target = document.getElementById(`cam-card-${camId}`);
-        if (target) highlightCard(target);
-      }, 200);
+      return;
     }
+
+    if (this.filterKeyword || (this.filterTag && this.filterTag !== 'all')) {
+      this.clearFilters();
+      const afterClearEl = document.getElementById(`cam-card-${camId}`);
+      if (afterClearEl) {
+        highlightCard(afterClearEl);
+        return;
+      }
+    }
+
+    const gridSizeMap = { 'grid-4': 4, 'grid-6': 6, 'grid-9': 9, 'grid-10': 10, 'grid-12': 12, 'grid-16': 16 };
+    const pageSize = gridSizeMap[this.currentGridMode];
+    if (pageSize) {
+      if (this.currentCenterId === 'dual') {
+        const qpAll = this.currentCameras.filter(c => c.areaTag === '青埔');
+        const bpAll = this.currentCameras.filter(c => c.areaTag === '新埔');
+        const qpIdx = qpAll.findIndex(c => c.id === camId);
+        const bpIdx = bpAll.findIndex(c => c.id === camId);
+        if (qpIdx !== -1) {
+          this.currentPage = Math.floor(qpIdx / Math.max(1, Math.ceil(pageSize / 2)));
+          this.renderVideoMatrix();
+        } else if (bpIdx !== -1) {
+          this.currentPage = Math.floor(bpIdx / Math.max(1, Math.floor(pageSize / 2)));
+          this.renderVideoMatrix();
+        }
+      } else {
+        const camIdx = this.currentCameras.findIndex(c => c.id === camId);
+        if (camIdx !== -1) {
+          this.currentPage = Math.floor(camIdx / pageSize);
+          this.renderVideoMatrix();
+        }
+      }
+      const pagedTarget = document.getElementById(`cam-card-${camId}`);
+      if (pagedTarget) {
+        highlightCard(pagedTarget);
+        return;
+      }
+    }
+
+    this.setGridMode('grid-all');
+    setTimeout(() => {
+      const target = document.getElementById(`cam-card-${camId}`);
+      if (target) highlightCard(target);
+    }, 200);
   }
 }
 

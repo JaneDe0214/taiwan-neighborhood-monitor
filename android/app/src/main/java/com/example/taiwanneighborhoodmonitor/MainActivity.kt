@@ -950,39 +950,42 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生非同步下載快照／MJPEG 影像網址並儲存至圖片庫 (解決跨網域 Canvas Taint 無法匯出問題)
+     * 原生非同步下載快照／MJPEG／YouTube 即時縮圖網址並儲存至圖片庫 (解決跨網域 Canvas Taint 無法匯出問題，並內建多解析度自動降級備援)
      */
     @JavascriptInterface
     fun saveImageFromUrl(imageUrl: String, fileName: String): Boolean {
-        val trimmed = imageUrl.trim()
-        if (!trimmed.startsWith("https://") && !trimmed.startsWith("http://")) {
+        val candidates = WebAssetRouting.buildSnapshotFallbackUrls(imageUrl)
+        if (candidates.isEmpty()) {
             return false
         }
         bridgeScope.launch {
             var savedName: String? = null
-            try {
-                val request = Request.Builder()
-                    .url(trimmed)
-                    .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
-                    .build()
-                okHttpClient.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        val contentType = response.header("Content-Type").orEmpty()
-                        val isMultipart = contentType.contains("multipart/x-mixed-replace", ignoreCase = true)
-                        response.body?.byteStream()?.use { stream ->
-                            val extracted = if (isMultipart) {
-                                WebAssetRouting.extractFirstJpegFrame(stream)
-                            } else {
-                                WebAssetRouting.readBoundedBytes(stream)
-                            }
-                            if (extracted != null && extracted.isNotEmpty()) {
-                                val mime = if (isMultipart) "image/jpeg" else contentType
-                                savedName = writeImageBytesToGallery(extracted, mime, fileName)
+            for (candidateUrl in candidates) {
+                try {
+                    val request = Request.Builder()
+                        .url(candidateUrl)
+                        .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
+                        .build()
+                    okHttpClient.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            val contentType = response.header("Content-Type").orEmpty()
+                            val isMultipart = contentType.contains("multipart/x-mixed-replace", ignoreCase = true)
+                            response.body?.byteStream()?.use { stream ->
+                                val extracted = if (isMultipart) {
+                                    WebAssetRouting.extractFirstJpegFrame(stream)
+                                } else {
+                                    WebAssetRouting.readBoundedBytes(stream)
+                                }
+                                if (extracted != null && extracted.size > 512) {
+                                    val mime = if (isMultipart || contentType.isBlank()) "image/jpeg" else contentType
+                                    savedName = writeImageBytesToGallery(extracted, mime, fileName)
+                                }
                             }
                         }
                     }
-                }
-            } catch (_: Exception) {}
+                    if (savedName != null) break
+                } catch (_: Exception) {}
+            }
 
             activity.runOnUiThread {
                 val msg = if (savedName != null) "截圖已儲存：$savedName" else "無法下載攝影機影像進行儲存"
@@ -2015,6 +2018,27 @@ internal data class AssetContentSpec(
  */
 internal object WebAssetRouting {
     private val boteCamKeyRegex = Regex("/(?:hls/|streamapi_)([0-9A-Za-z_-]+)")
+    private val ytThumbRegex = Regex("^https?://i\\.ytimg\\.com/vi/([0-9A-Za-z_-]{6,20})/[^/?#]+", RegexOption.IGNORE_CASE)
+
+    fun buildSnapshotFallbackUrls(rawUrl: String?): List<String> {
+        val trimmed = rawUrl?.trim().orEmpty()
+        if (!trimmed.startsWith("https://") && !trimmed.startsWith("http://")) {
+            return emptyList()
+        }
+        val ytMatch = ytThumbRegex.find(trimmed)
+        if (ytMatch != null) {
+            val videoId = ytMatch.groupValues[1]
+            return linkedSetOf(
+                trimmed,
+                "https://i.ytimg.com/vi/$videoId/maxresdefault_live.jpg",
+                "https://i.ytimg.com/vi/$videoId/sddefault_live.jpg",
+                "https://i.ytimg.com/vi/$videoId/hqdefault_live.jpg",
+                "https://i.ytimg.com/vi/$videoId/maxresdefault.jpg",
+                "https://i.ytimg.com/vi/$videoId/hqdefault.jpg"
+            ).toList()
+        }
+        return listOf(trimmed)
+    }
     private val nativeInterceptDomains = listOf(
         "raw.githubusercontent.com",
         "janede0214.github.io",
@@ -2028,6 +2052,7 @@ internal object WebAssetRouting {
         "tymetro.com.tw",
         "earthquake.usgs.gov",
         "open-meteo.com",
+        "api.met.no",
         "api.rainviewer.com"
     )
 
