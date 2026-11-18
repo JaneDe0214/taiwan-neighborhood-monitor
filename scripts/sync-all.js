@@ -2,8 +2,8 @@
  * 雙埔生活 - 全大眾運輸與 YouBike 雲端定時同步整合中樞 (高頻極速最佳化版)
  * 特色：
  * 1. 極速平行抓取：YouBike (opendata.vip 優先 + 官方 CSV 備援) + 高鐵官網 + 桃捷官網 + 捷運新埔即時看板
- * 2. 數據極致精簡：過濾 YouBike 冗餘英文與地址欄位，檔案瘦身 50%+，防止高頻 Git 膨脹
- * 3. 智慧防抖與靜態保護：網路異常或外部逾時時，確保本地已有資料永不被破壞
+ * 2. 資料極致精簡：過濾 YouBike 冗餘英文字串，保留精簡座標支援附近雷達，瘦身防止高頻 Git 膨脹
+ * 3. 智慧防抖與靜態保護：網路異常或外部逾時時，確保本機已有資料永不被破壞
  */
 
 const https = require('https');
@@ -106,7 +106,7 @@ function getTaiwanTimeString() {
 
 // 1. 同步 YouBike 2.0 (首選 opendata.vip，備援官方端點；精煉壓縮欄位)
 async function syncYouBike(outDir) {
-  console.log('[1/4] 正在同步 YouBike 2.0 即時動態...');
+  console.log('[1/5] 正在同步 YouBike 2.0 即時動態...');
   let ntpcList = [];
   let tycgList = [];
 
@@ -145,10 +145,18 @@ async function syncYouBike(outDir) {
     }
   }
 
-  // 核心精煉：只保留比對與即時車況所需欄位，拿掉多餘英文字串，瘦身 50% 避免 Git 膨脹
+  // 核心精煉：只保留比對、附近距離計算與即時車況所需欄位，拿掉多餘英文字串，防止 Git 膨脹
+  const roundCoord = (v) => {
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? Math.round(n * 100000) / 100000 : undefined;
+  };
+
   const slimNtpc = ntpcList.map(s => ({
     uid: s.uid || s.sno || s.StationUID,
     name: s.name || s.sna,
+    lat: roundCoord(s.lat),
+    lng: roundCoord(s.lng != null ? s.lng : s.lon),
+    ar: s.address || s.ar || undefined,
     bikes: s.bikes != null ? s.bikes : parseInt(s.sbi_quantity != null ? s.sbi_quantity : (s.sbi || '0'), 10),
     empty: s.empty != null ? s.empty : parseInt(s.bemp || '0', 10),
     eBikes: s.eBikes != null ? s.eBikes : parseInt(s.eyb_quantity || (s.sbi_detail && s.sbi_detail.eyb) || '0', 10),
@@ -158,6 +166,9 @@ async function syncYouBike(outDir) {
   const slimTycg = tycgList.map(s => ({
     uid: s.uid || s.sno || s.StationUID,
     name: s.name || s.sna,
+    lat: roundCoord(s.lat),
+    lng: roundCoord(s.lng != null ? s.lng : s.lon),
+    ar: s.address || s.ar || undefined,
     bikes: s.bikes != null ? s.bikes : parseInt(s.sbi != null ? s.sbi : (s.sbi_quantity || '0'), 10),
     empty: s.empty != null ? s.empty : parseInt(s.bemp || '0', 10),
     eBikes: s.eBikes != null ? s.eBikes : parseInt((s.sbi_detail && s.sbi_detail.eyb) || s.eyb_quantity || '0', 10),
@@ -196,7 +207,7 @@ async function syncYouBike(outDir) {
 
 // 2. 同步台灣高鐵當日時刻表 (南下: 板橋➔桃園 / 北上: 桃園➔板橋)
 async function syncThsr(outDir) {
-  console.log('[2/4] 正在自台灣高鐵官網同步當日最新班表 (保證停靠桃園)...');
+  console.log('[2/5] 正在自台灣高鐵官網同步當日最新班表 (保證停靠桃園)...');
   try {
     const [southTrains, northTrains] = await Promise.all([
       server.fetchOfficialThsrTimetable('BanQiao', 'TaoYuan'),
@@ -220,7 +231,7 @@ async function syncThsr(outDir) {
 
 // 3. 同步桃園機場捷運當日時刻表 (南下: A3➔A18 / 北上: A18➔A3)
 async function syncTymetro(outDir) {
-  console.log('[3/4] 正在自桃園捷運官網同步當日最新班表...');
+  console.log('[3/5] 正在自桃園捷運官網同步當日最新班表...');
   try {
     const [southTrains, northTrains] = await Promise.all([
       server.fetchOfficialTymetroTimetable('south'),

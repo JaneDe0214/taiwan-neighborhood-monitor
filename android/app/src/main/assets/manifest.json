@@ -1,0 +1,25 @@
+{
+  "name": "雙埔生活 - 即時環境與大眾運輸監控系統",
+  "short_name": "雙埔生活",
+  "description": "新埔 ‧ 青埔雙核心生活圈即時視訊、氣象、空氣品質、高鐵／機捷／捷運通勤走廊與 YouBike 2.0 動態看板",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#05080f",
+  "theme_color": "#060a13",
+  "lang": "zh-TW",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "dpuLogo_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

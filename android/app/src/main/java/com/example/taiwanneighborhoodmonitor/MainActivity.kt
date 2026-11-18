@@ -8,12 +8,15 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Base64
+import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +36,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -54,7 +60,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FilterInputStream
 import java.io.InputStream
-import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -92,6 +97,9 @@ class MainActivity : ComponentActivity() {
     private var customFullscreenCallback: WebChromeClient.CustomViewCallback? = null
     private var customFullscreenContainer: FrameLayout? = null
     private var lastTriggerRefreshMs: Long = 0L
+    @Volatile
+    private var hadNetworkLoss: Boolean = false
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,10 +111,17 @@ class MainActivity : ComponentActivity() {
             System.setProperty("http.keepAlive", "true")
         } catch (_: Exception) {}
 
-        // 1. 智慧識別設備類型 (Google TV / Android TV vs 手機版)
+        // 1. 智慧識別裝置類型 (Google TV / Android TV vs 手機版)
         isTvDevice = detectIsTvDevice(this)
 
-        // 2. 電視模式下啟用常亮保持，防止電視牆休眠黑屏
+        // 2. Android 15/16+ (targetSdk 36) 標準 Edge-to-Edge 深色系統列外觀設定
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
+
+        // 電視模式下啟用常亮保持，防止電視牆休眠黑畫面
         if (isTvDevice) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
@@ -114,21 +129,73 @@ class MainActivity : ComponentActivity() {
         // 3. 建立並配置全硬體加速的原生 WebView 視圖 (使用 LAYER_TYPE_NONE 交由 Chromium 內建管線加速，避免雙重離屏緩衝破圖黑塊)
         webView = WebView(this).apply {
             setLayerType(View.LAYER_TYPE_NONE, null)
-            setBackgroundColor("#0a0e17".toColorInt())
+            setBackgroundColor("#05080f".toColorInt())
             isFocusable = true
             isFocusableInTouchMode = true
         }
-        setContentView(webView)
+
+        val rootLayout = FrameLayout(this).apply {
+            setBackgroundColor("#05080f".toColorInt())
+            addView(
+                webView,
+                FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            )
+        }
+
+        // 手機與平板動態套用狀態列、挖孔鏡頭區、底部手勢列與虛擬鍵盤安全邊距，徹底杜絕遮擋
+        if (!isTvDevice) {
+            ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { v, windowInsets ->
+                val insets = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() or
+                        WindowInsetsCompat.Type.displayCutout() or
+                        WindowInsetsCompat.Type.ime()
+                )
+                v.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+                WindowInsetsCompat.CONSUMED
+            }
+        }
+        setContentView(rootLayout)
 
         configureWebView(webView)
         registerBackNavigation()
+        registerConnectivityWatcher()
 
-        // 4. 背景立即非同步平行預熱所有大眾運輸與 YouBike 即時數據 (0 阻塞、秒開無白屏)
+        // 4. 背景立即非同步平行預熱所有大眾運輸與 YouBike 即時資料 (0 阻塞、秒開無白畫面)
         lastTriggerRefreshMs = System.currentTimeMillis()
         nativeBridge.prewarmAllData()
 
         // 5. 透過官方建議的 HTTPS 虛擬網域載入本機資產應用程式（確保 YouTube/外部嵌入接收合法 HTTPS Referer，徹底消除錯誤 153）
         webView.loadUrl("https://appassets.androidplatform.net/index.html")
+    }
+
+    /**
+     * 監聽行動網路／Wi-Fi 連線狀態：出地下捷運隧道或網路斷而復連時，自動為前景畫面同步最新班次與車況
+     */
+    private fun registerConnectivityWatcher() {
+        try {
+            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
+            val callback = object : ConnectivityManager.NetworkCallback() {
+                override fun onLost(network: Network) {
+                    hadNetworkLoss = true
+                }
+
+                override fun onAvailable(network: Network) {
+                    if (hadNetworkLoss) {
+                        hadNetworkLoss = false
+                        if (::nativeBridge.isInitialized && nativeBridge.isForeground()) {
+                            runOnUiThread {
+                                triggerForceRefreshAll(force = false)
+                            }
+                        }
+                    }
+                }
+            }
+            cm.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        } catch (_: Exception) {}
     }
 
     /**
@@ -400,17 +467,9 @@ class MainActivity : ComponentActivity() {
                     return serveBundledAsset(uri)
                 }
                 if (url.startsWith("http://") || url.startsWith("https://")) {
-                    val isBote = url.contains("hls.bote.gov.taipei")
-                    val isNativeApi = url.contains("raw.githubusercontent.com") ||
-                        url.contains("janede0214.github.io") ||
-                        url.contains("opendata.vip") ||
-                        url.contains("tdx") ||
-                        url.contains("data.ntpc.gov.tw") ||
-                        url.contains("opendata.tycg.gov.tw") ||
-                        url.contains("cwa.gov.tw") ||
-                        url.contains("thsrc.com.tw") ||
-                        url.contains("earthquake.usgs.gov") ||
-                        url.contains("open-meteo.com")
+                    val host = uri.host
+                    val isBote = host.equals("hls.bote.gov.taipei", ignoreCase = true)
+                    val isNativeApi = WebAssetRouting.isNativeInterceptHost(host)
 
                     if ((isBote || isNativeApi) && request.method.equals("OPTIONS", ignoreCase = true)) {
                         return WebResourceResponse(
@@ -501,14 +560,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val boteCookies = java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.ConcurrentHashMap<String, String>>()
+    private val boteCookies = ConcurrentHashMap<String, ConcurrentHashMap<String, String>>()
+    private val boteHttpClient: OkHttpClient by lazy {
+        nativeBridge.sharedHttpClient().newBuilder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .connectTimeout(5000, TimeUnit.MILLISECONDS)
+            .readTimeout(10000, TimeUnit.MILLISECONDS)
+            .build()
+    }
 
     private fun extractBoteCamKey(urlString: String): String = WebAssetRouting.extractBoteCamKey(urlString)
 
     /**
      * 臺北市交通管制工程處 (hls.bote.gov.taipei) 專屬原生高速代理直透實作
-     * 1. 手動跟隨 301/302/303/307/308 重新導向（依鏡頭 ID 獨立隔離 hlsSession / cookieCheck Cookie）
-     * 2. 自動分配標準視訊切片 MIME Type (.m3u8, .ts, .mp4, .m4s) 並將所有二進位媒體 encoding 設為 null
+     * 1. 複用 OkHttp HTTP/2 與 TLS Keep-Alive 連線池，手動跟隨 301~308 重新導向（依鏡頭 ID 獨立隔離 Cookie，上限 200 組防暴漲）
+     * 2. 串流式轉發視訊切片 (.m3u8, .ts, .mp4, .m4s)，零全量 ByteArray 堆積，並將二進位媒體 encoding 設為 null
      * 3. 注入 Access-Control-Allow-Origin: * 消除 WebView 同源限制
      */
     private fun fetchNativeBoteUrl(
@@ -518,73 +585,67 @@ class MainActivity : ComponentActivity() {
     ): WebResourceResponse? {
         return try {
             var currentUrl = urlString
-            var conn: HttpURLConnection? = null
-            var code = -1
+            var finalResp: okhttp3.Response? = null
             val camKey = extractBoteCamKey(urlString)
+            if (boteCookies.size > 200 && !boteCookies.containsKey(camKey)) {
+                boteCookies.clear()
+            }
             val camCookies = boteCookies.computeIfAbsent(camKey) { ConcurrentHashMap() }
 
             for (hop in 0..4) {
-                val url = URL(currentUrl)
-                val attempt = (url.openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 5000
-                    readTimeout = 10000
-                    requestMethod = method
-                    setRequestProperty("Referer", "https://hls.bote.gov.taipei/live/index.html")
-                    setRequestProperty("Origin", "https://hls.bote.gov.taipei")
-                    setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                    setRequestProperty("Accept", "*/*")
-                    if (!rangeHeader.isNullOrBlank()) {
-                        setRequestProperty("Range", rangeHeader)
-                    }
-                    if (camCookies.isNotEmpty()) {
-                        val cookieHeader = camCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-                        setRequestProperty("Cookie", cookieHeader)
-                    }
-                    instanceFollowRedirects = false
+                val reqBuilder = Request.Builder()
+                    .url(currentUrl)
+                    .header("Referer", "https://hls.bote.gov.taipei/live/index.html")
+                    .header("Origin", "https://hls.bote.gov.taipei")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("Accept", "*/*")
+                if (!rangeHeader.isNullOrBlank()) {
+                    reqBuilder.header("Range", rangeHeader)
                 }
-                try {
-                    attempt.connect()
+                if (camCookies.isNotEmpty()) {
+                    val cookieHeader = camCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+                    reqBuilder.header("Cookie", cookieHeader)
+                }
+                if (method == "HEAD") reqBuilder.head() else reqBuilder.get()
 
-                    attempt.headerFields?.forEach { (headerName, values) ->
-                        if (headerName != null && headerName.equals("Set-Cookie", ignoreCase = true) && values != null) {
-                            for (raw in values) {
-                                val pair = raw.split(";")[0]
-                                val eqIdx = pair.indexOf('=')
-                                if (eqIdx > 0) {
-                                    val k = pair.substring(0, eqIdx).trim()
-                                    val v = pair.substring(eqIdx + 1).trim()
-                                    if (k.isNotEmpty()) camCookies[k] = v
-                                }
-                            }
+                val attempt = boteHttpClient.newCall(reqBuilder.build()).execute()
+                try {
+                    for (raw in attempt.headers("Set-Cookie")) {
+                        val pair = raw.substringBefore(';')
+                        val eqIdx = pair.indexOf('=')
+                        if (eqIdx > 0) {
+                            val k = pair.substring(0, eqIdx).trim()
+                            val v = pair.substring(eqIdx + 1).trim()
+                            if (k.isNotEmpty()) camCookies[k] = v
                         }
                     }
 
-                    code = attempt.responseCode
+                    val code = attempt.code
                     if (code == 401 || code == 403) {
                         camCookies.clear()
                     }
                     if (code in 300..399) {
-                        val location = attempt.getHeaderField("Location")
-                        attempt.disconnect()
+                        val location = attempt.header("Location")
+                        attempt.close()
                         if (location.isNullOrBlank()) return null
-                        val nextUrl = URL(url, location)
+                        val nextUrl = URL(URL(currentUrl), location)
                         if (!nextUrl.host.equals("hls.bote.gov.taipei", ignoreCase = true)) return null
                         currentUrl = nextUrl.toString()
                         continue
                     }
-                    conn = attempt
+                    finalResp = attempt
                     break
                 } catch (e: Exception) {
-                    try {
-                        attempt.disconnect()
-                    } catch (_: Exception) {}
+                    attempt.close()
                     throw e
                 }
             }
 
-            if (conn != null && code in 200..299) {
-                val rawContentType = conn.contentType ?: ""
-                val cleanPath = currentUrl.substringBefore("?").lowercase()
+            val resp = finalResp ?: return null
+            val code = resp.code
+            if (code in 200..299) {
+                val rawContentType = resp.header("Content-Type") ?: ""
+                val cleanPath = currentUrl.substringBefore("?").lowercase(Locale.US)
                 val isM3u8 = cleanPath.endsWith(".m3u8") || rawContentType.contains("mpegurl", ignoreCase = true)
                 val isTs = cleanPath.endsWith(".ts")
                 val isMp4 = cleanPath.endsWith(".mp4")
@@ -612,9 +673,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val contentRangeHeader = if (code == 206) conn.getHeaderField("Content-Range") else null
-                val bytes = if (method == "HEAD") ByteArray(0) else conn.inputStream.use { it.readBytes() }
-                conn.disconnect()
+                val contentRangeHeader = if (code == 206) resp.header("Content-Range") else null
+                val contentLenHeader = resp.header("Content-Length")
 
                 val headers = corsHeaders().apply {
                     put("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -622,8 +682,24 @@ class MainActivity : ComponentActivity() {
                     if (!contentRangeHeader.isNullOrBlank()) {
                         put("Content-Range", contentRangeHeader)
                     }
-                    if (method != "HEAD") {
-                        put("Content-Length", bytes.size.toString())
+                    if (method != "HEAD" && !contentLenHeader.isNullOrBlank()) {
+                        put("Content-Length", contentLenHeader)
+                    }
+                }
+
+                val bodyStream: InputStream = if (method == "HEAD") {
+                    resp.close()
+                    ByteArrayInputStream(ByteArray(0))
+                } else {
+                    val rawStream = resp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+                    object : FilterInputStream(rawStream) {
+                        override fun close() {
+                            try {
+                                super.close()
+                            } finally {
+                                resp.close()
+                            }
+                        }
                     }
                 }
 
@@ -633,10 +709,10 @@ class MainActivity : ComponentActivity() {
                     code,
                     if (code == 206) "Partial Content" else "OK",
                     headers,
-                    ByteArrayInputStream(bytes)
+                    bodyStream
                 )
             } else {
-                conn?.disconnect()
+                resp.close()
                 null
             }
         } catch (_: Exception) {
@@ -737,6 +813,13 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        try {
+            networkCallback?.let { cb ->
+                val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+                cm?.unregisterNetworkCallback(cb)
+            }
+        } catch (_: Exception) {}
+        networkCallback = null
         hideCustomFullscreenView()
         nativeBridge.cancelScope()
         webView.destroy()
@@ -763,6 +846,8 @@ class AndroidNativeBridge(
         isForegroundActive = active
     }
 
+    fun isForeground(): Boolean = isForegroundActive
+
     /**
      * 取消所有背景協程，防止 Activity 銷毀後記憶體洩漏
      */
@@ -775,6 +860,19 @@ class AndroidNativeBridge(
 
     @JavascriptInterface
     fun getPlatformName(): String = if (isTv) "GoogleTV" else "AndroidMobile"
+
+    /**
+     * 行動版原生細膩觸覺微震動回饋（切換區域、網格、方向與下拉重新整理時觸發）
+     */
+    @JavascriptInterface
+    fun performHapticFeedback() {
+        if (isTv) return
+        activity.runOnUiThread {
+            try {
+                webView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            } catch (_: Exception) {}
+        }
+    }
 
     /**
      * 原生呼叫外部 Intent 開啟地圖 (支援 Google 地圖 App 或系統瀏覽器)
@@ -1039,7 +1137,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 前端 DOMContentLoaded 就緒雙向握手：打開 App 即刻主動推送最新數據，消除載入延遲
+     * 前端 DOMContentLoaded 就緒雙向握手：打開 App 即刻主動推送最新資料，消除載入延遲
      */
     @JavascriptInterface
     fun onFrontendReady() {
@@ -1100,64 +1198,89 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 背景非同步拉取 YouBike 即時開放資料 (TDX / 桃園官方 / 雲端)
+     * 背景非同步拉取 YouBike 即時開放資料 (TDX / 新北官方 CSV + 桃園官方 JSON / GitHub 雲端備援)
      */
     private suspend fun refreshYouBikeAsync(force: Boolean = false) = withContext(Dispatchers.IO) {
         if (shouldSkipByCooldown("youbike", force, 10000L)) return@withContext
         if (isRefreshing.putIfAbsent("youbike", true) != null) return@withContext
         try {
-            fun isValidJsonArray(raw: String?): Boolean {
+            fun isNonEmptyJsonArray(raw: String?): Boolean {
                 val trimmed = raw?.trim() ?: return false
-                return trimmed.startsWith("[") && trimmed.endsWith("]")
+                return trimmed.length > 2 && trimmed.startsWith("[") && trimmed.endsWith("]")
             }
-            fun isValidJsonObject(raw: String?): Boolean {
+            fun isNonEmptyJsonObject(raw: String?): Boolean {
                 val trimmed = raw?.trim() ?: return false
-                return trimmed.startsWith("{") && trimmed.endsWith("}")
+                return trimmed.length > 2 && trimmed.startsWith("{") && trimmed.endsWith("}")
             }
 
-            // 1. 優先直打台灣 TDX 即時開放資料 API (opendata.vip，每分鐘動態更新)
+            var resolvedNtpc: String? = null
+            var resolvedTycg: String? = null
+
+            // 1. 優先並行直打台灣 TDX 即時開放資料 API (opendata.vip，每分鐘動態更新)
             try {
                 val ntpcDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500) }
                 val tycgDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/Taoyuan", 3500) }
                 val ntpcRaw = ntpcDeferred.await()
                 val tycgRaw = tycgDeferred.await()
-
-                val safeNtpc = if (isValidJsonArray(ntpcRaw)) ntpcRaw else "[]"
-                val safeTycg = if (isValidJsonArray(tycgRaw)) tycgRaw else "[]"
-
-                if (isValidJsonArray(ntpcRaw) || isValidJsonArray(tycgRaw)) {
-                    val nowDate = Date()
-                    val now = formatTaipeiTime(nowDate, "HH:mm")
-                    val iso = formatUtcIso(nowDate)
-                    val json = """{"success":true,"isDirectApi":true,"updatedAt":"$iso","updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
-                    dataMemoryCache["youbike"] = json
-                    lastFetchTimes["youbike"] = System.currentTimeMillis()
-                    notifyDataUpdated("youbike")
-                    return@withContext
-                }
+                if (isNonEmptyJsonArray(ntpcRaw)) resolvedNtpc = ntpcRaw
+                if (isNonEmptyJsonArray(tycgRaw)) resolvedTycg = tycgRaw
             } catch (_: Exception) {}
 
-            // 2. 備援 1：官方備援 API (桃園 JSON)
-            try {
-                val tycgDirectDeferred = async { fetchHttp("https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download", 4000) }
-                val ntpcRawDeferred = async { fetchHttp("https://www.opendata.vip/tdx/youbikeApi/NewTaipei", 3500) }
-                val tycgDirect = tycgDirectDeferred.await()
-                val ntpcRaw = ntpcRawDeferred.await()
-                val validNtpc = isValidJsonArray(ntpcRaw)
-                val validTycg = isValidJsonArray(tycgDirect) || isValidJsonObject(tycgDirect)
-                if (validNtpc || validTycg) {
-                    val nowDate = Date()
-                    val now = formatTaipeiTime(nowDate, "HH:mm")
-                    val iso = formatUtcIso(nowDate)
-                    val safeNtpc = if (validNtpc) ntpcRaw else "[]"
-                    val safeTycg = if (validTycg) tycgDirect else "[]"
-                    val json = """{"success":true,"isDirectApi":true,"updatedAt":"$iso","updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
-                    dataMemoryCache["youbike"] = json
-                    lastFetchTimes["youbike"] = System.currentTimeMillis()
-                    notifyDataUpdated("youbike")
-                    return@withContext
+            // 2. 針對單一縣市失敗時，精準補抓新北市政府官方開放 CSV 與桃園市政府官方 JSON（絕不將缺漏縣市直接覆寫為空陣列）
+            if (resolvedNtpc == null || resolvedTycg == null) {
+                try {
+                    val ntpcCsvDeferred = if (resolvedNtpc == null) {
+                        async { fetchHttp("https://data.ntpc.gov.tw/api/datasets/010E5B15-3823-4B20-B401-B1CF000550C5/csv/file", 4500) }
+                    } else null
+                    val tycgGovDeferred = if (resolvedTycg == null) {
+                        async { fetchHttp("https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download", 4500) }
+                    } else null
+
+                    val csvRaw = ntpcCsvDeferred?.await().orEmpty()
+                    if (csvRaw.isNotBlank()) {
+                        val parsedArr = TransitParsers.parseYouBikeCsv(csvRaw)
+                        if (parsedArr.length() > 0) {
+                            resolvedNtpc = parsedArr.toString()
+                        }
+                    }
+
+                    val tycgDirect = tycgGovDeferred?.await().orEmpty()
+                    if (isNonEmptyJsonArray(tycgDirect) || isNonEmptyJsonObject(tycgDirect)) {
+                        resolvedTycg = tycgDirect
+                    }
+                } catch (_: Exception) {}
+            }
+
+            // 若其中一城成功而另一城暫時逾時，優先保留記憶體快取中既有該城陣列，避免單城車況被洗空
+            if (resolvedNtpc != null || resolvedTycg != null) {
+                val prevCached = dataMemoryCache["youbike"]
+                if ((resolvedNtpc == null || resolvedTycg == null) && !prevCached.isNullOrBlank()) {
+                    try {
+                        val prevObj = JSONObject(prevCached)
+                        if (resolvedNtpc == null) {
+                            val prevNtpc = prevObj.optJSONArray("ntpc")
+                            if (prevNtpc != null && prevNtpc.length() > 0) resolvedNtpc = prevNtpc.toString()
+                        }
+                        if (resolvedTycg == null) {
+                            val prevTycgArr = prevObj.optJSONArray("tycg")
+                            val prevTycgObj = prevObj.optJSONObject("tycg")
+                            if (prevTycgArr != null && prevTycgArr.length() > 0) resolvedTycg = prevTycgArr.toString()
+                            else if (prevTycgObj != null && prevTycgObj.length() > 0) resolvedTycg = prevTycgObj.toString()
+                        }
+                    } catch (_: Exception) {}
                 }
-            } catch (_: Exception) {}
+
+                val nowDate = Date()
+                val now = formatTaipeiTime(nowDate, "HH:mm")
+                val iso = formatUtcIso(nowDate)
+                val safeNtpc = resolvedNtpc ?: "[]"
+                val safeTycg = resolvedTycg ?: "[]"
+                val json = """{"success":true,"isDirectApi":true,"updatedAt":"$iso","updateTimeDisplay":"$now","ntpc":$safeNtpc,"tycg":$safeTycg}"""
+                dataMemoryCache["youbike"] = json
+                lastFetchTimes["youbike"] = System.currentTimeMillis()
+                notifyDataUpdated("youbike")
+                return@withContext
+            }
 
             // 3. 備援 2：GitHub 雲端 Actions 資料庫
             val cloudUrls = listOf(
@@ -1451,7 +1574,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生秒級即時 YouBike 直取 (優先回傳記憶體即時資料，背景自動異步更新)
+     * 原生秒級即時 YouBike 直取 (優先回傳記憶體即時資料，背景自動非同步更新)
      */
     @JavascriptInterface
     fun getRealtimeYouBike(): String {
@@ -1460,7 +1583,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生秒級即時捷運看板與擁擠度直取 (優先回傳記憶體即時資料，背景自動異步更新)
+     * 原生秒級即時捷運看板與擁擠度直取 (優先回傳記憶體即時資料，背景自動非同步更新)
      */
     @JavascriptInterface
     fun getRealtimeMetroLive(): String {
@@ -1469,7 +1592,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生秒級即時高鐵停車位直取 (0 毫秒極速快取優先，背景自動異步更新)
+     * 原生秒級即時高鐵停車位直取 (0 毫秒極速快取優先，背景自動非同步更新)
      */
     @JavascriptInterface
     fun getRealtimeParking(): String {
@@ -1482,7 +1605,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生秒級即時台灣高鐵官方班表直取 (0 毫秒極速快取優先，背景自動異步更新)
+     * 原生秒級即時台灣高鐵官方班表直取 (0 毫秒極速快取優先，背景自動非同步更新)
      */
     @JavascriptInterface
     fun getRealtimeThsr(): String {
@@ -1495,7 +1618,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生秒級即時機捷官方班表直取 (0 毫秒極速快取優先，背景自動異步更新)
+     * 原生秒級即時機捷官方班表直取 (0 毫秒極速快取優先，背景自動非同步更新)
      */
     @JavascriptInterface
     fun getRealtimeTymetro(): String {
@@ -1508,7 +1631,7 @@ class AndroidNativeBridge(
     }
 
     /**
-     * 原生整合獲取最新資料庫 (0 毫秒極速快取優先，全背景異步並行更新)
+     * 原生整合獲取最新資料庫 (0 毫秒極速快取優先，全背景非同步並行更新)
      */
     @JavascriptInterface
     fun getLatestCloudData(dataType: String): String {
@@ -1789,6 +1912,96 @@ internal object TransitParsers {
         } catch (_: Exception) {}
         return trainsArray
     }
+
+    /**
+     * 解析新北市政府資料開放平台官方 YouBike 2.0 CSV（支援 BOM 去除與雙引號內逗號轉義）
+     */
+    fun parseYouBikeCsv(csvStr: String): JSONArray {
+        val result = JSONArray()
+        if (csvStr.isBlank()) return result
+        try {
+            val clean = csvStr.trimStart('\uFEFF')
+            val lines = clean.lines().filter { it.isNotBlank() }
+            if (lines.size < 2) return result
+
+            val headers = splitCsvLine(lines[0]).map { it.trim().trim('"') }
+            if (headers.isEmpty()) return result
+
+            val idxSno = headers.indexOf("sno")
+            val idxSna = headers.indexOf("sna")
+            if (idxSno < 0 && idxSna < 0) return result
+
+            for (lineIdx in 1 until lines.size) {
+                val cols = splitCsvLine(lines[lineIdx])
+                if (cols.size < headers.size / 2) continue
+
+                fun col(name: String): String {
+                    val idx = headers.indexOf(name)
+                    return if (idx in cols.indices) cols[idx].trim().trim('"') else ""
+                }
+
+                val act = col("act")
+                if (act == "0") continue
+
+                val sno = col("sno")
+                val sna = col("sna")
+                if (sno.isEmpty() && sna.isEmpty()) continue
+
+                val sbiQty = col("sbi_quantity").ifEmpty { col("sbi") }
+                val totQty = col("tot_quantity").ifEmpty { col("tot") }
+                val bemp = col("bemp")
+                val eybQty = col("eyb_quantity")
+                val mday = col("mday")
+                val lat = col("lat")
+                val lng = col("lng")
+                val ar = col("ar")
+
+                val item = JSONObject().apply {
+                    put("sno", sno)
+                    put("sna", sna)
+                    put("sbi_quantity", sbiQty.toIntOrNull() ?: 0)
+                    put("tot_quantity", totQty.toIntOrNull() ?: 0)
+                    put("bemp", bemp.toIntOrNull() ?: 0)
+                    put("eyb_quantity", eybQty.toIntOrNull() ?: 0)
+                    put("mday", mday)
+                    lat.toDoubleOrNull()?.let { put("lat", it) }
+                    lng.toDoubleOrNull()?.let { put("lng", it) }
+                    if (ar.isNotEmpty()) put("ar", ar)
+                    put("act", act.ifEmpty { "1" })
+                }
+                result.put(item)
+            }
+        } catch (_: Exception) {}
+        return result
+    }
+
+    private fun splitCsvLine(line: String): List<String> {
+        val out = ArrayList<String>(20)
+        val sb = StringBuilder()
+        var inQuotes = false
+        var i = 0
+        while (i < line.length) {
+            val ch = line[i]
+            when {
+                ch == '"' -> {
+                    if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+                        sb.append('"')
+                        i++
+                    } else {
+                        inQuotes = !inQuotes
+                    }
+                }
+                ch == ',' && !inQuotes -> {
+                    out.add(sb.toString())
+                    sb.setLength(0)
+                }
+                else -> sb.append(ch)
+            }
+            i++
+        }
+        out.add(sb.toString())
+        return out
+    }
 }
 
 internal data class AssetContentSpec(
@@ -1802,6 +2015,29 @@ internal data class AssetContentSpec(
  */
 internal object WebAssetRouting {
     private val boteCamKeyRegex = Regex("/(?:hls/|streamapi_)([0-9A-Za-z_-]+)")
+    private val nativeInterceptDomains = listOf(
+        "raw.githubusercontent.com",
+        "janede0214.github.io",
+        "opendata.vip",
+        "transportdata.tw",
+        "data.ntpc.gov.tw",
+        "opendata.tycg.gov.tw",
+        "cwa.gov.tw",
+        "cwaopendata.s3.ap-northeast-1.amazonaws.com",
+        "thsrc.com.tw",
+        "tymetro.com.tw",
+        "earthquake.usgs.gov",
+        "open-meteo.com",
+        "api.rainviewer.com"
+    )
+
+    fun isNativeInterceptHost(rawHost: String?): Boolean {
+        val host = rawHost?.trim()?.lowercase(Locale.US)?.trimEnd('.') ?: return false
+        if (host.isEmpty()) return false
+        return nativeInterceptDomains.any { domain ->
+            host == domain || host.endsWith(".$domain")
+        }
+    }
 
     fun resolveAssetPath(rawPath: String?): String? {
         var relPath = (rawPath ?: "/").trimStart('/')
@@ -1822,6 +2058,7 @@ internal object WebAssetRouting {
             lower.endsWith(".html") || lower.endsWith(".htm") -> "text/html"
             lower.endsWith(".js") -> "application/javascript"
             lower.endsWith(".css") -> "text/css"
+            lower.endsWith(".webmanifest") -> "application/manifest+json"
             lower.endsWith(".json") -> "application/json"
             lower.endsWith(".svg") -> "image/svg+xml"
             lower.endsWith(".png") -> "image/png"

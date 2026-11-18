@@ -966,11 +966,24 @@ async function handleParkingThsrProxy(req, res) {
   }
 }
 
-// 抓取單一 JSON 並附帶一次重試機制 (因應 Open-Meteo 偶發連線重置)
+// 抓取單一 JSON 並附帶一次重試機制 (優先採用現代內建 fetch / Happy Eyeballs 消除 Open-Meteo TLS 連線重置)
 async function fetchJsonWithRetry(url, retries = 1) {
   let lastErr;
   for (let i = 0; i <= retries; i++) {
     try {
+      if (typeof fetch === 'function') {
+        const res = await fetch(url, {
+          headers: {
+            'User-Agent': 'TaiwanNeighborhoodMonitor/1.0',
+            'Accept': 'application/json'
+          },
+          signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+            ? AbortSignal.timeout(8000)
+            : undefined
+        });
+        if (!res.ok) throw new Error(`HTTP Status ${res.status}`);
+        return await res.json();
+      }
       const raw = await fetchRemoteJson(url);
       return JSON.parse(raw);
     } catch (err) {
@@ -981,7 +994,7 @@ async function fetchJsonWithRetry(url, retries = 1) {
 }
 
 // 氣象與空氣品質代理 (Open-Meteo 雙端點並發查詢 + 120 秒記憶體快取與過期容錯)
-async function handleWeatherProxy(req, res, latRaw, lonRaw) {
+async function handleWeatherProxy(req, res, latRaw, lonRaw, tzRaw) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
@@ -993,7 +1006,11 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw) {
     return;
   }
 
-  const key = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  const allowedTz = new Set(['Asia/Taipei', 'Asia/Tokyo', 'auto']);
+  const tz = allowedTz.has(tzRaw) ? tzRaw : 'Asia/Taipei';
+  const encodedTz = encodeURIComponent(tz);
+
+  const key = `${lat.toFixed(2)},${lon.toFixed(2)},${tz}`;
   const now = Date.now();
   const cached = cache.weatherMap.get(key);
   if (cached && now < cached.expireAt) {
@@ -1002,8 +1019,8 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw) {
     return;
   }
 
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=Asia%2FTaipei`;
-  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=Asia%2FTaipei`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=${encodedTz}`;
+  const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=${encodedTz}`;
 
   try {
     const [weather, airQuality] = await Promise.all([
@@ -1057,7 +1074,13 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (pathname === '/api/weather') {
-    handleWeatherProxy(req, res, parsedUrl.searchParams.get('lat'), parsedUrl.searchParams.get('lon'));
+    handleWeatherProxy(
+      req,
+      res,
+      parsedUrl.searchParams.get('lat'),
+      parsedUrl.searchParams.get('lon'),
+      parsedUrl.searchParams.get('tz')
+    );
     return;
   }
   if (pathname === '/api/youbike/ntpc') {
@@ -1144,9 +1167,11 @@ const server = http.createServer((req, res) => {
       '.js': 'application/javascript; charset=utf-8',
       '.css': 'text/css; charset=utf-8',
       '.json': 'application/json; charset=utf-8',
+      '.webmanifest': 'application/manifest+json; charset=utf-8',
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
+      '.webp': 'image/webp',
       '.svg': 'image/svg+xml',
       '.ico': 'image/x-icon'
     };

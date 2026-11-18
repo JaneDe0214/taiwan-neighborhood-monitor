@@ -212,4 +212,46 @@ class AppUnitTest {
 
         assertNull(WebAssetRouting.readBoundedBytes(ByteArrayInputStream(ByteArray(0))))
     }
+
+    @Test
+    fun parseYouBikeCsv_handlesBomQuotedCommasAndFiltersInactive() {
+        val csv = "\uFEFFsno,sna,tot,sbi,sarea,mday,lat,lng,ar,bemp,act,sbi_quantity,eyb_quantity,tot_quantity\n" +
+            "500201001,\"YouBike2.0_捷運新埔站(3號出口)\",20,9,板橋區,20261118080000,25.02247,121.46868,\"民生路二段232號,近3號出口\",11,1,9,3,20\n" +
+            "500201002,YouBike2.0_暫停營運站,30,0,板橋區,20261118080000,25.02000,121.46000,文化路一段,30,0,0,0,30\n"
+
+        val arr = TransitParsers.parseYouBikeCsv(csv)
+        assertEquals(1, arr.length())
+        val st = arr.getJSONObject(0)
+        assertEquals("500201001", st.getString("sno"))
+        assertEquals("YouBike2.0_捷運新埔站(3號出口)", st.getString("sna"))
+        assertEquals(9, st.getInt("sbi_quantity"))
+        assertEquals(3, st.getInt("eyb_quantity"))
+        assertEquals(11, st.getInt("bemp"))
+        assertEquals(20, st.getInt("tot_quantity"))
+        assertEquals("民生路二段232號,近3號出口", st.getString("ar"))
+        assertEquals(25.02247, st.getDouble("lat"), 1e-5)
+        assertEquals(121.46868, st.getDouble("lng"), 1e-5)
+
+        assertEquals(0, TransitParsers.parseYouBikeCsv("").length())
+        assertEquals(0, TransitParsers.parseYouBikeCsv("invalid,header\n1,2").length())
+    }
+
+    @Test
+    fun isNativeInterceptHost_matchesAllowedSubdomainsAndRejectsSpoofedHosts() {
+        assertTrue(WebAssetRouting.isNativeInterceptHost("www.opendata.vip"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("www.tymetro.com.tw"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.rainviewer.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("air-quality-api.open-meteo.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("cwaopendata.s3.ap-northeast-1.amazonaws.com"))
+
+        assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
+        assertFalse(WebAssetRouting.isNativeInterceptHost("evil-opendata.vip"))
+        assertFalse(WebAssetRouting.isNativeInterceptHost("opendata.vip.attacker.com"))
+        assertFalse(WebAssetRouting.isNativeInterceptHost(null))
+        assertFalse(WebAssetRouting.isNativeInterceptHost(""))
+
+        val manifestSpec = WebAssetRouting.assetContentSpec("manifest.webmanifest")
+        assertEquals("application/manifest+json", manifestSpec.mimeType)
+        assertFalse(manifestSpec.isBinary)
+    }
 }

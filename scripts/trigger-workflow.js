@@ -1,5 +1,5 @@
-﻿/**
- * 外部觸發 GitHub Action 即時同步輔助腳本 (API 秒級調用)
+/**
+ * 外部觸發 GitHub Action 即時同步輔助腳本 (API 秒級呼叫)
  * 使用方法：
  *   node scripts/trigger-workflow.js <YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>
  * 
@@ -51,7 +51,7 @@ console.log(`正在發送即時觸發請求至 GitHub API (${OWNER}/${REPO})...`
 const req = https.request(options, (res) => {
   if (res.statusCode === 204) {
     console.log('✅ 成功觸發 GitHub Actions！(HTTP 204 No Content)');
-    console.log('GitHub Runner 將在數秒內立即啟動並更新大眾運輸與 YouBike 數據。');
+    console.log('GitHub Runner 將在數秒內立即啟動並更新大眾運輸與 YouBike 即時資料。');
   } else {
     let body = '';
     res.on('data', chunk => body += chunk);

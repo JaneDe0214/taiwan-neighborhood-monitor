@@ -41,11 +41,31 @@ kotlin {
     jvmToolchain(17)
 }
 
+// 建置前自動將根目錄最新前端檔案與即時快照資料集同步至 Android assets，徹底消除雙端版本落差
+val repoRootDir = rootProject.projectDir.parentFile
+val syncWebAssets by tasks.registering(Copy::class) {
+    from(repoRootDir) {
+        include("index.html", "manifest.json", "dpuLogo.jpg", "dpuLogo_icon.png", "favicon.png")
+    }
+    from(File(repoRootDir, "data")) {
+        into("data")
+    }
+    into(layout.projectDirectory.dir("src/main/assets"))
+}
+
+tasks.named("preBuild") {
+    dependsOn(syncWebAssets)
+}
+
+tasks.matching { it.name != "syncWebAssets" && it.name.endsWith("Assets") }.configureEach {
+    dependsOn(syncWebAssets)
+}
+
 dependencies {
-  // 核心 AndroidX 與協程依賴 (無冗餘 Compose UI，極致輕量化)
+  // 核心 AndroidX 與協程依賴 (移除未使用之 Compose UI 套件，改用純粹 activity-ktx 極致輕量化)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
-  implementation(libs.androidx.activity.compose) // 提供 ComponentActivity 支援
+  implementation(libs.androidx.activity.ktx)
   implementation(libs.okhttp) // 現代高效連線池、HTTP/2 多路複用與 Transparent Gzip
 
   // 單元測試
