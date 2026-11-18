@@ -304,7 +304,17 @@ body {
   text-transform: uppercase;
 }
 
-/* 中心切換選擇器 (附近 / 雙埔 / 青埔 / 新埔 / 觀光 / 日本 / 韓國 / 歐洲 / 美洲 / 收藏) */
+/* 中心切換選擇器 (附近 / 雙埔 / 青埔 / 新埔 / 觀光 / 日本 / 韓國 / 歐洲 / 美洲 / 極地極光 / 雨林 / 海洋 / 風景 / 日夜 / 收藏) */
+.center-switch-outer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .center-switch-group {
   display: inline-flex;
   align-items: center;
@@ -314,13 +324,57 @@ body {
   border: 1px solid var(--hairline);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
   gap: 2px;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 0;
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
 }
+.center-switch-group.is-scrollable {
+  cursor: grab;
+}
+.center-switch-group.is-scrollable .center-btn {
+  cursor: pointer;
+}
+.center-switch-group.is-dragging,
+.center-switch-group.is-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
 .center-switch-group::-webkit-scrollbar { display: none; }
+
+.center-scroll-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  background: rgba(14, 21, 38, 0.94);
+  color: var(--text-main);
+  font-size: 0.72rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease, transform 0.15s ease;
+}
+.center-scroll-arrow:hover:not(:disabled) {
+  background: rgba(var(--ambient-accent), 0.2);
+  border-color: rgba(var(--ambient-accent), 0.55);
+  color: #ffffff;
+}
+.center-scroll-arrow:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.center-scroll-arrow:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+.center-scroll-arrow.is-hidden {
+  display: none !important;
+}
 
 .center-btn {
   background: transparent;
@@ -7272,13 +7326,16 @@ body {
   }
 }
 
-@media (max-width: 1680px) {
+@media (max-width: 2360px) {
   .top-nav {
     flex-wrap: wrap;
     row-gap: 6px;
   }
-  .center-switch-group {
+  .center-switch-outer {
     order: 2;
+    max-width: 100%;
+  }
+  .center-switch-group {
     max-width: 100%;
   }
   .nav-actions {
@@ -7358,8 +7415,14 @@ body {
   }
 
   /* 監控中心切換選擇器：平滑水平滑動 + 漸層邊緣指示 */
-  .center-switch-group {
+  .center-switch-outer {
     width: 100% !important;
+    max-width: 100% !important;
+  }
+  .center-switch-group {
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
@@ -9001,6 +9064,19 @@ html[data-theme="light"] .grid-selector {
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
+html[data-theme="light"] .center-scroll-arrow {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.16);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] .center-scroll-arrow:hover:not(:disabled) {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+}
+
 html[data-theme="light"] .center-btn:hover,
 html[data-theme="light"] .grid-btn:hover {
   background: rgba(255, 255, 255, 0.72);
@@ -10153,8 +10229,12 @@ html[data-theme="light"] .daynight-mode-pill.is-dn-active {
       </div>
     </div>
 
-    <!-- 監控中心切換 (附近 vs 雙埔 vs 青埔 vs 新埔 vs 觀光 vs 日本) -->
-    <div class="center-switch-group">
+    <!-- 監控中心切換 (附近 vs 雙埔 vs 青埔 vs 新埔 vs 觀光 vs 全球4K vs 日本..日夜 vs 收藏) -->
+    <div class="center-switch-outer">
+      <button type="button" id="btnCenterScrollLeft" class="center-scroll-arrow is-hidden" aria-label="向左捲動分類" title="向左檢視前面分類">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+      </button>
+      <div class="center-switch-group">
       <button class="center-btn" data-center="nearby" title="附近：自動偵測目前所在位置，由近到遠呈現鄰近即時監視器與生活資訊">
         <i class="fa-solid fa-location-crosshairs"></i>
         <span>附近</span>
@@ -10223,6 +10303,10 @@ html[data-theme="light"] .daynight-mode-pill.is-dn-active {
         <i class="fa-solid fa-star" style="color:#fbbf24;"></i>
         <span>收藏</span>
         <span id="favCountBadge" class="fav-count-pill is-empty"></span>
+      </button>
+    </div>
+      <button type="button" id="btnCenterScrollRight" class="center-scroll-arrow is-hidden" aria-label="向右捲動分類" title="向右檢視更多分類（極地極光／雨林／海洋／風景／日夜／收藏）">
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
       </button>
     </div>
 
@@ -34582,15 +34666,112 @@ class MonitorApp {
   bindEvents() {
     if (this._eventsBound) return;
     this._eventsBound = true;
-    // 中心切換列滑鼠滾輪水平滑動輔助
+    // 中心切換列：完整支援「滑鼠按住拖拉、滑鼠滾輪垂直轉水平捲動、左右快捷捲動箭頭」
+    const centerSwitchOuter = document.querySelector('.center-switch-outer');
     const centerSwitchGroup = document.querySelector('.center-switch-group');
+    const btnCenterLeft = document.getElementById('btnCenterScrollLeft');
+    const btnCenterRight = document.getElementById('btnCenterScrollRight');
+    const updateCenterScrollUI = () => {
+      if (!centerSwitchGroup) return;
+      const maxScroll = Math.max(0, centerSwitchGroup.scrollWidth - centerSwitchGroup.clientWidth);
+      const isScrollable = maxScroll > 2;
+      centerSwitchGroup.classList.toggle('is-scrollable', isScrollable);
+      if (btnCenterLeft) {
+        btnCenterLeft.classList.toggle('is-hidden', !isScrollable);
+        btnCenterLeft.disabled = !isScrollable || centerSwitchGroup.scrollLeft <= 2;
+      }
+      if (btnCenterRight) {
+        btnCenterRight.classList.toggle('is-hidden', !isScrollable);
+        btnCenterRight.disabled = !isScrollable || centerSwitchGroup.scrollLeft >= maxScroll - 2;
+      }
+    };
+    this.updateCenterScrollUI = updateCenterScrollUI;
+
     if (centerSwitchGroup) {
-      centerSwitchGroup.addEventListener('wheel', (e) => {
-        if (centerSwitchGroup.scrollWidth > centerSwitchGroup.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-          e.preventDefault();
-          centerSwitchGroup.scrollLeft += e.deltaY;
-        }
+      const wheelHost = centerSwitchOuter || centerSwitchGroup;
+      wheelHost.addEventListener('wheel', (e) => {
+        if (centerSwitchGroup.scrollWidth <= centerSwitchGroup.clientWidth + 2) return;
+        let delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (!delta) return;
+        if (e.deltaMode === 1) delta *= 36;
+        else if (e.deltaMode === 2) delta *= centerSwitchGroup.clientWidth * 0.85;
+        e.preventDefault();
+        centerSwitchGroup.scrollLeft += delta;
+        updateCenterScrollUI();
       }, { passive: false });
+
+      let isDragging = false;
+      let hasDragged = false;
+      let dragStartX = 0;
+      let dragStartScrollLeft = 0;
+      let suppressClickUntil = 0;
+
+      centerSwitchGroup.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || centerSwitchGroup.scrollWidth <= centerSwitchGroup.clientWidth + 2) return;
+        isDragging = true;
+        hasDragged = false;
+        dragStartX = e.clientX;
+        dragStartScrollLeft = centerSwitchGroup.scrollLeft;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - dragStartX;
+        if (!hasDragged && Math.abs(dx) >= 5) {
+          hasDragged = true;
+          centerSwitchGroup.classList.add('is-dragging');
+        }
+        if (hasDragged) {
+          e.preventDefault();
+          centerSwitchGroup.scrollLeft = dragStartScrollLeft - dx;
+          updateCenterScrollUI();
+        }
+      });
+
+      const endCenterDrag = () => {
+        if (!isDragging) return;
+        if (hasDragged) {
+          suppressClickUntil = Date.now() + 120;
+        }
+        isDragging = false;
+        hasDragged = false;
+        centerSwitchGroup.classList.remove('is-dragging');
+      };
+      window.addEventListener('mouseup', endCenterDrag);
+      window.addEventListener('blur', endCenterDrag);
+
+      // 攔截拖曳釋放時誤觸按鈕 click（短點擊 <5px 正常切換分類）
+      centerSwitchGroup.addEventListener('click', (e) => {
+        if (Date.now() < suppressClickUntil) {
+          e.preventDefault();
+          e.stopPropagation();
+          suppressClickUntil = 0;
+        }
+      }, true);
+
+      centerSwitchGroup.addEventListener('scroll', updateCenterScrollUI, { passive: true });
+      window.addEventListener('resize', updateCenterScrollUI, { passive: true });
+      if (typeof ResizeObserver !== 'undefined') {
+        try {
+          const ro = new ResizeObserver(() => updateCenterScrollUI());
+          ro.observe(centerSwitchGroup);
+          const topNav = document.querySelector('.top-nav');
+          if (topNav) ro.observe(topNav);
+        } catch (_) {}
+      }
+      if (btnCenterLeft) {
+        btnCenterLeft.addEventListener('click', () => {
+          const step = Math.max(180, Math.round(centerSwitchGroup.clientWidth * 0.55));
+          centerSwitchGroup.scrollBy({ left: -step, behavior: 'smooth' });
+        });
+      }
+      if (btnCenterRight) {
+        btnCenterRight.addEventListener('click', () => {
+          const step = Math.max(180, Math.round(centerSwitchGroup.clientWidth * 0.55));
+          centerSwitchGroup.scrollBy({ left: step, behavior: 'smooth' });
+        });
+      }
+      requestAnimationFrame(updateCenterScrollUI);
     }
 
     // 中心切換按鈕 (附帶懸停／聚焦預測式縮圖預熱，達成點擊瞬間零黑畫面秒開)
