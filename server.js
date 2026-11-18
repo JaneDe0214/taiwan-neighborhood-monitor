@@ -67,7 +67,12 @@ const cache = {
   busEtaMap: new Map(),
   busRouteMetaMap: new Map(),
   busRouteStopsMap: new Map(),
-  youbikeCityMap: new Map()
+  youbikeCityMap: new Map(),
+  intlGeocodeMap: new Map(),
+  intlTransitMap: new Map(),
+  intlTripMap: new Map(),
+  cityBikesDir: { data: null, expireAt: 0 },
+  cityBikesNetMap: new Map()
 };
 
 // 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
@@ -1642,6 +1647,653 @@ async function handleBusRouteStopsProxy(req, res, parsedUrl) {
   }
 }
 
+// ============================================================================
+// 跨國（日本／韓國／亞太／歐洲／美洲）在地行政區、最近大眾運輸與全球共享單車代理引擎
+// ============================================================================
+const INTL_TERM_NORMALIZE_PAIRS = [
+  [/\u5927\u97e9\u6c11\u56fd|大韓民國/g, '韓國'],
+  [/\u7f8e\u5229\u575a\u5408\u4f17\u56fd|美利堅合眾國/g, '美國'],
+  [/\u5927\u4e0d\u5217\u98a0[\u53ca\u548c\u8207\u4e0e]*\u5317[\u7231\u611b][\u5c14\u723e][\u5170\u862d][\u8054\u806f]\u5408\u738b[\u56fd\u570b]/g, '英國'],
+  [/\u6089\u5c3c|悉尼/g, '雪梨'],
+  [/\u65b0\u897f\u5170|新西蘭/g, '紐西蘭'],
+  [/\u963f\u8054\u914b|\u963f\u62c9\u4f2f\u8054\u5408\u914b\u957f\u56fd/g, '阿聯'],
+  [/\u6c99\u7279\u963f\u62c9\u4f2f/g, '沙烏地阿拉伯'],
+  [/\u9996\u5c14/g, '首爾'],
+  [/\u4e1c\u4eac/g, '東京'],
+  [/\u6da9\u8c37/g, '澀谷'],
+  [/\u51b2\u7ef3/g, '沖繩'],
+  [/\u4f26\u6566/g, '倫敦'],
+  [/\u82cf\u9ece\u4e16/g, '蘇黎世'],
+  [/\u7f57\u74e6\u6d85\u7c73/g, '羅瓦涅米'],
+  [/\u7ebd\u7ea6/g, '紐約'],
+  [/\u6d1b\u6749\u77f6/g, '洛杉磯'],
+  [/\u62c9\u65af\u7ef4\u52a0\u65af/g, '拉斯維加斯'],
+  [/\u5723\u4fdd\u7f57/g, '聖保羅'],
+  [/\u5965\u514b\u5170/g, '奧克蘭'],
+  [/\u533a/g, '區'],
+  [/\u56fd/g, '國'],
+  [/\u53bf/g, '縣'],
+  [/\u5c9b/g, '島'],
+  [/\u6e7e/g, '灣'],
+  [/\u9547/g, '鎮'],
+  [/\u4e61/g, '鄉'],
+  [/\u91cc\u7ea6/g, '里約'],
+  [/\u97e9/g, '韓'],
+  [/\u53f0\u6e7e/g, '台灣']
+];
+
+function normalizeIntlTwLabel(raw) {
+  let s = String(raw || '').trim();
+  if (!s) return '';
+  for (const [re, rep] of INTL_TERM_NORMALIZE_PAIRS) {
+    s = s.replace(re, rep);
+  }
+  return s;
+}
+
+function formatTimeInZoneHHMM(isoStr, timeZone = 'UTC') {
+  if (!isoStr) return '';
+  const ms = Date.parse(isoStr);
+  if (!Number.isFinite(ms)) return '';
+  try {
+    return new Intl.DateTimeFormat('zh-TW', {
+      timeZone: timeZone || 'UTC',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date(ms));
+  } catch (_) {
+    return new Date(ms).toISOString().slice(11, 16);
+  }
+}
+
+function mapIntlModeMeta(mode = '') {
+  const m = String(mode || '').toUpperCase();
+  if (m.includes('SUBWAY') || m.includes('METRO')) return { mode: 'SUBWAY', label: '地鐵', icon: 'fa-train-subway' };
+  if (m.includes('HIGHSPEED') || m.includes('LONG_DISTANCE')) return { mode: 'RAIL', label: '高速鐵道', icon: 'fa-train' };
+  if (m.includes('RAIL') || m.includes('TRAIN')) return { mode: 'RAIL', label: '鐵道', icon: 'fa-train' };
+  if (m.includes('TRAM') || m.includes('LIGHT_RAIL')) return { mode: 'TRAM', label: '路面電車', icon: 'fa-train-tram' };
+  if (m.includes('FERRY')) return { mode: 'FERRY', label: '渡輪水上巴士', icon: 'fa-ferry' };
+  if (m.includes('AERIAL') || m.includes('FUNICULAR')) return { mode: 'CABLE', label: '登山纜車', icon: 'fa-cable-car' };
+  return { mode: 'BUS', label: '公車巴士', icon: 'fa-bus' };
+}
+
+async function resolveGlobalAdminInfo(lat, lon) {
+  const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  const now = Date.now();
+  const cached = cache.intlGeocodeMap.get(key);
+  if (cached && now < cached.expireAt) return cached.data;
+
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat.toFixed(5)}&longitude=${lon.toFixed(5)}&localityLanguage=zh-tw`;
+    const j = await fetchJsonWithRetry(url, 0, 4000);
+    const country = normalizeIntlTwLabel(j?.countryName || '');
+    const subdiv = normalizeIntlTwLabel(j?.principalSubdivision || '');
+    const city = normalizeIntlTwLabel(j?.city || '');
+    const locality = normalizeIntlTwLabel(j?.locality || '');
+    const primaryCity = city || subdiv || country || '海外地區';
+    const subArea = (locality && locality !== primaryCity) ? locality : '';
+    const shortLabel = country ? `${country} ‧ ${primaryCity}` : primaryCity;
+    const fullLabel = subArea ? `${shortLabel} ${subArea}` : shortLabel;
+    const info = {
+      county: country || primaryCity,
+      town: subArea ? `${primaryCity}${subArea}` : primaryCity,
+      village: '',
+      countryCode: String(j?.countryCode || '').toUpperCase(),
+      shortLabel,
+      fullLabel,
+      isInternational: true,
+      source: 'bigdatacloud'
+    };
+    setBoundedMap(cache.intlGeocodeMap, key, { data: info, expireAt: now + 3600000 }, 240);
+    return info;
+  } catch (_) {
+    return {
+      county: '海外觀測點',
+      town: `${lat.toFixed(2)}, ${lon.toFixed(2)}`,
+      village: '',
+      countryCode: '',
+      shortLabel: '海外觀測點',
+      fullLabel: '海外觀測點',
+      isInternational: true,
+      source: 'coords'
+    };
+  }
+}
+
+async function handleGeocodeGlobalProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度座標' }));
+    return;
+  }
+  const info = await resolveGlobalAdminInfo(lat, lon);
+  res.writeHead(200);
+  res.end(JSON.stringify({ success: true, ...info }));
+}
+
+async function handleIntlTransitNearbyProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  const reqStopIdx = Math.max(0, Math.min(4, parseInt(parsedUrl.searchParams.get('stopIdx') || '0', 10) || 0));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度座標' }));
+    return;
+  }
+
+  const cacheKey = `${lat.toFixed(4)},${lon.toFixed(4)},${reqStopIdx}`;
+  const now = Date.now();
+  const cached = cache.intlTransitMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.data);
+    return;
+  }
+
+  try {
+    const isJapanBox = lat >= 24.0 && lat <= 46.5 && lon >= 122.8 && lon <= 149.0;
+    const isLondonBox = lat >= 51.25 && lat <= 51.72 && lon >= -0.55 && lon <= 0.32;
+    const isSwissBox = lat >= 45.8 && lat <= 47.85 && lon >= 5.9 && lon <= 10.6;
+
+    const transitousHeaders = {
+      'Accept': 'application/json',
+      'User-Agent': 'TaiwanNeighborhoodMonitor/2.0 (https://github.com/JaneDe0214/taiwan-neighborhood-monitor)'
+    };
+
+    const fetchTransitousJson = async (u, ms = 5500) => {
+      const r = await fetch(u, { headers: transitousHeaders, signal: AbortSignal.timeout(ms) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    };
+
+    const [adminInfo, transitousStops, heartRailsRes, tflRes, sbbRes] = await Promise.all([
+      resolveGlobalAdminInfo(lat, lon),
+      fetchTransitousJson(`https://api.transitous.org/api/v1/reverse-geocode?place=${lat.toFixed(5)},${lon.toFixed(5)}&type=STOP`, 5500).catch(() => []),
+      isJapanBox
+        ? fetchJsonWithRetry(`https://express.heartrails.com/api/json?method=getStations&x=${lon.toFixed(5)}&y=${lat.toFixed(5)}`, 0, 4000).catch(() => null)
+        : Promise.resolve(null),
+      isLondonBox
+        ? fetchJsonWithRetry(`https://api.tfl.gov.uk/StopPoint?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}&stopTypes=NaptanPublicBusCoachTram,NaptanMetroStation&radius=420`, 0, 4500).catch(() => null)
+        : Promise.resolve(null),
+      isSwissBox
+        ? fetchJsonWithRetry(`https://transport.opendata.ch/v1/locations?x=${lat.toFixed(5)}&y=${lon.toFixed(5)}&type=station`, 0, 4500).catch(() => null)
+        : Promise.resolve(null)
+    ]);
+
+    const stations = [];
+    const seenStopNames = new Set();
+    let detectedTz = '';
+
+    // 1. 整合 MOTIS Transitous 全球 GTFS / GTFS-RT 站點
+    if (Array.isArray(transitousStops)) {
+      for (const st of transitousStops) {
+        if (!st?.id || !st?.name || !Number.isFinite(st.lat) || !Number.isFinite(st.lon)) continue;
+        const distMeters = calcDistanceMeters(lat, lon, st.lat, st.lon);
+        if (distMeters > 3500) continue;
+        if (!detectedTz && st.tz) detectedTz = st.tz;
+        const cleanKey = st.name.toLowerCase().trim();
+        if (seenStopNames.has(cleanKey)) continue;
+        seenStopNames.add(cleanKey);
+        stations.push({
+          provider: 'transitous',
+          stopId: st.id,
+          name: st.name,
+          lat: st.lat,
+          lon: st.lon,
+          distMeters,
+          tz: st.tz || '',
+          modes: Array.isArray(st.modes) ? st.modes : []
+        });
+      }
+    }
+
+    // 2. 倫敦 TfL 即時站點補充
+    if (tflRes && Array.isArray(tflRes.stopPoints)) {
+      for (const sp of tflRes.stopPoints) {
+        if (!sp?.naptanId || sp.naptanId.startsWith('HUB') || !sp.commonName) continue;
+        const distMeters = Number.isFinite(sp.distance) ? Math.round(sp.distance) : calcDistanceMeters(lat, lon, sp.lat, sp.lon);
+        if (distMeters > 800) continue;
+        const cleanKey = sp.commonName.toLowerCase().trim();
+        if (seenStopNames.has(cleanKey)) continue;
+        seenStopNames.add(cleanKey);
+        stations.push({
+          provider: 'tfl',
+          stopId: sp.naptanId,
+          name: sp.commonName,
+          lat: sp.lat,
+          lon: sp.lon,
+          distMeters,
+          tz: 'Europe/London',
+          modes: ['BUS']
+        });
+      }
+    }
+
+    // 3. 瑞士國鐵 SBB 高山鐵道／纜車站點補充
+    if (sbbRes && Array.isArray(sbbRes.stations)) {
+      for (const sp of sbbRes.stations) {
+        if (!sp?.id || !sp?.name || !sp?.coordinate) continue;
+        const sLat = Number(sp.coordinate.x);
+        const sLon = Number(sp.coordinate.y);
+        if (!Number.isFinite(sLat) || !Number.isFinite(sLon)) continue;
+        const distMeters = Number.isFinite(sp.distance) ? Math.round(sp.distance) : calcDistanceMeters(lat, lon, sLat, sLon);
+        if (distMeters > 2500) continue;
+        const cleanKey = sp.name.toLowerCase().trim();
+        if (seenStopNames.has(cleanKey)) continue;
+        seenStopNames.add(cleanKey);
+        stations.push({
+          provider: 'sbb',
+          stopId: String(sp.id),
+          name: sp.name,
+          lat: sLat,
+          lon: sLon,
+          distMeters,
+          tz: 'Europe/Zurich',
+          modes: ['RAIL']
+        });
+      }
+    }
+
+    // 4. 日本 HeartRails Express 鐵道車站與路線補充（涵蓋富士山河口湖、大阪難波、札幌、沖繩等全境車站）
+    const hrList = Array.isArray(heartRailsRes?.response?.station) ? heartRailsRes.response.station : [];
+    const hrByStation = new Map();
+    for (const st of hrList) {
+      if (!st?.name || !Number.isFinite(Number(st.y)) || !Number.isFinite(Number(st.x))) continue;
+      const sLat = Number(st.y);
+      const sLon = Number(st.x);
+      const distMeters = calcDistanceMeters(lat, lon, sLat, sLon);
+      if (distMeters > 3500) continue;
+      const grp = hrByStation.get(st.name) || {
+        provider: 'heartrails',
+        stopId: `hr:${st.name}`,
+        name: `${st.name}駅`,
+        lat: sLat,
+        lon: sLon,
+        distMeters,
+        tz: 'Asia/Tokyo',
+        modes: ['RAIL'],
+        hrLines: []
+      };
+      if (distMeters < grp.distMeters) grp.distMeters = distMeters;
+      grp.hrLines.push({
+        line: st.line || '鐵道線',
+        prev: st.prev || '',
+        next: st.next || '',
+        prefecture: st.prefecture || ''
+      });
+      hrByStation.set(st.name, grp);
+    }
+    for (const grp of hrByStation.values()) {
+      const dup = stations.find(s => s.name.includes(grp.name.replace(/駅$/, '')) && Math.abs(s.distMeters - grp.distMeters) < 180);
+      if (dup) {
+        dup.hrLines = grp.hrLines;
+      } else {
+        stations.push(grp);
+      }
+    }
+
+    stations.sort((a, b) => a.distMeters - b.distMeters);
+    const topStations = stations.slice(0, 5);
+    if (topStations.length === 0) {
+      const emptyPayload = JSON.stringify({
+        success: true,
+        isInternational: true,
+        admin: adminInfo,
+        tz: detectedTz || 'UTC',
+        stations: [],
+        activeStopIndex: 0,
+        activeStop: null,
+        buses: [],
+        updateTimeDisplay: formatTimeInZoneHHMM(new Date().toISOString(), detectedTz || 'Asia/Taipei')
+      });
+      setBoundedMap(cache.intlTransitMap, cacheKey, { data: emptyPayload, expireAt: now + 30000 }, 160);
+      res.writeHead(200);
+      res.end(emptyPayload);
+      return;
+    }
+
+    const activeStopIndex = Math.min(reqStopIdx, topStations.length - 1);
+    const activeStop = topStations[activeStopIndex];
+    const stopTz = activeStop.tz || detectedTz || (isJapanBox ? 'Asia/Tokyo' : 'UTC');
+    const buses = [];
+
+    if (activeStop.provider === 'transitous') {
+      const stData = await fetchTransitousJson(`https://api.transitous.org/api/v1/stoptimes?stopId=${encodeURIComponent(activeStop.stopId)}&n=18`, 5500).catch(() => null);
+      const seenRoutes = new Set();
+      for (const item of (stData?.stopTimes || [])) {
+        const rName = String(item.routeShortName || item.displayName || item.routeLongName || '').trim();
+        const dest = String(item.headsign || item.tripTo?.name || '').trim();
+        if (!rName) continue;
+        const dedupKey = `${rName}|${dest}`;
+        if (seenRoutes.has(dedupKey)) continue;
+        seenRoutes.add(dedupKey);
+
+        const depIso = item.place?.departure || item.place?.arrival || item.place?.scheduledDeparture;
+        const depMs = depIso ? Date.parse(depIso) : NaN;
+        const remainSec = Number.isFinite(depMs) ? Math.max(0, Math.round((depMs - Date.now()) / 1000)) : null;
+        const hhmm = depIso ? formatTimeInZoneHHMM(depIso, item.place?.tz || stopTz) : '';
+        const isRt = Boolean(item.realTime);
+        const modeInfo = mapIntlModeMeta(item.mode);
+
+        let statusText = '班表營運中';
+        if (remainSec != null) {
+          if (isRt) {
+            statusText = remainSec <= 60 ? '進站中' : (remainSec <= 180 ? `即將進站 (${Math.ceil(remainSec / 60)}分)` : `${Math.round(remainSec / 60)} 分`);
+          } else {
+            const mins = Math.round(remainSec / 60);
+            statusText = mins <= 1 ? `${hhmm} 發車` : (mins > 60 ? `${hhmm} 班表` : `${mins} 分 (${hhmm} 班表)`);
+          }
+        }
+
+        buses.push({
+          city: 'INTL',
+          provider: 'transitous',
+          mode: modeInfo.mode,
+          modeLabel: modeInfo.label,
+          modeIcon: modeInfo.icon,
+          routeName: rName,
+          direction: item.directionId || 0,
+          destination: dest || modeInfo.label,
+          estimateSec: isRt ? remainSec : null,
+          stopStatus: isRt ? 0 : 1,
+          nextBusTime: depIso || null,
+          depLocalTime: hhmm,
+          isRealtime: isRt,
+          tripId: item.tripId || '',
+          agencyName: item.agencyName || '',
+          plateNumb: '',
+          statusText,
+          _sortSec: remainSec != null ? remainSec : 999999
+        });
+      }
+    } else if (activeStop.provider === 'tfl') {
+      const arr = await fetchJsonWithRetry(`https://api.tfl.gov.uk/StopPoint/${encodeURIComponent(activeStop.stopId)}/Arrivals`, 0, 4500).catch(() => []);
+      const seen = new Set();
+      if (Array.isArray(arr)) {
+        arr.sort((a, b) => (a.timeToStation || 0) - (b.timeToStation || 0));
+        for (const a of arr) {
+          const rName = String(a.lineName || '').trim();
+          const dest = String(a.destinationName || a.towards || '').trim();
+          if (!rName || seen.has(`${rName}|${dest}`)) continue;
+          seen.add(`${rName}|${dest}`);
+          const sec = Math.max(0, Number(a.timeToStation) || 0);
+          const modeInfo = mapIntlModeMeta(a.modeName);
+          buses.push({
+            city: 'INTL',
+            provider: 'tfl',
+            mode: modeInfo.mode,
+            modeLabel: modeInfo.label,
+            modeIcon: modeInfo.icon,
+            routeName: rName,
+            direction: 0,
+            destination: dest || 'London',
+            estimateSec: sec,
+            stopStatus: 0,
+            nextBusTime: a.expectedArrival || null,
+            depLocalTime: formatTimeInZoneHHMM(a.expectedArrival, 'Europe/London'),
+            isRealtime: true,
+            tripId: '',
+            agencyName: 'TfL',
+            plateNumb: a.vehicleId || '',
+            statusText: sec <= 60 ? '進站中' : `${Math.round(sec / 60)} 分`,
+            _sortSec: sec
+          });
+        }
+      }
+    } else if (activeStop.provider === 'sbb') {
+      const sb = await fetchJsonWithRetry(`https://transport.opendata.ch/v1/stationboard?id=${encodeURIComponent(activeStop.stopId)}&limit=12`, 0, 4500).catch(() => null);
+      const seen = new Set();
+      for (const item of (sb?.stationboard || [])) {
+        const rName = `${item.category || ''}${item.number || ''}`.trim();
+        const dest = String(item.to || '').trim();
+        if (!rName || seen.has(`${rName}|${dest}`)) continue;
+        seen.add(`${rName}|${dest}`);
+        const depIso = item.stop?.prognosis?.departure || item.stop?.departure;
+        const isRt = Boolean(item.stop?.prognosis?.departure);
+        const depMs = depIso ? Date.parse(depIso) : NaN;
+        const sec = Number.isFinite(depMs) ? Math.max(0, Math.round((depMs - Date.now()) / 1000)) : null;
+        const hhmm = formatTimeInZoneHHMM(depIso, 'Europe/Zurich');
+        buses.push({
+          city: 'INTL',
+          provider: 'sbb',
+          mode: item.category === 'B' ? 'BUS' : 'RAIL',
+          modeLabel: item.category === 'B' ? '郵政巴士' : '瑞士國鐵',
+          modeIcon: item.category === 'B' ? 'fa-bus' : 'fa-train',
+          routeName: rName,
+          direction: 0,
+          destination: dest || 'Switzerland',
+          estimateSec: isRt ? sec : null,
+          stopStatus: isRt ? 0 : 1,
+          nextBusTime: depIso || null,
+          depLocalTime: hhmm,
+          isRealtime: isRt,
+          tripId: '',
+          agencyName: 'SBB',
+          plateNumb: '',
+          statusText: sec != null ? (isRt ? `${Math.round(sec / 60)} 分` : `${Math.round(sec / 60)} 分 (${hhmm} 班表)`) : `${hhmm} 發車`,
+          _sortSec: sec != null ? sec : 999999
+        });
+      }
+    }
+
+    // 補充日本鐵道路線與前後站資訊（如富士急行線、私鐵與地鐵支線）
+    if (Array.isArray(activeStop.hrLines) && activeStop.hrLines.length > 0) {
+      activeStop.hrLines.forEach((ln, idx) => {
+        if (buses.some(b => b.routeName === ln.line)) return;
+        const adj = [ln.prev ? `${ln.prev}駅` : '', ln.next ? `${ln.next}駅` : ''].filter(Boolean).join(' ↔ ');
+        buses.push({
+          city: 'INTL',
+          provider: 'heartrails',
+          mode: 'RAIL',
+          modeLabel: '日本鐵道',
+          modeIcon: 'fa-train',
+          routeName: ln.line,
+          direction: idx,
+          destination: adj || ln.prefecture || '雙向運行',
+          estimateSec: null,
+          stopStatus: 1,
+          nextBusTime: null,
+          depLocalTime: '',
+          isRealtime: false,
+          tripId: '',
+          agencyName: 'JR / 私鐵 / 地鐵',
+          plateNumb: '',
+          hrStops: [ln.prev ? `${ln.prev}駅` : null, activeStop.name, ln.next ? `${ln.next}駅` : null].filter(Boolean),
+          statusText: '依站內時刻表運行',
+          _sortSec: 500000 + idx
+        });
+      });
+    }
+
+    buses.sort((a, b) => a._sortSec - b._sortSec);
+    const cleanBuses = buses.slice(0, 14).map(({ _sortSec, ...rest }) => rest);
+
+    const payload = JSON.stringify({
+      success: true,
+      isInternational: true,
+      admin: adminInfo,
+      tz: stopTz,
+      stations: topStations.map(s => ({
+        name: s.name,
+        distMeters: s.distMeters,
+        lat: s.lat,
+        lon: s.lon,
+        modes: s.modes || []
+      })),
+      activeStopIndex,
+      activeStop: {
+        name: activeStop.name,
+        distMeters: activeStop.distMeters,
+        lat: activeStop.lat,
+        lon: activeStop.lon,
+        modes: activeStop.modes || []
+      },
+      buses: cleanBuses,
+      updateTimeDisplay: formatTimeInZoneHHMM(new Date().toISOString(), stopTz)
+    });
+
+    setBoundedMap(cache.intlTransitMap, cacheKey, { data: payload, expireAt: now + 20000 }, 160);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得跨國大眾運輸資訊', detail: err.message }));
+  }
+}
+
+async function handleIntlTripStopsProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const tripId = String(parsedUrl.searchParams.get('tripId') || '').trim();
+  const stopName = String(parsedUrl.searchParams.get('stopName') || '').trim();
+  if (!tripId) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '缺少班次識別參數' }));
+    return;
+  }
+  const cacheKey = `${tripId}|${stopName}`;
+  const now = Date.now();
+  const cached = cache.intlTripMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.data);
+    return;
+  }
+  try {
+    const r = await fetch(`https://api.transitous.org/api/v1/trip?tripId=${encodeURIComponent(tripId)}`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'TaiwanNeighborhoodMonitor/2.0 (https://github.com/JaneDe0214/taiwan-neighborhood-monitor)'
+      },
+      signal: AbortSignal.timeout(5500)
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    const leg = j?.legs?.[0];
+    const rawStops = leg ? [leg.from, ...(leg.intermediateStops || []), leg.to].filter(Boolean) : [];
+    const stops = rawStops.map((st, idx) => {
+      const nm = String(st.name || '').trim();
+      const depIso = st.departure || st.arrival || st.scheduledDeparture || st.scheduledArrival;
+      const hhmm = depIso ? formatTimeInZoneHHMM(depIso, st.tz || 'UTC') : '';
+      return {
+        seq: idx + 1,
+        name: nm,
+        isCurrent: Boolean(stopName && (nm === stopName || nm.includes(stopName) || stopName.includes(nm))),
+        statusText: hhmm,
+        state: ''
+      };
+    });
+    const payload = JSON.stringify({ success: true, totalStops: stops.length, stops });
+    setBoundedMap(cache.intlTripMap, cacheKey, { data: payload, expireAt: now + 60000 }, 120);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得跨國班次沿途站序', detail: err.message }));
+  }
+}
+
+async function handleGlobalBikesProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度座標' }));
+    return;
+  }
+
+  try {
+    const now = Date.now();
+    let networks = cache.cityBikesDir.data;
+    if (!networks || now >= cache.cityBikesDir.expireAt) {
+      const dirJson = await fetchJsonWithRetry('https://api.citybik.es/v2/networks?fields=id,name,location', 0, 5500);
+      networks = Array.isArray(dirJson?.networks) ? dirJson.networks : [];
+      cache.cityBikesDir = { data: networks, expireAt: now + 6 * 3600000 };
+    }
+
+    const candidates = networks
+      .map(n => {
+        const nLat = Number(n?.location?.latitude);
+        const nLon = Number(n?.location?.longitude);
+        if (!n?.id || !Number.isFinite(nLat) || !Number.isFinite(nLon)) return null;
+        return { id: n.id, name: n.name || n.id, dMeters: calcDistanceMeters(lat, lon, nLat, nLon) };
+      })
+      .filter(x => x && x.dMeters <= 38000)
+      .sort((a, b) => a.dMeters - b.dMeters)
+      .slice(0, 2);
+
+    if (candidates.length === 0) {
+      res.writeHead(200);
+      res.end(JSON.stringify({ success: true, networkName: '', stations: [] }));
+      return;
+    }
+
+    const pool = [];
+    let primaryNetworkName = candidates[0].name;
+    for (const cand of candidates) {
+      let netStations = null;
+      const cachedNet = cache.cityBikesNetMap.get(cand.id);
+      if (cachedNet && now < cachedNet.expireAt) {
+        netStations = cachedNet.stations;
+      } else {
+        const netJson = await fetchJsonWithRetry(`https://api.citybik.es/v2/networks/${encodeURIComponent(cand.id)}`, 0, 5500).catch(() => null);
+        if (Array.isArray(netJson?.network?.stations)) {
+          netStations = netJson.network.stations;
+          setBoundedMap(cache.cityBikesNetMap, cand.id, { stations: netStations, expireAt: now + 30000 }, 60);
+        }
+      }
+      if (Array.isArray(netStations)) {
+        for (const s of netStations) {
+          const sLat = Number(s.latitude);
+          const sLon = Number(s.longitude);
+          if (!Number.isFinite(sLat) || !Number.isFinite(sLon)) continue;
+          const dMeters = calcDistanceMeters(lat, lon, sLat, sLon);
+          if (dMeters > 3000) continue;
+          const bikes = Math.max(0, Number(s.free_bikes) || 0);
+          const spaces = Math.max(0, Number(s.empty_slots) || 0);
+          const ebikes = Math.max(0, Number(s.extra?.ebikes) || 0);
+          pool.push({
+            id: String(s.id || `${cand.id}_${sLat.toFixed(4)}`),
+            networkName: cand.name,
+            name: String(s.name || '').replace(/^\d+\.\s*/, '').trim(),
+            address: String(s.extra?.address || '').trim(),
+            lat: sLat,
+            lon: sLon,
+            distKm: +(dMeters / 1000).toFixed(2),
+            bikes,
+            spaces,
+            ebikes,
+            total: Math.max(1, bikes + spaces),
+            timestamp: s.timestamp || ''
+          });
+        }
+      }
+    }
+
+    pool.sort((a, b) => a.distKm - b.distKm);
+    res.writeHead(200);
+    res.end(JSON.stringify({
+      success: true,
+      networkName: primaryNetworkName,
+      stations: pool.slice(0, 6)
+    }));
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得跨國共享單車資料', detail: err.message }));
+  }
+}
+
 // 抓取單一 JSON 並附帶一次重試機制 (優先採用現代內建 fetch / Happy Eyeballs 消除 Open-Meteo TLS 連線重置)
 // 抓取單一 JSON 並附帶重試機制 (支援自訂逾時秒數)
 async function fetchJsonWithRetry(url, retries = 1, timeoutMs = 4500) {
@@ -1969,6 +2621,22 @@ const server = http.createServer((req, res) => {
   }
   if (pathname === '/api/bus/route-stops') {
     handleBusRouteStopsProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/geocode/global') {
+    handleGeocodeGlobalProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/transit/intl-nearby') {
+    handleIntlTransitNearbyProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/transit/intl-trip') {
+    handleIntlTripStopsProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/bikes/global') {
+    handleGlobalBikesProxy(req, res, parsedUrl);
     return;
   }
   if (pathname === '/api/bote/prewarm') {

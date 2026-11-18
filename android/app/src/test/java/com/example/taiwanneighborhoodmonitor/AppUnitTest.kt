@@ -240,6 +240,12 @@ class AppUnitTest {
     fun isNativeInterceptHost_matchesAllowedSubdomainsAndRejectsSpoofedHosts() {
         assertTrue(WebAssetRouting.isNativeInterceptHost("www.opendata.vip"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.nlsc.gov.tw"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.transitous.org"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("express.heartrails.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.citybik.es"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.bigdatacloud.net"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.tfl.gov.uk"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("transport.opendata.ch"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("www.tymetro.com.tw"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.rainviewer.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("air-quality-api.open-meteo.com"))

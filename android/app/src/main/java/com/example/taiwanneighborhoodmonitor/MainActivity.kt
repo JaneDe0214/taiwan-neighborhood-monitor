@@ -78,6 +78,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
+    private var rootLayoutRef: FrameLayout? = null
     private var isTvDevice: Boolean = false
     private lateinit var nativeBridge: AndroidNativeBridge
 
@@ -114,12 +115,11 @@ class MainActivity : ComponentActivity() {
         // 1. 智慧識別裝置類型 (Google TV / Android TV vs 手機版)
         isTvDevice = detectIsTvDevice(this)
 
-        // 2. Android 15/16+ (targetSdk 36) 標準 Edge-to-Edge 深色系統列外觀設定
+        // 2. Android 15/16+ (targetSdk 36) 標準 Edge-to-Edge 系統列外觀設定（支援自動跟隨系統深淺色與前端手動切換）
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            isAppearanceLightStatusBars = false
-            isAppearanceLightNavigationBars = false
-        }
+        val initialSystemLight = !isTvDevice &&
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO
+        val initialBgColor = if (initialSystemLight) "#f1f5f9".toColorInt() else "#05080f".toColorInt()
 
         // 電視模式下啟用常亮保持，防止電視牆休眠黑畫面
         if (isTvDevice) {
@@ -129,13 +129,13 @@ class MainActivity : ComponentActivity() {
         // 3. 建立並配置全硬體加速的原生 WebView 視圖 (使用 LAYER_TYPE_NONE 交由 Chromium 內建管線加速，避免雙重離屏緩衝破圖黑塊)
         webView = WebView(this).apply {
             setLayerType(View.LAYER_TYPE_NONE, null)
-            setBackgroundColor("#05080f".toColorInt())
+            setBackgroundColor(initialBgColor)
             isFocusable = true
             isFocusableInTouchMode = true
         }
 
         val rootLayout = FrameLayout(this).apply {
-            setBackgroundColor("#05080f".toColorInt())
+            setBackgroundColor(initialBgColor)
             addView(
                 webView,
                 FrameLayout.LayoutParams(
@@ -144,6 +144,8 @@ class MainActivity : ComponentActivity() {
                 )
             )
         }
+        rootLayoutRef = rootLayout
+        applyNativeSystemBarTheme(initialSystemLight)
 
         // 手機與平板動態套用狀態列、挖孔鏡頭區、底部手勢列與虛擬鍵盤安全邊距，徹底杜絕遮擋
         if (!isTvDevice) {
@@ -798,6 +800,32 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    internal fun applyNativeSystemBarTheme(isLight: Boolean) {
+        try {
+            val bg = if (isLight) "#f1f5f9".toColorInt() else "#05080f".toColorInt()
+            rootLayoutRef?.setBackgroundColor(bg)
+            if (::webView.isInitialized) {
+                webView.setBackgroundColor(bg)
+            }
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightStatusBars = isLight
+                isAppearanceLightNavigationBars = isLight
+            }
+        } catch (_: Exception) {}
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (::webView.isInitialized) {
+            val isSysLight = !isTvDevice &&
+                (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO
+            webView.evaluateJavascript(
+                "window.themeManager && typeof window.themeManager.onNativeSystemThemeChanged === 'function' && window.themeManager.onNativeSystemThemeChanged($isSysLight);",
+                null
+            )
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         webView.onResume()
@@ -860,6 +888,20 @@ class AndroidNativeBridge(
 
     @JavascriptInterface
     fun getPlatformName(): String = if (isTv) "GoogleTV" else "AndroidMobile"
+
+    @JavascriptInterface
+    fun isSystemLightMode(): Boolean {
+        if (isTv) return false
+        val nightMask = activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+        return nightMask == Configuration.UI_MODE_NIGHT_NO
+    }
+
+    @JavascriptInterface
+    fun syncThemeAppearance(isLight: Boolean) {
+        activity.runOnUiThread {
+            (activity as? MainActivity)?.applyNativeSystemBarTheme(isLight)
+        }
+    }
 
     /**
      * 行動版原生細膩觸覺微震動回饋（切換區域、網格、方向與下拉重新整理時觸發）
@@ -2054,7 +2096,13 @@ internal object WebAssetRouting {
         "earthquake.usgs.gov",
         "open-meteo.com",
         "api.met.no",
-        "api.rainviewer.com"
+        "api.rainviewer.com",
+        "transitous.org",
+        "heartrails.com",
+        "citybik.es",
+        "bigdatacloud.net",
+        "tfl.gov.uk",
+        "opendata.ch"
     )
 
     fun isNativeInterceptHost(rawHost: String?): Boolean {
