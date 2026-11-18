@@ -15102,6 +15102,102 @@ class WeatherEnvironmentMonitor {
     this.renderYouBikeStatus(this.currentCenterId);
   }
 
+  // 官方 YouBike 2.0 開放資料直連函式（具備 Access-Control-Allow-Origin: *，涵蓋全台 9,800+ 站即時車數與電輔車，含 15 秒快取與併發去重）
+  async fetchOfficialYouBikeAll(timeoutMs = 5500) {
+    const now = Date.now();
+    if (Array.isArray(this._yb2AllCache) && this._yb2AllCache.length > 100 && (now - (this._yb2AllCacheAt || 0) < 15000)) {
+      return this._yb2AllCache;
+    }
+    if (this._yb2AllInflight) {
+      return this._yb2AllInflight;
+    }
+    const prefixToCity = {
+      '5001': 'Taipei',
+      '5002': 'NewTaipei',
+      '5003': 'Taoyuan',
+      '5004': 'Hsinchu',
+      '5082': 'Hsinchu',
+      '5005': 'HsinchuCounty',
+      '5006': 'Taichung',
+      '5007': 'MiaoliCounty',
+      '5008': 'ChanghuaCounty',
+      '5009': 'NantouCounty',
+      '5010': 'Chiayi',
+      '5011': 'ChiayiCounty',
+      '5012': 'Kaohsiung',
+      '5013': 'Tainan',
+      '5014': 'PingtungCounty',
+      '5015': 'TaitungCounty'
+    };
+    const areaToCity = {
+      '00': 'Taipei',
+      '05': 'NewTaipei',
+      '07': 'Taoyuan',
+      '09': 'Hsinchu',
+      '10': 'Hsinchu',
+      '0B': 'HsinchuCounty',
+      '0A': 'MiaoliCounty',
+      '01': 'Taichung',
+      '08': 'Chiayi',
+      '11': 'ChiayiCounty',
+      '12': 'Kaohsiung',
+      '13': 'Tainan',
+      '14': 'PingtungCounty',
+      '15': 'TaitungCounty'
+    };
+
+    this._yb2AllInflight = (async () => {
+      try {
+        const res = await fetch(`https://apis.youbike.com.tw/json/station-yb2.json?_t=${Date.now()}`, {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(timeoutMs)
+        });
+        if (!res.ok) return [];
+        const rawList = await res.json();
+        if (!Array.isArray(rawList) || rawList.length === 0) return [];
+        const normalized = new Array(rawList.length);
+        for (let i = 0; i < rawList.length; i++) {
+          const r = rawList[i];
+          if (!r) continue;
+          const sno = String(r.station_no || '');
+          const tdxCity = prefixToCity[sno.slice(0, 4)] || areaToCity[String(r.area_code || '')] || '';
+          const bikesNum = r.available_spaces != null ? Number(r.available_spaces) : NaN;
+          const emptyNum = r.empty_spaces != null ? Number(r.empty_spaces) : NaN;
+          const ebikeNum = (r.available_spaces_detail && r.available_spaces_detail.eyb != null)
+            ? Number(r.available_spaces_detail.eyb)
+            : 0;
+          normalized[i] = {
+            uid: sno,
+            sno,
+            name: String(r.name_tw || ''),
+            address: String(r.address_tw || ''),
+            lat: parseFloat(r.lat),
+            lng: parseFloat(r.lng),
+            bikes: Number.isFinite(bikesNum) ? bikesNum : null,
+            empty: Number.isFinite(emptyNum) ? emptyNum : null,
+            eBikes: Number.isFinite(ebikeNum) ? ebikeNum : 0,
+            tot: Number(r.parking_spaces) || 0,
+            status: r.status != null ? Number(r.status) : 1,
+            time: String(r.time || r.updated_at || ''),
+            _tdxCity: tdxCity
+          };
+        }
+        const cleaned = normalized.filter(Boolean);
+        if (cleaned.length > 100) {
+          this._yb2AllCache = cleaned;
+          this._yb2AllCacheAt = Date.now();
+        }
+        return cleaned;
+      } catch (_err) {
+        return [];
+      } finally {
+        this._yb2AllInflight = null;
+      }
+    })();
+
+    return this._yb2AllInflight;
+  }
+
   // 原生端主動推播 YouBike 更新完成事件（僅讀快取並重繪，不再發起新一輪原生請求）
   onNativeYouBikeUpdated() {
     return this.fetchRealtimeYouBike(true, true);
@@ -15211,7 +15307,21 @@ class WeatherEnvironmentMonitor {
         return;
       }
 
-      // 途徑 2：標準 Web / PWA 環境：嘗試直接連線台灣 TDX 開放資料即時 API (秒級動態，繞過 5 分鐘 Actions 延遲)
+      // 途徑 2：標準 Web / PWA 環境：優先直連官方 CORS YouBike 2.0 即時 API（apis.youbike.com.tw），免依賴 Actions 快照且跨網域零阻擋
+      if (!ntpcData && !tycgRaw && !isLocalNodeServer && !fromNativePush) {
+        const yb2All = await this.fetchOfficialYouBikeAll(5500);
+        if (Array.isArray(yb2All) && yb2All.length > 100) {
+          const nList = yb2All.filter(s => s._tdxCity === 'NewTaipei');
+          const tList = yb2All.filter(s => s._tdxCity === 'Taoyuan');
+          if (nList.length > 0) ntpcData = nList;
+          if (tList.length > 0) tycgRaw = tList;
+          if (ntpcData || tycgRaw) {
+            isSourceRealtime = true;
+          }
+        }
+      }
+
+      // 途徑 2B：若官方主站暫時未回應，備援嘗試 TDX 即時 API
       if (!ntpcData && !tycgRaw && !isLocalNodeServer && !fromNativePush) {
         try {
           const [nRes, tRes] = await Promise.allSettled([
@@ -15235,16 +15345,29 @@ class WeatherEnvironmentMonitor {
         } catch (e) {}
       }
 
-      // 途徑 3：若為電腦本機開發環境，優先嘗試本機伺服器代理
-      if (!ntpcData && !tycgRaw && isLocalNodeServer && ntpcEndpoints.length > 0 && !fromNativePush) {
+      // 途徑 3：若為電腦本機開發環境，優先嘗試本機伺服器代理；若為本機靜態伺服器（如無 /api/youbike），自動補抓官方 CORS API
+      if ((!ntpcData || !tycgRaw) && isLocalNodeServer && ntpcEndpoints.length > 0 && !fromNativePush) {
         let [ntpcRes, tycgRes] = await Promise.allSettled([
-          fetchJsonSafe(ntpcEndpoints),
-          fetchJsonSafe(tycgEndpoints)
+          !ntpcData ? fetchJsonSafe(ntpcEndpoints) : Promise.resolve(ntpcData),
+          !tycgRaw ? fetchJsonSafe(tycgEndpoints) : Promise.resolve(tycgRaw)
         ]);
-        ntpcData = ntpcRes.status === 'fulfilled' ? ntpcRes.value : null;
-        tycgRaw = tycgRes.status === 'fulfilled' ? tycgRes.value : null;
+        if (!ntpcData && ntpcRes.status === 'fulfilled') ntpcData = ntpcRes.value;
+        if (!tycgRaw && tycgRes.status === 'fulfilled') tycgRaw = tycgRes.value;
         if (ntpcData || tycgRaw) {
           isSourceRealtime = true;
+        }
+        if (!ntpcData || !tycgRaw) {
+          const yb2All = await this.fetchOfficialYouBikeAll(5500);
+          if (Array.isArray(yb2All) && yb2All.length > 100) {
+            if (!ntpcData) {
+              const nList = yb2All.filter(s => s._tdxCity === 'NewTaipei');
+              if (nList.length > 0) { ntpcData = nList; isSourceRealtime = true; }
+            }
+            if (!tycgRaw) {
+              const tList = yb2All.filter(s => s._tdxCity === 'Taoyuan');
+              if (tList.length > 0) { tycgRaw = tList; isSourceRealtime = true; }
+            }
+          }
         }
       }
 
@@ -15490,16 +15613,38 @@ class WeatherEnvironmentMonitor {
     };
 
     let rawPool = [];
-    try {
-      const responses = await Promise.allSettled(cfg.cities.slice(0, 2).map(fetchSingleCityPool));
-      responses.forEach(r => {
-        if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-          rawPool.push(...r.value);
-        }
-      });
-    } catch (_e) {}
+    if (isLocalNodeServer) {
+      try {
+        const responses = await Promise.allSettled(cfg.cities.slice(0, 2).map(fetchSingleCityPool));
+        responses.forEach(r => {
+          if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+            rawPool.push(...r.value);
+          }
+        });
+      } catch (_e) {}
+    }
 
-    // 若新北／桃園直連逾時，退回使用記憶體快取中之站點清單（含精簡座標）
+    // 非本機代理環境（如 GitHub Pages／Android WebView／純靜態伺服器）或本機代理無回應時，直連官方 CORS YouBike 2.0 開放資料 API
+    if (rawPool.length === 0) {
+      const yb2All = await this.fetchOfficialYouBikeAll(5500);
+      if (Array.isArray(yb2All) && yb2All.length > 0) {
+        const matchedCity = yb2All.filter(it => cfg.cities.includes(it._tdxCity));
+        rawPool = matchedCity.length > 0 ? matchedCity : yb2All;
+      }
+    }
+
+    if (rawPool.length === 0 && !isLocalNodeServer) {
+      try {
+        const responses = await Promise.allSettled(cfg.cities.slice(0, 2).map(fetchSingleCityPool));
+        responses.forEach(r => {
+          if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+            rawPool.push(...r.value);
+          }
+        });
+      } catch (_e) {}
+    }
+
+    // 若官方直連均逾時，退回使用記憶體快取中之站點清單（含精簡座標）
     if (rawPool.length === 0) {
       if (cfg.cities.includes('NewTaipei') && Array.isArray(this._rawNtpcCache)) rawPool.push(...this._rawNtpcCache);
       if (cfg.cities.includes('Taoyuan') && Array.isArray(this._rawTycgCache)) rawPool.push(...this._rawTycgCache);

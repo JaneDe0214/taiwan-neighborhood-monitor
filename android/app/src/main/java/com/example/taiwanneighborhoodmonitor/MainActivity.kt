@@ -2623,6 +2623,8 @@ internal object WebAssetRouting {
         "tfl.gov.uk",
         "opendata.ch",
         "tcgbusfs.blob.core.windows.net",
+        "apis.youbike.com.tw",
+        "youbike.com.tw",
         "open.er-api.com",
         "services.swpc.noaa.gov"
     )
