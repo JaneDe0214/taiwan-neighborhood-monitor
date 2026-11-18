@@ -145,6 +145,9 @@ body[data-theme-center="korea"]    { --ambient-accent: 56, 189, 248;  --ambient-
 body[data-theme-center="apac"]     { --ambient-accent: 20, 184, 166;  --ambient-secondary: 250, 204, 21; }
 body[data-theme-center="europe"]   { --ambient-accent: 99, 102, 241;  --ambient-secondary: 45, 212, 191; }
 body[data-theme-center="americas"] { --ambient-accent: 249, 115, 22;  --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="polar"]    { --ambient-accent: 56, 189, 248;  --ambient-secondary: 52, 211, 153; }
+body[data-theme-center="rainforest"]{ --ambient-accent: 16, 185, 129; --ambient-secondary: 250, 204, 21; }
+body[data-theme-center="ocean"]    { --ambient-accent: 6, 182, 212;   --ambient-secondary: 99, 102, 241; }
 body[data-theme-center="favorites"]{ --ambient-accent: 251, 191, 36;  --ambient-secondary: 249, 115, 22; }
 
 /* 前庭覺障礙無障礙保護與低功耗偏好 */
@@ -10029,7 +10032,7 @@ html[data-theme="light"] .wall-sync-dialog { background: #ffffff; border-color: 
         <i class="fa-solid fa-plane-arrival"></i>
         <span>觀光</span>
       </button>
-      <button class="center-btn" data-center="world" title="全球 4K 旗艦總覽 64 處：集結日本、韓國、亞太、歐洲、美洲最高畫質 2160P 與最高即時人氣直播">
+      <button class="center-btn" data-center="world" title="全球 4K 旗艦總覽 80 處：集結八大洲際與極地、雨林、海洋最高畫質 2160P 與最高即時人氣直播">
         <i class="fa-solid fa-globe"></i>
         <span>全球4K</span>
       </button>
@@ -10052,6 +10055,18 @@ html[data-theme="light"] .wall-sync-dialog { background: #ffffff; border-color: 
       <button class="center-btn" data-center="americas" title="美洲奇觀 30 處：洛杉磯威尼斯海灘 4K ‧ 國際太空站俯瞰地球 4K ‧ 拉斯維加斯 4K ‧ SpaceX 星艦基地 4K ‧ 夏威夷 ‧ 紐約時代廣場 ‧ 尼加拉瀑布">
         <i class="fa-solid fa-earth-americas"></i>
         <span>美洲</span>
+      </button>
+      <button class="center-btn" data-center="polar" title="極地極光 26 處：芬蘭拉普蘭極光 4K ‧ 格陵蘭冰峽灣浮冰 4K ‧ 冰島活火山熔岩 4K ‧ 聖誕老人村 ‧ 阿拉斯加與北極熊 ‧ 南極門戶烏斯懷亞與企鵝棲地">
+        <i class="fa-solid fa-snowflake"></i>
+        <span>極地極光</span>
+      </button>
+      <button class="center-btn" data-center="rainforest" title="雨林生態 26 處：哥斯大黎加與巴拿馬熱帶雨林金剛鸚鵡／大嘴鳥／蜂鳥 ‧ 康乃爾森林飛羽 4K ‧ 秘魯厄瓜多雲霧雨林 ‧ 剛果雨林 ‧ 非洲納米比與波札那野生象群水坑">
+        <i class="fa-solid fa-tree"></i>
+        <span>雨林生態</span>
+      </button>
+      <button class="center-btn" data-center="ocean" title="海洋珊瑚 24 處：加勒比海庫拉索 4K 水下珊瑚礁 ‧ 蒙特雷灣療癒水母與海獺 ‧ 邁阿密海底珊瑚城 ‧ 馬約卡與馬德拉 4K 碧藍海灣">
+        <i class="fa-solid fa-water"></i>
+        <span>海洋珊瑚</span>
       </button>
       <button class="center-btn" data-center="favorites" title="我的最愛：自選跨區跨國專屬監視器收藏牆">
         <i class="fa-solid fa-star" style="color:#fbbf24;"></i>
@@ -10162,11 +10177,17 @@ html[data-theme="light"] .wall-sync-dialog { background: #ffffff; border-color: 
           <button class="filter-tag-pill" data-filter-tag="東南亞" data-region-scope="apac,world" type="button" style="display:none;">東南亞海島</button>
           <button class="filter-tag-pill" data-filter-tag="紐澳" data-region-scope="apac,world" type="button" style="display:none;">紐澳港灣</button>
           <button class="filter-tag-pill" data-filter-tag="阿爾卑斯" data-region-scope="europe,world" type="button" style="display:none;">阿爾卑斯</button>
-          <button class="filter-tag-pill" data-filter-tag="極光" data-region-scope="europe" type="button" style="display:none;">極光峽灣</button>
+          <button class="filter-tag-pill" data-filter-tag="極光" data-region-scope="europe,polar,world" type="button" style="display:none;">極光雪原</button>
+          <button class="filter-tag-pill" data-filter-tag="格陵蘭" data-region-scope="polar,world" type="button" style="display:none;">冰島格陵蘭</button>
+          <button class="filter-tag-pill" data-filter-tag="企鵝" data-region-scope="polar,ocean" type="button" style="display:none;">企鵝北極熊</button>
+          <button class="filter-tag-pill" data-filter-tag="雨林" data-region-scope="rainforest,world" type="button" style="display:none;">熱帶雨林</button>
+          <button class="filter-tag-pill" data-filter-tag="水坑" data-region-scope="rainforest,world" type="button" style="display:none;">非洲動物水坑</button>
+          <button class="filter-tag-pill" data-filter-tag="珊瑚" data-region-scope="ocean,world" type="button" style="display:none;">海底珊瑚礁</button>
+          <button class="filter-tag-pill" data-filter-tag="水母" data-region-scope="ocean" type="button" style="display:none;">療癒水母海獺</button>
           <button class="filter-tag-pill" data-filter-tag="運河" data-region-scope="europe,world" type="button" style="display:none;">古都運河</button>
-          <button class="filter-tag-pill" data-filter-tag="海灘" data-region-scope="americas,apac,world" type="button" style="display:none;">海灘衝浪</button>
+          <button class="filter-tag-pill" data-filter-tag="海灘" data-region-scope="americas,apac,ocean,world" type="button" style="display:none;">海灘衝浪</button>
           <button class="filter-tag-pill" data-filter-tag="太空" data-region-scope="americas,world" type="button" style="display:none;">太空星艦</button>
-          <button class="filter-tag-pill" data-filter-tag="國家公園" data-region-scope="americas,apac" type="button" style="display:none;">國家公園</button>
+          <button class="filter-tag-pill" data-filter-tag="國家公園" data-region-scope="americas,apac,polar,rainforest" type="button" style="display:none;">國家公園</button>
         </div>
         <div class="filter-meta-controls">
           <button id="btnSortPriority" class="sort-priority-btn active is-hidden" type="button" aria-pressed="true" title="目前依「最高畫質 × 即時熱門度」優先排序 (點擊切換地標預設順序)">
@@ -12243,6 +12264,27 @@ class WeatherEnvironmentMonitor {
         { key: 'la', label: '洛杉磯', fullName: '加州洛杉磯', lat: 33.9850, lon: -118.4695, tz: 'America/Los_Angeles' },
         { key: 'rockies', label: '洛磯山脈', fullName: '班夫洛磯山脈', lat: 51.0892, lon: -115.3585, tz: 'America/Edmonton' },
         { key: 'rio', label: '里約', fullName: '巴西里約海灘', lat: -22.9848, lon: -43.1892, tz: 'America/Sao_Paulo' }
+      ],
+      polar: [
+        { key: 'levi', label: '拉普蘭極光', fullName: '芬蘭拉普蘭北極圈', lat: 67.8040, lon: 24.8082, tz: 'Europe/Helsinki' },
+        { key: 'reykjavik', label: '冰島火山', fullName: '冰島雷克雅內斯半島', lat: 63.8833, lon: -22.2667, tz: 'Atlantic/Reykjavik' },
+        { key: 'ilulissat', label: '格陵蘭冰山', fullName: '格陵蘭迪斯科冰峽灣', lat: 69.2198, lon: -51.0986, tz: 'America/Nuuk' },
+        { key: 'churchill', label: '北極熊灣', fullName: '加拿大邱吉爾北極熊保護區', lat: 58.7684, lon: -94.1650, tz: 'America/Winnipeg' },
+        { key: 'ushuaia', label: '南極門戶', fullName: '火地島烏斯懷亞南極門戶', lat: -54.8019, lon: -68.3030, tz: 'America/Argentina/Ushuaia' }
+      ],
+      rainforest: [
+        { key: 'costarica', label: '哥斯大黎加', fullName: '哥斯大黎加熱帶雨林', lat: 10.0242, lon: -84.0739, tz: 'America/Costa_Rica' },
+        { key: 'panama', label: '巴拿馬雨林', fullName: '巴拿馬索貝拉尼亞雨林', lat: 9.0761, lon: -79.6486, tz: 'America/Panama' },
+        { key: 'ecuador', label: '安地斯雲林', fullName: '厄瓜多亞馬遜雲霧雨林', lat: -0.0258, lon: -78.7583, tz: 'America/Guayaquil' },
+        { key: 'namibia', label: '納米比水坑', fullName: '納米比亞埃托沙水坑', lat: -19.1778, lon: 15.9172, tz: 'Africa/Windhoek' },
+        { key: 'kenya', label: '肯亞莽原', fullName: '肯亞馬賽馬拉保護區', lat: -1.5360, lon: 35.0250, tz: 'Africa/Nairobi' }
+      ],
+      ocean: [
+        { key: 'curacao', label: '加勒比珊瑚', fullName: '庫拉索珊瑚礁海域', lat: 12.0836, lon: -68.8958, tz: 'America/Curacao' },
+        { key: 'monterey', label: '蒙特雷深海', fullName: '加州蒙特雷灣海洋保護區', lat: 36.6183, lon: -121.9015, tz: 'America/Los_Angeles' },
+        { key: 'mallorca', label: '地中海碧灣', fullName: '西班牙馬約卡島海灣', lat: 39.5364, lon: 2.4419, tz: 'Europe/Madrid' },
+        { key: 'madeira', label: '馬德拉海島', fullName: '大西洋馬德拉群島', lat: 32.6500, lon: -16.9680, tz: 'Atlantic/Madeira' },
+        { key: 'miami_reef', label: '邁阿密礁湖', fullName: '佛羅里達珊瑚礁海域', lat: 25.7745, lon: -80.1462, tz: 'America/New_York' }
       ]
     };
     this.japanCities = this.regionCities.japan;
@@ -12252,7 +12294,10 @@ class WeatherEnvironmentMonitor {
       korea: 'seoul',
       apac: 'sydney',
       europe: 'venice',
-      americas: 'la'
+      americas: 'la',
+      polar: 'levi',
+      rainforest: 'costarica',
+      ocean: 'curacao'
     };
     this.currentJapanCityKey = 'tokyo';
 
@@ -14498,14 +14543,17 @@ class WeatherEnvironmentMonitor {
     }
 
     const activeCtr = typeof window !== 'undefined' && window.monitorApp?.currentCenterId ? window.monitorApp.currentCenterId : 'dual';
-    const regionTitles = { world: '全球 4K 實況', japan: '日本實況', korea: '韓國實況', apac: '亞太實況', europe: '歐洲實況', americas: '美洲實況' };
+    const regionTitles = { world: '全球 4K 實況', japan: '日本實況', korea: '韓國實況', apac: '亞太實況', europe: '歐洲實況', americas: '美洲實況', polar: '極地極光實況', rainforest: '雨林生態實況', ocean: '海洋珊瑚實況' };
     const regionSafeBadges = {
       world: { text: '全球板塊安全', title: '全球主要板塊即時監測中 ‧ 當地氣象與強震即時監測正常' },
       japan: { text: '日本全域安全', title: '日本列島即時監測中 ‧ 當地氣象與強震即時監測正常' },
       korea: { text: '韓國全域安全', title: '韓國全境即時監測中 ‧ 當地氣象與地震即時監測正常' },
       apac: { text: '亞太全域安全', title: '亞太重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
       europe: { text: '歐洲全域安全', title: '歐洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
-      americas: { text: '美洲全域安全', title: '美洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' }
+      americas: { text: '美洲全域安全', title: '美洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
+      polar: { text: '極地火山監測正常', title: '南北極圈與冰島火山帶即時監測中 ‧ 30 分鐘內無異常強震通報' },
+      rainforest: { text: '雨林生態安全', title: '中南美雨林與非洲保護區即時監測正常' },
+      ocean: { text: '海域環境安全', title: '全球珊瑚礁與海島觀測海域即時監測正常' }
     };
     const areaTitle = scopeLabel || regionTitles[activeCtr] || '雙埔生活';
     const shortScope = (scopeLabel === '青埔' || scopeLabel === '新埔') ? `${scopeLabel}` : '';
@@ -15201,7 +15249,7 @@ class WeatherEnvironmentMonitor {
     const container = document.getElementById('youbikeStationList');
     if (!container) return;
 
-    const isIntlCenter = ['world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(centerId) ||
+    const isIntlCenter = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'].includes(centerId) ||
       (typeof window !== 'undefined' && typeof window.monitorApp?.isInternationalCenter === 'function' && window.monitorApp.isInternationalCenter(centerId));
 
     // 當切換不同生活圈中心時，智慧同步預設篩選範圍
@@ -16383,7 +16431,7 @@ class LocalGeoBusService {
   }
 
   isTransitBarCenter(cid = this.centerId) {
-    return ['nearby', 'tourist', 'favorites', 'world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(cid);
+    return ['nearby', 'tourist', 'favorites', 'world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'].includes(cid);
   }
 
   syncForCenter(centerId, opts = {}) {
@@ -17286,7 +17334,7 @@ class NeighborhoodRadarMap {
       : (validCamList.length > 0 ? Number(validCamList[0].lon) : 121.3450);
 
     const isTourist = safeCenter.id === 'tourist';
-    const isIntl = ['world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(safeCenter.id);
+    const isIntl = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'].includes(safeCenter.id);
     const isFavorites = safeCenter.id === 'favorites';
     const regionMapPresets = {
       world: { pos: [22.0, 18.0], zoom: 2 },
@@ -17294,7 +17342,10 @@ class NeighborhoodRadarMap {
       korea: { pos: [36.0, 127.9], zoom: 6 },
       apac: { pos: [-8.0, 122.0], zoom: 3 },
       europe: { pos: [50.5, 11.0], zoom: 3 },
-      americas: { pos: [28.0, -96.0], zoom: 3 }
+      americas: { pos: [28.0, -96.0], zoom: 3 },
+      polar: { pos: [65.5, -18.0], zoom: 2 },
+      rainforest: { pos: [-2.0, -25.0], zoom: 2 },
+      ocean: { pos: [22.0, -68.0], zoom: 2 }
     };
     const preset = regionMapPresets[safeCenter.id];
     const initialZoom = preset ? preset.zoom : (isTourist ? 10 : (isFavorites ? 12 : 14));
@@ -17467,7 +17518,7 @@ class EarthquakeEmergencyMonitor {
 
   // 切換地震監測區域 ('taiwan' | 'world' | 'japan' | 'korea' | 'apac' | 'europe' | 'americas')
   setRegion(mode = 'taiwan') {
-    const validModes = ['taiwan', 'world', 'japan', 'korea', 'apac', 'europe', 'americas'];
+    const validModes = ['taiwan', 'world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'];
     const nextMode = validModes.includes(mode) ? mode : 'taiwan';
     if (this.regionMode === nextMode) return;
     this.regionMode = nextMode;
@@ -17490,7 +17541,10 @@ class EarthquakeEmergencyMonitor {
       korea: { text: '韓國全域安全', title: '朝鮮半島周邊地震監測中 ‧ 30 分鐘內無顯著強震通報' },
       apac: { text: '亞太全域安全', title: '亞太環太平洋與印澳板塊監測中 ‧ 30 分鐘內無顯著強震通報' },
       europe: { text: '歐洲全域安全', title: '歐洲與冰島火山地震帶監測中 ‧ 30 分鐘內無顯著強震通報' },
-      americas: { text: '美洲全域安全', title: '美洲環太平洋與斷層帶監測中 ‧ 30 分鐘內無顯著強震通報' }
+      americas: { text: '美洲全域安全', title: '美洲環太平洋與斷層帶監測中 ‧ 30 分鐘內無顯著強震通報' },
+      polar: { text: '極地火山監測正常', title: '冰島裂谷與南北極圈板塊監測中 ‧ 30 分鐘內無顯著強震通報' },
+      rainforest: { text: '雨林板塊安全', title: '中南美與東非大裂谷監測中 ‧ 30 分鐘內無顯著強震通報' },
+      ocean: { text: '海島板塊安全', title: '加勒比海與太平洋海盆監測中 ‧ 30 分鐘內無顯著強震通報' }
     };
     const cfg = bannerMap[this.regionMode];
     if (cfg) {
@@ -17552,7 +17606,10 @@ class EarthquakeEmergencyMonitor {
         korea: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=32.5&maxlatitude=39.5&minlongitude=124.0&maxlongitude=131.5&minmagnitude=3.8&limit=3',
         apac: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-48.0&maxlatitude=25.0&minlongitude=95.0&maxlongitude=180.0&minmagnitude=5.0&limit=3',
         europe: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=35.0&maxlatitude=71.0&minlongitude=-26.0&maxlongitude=32.0&minmagnitude=4.8&limit=3',
-        americas: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-35.0&maxlatitude=65.0&minlongitude=-165.0&maxlongitude=-35.0&minmagnitude=5.0&limit=3'
+        americas: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-35.0&maxlatitude=65.0&minlongitude=-165.0&maxlongitude=-35.0&minmagnitude=5.0&limit=3',
+        polar: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=58.0&maxlatitude=85.0&minlongitude=-170.0&maxlongitude=40.0&minmagnitude=4.5&limit=3',
+        rainforest: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-30.0&maxlatitude=20.0&minlongitude=-92.0&maxlongitude=42.0&minmagnitude=5.0&limit=3',
+        ocean: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-25.0&maxlatitude=45.0&minlongitude=-162.0&maxlongitude=10.0&minmagnitude=5.0&limit=3'
       };
       const usgsUrl = usgsUrlMap[reqRegion] || usgsUrlMap.taiwan;
       const res = await fetch(usgsUrl, { signal: AbortSignal.timeout(4000) });
@@ -20725,7 +20782,7 @@ class TwinCityTransitMonitor {
         if (favContainer) favContainer.style.display = 'none';
         return;
       }
-      const isIntlMode = ['world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(curCenterId);
+      const isIntlMode = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'].includes(curCenterId);
       const isNearbyBusMode = isIntlMode || curCenterId === 'nearby' || curCenterId === 'tourist' || (curCenterId === 'favorites' && Boolean(window.localBusService && window.localBusService.target));
       if (isNearbyBusMode) {
         const container = document.getElementById(this.containerId);
@@ -22249,6 +22306,30 @@ window.CAMERAS_DATA = {
       "lat": 40.758,
       "lon": -73.9855,
       "description": "美洲奇觀 30 處高畫質精選：洛杉磯威尼斯海灘 4K ‧ 國際太空站俯瞰地球 4K ‧ 拉斯維加斯 4K ‧ SpaceX 星艦基地 4K ‧ 夏威夷 ‧ 紐約時代廣場 ‧ 尼加拉瀑布"
+    },
+    {
+      "id": "polar",
+      "name": "極地極光",
+      "address": "北極圈拉普蘭 ‧ 格陵蘭冰峽灣 ‧ 冰島活火山 ‧ 南極門戶",
+      "lat": 67.804,
+      "lon": 24.8082,
+      "description": "極地極光 26 處高畫質精選：芬蘭拉普蘭極光 4K ‧ 格陵蘭浮冰群 4K ‧ 冰島活火山熔岩 4K ‧ 聖誕老人村 ‧ 北極熊與南極門戶烏斯懷亞"
+    },
+    {
+      "id": "rainforest",
+      "name": "雨林生態",
+      "address": "哥斯大黎加與巴拿馬雨林 ‧ 康乃爾森林 ‧ 非洲莽原水坑",
+      "lat": 10.0242,
+      "lon": -84.0739,
+      "description": "雨林生態 26 處高畫質精選：森林飛羽 4K ‧ 哥斯大黎加金剛鸚鵡與大嘴鳥 ‧ 巴拿馬與安地斯雲霧雨林蜂鳥 ‧ 波札那與納米比亞野生象群水坑"
+    },
+    {
+      "id": "ocean",
+      "name": "海洋珊瑚",
+      "address": "加勒比海珊瑚礁 ‧ 蒙特雷灣水母海獺 ‧ 碧藍海島",
+      "lat": 12.0836,
+      "lon": -68.8958,
+      "description": "海洋珊瑚 24 處高畫質精選：庫拉索 4K 海底珊瑚礁 ‧ 蒙特雷灣夢幻水母與海獺 ‧ 邁阿密水下珊瑚城 ‧ 馬約卡與馬德拉 4K 碧藍海灣"
     },
     {
       "id": "favorites",
@@ -28198,6 +28279,1608 @@ window.CAMERAS_DATA = {
         "defaultOrder": 23,
         "popScore": 407
       }
+    ],
+    "polar": [
+      {
+        "id": "pl-01-levi-aurora-4k",
+        "cctvCode": "PL-01-LEVI-AURORA-4K",
+        "name": "芬蘭拉普蘭列維 ‧ 北極圈極光雪原北向 4K 實況 (Levi Aurora 4K)",
+        "authority": "Starlapland 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "rKfecmmzzw0",
+        "lat": 67.804,
+        "lon": 24.8082,
+        "streamUrl": "https://www.youtube.com/watch?v=rKfecmmzzw0",
+        "sourceUrl": "https://www.youtube.com/watch?v=rKfecmmzzw0",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 2420,
+        "tag": "北極圈極光雪原風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "popScore": 8511
+      },
+      {
+        "id": "pl-02-sodankyla-aurora-4k",
+        "cctvCode": "PL-02-SODANKYLA-AURORA-4K",
+        "name": "芬蘭索丹屈萊 ‧ 北極圈極光觀測站 4K 實況 (Sodankylä Aurora 4K)",
+        "authority": "Starlapland 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "dnlQtDad6Dk",
+        "lat": 67.416,
+        "lon": 26.589,
+        "streamUrl": "https://www.youtube.com/watch?v=dnlQtDad6Dk",
+        "sourceUrl": "https://www.youtube.com/watch?v=dnlQtDad6Dk",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 1420,
+        "tag": "北極圈極光雪原風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "popScore": 6018
+      },
+      {
+        "id": "pl-03-iceland-volcano-d-4k",
+        "cctvCode": "PL-03-ICELAND-VOLCANO-D-4K",
+        "name": "冰島雷克雅內斯 ‧ 活火山熔岩原全天候觀測 4K (Iceland Volcano 4K)",
+        "authority": "afarTV 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "NHWYF3BfBkA",
+        "lat": 63.8833,
+        "lon": -22.2667,
+        "streamUrl": "https://www.youtube.com/watch?v=NHWYF3BfBkA",
+        "sourceUrl": "https://www.youtube.com/watch?v=NHWYF3BfBkA",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 139,
+        "tag": "冰島火山格陵蘭極地風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "popScore": 1765
+      },
+      {
+        "id": "pl-04-iceland-volcano-c-4k",
+        "cctvCode": "PL-04-ICELAND-VOLCANO-C-4K",
+        "name": "冰島火山地貌 ‧ 超廣角熔岩地熱原野 4K (Iceland Volcanic Landscape 4K)",
+        "authority": "afarTV 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "C_xt5Z9ZHxg",
+        "lat": 63.889,
+        "lon": -22.251,
+        "streamUrl": "https://www.youtube.com/watch?v=C_xt5Z9ZHxg",
+        "sourceUrl": "https://www.youtube.com/watch?v=C_xt5Z9ZHxg",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 77,
+        "tag": "冰島火山極地風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "popScore": 1391
+      },
+      {
+        "id": "pl-05-norway-geiranger-4k",
+        "cctvCode": "PL-05-NORWAY-GEIRANGER-4K",
+        "name": "挪威蓋朗厄爾峽灣 ‧ 世界遺產冰河峽灣港 4K (Geirangerfjord 4K)",
+        "authority": "Geirangerfjord 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "yMSc-qqW3To",
+        "lat": 62.1015,
+        "lon": 7.2059,
+        "streamUrl": "https://www.youtube.com/watch?v=yMSc-qqW3To",
+        "sourceUrl": "https://www.youtube.com/watch?v=yMSc-qqW3To",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 29,
+        "tag": "北極圈峽灣冰川風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "popScore": 1002
+      },
+      {
+        "id": "pl-06-greenland-icebergs-4k",
+        "cctvCode": "PL-06-GREENLAND-ICEBERGS-4K",
+        "name": "格陵蘭迪斯科灣 ‧ 北極圈巨型浮冰群 4K 實況 (Greenland Icebergs 4K)",
+        "authority": "afarTV 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "VRsHARw5GfQ",
+        "lat": 69.2198,
+        "lon": -51.0986,
+        "streamUrl": "https://www.youtube.com/watch?v=VRsHARw5GfQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=VRsHARw5GfQ",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 23,
+        "tag": "北極圈格陵蘭冰山風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "popScore": 938
+      },
+      {
+        "id": "pl-07-greenland-nuuk-4k",
+        "cctvCode": "PL-07-GREENLAND-NUUK-4K",
+        "name": "格陵蘭首都努克 ‧ 北極峽灣與冰原海岸 4K (Nuuk South 4K)",
+        "authority": "Greenland Airports 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "K1hOwBEISCY",
+        "lat": 64.1909,
+        "lon": -51.6781,
+        "streamUrl": "https://www.youtube.com/watch?v=K1hOwBEISCY",
+        "sourceUrl": "https://www.youtube.com/watch?v=K1hOwBEISCY",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 21,
+        "tag": "北極圈格陵蘭風景交通 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "popScore": 915
+      },
+      {
+        "id": "pl-08-greenland-ilulissat-4k",
+        "cctvCode": "PL-08-GREENLAND-ILULISSAT-4K",
+        "name": "格陵蘭伊盧利薩特 ‧ 北極冰峽灣世界遺產 4K (Ilulissat Icefjord 4K)",
+        "authority": "afarTV 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "VVa_nZtUofE",
+        "lat": 69.2167,
+        "lon": -51.1,
+        "streamUrl": "https://www.youtube.com/watch?v=VVa_nZtUofE",
+        "sourceUrl": "https://www.youtube.com/watch?v=VVa_nZtUofE",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 12,
+        "tag": "北極圈格陵蘭冰山風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "popScore": 796
+      },
+      {
+        "id": "pl-09-kilpisjarvi-aurora-4k",
+        "cctvCode": "PL-09-KILPISJARVI-AURORA-4K",
+        "name": "芬蘭基爾皮斯耶爾維 ‧ 北歐三國交界北極圈極光 4K (Kilpisjärvi 4K)",
+        "authority": "Starlapland 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "ccTVAhJU5lg",
+        "lat": 69.045,
+        "lon": 20.798,
+        "streamUrl": "https://www.youtube.com/watch?v=ccTVAhJU5lg",
+        "sourceUrl": "https://www.youtube.com/watch?v=ccTVAhJU5lg",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 9,
+        "tag": "北極圈極光雪原風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "popScore": 748
+      },
+      {
+        "id": "pl-10-greenland-sisimiut-4k",
+        "cctvCode": "PL-10-GREENLAND-SISIMIUT-4K",
+        "name": "格陵蘭西西繆特 ‧ 北極圈冰原海岸東南向 4K (Sisimiut Greenland 4K)",
+        "authority": "Greenland Airports 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "bZCw70JhhGI",
+        "lat": 66.9513,
+        "lon": -53.7293,
+        "streamUrl": "https://www.youtube.com/watch?v=bZCw70JhhGI",
+        "sourceUrl": "https://www.youtube.com/watch?v=bZCw70JhhGI",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 5,
+        "tag": "北極圈格陵蘭極地風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 10,
+        "popScore": 669
+      },
+      {
+        "id": "pl-11-iceland-fagradalsfjall-2k",
+        "cctvCode": "PL-11-ICELAND-FAGRADALSFJALL-2K",
+        "name": "冰島法格拉達爾火山 ‧ 托爾比約恩山巔全景 2K (Iceland Volcano 2K)",
+        "authority": "Fridriksson 官方實況",
+        "type": "youtube",
+        "videoId": "8VjPqa2go6o",
+        "lat": 63.873,
+        "lon": -22.419,
+        "streamUrl": "https://www.youtube.com/watch?v=8VjPqa2go6o",
+        "sourceUrl": "https://www.youtube.com/watch?v=8VjPqa2go6o",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 914,
+        "tag": "冰島火山格陵蘭極地風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 11,
+        "popScore": 4602
+      },
+      {
+        "id": "pl-12-pyha-luosto-aurora-2k",
+        "cctvCode": "PL-12-PYHA-LUOSTO-AURORA-2K",
+        "name": "芬蘭皮海-盧奧斯托國家公園 ‧ 極光雪嶺 2K (Pyhä-Luosto Aurora 2K)",
+        "authority": "Visit Pyhä-Luosto 官方實況",
+        "type": "youtube",
+        "videoId": "dyRSvHGGvA8",
+        "lat": 67.0185,
+        "lon": 27.245,
+        "streamUrl": "https://www.youtube.com/watch?v=dyRSvHGGvA8",
+        "sourceUrl": "https://www.youtube.com/watch?v=dyRSvHGGvA8",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 266,
+        "tag": "北極圈極光國家公園風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 12,
+        "popScore": 2372
+      },
+      {
+        "id": "pl-13-patagonia-andes-2k",
+        "cctvCode": "PL-13-PATAGONIA-ANDES-2K",
+        "name": "阿根廷巴塔哥尼亞 ‧ 安地斯南端冰川湖泊 2K (Patagonia Live 2K)",
+        "authority": "Clima Bariloche 官方實況",
+        "type": "youtube",
+        "videoId": "8MhY4vTPzzk",
+        "lat": -41.1335,
+        "lon": -71.3103,
+        "streamUrl": "https://www.youtube.com/watch?v=8MhY4vTPzzk",
+        "sourceUrl": "https://www.youtube.com/watch?v=8MhY4vTPzzk",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 17,
+        "tag": "南極圈巴塔哥尼亞風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 13,
+        "popScore": 865
+      },
+      {
+        "id": "pl-14-lapland-wilderness-2k",
+        "cctvCode": "PL-14-LAPLAND-WILDERNESS-2K",
+        "name": "芬蘭拉普蘭荒野 ‧ 北極圈針葉雪林實況 2K (Lapland Wilderness 2K)",
+        "authority": "Kaira Racing 官方實況",
+        "type": "youtube",
+        "videoId": "8BRH85e_byQ",
+        "lat": 66.812,
+        "lon": 24.421,
+        "streamUrl": "https://www.youtube.com/watch?v=8BRH85e_byQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=8BRH85e_byQ",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 13,
+        "tag": "北極圈極光雪原風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 14,
+        "popScore": 811
+      },
+      {
+        "id": "pl-15-aurora-alert-lapland",
+        "cctvCode": "PL-15-AURORA-ALERT-LAPLAND",
+        "name": "芬蘭羅瓦涅米 ‧ 北極光即時預警天頂實況 (Aurora Alert Realtime)",
+        "authority": "Aurora Alert Realtime 官方實況",
+        "type": "youtube",
+        "videoId": "AvKdtZIb-6c",
+        "lat": 66.5039,
+        "lon": 25.7294,
+        "streamUrl": "https://www.youtube.com/watch?v=AvKdtZIb-6c",
+        "sourceUrl": "https://www.youtube.com/watch?v=AvKdtZIb-6c",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 1507,
+        "tag": "北極圈極光雪原風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 15,
+        "popScore": 6248
+      },
+      {
+        "id": "pl-16-iceland-hagafell-volcano",
+        "cctvCode": "PL-16-ICELAND-HAGAFELL-VOLCANO",
+        "name": "冰島哈加費爾 ‧ 火山裂隙熔岩近距離特寫 (Hagafell Volcano)",
+        "authority": "mbl.is 冰島晨報官方實況",
+        "type": "youtube",
+        "videoId": "L8i9G8jhWao",
+        "lat": 63.8712,
+        "lon": -22.385,
+        "streamUrl": "https://www.youtube.com/watch?v=L8i9G8jhWao",
+        "sourceUrl": "https://www.youtube.com/watch?v=L8i9G8jhWao",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 1213,
+        "tag": "冰島火山格陵蘭風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 16,
+        "popScore": 5457
+      },
+      {
+        "id": "pl-17-levi-elves-village",
+        "cctvCode": "PL-17-LEVI-ELVES-VILLAGE",
+        "name": "芬蘭列維精靈村 ‧ 北極圈童話雪屋渡假村 (Elves Village Lapland)",
+        "authority": "Hullu Poro 官方實況",
+        "type": "youtube",
+        "videoId": "EmoTKMm5sDI",
+        "lat": 67.813,
+        "lon": 24.832,
+        "streamUrl": "https://www.youtube.com/watch?v=EmoTKMm5sDI",
+        "sourceUrl": "https://www.youtube.com/watch?v=EmoTKMm5sDI",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 60,
+        "concurrentViewers": 683,
+        "tag": "北極圈極光雪原風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 17,
+        "popScore": 3889
+      },
+      {
+        "id": "pl-18-greenland-ilulissat-north",
+        "cctvCode": "PL-18-GREENLAND-ILULISSAT-NORTH",
+        "name": "格陵蘭伊盧利薩特北向 ‧ 北極海浮冰海岸 (Ilulissat North)",
+        "authority": "Greenland Airports 官方實況",
+        "type": "youtube",
+        "videoId": "XbGeRD37MFM",
+        "lat": 69.2432,
+        "lon": -51.0571,
+        "streamUrl": "https://www.youtube.com/watch?v=XbGeRD37MFM",
+        "sourceUrl": "https://www.youtube.com/watch?v=XbGeRD37MFM",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 487,
+        "tag": "北極圈格陵蘭冰山風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 18,
+        "popScore": 3228
+      },
+      {
+        "id": "pl-19-penguin-habitat-live",
+        "cctvCode": "PL-19-PENGUIN-HABITAT-LIVE",
+        "name": "極地企鵝保育館 ‧ 國王企鵝與跳岩企鵝冰原棲地 (Penguin Habitat)",
+        "authority": "Moody Gardens 官方實況",
+        "type": "youtube",
+        "videoId": "HHp4rjhJsWI",
+        "lat": 29.2731,
+        "lon": -94.8519,
+        "streamUrl": "https://www.youtube.com/watch?v=HHp4rjhJsWI",
+        "sourceUrl": "https://www.youtube.com/watch?v=HHp4rjhJsWI",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 289,
+        "tag": "企鵝北極熊極地生態風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 19,
+        "popScore": 2470
+      },
+      {
+        "id": "pl-20-greenland-kangerlussuaq",
+        "cctvCode": "PL-20-GREENLAND-KANGERLUSSUAQ",
+        "name": "格陵蘭康克魯斯瓦格 ‧ 北極大冰蓋門戶實況 (Kangerlussuaq West)",
+        "authority": "Greenland Airports 官方實況",
+        "type": "youtube",
+        "videoId": "xdfXJJImEDM",
+        "lat": 67.0108,
+        "lon": -50.7091,
+        "streamUrl": "https://www.youtube.com/watch?v=xdfXJJImEDM",
+        "sourceUrl": "https://www.youtube.com/watch?v=xdfXJJImEDM",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 255,
+        "tag": "北極圈格陵蘭冰山風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 20,
+        "popScore": 2324
+      },
+      {
+        "id": "pl-21-alaska-muskox-cam",
+        "cctvCode": "PL-21-ALASKA-MUSKOX-CAM",
+        "name": "阿拉斯加費爾班克斯 ‧ 極地麝牛冰原生態站 (Alaska Muskox Cam)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "2t3hVTdetkA",
+        "lat": 64.8783,
+        "lon": -147.865,
+        "streamUrl": "https://www.youtube.com/watch?v=2t3hVTdetkA",
+        "sourceUrl": "https://www.youtube.com/watch?v=2t3hVTdetkA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 136,
+        "tag": "北極圈企鵝北極熊生態風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 21,
+        "popScore": 1748
+      },
+      {
+        "id": "pl-22-rovaniemi-santa-village",
+        "cctvCode": "PL-22-ROVANIEMI-SANTA-VILLAGE",
+        "name": "芬蘭羅瓦涅米 ‧ 聖誕老人村北極圈線官方實況 (Santa Claus Village)",
+        "authority": "Visit Rovaniemi 官方實況",
+        "type": "youtube",
+        "videoId": "xNcpg4bgwe8",
+        "lat": 66.5436,
+        "lon": 25.8472,
+        "streamUrl": "https://www.youtube.com/watch?v=xNcpg4bgwe8",
+        "sourceUrl": "https://www.youtube.com/watch?v=xNcpg4bgwe8",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 113,
+        "tag": "北極圈極光雪原商圈風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 22,
+        "popScore": 1618
+      },
+      {
+        "id": "pl-23-apukka-igloo-aurora",
+        "cctvCode": "PL-23-APUKKA-IGLOO-AURORA",
+        "name": "芬蘭羅瓦涅米 ‧ 阿普卡極光玻璃冰屋村 (Apukka Glass Igloo)",
+        "authority": "Apukka Resort 官方實況",
+        "type": "youtube",
+        "videoId": "wT8Zhh9MBEE",
+        "lat": 66.583,
+        "lon": 26.017,
+        "streamUrl": "https://www.youtube.com/watch?v=wT8Zhh9MBEE",
+        "sourceUrl": "https://www.youtube.com/watch?v=wT8Zhh9MBEE",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 55,
+        "tag": "北極圈極光雪原風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 23,
+        "popScore": 1232
+      },
+      {
+        "id": "pl-24-alaska-fairbanks-aurora",
+        "cctvCode": "PL-24-ALASKA-FAIRBANKS-AURORA",
+        "name": "美國阿拉斯加 ‧ 費爾班克斯極光即時觀測站 (Fairbanks Aurora)",
+        "authority": "Weathernews 官方實況",
+        "type": "youtube",
+        "videoId": "yycMnOJwvjY",
+        "lat": 64.8378,
+        "lon": -147.7164,
+        "streamUrl": "https://www.youtube.com/watch?v=yycMnOJwvjY",
+        "sourceUrl": "https://www.youtube.com/watch?v=yycMnOJwvjY",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 34,
+        "tag": "北極圈極光雪原風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 24,
+        "popScore": 1052
+      },
+      {
+        "id": "pl-25-churchill-polar-bear",
+        "cctvCode": "PL-25-CHURCHILL-POLAR-BEAR",
+        "name": "加拿大邱吉爾 ‧ 哈德遜灣野生北極熊觀測車 (Churchill Polar Bear)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "8MoaBHl8U3A",
+        "lat": 58.7684,
+        "lon": -94.165,
+        "streamUrl": "https://www.youtube.com/watch?v=8MoaBHl8U3A",
+        "sourceUrl": "https://www.youtube.com/watch?v=8MoaBHl8U3A",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 19,
+        "tag": "北極圈企鵝北極熊生態風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 25,
+        "popScore": 891
+      },
+      {
+        "id": "pl-26-ushuaia-antarctica-gate",
+        "cctvCode": "PL-26-USHUAIA-ANTARCTICA-GATE",
+        "name": "阿根廷火地島烏斯懷亞 ‧ 南極洲遠征門戶世界盡頭 (Ushuaia Fin del Mundo)",
+        "authority": "Tierra del Fuego 官方實況",
+        "type": "youtube",
+        "videoId": "FKu3uOfk3qY",
+        "lat": -54.8019,
+        "lon": -68.303,
+        "streamUrl": "https://www.youtube.com/watch?v=FKu3uOfk3qY",
+        "sourceUrl": "https://www.youtube.com/watch?v=FKu3uOfk3qY",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 15,
+        "tag": "南極圈企鵝峽灣風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 26,
+        "popScore": 839
+      }
+    ],
+    "rainforest": [
+      {
+        "id": "rf-01-forest-birdwings-4k",
+        "cctvCode": "RF-01-FOREST-BIRDWINGS-4K",
+        "name": "森林飛羽保護區 ‧ 25種林間野鳥療癒覓食 4K (Forest Birds 4K)",
+        "authority": "BirdWings360 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "vH9Y6Lksl3c",
+        "lat": 41.4993,
+        "lon": -81.6944,
+        "streamUrl": "https://www.youtube.com/watch?v=vH9Y6Lksl3c",
+        "sourceUrl": "https://www.youtube.com/watch?v=vH9Y6Lksl3c",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 281,
+        "tag": "雨林森林飛羽生態風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "popScore": 2436
+      },
+      {
+        "id": "rf-02-nordic-forest-wildlife-4k",
+        "cctvCode": "RF-02-NORDIC-FOREST-WILDLIFE-4K",
+        "name": "丹麥原始森林秘境 ‧ 野生鹿群與森林溪谷 4K (Forest Wildlife 4K)",
+        "authority": "Morten Hilmer 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "F0GOOP82094",
+        "lat": 56.55,
+        "lon": 9.95,
+        "streamUrl": "https://www.youtube.com/watch?v=F0GOOP82094",
+        "sourceUrl": "https://www.youtube.com/watch?v=F0GOOP82094",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 271,
+        "tag": "雨林森林生態風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "popScore": 2393
+      },
+      {
+        "id": "rf-03-cornell-sapsucker-4k",
+        "cctvCode": "RF-03-CORNELL-SAPSUCKER-4K",
+        "name": "康乃爾鳥類學實驗室 ‧ 薩普薩克森林濕地飛羽 4K (Cornell Woods 4K)",
+        "authority": "Cornell Lab 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "x10vL6_47Dw",
+        "lat": 42.4795,
+        "lon": -76.4512,
+        "streamUrl": "https://www.youtube.com/watch?v=x10vL6_47Dw",
+        "sourceUrl": "https://www.youtube.com/watch?v=x10vL6_47Dw",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 180,
+        "tag": "雨林森林飛羽生態風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "popScore": 1977
+      },
+      {
+        "id": "rf-04-woodland-wildlife-4k",
+        "cctvCode": "RF-04-WOODLAND-WILDLIFE-4K",
+        "name": "溫帶森林自然保護區 ‧ 紅衣鳳頭鳥與林間動物 4K (Woodland Wildlife 4K)",
+        "authority": "Bird Watching HQ 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "b6-zNf3BGy0",
+        "lat": 41.24,
+        "lon": -81.55,
+        "streamUrl": "https://www.youtube.com/watch?v=b6-zNf3BGy0",
+        "sourceUrl": "https://www.youtube.com/watch?v=b6-zNf3BGy0",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 60,
+        "concurrentViewers": 80,
+        "tag": "雨林森林飛羽生態風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "popScore": 1412
+      },
+      {
+        "id": "rf-05-subtropical-birds-4k",
+        "cctvCode": "RF-05-SUBTROPICAL-BIRDS-4K",
+        "name": "亞熱帶森林生態站 ‧ 60種珍稀林鳥聚集實況 4K (Forest Feeder 4K)",
+        "authority": "Ken Little 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "X7qPLu9hmrg",
+        "lat": 33.5186,
+        "lon": -86.8104,
+        "streamUrl": "https://www.youtube.com/watch?v=X7qPLu9hmrg",
+        "sourceUrl": "https://www.youtube.com/watch?v=X7qPLu9hmrg",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 33,
+        "tag": "雨林森林飛羽生態風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "popScore": 1042
+      },
+      {
+        "id": "rf-06-djuma-waterhole-2k",
+        "cctvCode": "RF-06-DJUMA-WATERHOLE-2K",
+        "name": "南非薩比沙保護區 ‧ 朱馬叢林野生動物水坑 2K (Djuma Safari 2K)",
+        "authority": "Djuma Cam 官方實況",
+        "type": "youtube",
+        "videoId": "oKqvQa4J8VY",
+        "lat": -24.7872,
+        "lon": 31.5367,
+        "streamUrl": "https://www.youtube.com/watch?v=oKqvQa4J8VY",
+        "sourceUrl": "https://www.youtube.com/watch?v=oKqvQa4J8VY",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 69,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "popScore": 1336
+      },
+      {
+        "id": "rf-07-botswana-elephant-pan",
+        "cctvCode": "RF-07-BOTSWANA-ELEPHANT-PAN",
+        "name": "波札那奧卡萬戈綠洲 ‧ 野生象群飲水池實況 (Botswana Elephant Pan)",
+        "authority": "Africam 官方實況",
+        "type": "youtube",
+        "videoId": "QJe1tGI1EZc",
+        "lat": -19.155,
+        "lon": 23.775,
+        "streamUrl": "https://www.youtube.com/watch?v=QJe1tGI1EZc",
+        "sourceUrl": "https://www.youtube.com/watch?v=QJe1tGI1EZc",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 3763,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "popScore": 9900
+      },
+      {
+        "id": "rf-08-namibia-onguma-waterhole",
+        "cctvCode": "RF-08-NAMIBIA-ONGUMA-WATERHOLE",
+        "name": "納米比亞翁古馬保護區 ‧ 長頸鹿與大象綠洲水坑 (Namibia Onguma)",
+        "authority": "Africam 官方實況",
+        "type": "youtube",
+        "videoId": "yuIm1V7Ne7I",
+        "lat": -18.7361,
+        "lon": 17.0481,
+        "streamUrl": "https://www.youtube.com/watch?v=yuIm1V7Ne7I",
+        "sourceUrl": "https://www.youtube.com/watch?v=yuIm1V7Ne7I",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 3105,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "popScore": 9900
+      },
+      {
+        "id": "rf-09-southafrica-naledi-cateye",
+        "cctvCode": "RF-09-SOUTHAFRICA-NALEDI-CATEYE",
+        "name": "南非巴盧萊保護區 ‧ 納萊迪花豹與獅群水坑 (Africam Naledi)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "pZZst4BOpVI",
+        "lat": -24.1986,
+        "lon": 30.8925,
+        "streamUrl": "https://www.youtube.com/watch?v=pZZst4BOpVI",
+        "sourceUrl": "https://www.youtube.com/watch?v=pZZst4BOpVI",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 3096,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "popScore": 9900
+      },
+      {
+        "id": "rf-10-namibia-kambaku-reserve",
+        "cctvCode": "RF-10-NAMIBIA-KAMBAKU-RESERVE",
+        "name": "納米比亞坎巴庫保護區 ‧ 莽原羚羊與斑馬水坑 (Kambaku Reserve)",
+        "authority": "Kambaku Safari 官方實況",
+        "type": "youtube",
+        "videoId": "n0y1ZOwrDQI",
+        "lat": -20.4667,
+        "lon": 16.6833,
+        "streamUrl": "https://www.youtube.com/watch?v=n0y1ZOwrDQI",
+        "sourceUrl": "https://www.youtube.com/watch?v=n0y1ZOwrDQI",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 2483,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 10,
+        "popScore": 8660
+      },
+      {
+        "id": "rf-11-kenya-masai-mara-river",
+        "cctvCode": "RF-11-KENYA-MASAI-MARA-RIVER",
+        "name": "肯亞馬賽馬拉保護區 ‧ 馬拉河動物大遷徙渡河點 (Masai Mara River)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "-7GOA9KIWcs",
+        "lat": -1.536,
+        "lon": 35.025,
+        "streamUrl": "https://www.youtube.com/watch?v=-7GOA9KIWcs",
+        "sourceUrl": "https://www.youtube.com/watch?v=-7GOA9KIWcs",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 897,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 11,
+        "popScore": 4551
+      },
+      {
+        "id": "rf-12-kenya-mpala-waterhole",
+        "cctvCode": "RF-12-KENYA-MPALA-WATERHOLE",
+        "name": "肯亞萊基皮亞高原 ‧ 姆帕拉野生大象水坑 (Kenya Mpala Waterhole)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "oORXfTviuCs",
+        "lat": 0.2922,
+        "lon": 36.8981,
+        "streamUrl": "https://www.youtube.com/watch?v=oORXfTviuCs",
+        "sourceUrl": "https://www.youtube.com/watch?v=oORXfTviuCs",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 60,
+        "concurrentViewers": 413,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 12,
+        "popScore": 2959
+      },
+      {
+        "id": "rf-13-kenya-oldonyo-kilimanjaro",
+        "cctvCode": "RF-13-KENYA-OLDONYO-KILIMANJARO",
+        "name": "肯亞吉力馬札羅山麓 ‧ 奧爾多尼奧象群水坑 (ol Donyo Kenya)",
+        "authority": "Africam 官方實況",
+        "type": "youtube",
+        "videoId": "XsOU8JnEpNM",
+        "lat": -2.7333,
+        "lon": 37.7667,
+        "streamUrl": "https://www.youtube.com/watch?v=XsOU8JnEpNM",
+        "sourceUrl": "https://www.youtube.com/watch?v=XsOU8JnEpNM",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 348,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 13,
+        "popScore": 2709
+      },
+      {
+        "id": "rf-14-kenya-mpala-hippo-river",
+        "cctvCode": "RF-14-KENYA-MPALA-HIPPO-RIVER",
+        "name": "肯亞姆帕拉河谷 ‧ 野生河馬與尼羅鱷溪流 (Kenya Hippo River)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "7x5kRo1B84Y",
+        "lat": 0.29,
+        "lon": 36.901,
+        "streamUrl": "https://www.youtube.com/watch?v=7x5kRo1B84Y",
+        "sourceUrl": "https://www.youtube.com/watch?v=7x5kRo1B84Y",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 60,
+        "concurrentViewers": 214,
+        "tag": "水坑雨林溪流野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 14,
+        "popScore": 2139
+      },
+      {
+        "id": "rf-15-southafrica-rhino-centre",
+        "cctvCode": "RF-15-SOUTHAFRICA-RHINO-CENTRE",
+        "name": "南非胡德斯普雷特 ‧ 瀕危犀牛保育園區實況 (Hoedspruit Rhino)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "wtylzrJvCKU",
+        "lat": -24.453,
+        "lon": 30.97,
+        "streamUrl": "https://www.youtube.com/watch?v=wtylzrJvCKU",
+        "sourceUrl": "https://www.youtube.com/watch?v=wtylzrJvCKU",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 115,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 15,
+        "popScore": 1630
+      },
+      {
+        "id": "rf-16-namibia-etosha-okaukuejo",
+        "cctvCode": "RF-16-NAMIBIA-ETOSHA-OKAUKUEJO",
+        "name": "納米比亞埃托沙國家公園 ‧ 奧考奎約傳奇水坑 (Etosha Okaukuejo)",
+        "authority": "NamibiaCam 官方實況",
+        "type": "youtube",
+        "videoId": "AeMUdOPFcXI",
+        "lat": -19.1778,
+        "lon": 15.9172,
+        "streamUrl": "https://www.youtube.com/watch?v=AeMUdOPFcXI",
+        "sourceUrl": "https://www.youtube.com/watch?v=AeMUdOPFcXI",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 105,
+        "tag": "水坑國家公園野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 16,
+        "popScore": 1570
+      },
+      {
+        "id": "rf-17-southafrica-tembe-elephants",
+        "cctvCode": "RF-17-SOUTHAFRICA-TEMBE-ELEPHANTS",
+        "name": "南非滕貝大象公園 ‧ 原始沙林巨象家族水坑 (Tembe Elephant Park)",
+        "authority": "Africam 官方實況",
+        "type": "youtube",
+        "videoId": "gdrNUUf-cQw",
+        "lat": -27.0472,
+        "lon": 32.4219,
+        "streamUrl": "https://www.youtube.com/watch?v=gdrNUUf-cQw",
+        "sourceUrl": "https://www.youtube.com/watch?v=gdrNUUf-cQw",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 76,
+        "tag": "水坑雨林國家公園風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 17,
+        "popScore": 1385
+      },
+      {
+        "id": "rf-18-panama-rainforest-hummingbird",
+        "cctvCode": "RF-18-PANAMA-RAINFOREST-HUMMINGBIRD",
+        "name": "巴拿馬索貝拉尼亞國家公園 ‧ 熱帶雨林樹冠蜂鳥台 (Panama Rainforest)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "JE2CGFclrRg",
+        "lat": 9.0761,
+        "lon": -79.6486,
+        "streamUrl": "https://www.youtube.com/watch?v=JE2CGFclrRg",
+        "sourceUrl": "https://www.youtube.com/watch?v=JE2CGFclrRg",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 47,
+        "tag": "雨林熱帶雨林飛羽國家公園風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 18,
+        "popScore": 1167
+      },
+      {
+        "id": "rf-19-alaska-katmai-brooks-falls",
+        "cctvCode": "RF-19-ALASKA-KATMAI-BROOKS-FALLS",
+        "name": "阿拉斯加卡特邁國家公園 ‧ 布魯克斯瀑布棕熊捕鮭魚 (Brooks Falls Bears)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "EwTH5yY7Mks",
+        "lat": 58.5553,
+        "lon": -155.7783,
+        "streamUrl": "https://www.youtube.com/watch?v=EwTH5yY7Mks",
+        "sourceUrl": "https://www.youtube.com/watch?v=EwTH5yY7Mks",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 38,
+        "tag": "雨林森林瀑布國家公園風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 19,
+        "popScore": 1089
+      },
+      {
+        "id": "rf-20-costarica-scarlet-macaws",
+        "cctvCode": "RF-20-COSTARICA-SCARLET-MACAWS",
+        "name": "哥斯大黎加熱帶雨林 ‧ 野生緋紅金剛鸚鵡覓食台 (Costa Rica Macaws)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "4V5rtm9Nrfo",
+        "lat": 9.852,
+        "lon": -85.378,
+        "streamUrl": "https://www.youtube.com/watch?v=4V5rtm9Nrfo",
+        "sourceUrl": "https://www.youtube.com/watch?v=4V5rtm9Nrfo",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 37,
+        "tag": "雨林熱帶雨林飛羽風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 20,
+        "popScore": 1080
+      },
+      {
+        "id": "rf-21-costarica-toucan-ranch",
+        "cctvCode": "RF-21-COSTARICA-TOUCAN-RANCH",
+        "name": "哥斯大黎加雲霧雨林 ‧ 彩虹大嘴鳥保育園區 (Costa Rica Toucans)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "tgmrC0rDrc4",
+        "lat": 10.0242,
+        "lon": -84.0739,
+        "streamUrl": "https://www.youtube.com/watch?v=tgmrC0rDrc4",
+        "sourceUrl": "https://www.youtube.com/watch?v=tgmrC0rDrc4",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 36,
+        "tag": "雨林熱帶雨林飛羽風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 21,
+        "popScore": 1070
+      },
+      {
+        "id": "rf-22-costarica-green-macaw",
+        "cctvCode": "RF-22-COSTARICA-GREEN-MACAW",
+        "name": "哥斯大黎加熱帶雨林 ‧ 瀕危大綠金剛鸚鵡樹冠巢穴 (Green Macaw Nest)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "OUc-R6Mtg0E",
+        "lat": 10.45,
+        "lon": -84.01,
+        "streamUrl": "https://www.youtube.com/watch?v=OUc-R6Mtg0E",
+        "sourceUrl": "https://www.youtube.com/watch?v=OUc-R6Mtg0E",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 31,
+        "tag": "雨林熱帶雨林飛羽風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 22,
+        "popScore": 1022
+      },
+      {
+        "id": "rf-23-panama-cornell-fruit-feeder",
+        "cctvCode": "RF-23-PANAMA-CORNELL-FRUIT-FEEDER",
+        "name": "巴拿馬埃爾瓦耶熱帶雨林 ‧ 康乃爾彩色唐納雀果台 (Panama Fruit Feeder)",
+        "authority": "Cornell Lab 官方實況",
+        "type": "youtube",
+        "videoId": "WtoxxHADnGk",
+        "lat": 8.6008,
+        "lon": -80.1336,
+        "streamUrl": "https://www.youtube.com/watch?v=WtoxxHADnGk",
+        "sourceUrl": "https://www.youtube.com/watch?v=WtoxxHADnGk",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 25,
+        "tag": "雨林熱帶雨林飛羽風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 23,
+        "popScore": 960
+      },
+      {
+        "id": "rf-24-peru-cloudforest-hummingbird",
+        "cctvCode": "RF-24-PERU-CLOUDFOREST-HUMMINGBIRD",
+        "name": "秘魯安地斯雲霧雨林 ‧ 巨蜂鳥與刀嘴蜂鳥秘境 (Peru Cloud Forest)",
+        "authority": "Hummingbird Spot 官方實況",
+        "type": "youtube",
+        "videoId": "VYCrrXygJfw",
+        "lat": -12.593,
+        "lon": -75.015,
+        "streamUrl": "https://www.youtube.com/watch?v=VYCrrXygJfw",
+        "sourceUrl": "https://www.youtube.com/watch?v=VYCrrXygJfw",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 16,
+        "tag": "雨林熱帶雨林飛羽風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 24,
+        "popScore": 852
+      },
+      {
+        "id": "rf-25-congo-rainforest-bonobo",
+        "cctvCode": "RF-25-CONGO-RAINFOREST-BONOBO",
+        "name": "剛果盆地熱帶雨林 ‧ 蘿拉倭黑猩猩與山地大猩猩保護區 (Congo Rainforest)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "gqP5nBCRbHA",
+        "lat": -4.4586,
+        "lon": 15.2669,
+        "streamUrl": "https://www.youtube.com/watch?v=gqP5nBCRbHA",
+        "sourceUrl": "https://www.youtube.com/watch?v=gqP5nBCRbHA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 10,
+        "tag": "雨林熱帶雨林野生動物風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 25,
+        "popScore": 764
+      },
+      {
+        "id": "rf-26-ecuador-sachatamia-rainforest",
+        "cctvCode": "RF-26-ECUADOR-SACHATAMIA-RAINFOREST",
+        "name": "厄瓜多明多雲霧雨林 ‧ 亞馬遜西坡熱帶蜂鳥秘境 (Ecuador Rainforest)",
+        "authority": "Hummingbird Spot 官方實況",
+        "type": "youtube",
+        "videoId": "c3KfiiBTIvA",
+        "lat": -0.0258,
+        "lon": -78.7583,
+        "streamUrl": "https://www.youtube.com/watch?v=c3KfiiBTIvA",
+        "sourceUrl": "https://www.youtube.com/watch?v=c3KfiiBTIvA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 8,
+        "tag": "雨林熱帶雨林飛羽風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 26,
+        "popScore": 730
+      }
+    ],
+    "ocean": [
+      {
+        "id": "oc-01-mallorca-cala-fornells-4k",
+        "cctvCode": "OC-01-MALLORCA-CALA-FORNELLS-4K",
+        "name": "西班牙馬約卡島 ‧ 地中海碧藍海灣 Cala Fornells 4K (Mallorca 4K)",
+        "authority": "Mallorca Webcam 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "4VAvvsBeV9Y",
+        "lat": 39.5364,
+        "lon": 2.4419,
+        "streamUrl": "https://www.youtube.com/watch?v=4VAvvsBeV9Y",
+        "sourceUrl": "https://www.youtube.com/watch?v=4VAvvsBeV9Y",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 395,
+        "tag": "海灘碧藍海島海洋風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "popScore": 2891
+      },
+      {
+        "id": "oc-02-curacao-avila-lagoon-4k",
+        "cctvCode": "OC-02-CURACAO-AVILA-LAGOON-4K",
+        "name": "加勒比海庫拉索島 ‧ 阿維拉珊瑚白沙潟湖 4K (Curaçao Lagoon 4K)",
+        "authority": "SHOWME Caribbean 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "-oiR7FxcwYU",
+        "lat": 12.0994,
+        "lon": -68.9219,
+        "streamUrl": "https://www.youtube.com/watch?v=-oiR7FxcwYU",
+        "sourceUrl": "https://www.youtube.com/watch?v=-oiR7FxcwYU",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 94,
+        "tag": "海灘珊瑚加勒比海風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "popScore": 1503
+      },
+      {
+        "id": "oc-03-curacao-turquoise-coast-4k",
+        "cctvCode": "OC-03-CURACAO-TURQUOISE-COAST-4K",
+        "name": "加勒比海庫拉索島 ‧ 碧藍海岸棕櫚沙灘二台 4K (Curaçao Beach 4K)",
+        "authority": "SHOWME Caribbean 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "47Ze6Cp3CWQ",
+        "lat": 12.099,
+        "lon": -68.9225,
+        "streamUrl": "https://www.youtube.com/watch?v=47Ze6Cp3CWQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=47Ze6Cp3CWQ",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 56,
+        "tag": "海灘珊瑚加勒比海風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "popScore": 1239
+      },
+      {
+        "id": "oc-04-curacao-underwater-reef-4k",
+        "cctvCode": "OC-04-CURACAO-UNDERWATER-REEF-4K",
+        "name": "加勒比海庫拉索海洋館 ‧ 海底珊瑚礁熱帶魚直擊 4K (Underwater Reef 4K)",
+        "authority": "SHOWME Caribbean 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "P9gFih_9T6k",
+        "lat": 12.0836,
+        "lon": -68.8958,
+        "streamUrl": "https://www.youtube.com/watch?v=P9gFih_9T6k",
+        "sourceUrl": "https://www.youtube.com/watch?v=P9gFih_9T6k",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 54,
+        "tag": "珊瑚海底熱帶魚海洋風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "popScore": 1224
+      },
+      {
+        "id": "oc-05-grancanaria-atlantic-4k",
+        "cctvCode": "OC-05-GRANCANARIA-ATLANTIC-4K",
+        "name": "西班牙大加那利島 ‧ 大西洋陽光海岸全景 4K (Gran Canaria 4K)",
+        "authority": "Gran Canaria Live 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "o09siXxJw9A",
+        "lat": 27.7567,
+        "lon": -15.5725,
+        "streamUrl": "https://www.youtube.com/watch?v=o09siXxJw9A",
+        "sourceUrl": "https://www.youtube.com/watch?v=o09siXxJw9A",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 10,
+        "tag": "海灘海洋海島風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "popScore": 764
+      },
+      {
+        "id": "oc-06-madeira-funchal-bay-4k",
+        "cctvCode": "OC-06-MADEIRA-FUNCHAL-BAY-4K",
+        "name": "葡萄牙馬德拉群島 ‧ 大西洋珍珠豐沙爾海灣山海 4K (Madeira 4K)",
+        "authority": "Madeira4K 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "EmNBDSPIh2Q",
+        "lat": 32.65,
+        "lon": -16.968,
+        "streamUrl": "https://www.youtube.com/watch?v=EmNBDSPIh2Q",
+        "sourceUrl": "https://www.youtube.com/watch?v=EmNBDSPIh2Q",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 8,
+        "tag": "海灘海洋火山海島風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "popScore": 730
+      },
+      {
+        "id": "oc-07-mallorca-andratx-harbor-4k",
+        "cctvCode": "OC-07-MALLORCA-ANDRATX-HARBOR-4K",
+        "name": "西班牙馬約卡安德拉奇港 ‧ 地中海帆船海灣 4K (Port d'Andratx 4K)",
+        "authority": "Mallorca Webcam 官方 4K 實況",
+        "type": "youtube",
+        "videoId": "urkka1XbS6U",
+        "lat": 39.5435,
+        "lon": 2.382,
+        "streamUrl": "https://www.youtube.com/watch?v=urkka1XbS6U",
+        "sourceUrl": "https://www.youtube.com/watch?v=urkka1XbS6U",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 6,
+        "tag": "海灘港灣海洋風景 4K",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "popScore": 691
+      },
+      {
+        "id": "oc-08-honduras-utopia-reef-2k",
+        "cctvCode": "OC-08-HONDURAS-UTOPIA-REEF-2K",
+        "name": "宏都拉斯烏提拉島 ‧ 加勒比海海底珊瑚沙道 2K (Utopia Reef 2K)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "jzx_n25g3kA",
+        "lat": 16.0864,
+        "lon": -86.9297,
+        "streamUrl": "https://www.youtube.com/watch?v=jzx_n25g3kA",
+        "sourceUrl": "https://www.youtube.com/watch?v=jzx_n25g3kA",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 35,
+        "tag": "珊瑚海底潛水海洋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "popScore": 1061
+      },
+      {
+        "id": "oc-09-aruba-eagle-beach-2k",
+        "cctvCode": "OC-09-ARUBA-EAGLE-BEACH-2K",
+        "name": "加勒比海阿魯巴島 ‧ 世界最美鷹灘白沙海浪 2K (Aruba Eagle Beach 2K)",
+        "authority": "SHOWME Caribbean 官方實況",
+        "type": "youtube",
+        "videoId": "_ZXMjk5K0_s",
+        "lat": 12.5513,
+        "lon": -70.0565,
+        "streamUrl": "https://www.youtube.com/watch?v=_ZXMjk5K0_s",
+        "sourceUrl": "https://www.youtube.com/watch?v=_ZXMjk5K0_s",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "fps": 30,
+        "concurrentViewers": 8,
+        "tag": "海灘碧藍海島海洋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "popScore": 730
+      },
+      {
+        "id": "oc-10-madeira-lido-ocean-pool",
+        "cctvCode": "OC-10-MADEIRA-LIDO-OCEAN-POOL",
+        "name": "葡萄牙馬德拉豐沙爾 ‧ 大西洋火山岩天然海水池 (Madeira Lido)",
+        "authority": "Madeira-Web 官方實況",
+        "type": "youtube",
+        "videoId": "K8Fl1Bm365M",
+        "lat": 32.6365,
+        "lon": -16.9332,
+        "streamUrl": "https://www.youtube.com/watch?v=K8Fl1Bm365M",
+        "sourceUrl": "https://www.youtube.com/watch?v=K8Fl1Bm365M",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 256,
+        "tag": "海灘海洋海島風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 10,
+        "popScore": 2328
+      },
+      {
+        "id": "oc-11-madeira-praia-formosa",
+        "cctvCode": "OC-11-MADEIRA-PRAIA-FORMOSA",
+        "name": "葡萄牙馬德拉島 ‧ 福爾摩沙黑卵石海浪實況 (Praia Formosa)",
+        "authority": "Madeira-Web 官方實況",
+        "type": "youtube",
+        "videoId": "ZNf42SF9lXM",
+        "lat": 32.6401,
+        "lon": -16.9488,
+        "streamUrl": "https://www.youtube.com/watch?v=ZNf42SF9lXM",
+        "sourceUrl": "https://www.youtube.com/watch?v=ZNf42SF9lXM",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 160,
+        "tag": "海灘衝浪海洋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 11,
+        "popScore": 1876
+      },
+      {
+        "id": "oc-12-vancouver-sea-otter",
+        "cctvCode": "OC-12-VANCOUVER-SEA-OTTER",
+        "name": "加拿大溫哥華水族館 ‧ 超療癒海獺漂浮戲水實況 (Sea Otter Cam)",
+        "authority": "Vancouver Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "9mg9PoFEX2U",
+        "lat": 49.3005,
+        "lon": -123.1309,
+        "streamUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
+        "sourceUrl": "https://www.youtube.com/watch?v=9mg9PoFEX2U",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 151,
+        "tag": "水母海獺療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 12,
+        "popScore": 1829
+      },
+      {
+        "id": "oc-13-monterey-jellyfish-cam",
+        "cctvCode": "OC-13-MONTEREY-JELLYFISH-CAM",
+        "name": "加州蒙特雷灣水族館 ‧ 深海夢幻水母漂浮療癒實況 (Live Jelly Cam)",
+        "authority": "Monterey Bay Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "eQ_foBERmzA",
+        "lat": 36.6183,
+        "lon": -121.9015,
+        "streamUrl": "https://www.youtube.com/watch?v=eQ_foBERmzA",
+        "sourceUrl": "https://www.youtube.com/watch?v=eQ_foBERmzA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 128,
+        "tag": "水母海獺珊瑚療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 13,
+        "popScore": 1704
+      },
+      {
+        "id": "oc-14-pacific-tropical-reef",
+        "cctvCode": "OC-14-PACIFIC-TROPICAL-REEF",
+        "name": "太平洋水族館 ‧ 帛琉藍洞熱帶珊瑚礁彩色魚群 (Tropical Reef Cam)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "DHUnz4dyb54",
+        "lat": 33.762,
+        "lon": -118.197,
+        "streamUrl": "https://www.youtube.com/watch?v=DHUnz4dyb54",
+        "sourceUrl": "https://www.youtube.com/watch?v=DHUnz4dyb54",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 127,
+        "tag": "珊瑚海底熱帶魚療癒風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 14,
+        "popScore": 1698
+      },
+      {
+        "id": "oc-15-florida-lower-keys",
+        "cctvCode": "OC-15-FLORIDA-LOWER-KEYS",
+        "name": "美國佛羅里達礁島群 ‧ 碧綠珊瑚潟湖海島碼頭 (Florida Keys Lagoon)",
+        "authority": "Viva The Keys 官方實況",
+        "type": "youtube",
+        "videoId": "qi0mY6zVQnY",
+        "lat": 24.6615,
+        "lon": -81.4542,
+        "streamUrl": "https://www.youtube.com/watch?v=qi0mY6zVQnY",
+        "sourceUrl": "https://www.youtube.com/watch?v=qi0mY6zVQnY",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 102,
+        "tag": "海灘珊瑚海島風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 15,
+        "popScore": 1552
+      },
+      {
+        "id": "oc-16-monterey-sea-otter-cam",
+        "cctvCode": "OC-16-MONTEREY-SEA-OTTER-CAM",
+        "name": "加州蒙特雷灣水族館 ‧ 海獺家族水上翻滾實況 (Monterey Sea Otter)",
+        "authority": "Monterey Bay Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "abbR-Ttd-cA",
+        "lat": 36.6181,
+        "lon": -121.9018,
+        "streamUrl": "https://www.youtube.com/watch?v=abbR-Ttd-cA",
+        "sourceUrl": "https://www.youtube.com/watch?v=abbR-Ttd-cA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 91,
+        "tag": "水母海獺企鵝療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 16,
+        "popScore": 1484
+      },
+      {
+        "id": "oc-17-miami-coral-city-underwater",
+        "cctvCode": "OC-17-MIAMI-CORAL-CITY-UNDERWATER",
+        "name": "美國邁阿密比斯坎灣 ‧ 野生海底珊瑚城市水下實況 (Coral City Underwater)",
+        "authority": "Coral Morphologic 官方實況",
+        "type": "youtube",
+        "videoId": "7i8ARjIeM2k",
+        "lat": 25.7745,
+        "lon": -80.1462,
+        "streamUrl": "https://www.youtube.com/watch?v=7i8ARjIeM2k",
+        "sourceUrl": "https://www.youtube.com/watch?v=7i8ARjIeM2k",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 81,
+        "tag": "珊瑚海底熱帶魚海洋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 17,
+        "popScore": 1418
+      },
+      {
+        "id": "oc-18-monterey-kelp-forest",
+        "cctvCode": "OC-18-MONTEREY-KELP-FOREST",
+        "name": "加州蒙特雷灣水族館 ‧ 巨型海藻森林陽光魚群 (Kelp Forest Cam)",
+        "authority": "Monterey Bay Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "w3LjpFhySTg",
+        "lat": 36.6185,
+        "lon": -121.9012,
+        "streamUrl": "https://www.youtube.com/watch?v=w3LjpFhySTg",
+        "sourceUrl": "https://www.youtube.com/watch?v=w3LjpFhySTg",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 78,
+        "tag": "珊瑚海底水母療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 18,
+        "popScore": 1398
+      },
+      {
+        "id": "oc-19-honduras-utopia-reef-wall",
+        "cctvCode": "OC-19-HONDURAS-UTOPIA-REEF-WALL",
+        "name": "宏都拉斯加勒比海 ‧ 海底珊瑚大峭壁潛水視角 (Utopia Reef Wall)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "1zcIUk66HX4",
+        "lat": 16.086,
+        "lon": -86.9302,
+        "streamUrl": "https://www.youtube.com/watch?v=1zcIUk66HX4",
+        "sourceUrl": "https://www.youtube.com/watch?v=1zcIUk66HX4",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 68,
+        "tag": "珊瑚海底潛水海洋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 19,
+        "popScore": 1329
+      },
+      {
+        "id": "oc-20-monterey-shark-cam",
+        "cctvCode": "OC-20-MONTEREY-SHARK-CAM",
+        "name": "加州蒙特雷灣水族館 ‧ 深海鯊魚與魔鬼魚巡游實況 (Live Shark Cam)",
+        "authority": "Monterey Bay Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "tEtg5Kg3voQ",
+        "lat": 36.618,
+        "lon": -121.902,
+        "streamUrl": "https://www.youtube.com/watch?v=tEtg5Kg3voQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=tEtg5Kg3voQ",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 64,
+        "tag": "珊瑚海底水母療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 20,
+        "popScore": 1300
+      },
+      {
+        "id": "oc-21-monterey-open-sea",
+        "cctvCode": "OC-21-MONTEREY-OPEN-SEA",
+        "name": "加州蒙特雷灣水族館 ‧ 遠洋海龜與銀色魚群風暴 (Open Sea Cam)",
+        "authority": "Monterey Bay Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "n_GpVsz4nHU",
+        "lat": 36.6182,
+        "lon": -121.9022,
+        "streamUrl": "https://www.youtube.com/watch?v=n_GpVsz4nHU",
+        "sourceUrl": "https://www.youtube.com/watch?v=n_GpVsz4nHU",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 54,
+        "tag": "珊瑚海底水母療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 21,
+        "popScore": 1224
+      },
+      {
+        "id": "oc-22-pacific-blue-cavern",
+        "cctvCode": "OC-22-PACIFIC-BLUE-CAVERN",
+        "name": "太平洋水族館 ‧ 海底藍洞巨藻礁岩療癒實況 (Blue Cavern Cam)",
+        "authority": "Explore.org 官方實況",
+        "type": "youtube",
+        "videoId": "H59B9Uoewwg",
+        "lat": 33.7622,
+        "lon": -118.1972,
+        "streamUrl": "https://www.youtube.com/watch?v=H59B9Uoewwg",
+        "sourceUrl": "https://www.youtube.com/watch?v=H59B9Uoewwg",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 50,
+        "tag": "珊瑚海底水母療癒水族風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 22,
+        "popScore": 1192
+      },
+      {
+        "id": "oc-23-bvi-white-bay-beach",
+        "cctvCode": "OC-23-BVI-WHITE-BAY-BEACH",
+        "name": "英屬維京群島 ‧ 加勒比海白灣透明碧海沙灘 (BVI White Bay)",
+        "authority": "Soggy Dollar 官方實況",
+        "type": "youtube",
+        "videoId": "V_I168MM-ik",
+        "lat": 18.4428,
+        "lon": -64.7614,
+        "streamUrl": "https://www.youtube.com/watch?v=V_I168MM-ik",
+        "sourceUrl": "https://www.youtube.com/watch?v=V_I168MM-ik",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 48,
+        "tag": "海灘碧藍海島海洋風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 23,
+        "popScore": 1175
+      },
+      {
+        "id": "oc-24-monterey-coral-reef",
+        "cctvCode": "OC-24-MONTEREY-CORAL-REEF",
+        "name": "加州蒙特雷灣水族館 ‧ 印太繽紛活珊瑚礁生態 (Live Coral Reef Cam)",
+        "authority": "Monterey Bay Aquarium 官方實況",
+        "type": "youtube",
+        "videoId": "1VBPxAkaNDU",
+        "lat": 36.6184,
+        "lon": -121.9016,
+        "streamUrl": "https://www.youtube.com/watch?v=1VBPxAkaNDU",
+        "sourceUrl": "https://www.youtube.com/watch?v=1VBPxAkaNDU",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 44,
+        "tag": "珊瑚海底水母企鵝療癒風景",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 24,
+        "popScore": 1142
+      }
     ]
   }
 };
@@ -29588,7 +31271,11 @@ class TravelToolkitService {
       HKD: { code: 'HKD', name: '港幣', symbol: 'HK$', defaultAmt: 500, chips: [100, 500, 1000] },
       CAD: { code: 'CAD', name: '加幣', symbol: 'C$', defaultAmt: 100, chips: [50, 100, 500] },
       BRL: { code: 'BRL', name: '巴西里拉', symbol: 'R$', defaultAmt: 200, chips: [100, 200, 1000] },
-      AED: { code: 'AED', name: '迪拉姆', symbol: 'AED', defaultAmt: 200, chips: [100, 200, 1000] }
+      AED: { code: 'AED', name: '迪拉姆', symbol: 'AED', defaultAmt: 200, chips: [100, 200, 1000] },
+      ISK: { code: 'ISK', name: '冰島克朗', symbol: 'kr', defaultAmt: 5000, chips: [2000, 5000, 20000] },
+      NOK: { code: 'NOK', name: '挪威克朗', symbol: 'kr', defaultAmt: 500, chips: [200, 500, 2000] },
+      DKK: { code: 'DKK', name: '丹麥格陵蘭克朗', symbol: 'kr', defaultAmt: 500, chips: [200, 500, 2000] },
+      ZAR: { code: 'ZAR', name: '南非蘭特', symbol: 'R', defaultAmt: 500, chips: [200, 500, 2000] }
     };
   }
 
@@ -29611,10 +31298,15 @@ class TravelToolkitService {
       JP: 'JPY', KR: 'KRW', US: 'USD', GB: 'GBP', UK: 'GBP', CH: 'CHF',
       AU: 'AUD', NZ: 'NZD', TH: 'THB', SG: 'SGD', HK: 'HKD', CA: 'CAD',
       BR: 'BRL', AE: 'AED', IT: 'EUR', FR: 'EUR', NL: 'EUR', DE: 'EUR',
-      AT: 'EUR', ES: 'EUR', FI: 'EUR', GR: 'EUR'
+      AT: 'EUR', ES: 'EUR', FI: 'EUR', GR: 'EUR', PT: 'EUR',
+      IS: 'ISK', NO: 'NOK', GL: 'DKK', DK: 'DKK', ZA: 'ZAR', NA: 'ZAR'
     };
     if (byCc[cc]) return byCc[cc];
     const s = `${label} ${tz}`;
+    if (/冰島|Reykjavik/.test(s)) return 'ISK';
+    if (/挪威|蓋朗厄爾|Oslo/.test(s)) return 'NOK';
+    if (/格陵蘭|努克|伊盧利薩特|Nuuk|Copenhagen/.test(s)) return 'DKK';
+    if (/南非|納米比亞|Windhoek|Johannesburg/.test(s)) return 'ZAR';
     if (/日本|東京|大阪|京都|富士山|北海道|沖繩|Tokyo/.test(s) || centerId === 'japan') return 'JPY';
     if (/韓國|首爾|釜山|濟州|漢江|Seoul/.test(s) || centerId === 'korea') return 'KRW';
     if (/倫敦|英國|泰晤士|London/.test(s)) return 'GBP';
@@ -29627,8 +31319,8 @@ class TravelToolkitService {
     if (/加拿大|洛磯山|班夫|Edmonton/.test(s)) return 'CAD';
     if (/里約|巴西|Sao_Paulo/.test(s)) return 'BRL';
     if (/杜拜|阿聯|Dubai/.test(s)) return 'AED';
-    if (centerId === 'europe' || /威尼斯|巴黎|阿姆斯特丹|芬蘭|極光|Rome|Paris|Helsinki/.test(s)) return 'EUR';
-    if (centerId === 'americas') return 'USD';
+    if (centerId === 'europe' || centerId === 'polar' || /威尼斯|巴黎|阿姆斯特丹|芬蘭|拉普蘭|極光|馬約卡|馬德拉|Rome|Paris|Helsinki|Madrid|Madeira/.test(s)) return 'EUR';
+    if (centerId === 'americas' || centerId === 'rainforest' || centerId === 'ocean') return 'USD';
     if (centerId === 'apac') return 'AUD';
     return 'JPY';
   }
@@ -29921,9 +31613,9 @@ class MonitorApp {
     this._prePipFocusedCamId = null;
   }
 
-  // 判斷是否為跨國實況分頁 (全球 4K / 日本 / 韓國 / 亞太 / 歐洲 / 美洲)
+  // 判斷是否為跨國實況分頁 (全球 4K / 日本 / 韓國 / 亞太 / 歐洲 / 美洲 / 極地極光 / 雨林生態 / 海洋珊瑚)
   isInternationalCenter(centerId = this.currentCenterId) {
-    return ['world', 'japan', 'korea', 'apac', 'europe', 'americas'].includes(centerId);
+    return ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'].includes(centerId);
   }
 
   // 計算單一攝影機之「最高畫質 × 即時熱門度」綜合優先權評分 (4K 2160P > 2K 1440P > 1080P > 720P，同級距依同時觀看人數與地標人氣排序)
@@ -29958,10 +31650,10 @@ class MonitorApp {
     return cloned;
   }
 
-  // 動態彙整「全球 4K」旗艦總覽：跨洲際嚴選前 64 支最高畫質 2160P 與最高即時人氣直播
+  // 動態彙整「全球 4K」旗艦總覽：跨八大洲際與極地、雨林、海洋嚴選前 80 支最高畫質 2160P 與最高即時人氣直播
   buildWorldTopCameras() {
     const dataMap = window.CAMERAS_DATA?.cameras || {};
-    const pools = ['japan', 'korea', 'apac', 'europe', 'americas'].map(cid => (dataMap[cid] || []).slice());
+    const pools = ['japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean'].map(cid => (dataMap[cid] || []).slice());
     const seen = new Set();
     const merged = [];
     for (const list of pools) {
@@ -29973,12 +31665,12 @@ class MonitorApp {
       }
     }
     merged.sort((a, b) => this.computeCameraSortScore(b) - this.computeCameraSortScore(a));
-    const top64 = merged.slice(0, 64);
-    // 為「地標順序」模式建立五大洲均衡輪替順序 (日本 → 韓國 → 亞太 → 歐洲 → 美洲)
-    const byRegion = pools.map(list => list.filter(c => top64.some(t => t.id === c.id)));
+    const top80 = merged.slice(0, 80);
+    // 為「地標順序」模式建立八大主題均衡輪替順序
+    const byRegion = pools.map(list => list.filter(c => top80.some(t => t.id === c.id)));
     const balancedIds = [];
     let cursor = 0;
-    while (balancedIds.length < top64.length && cursor < 80) {
+    while (balancedIds.length < top80.length && cursor < 85) {
       for (const rList of byRegion) {
         if (cursor < rList.length && !balancedIds.includes(rList[cursor].id)) {
           balancedIds.push(rList[cursor].id);
@@ -29986,11 +31678,11 @@ class MonitorApp {
       }
       cursor++;
     }
-    top64.forEach((cam, idx) => {
+    top80.forEach((cam, idx) => {
       const bIdx = balancedIds.indexOf(cam.id);
       cam.defaultOrder = bIdx !== -1 ? (bIdx + 1) : (idx + 1);
     });
-    return top64;
+    return top80;
   }
 
   // 切換「畫質×熱門優先」與「地標預設順序」
@@ -30056,7 +31748,10 @@ class MonitorApp {
         korea: 'Asia/Seoul',
         apac: 'Australia/Sydney',
         europe: 'Europe/Rome',
-        americas: 'America/Los_Angeles'
+        americas: 'America/Los_Angeles',
+        polar: 'Europe/Helsinki',
+        rainforest: 'America/Costa_Rica',
+        ocean: 'America/Curacao'
       };
       return defaultTzMap[cid] || 'Asia/Taipei';
     }
@@ -30247,7 +31942,19 @@ class MonitorApp {
       'Pacific/Honolulu': '夏威夷時間',
       'America/Los_Angeles': '美西時間',
       'America/Edmonton': '洛磯山時間',
-      'America/Sao_Paulo': '里約時間'
+      'America/Sao_Paulo': '里約時間',
+      'Atlantic/Reykjavik': '冰島時間',
+      'America/Nuuk': '格陵蘭時間',
+      'America/Winnipeg': '北極熊灣時間',
+      'America/Argentina/Ushuaia': '火地島時間',
+      'America/Costa_Rica': '哥斯大黎加時間',
+      'America/Panama': '巴拿馬時間',
+      'America/Guayaquil': '安地斯時間',
+      'Africa/Windhoek': '納米比亞時間',
+      'Africa/Nairobi': '東非時間',
+      'America/Curacao': '加勒比時間',
+      'Europe/Madrid': '馬約卡時間',
+      'Atlantic/Madeira': '馬德拉時間'
     };
     const updateTime = () => {
       const now = new Date();
@@ -30989,12 +32696,15 @@ class MonitorApp {
       { title: '切換至「青埔」高鐵特區', sub: '高鐵桃園站、A18/A19 與周邊路口', badge: '區域中心', icon: 'fa-building-user', run: () => this.switchCenter('qingpu') },
       { title: '切換至「新埔」板橋商圈', sub: '新埔站、文化路與台64沿線', badge: '區域中心', icon: 'fa-house-signal', run: () => this.switchCenter('banqiao') },
       { title: '切換至「觀光」精選實況', sub: '九份、西門町、大稻埕、淡水', badge: '區域中心', icon: 'fa-plane-arrival', run: () => this.switchCenter('tourist') },
-      { title: '切換至「全球 4K」世界百大旗艦總覽', sub: '跨洲際嚴選 64 處原生 4K 2160P 最高人氣直播', badge: '全球旗艦', icon: 'fa-globe', run: () => this.switchCenter('world') },
+      { title: '切換至「全球 4K」世界百大旗艦總覽', sub: '跨洲際與極地、雨林、海洋嚴選 80 處原生 4K 2160P 與高人氣直播', badge: '全球旗艦', icon: 'fa-globe', run: () => this.switchCenter('world') },
       { title: '切換至「日本」80 處跨國實況', sub: '東京台場 4K、澀谷 4K、富士山 4K、京都大阪、上高地、北海道、沖繩', badge: '國際實況', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
       { title: '切換至「韓國」24 處跨國實況', sub: '首爾漢江 4K、盤浦噴泉 4K、東大門 DDP 4K、弘大商圈、釜山廣安大橋、濟州島', badge: '國際實況', icon: 'fa-landmark', run: () => this.switchCenter('korea') },
       { title: '切換至「亞太」24 處跨國實況', sub: '雪梨港灣 4K、泰國蘇美島與曼谷 4K、新加坡 4K、紐西蘭奧克蘭 4K、香港維港、麥加', badge: '國際實況', icon: 'fa-umbrella-beach', run: () => this.switchCenter('apac') },
       { title: '切換至「歐洲」30 處跨國絕景', sub: '威尼斯里亞托橋 4K、阿姆斯特丹 4K、倫敦泰晤士河 4K、瑞士阿爾卑斯、巴黎鐵塔、北歐極光', badge: '國際實況', icon: 'fa-mountain-sun', run: () => this.switchCenter('europe') },
       { title: '切換至「美洲」30 處跨國奇觀', sub: '洛杉磯海灘 4K、國際太空站地球 4K、拉斯維加斯 4K、SpaceX 星艦 4K、夏威夷、紐約時代廣場', badge: '國際實況', icon: 'fa-earth-americas', run: () => this.switchCenter('americas') },
+      { title: '切換至「極地極光」26 處南北極圈與火山實況', sub: '芬蘭拉普蘭極光 4K、格陵蘭冰峽灣 4K、冰島活火山 4K、聖誕老人村、北極熊、南極門戶烏斯懷亞', badge: '自然療癒', icon: 'fa-snowflake', run: () => this.switchCenter('polar') },
+      { title: '切換至「雨林生態」26 處熱帶雨林與非洲水坑', sub: '哥斯大黎加金剛鸚鵡與大嘴鳥、巴拿馬與安地斯雲霧雨林蜂鳥、康乃爾森林 4K、波札那與納米比亞象群水坑', badge: '自然療癒', icon: 'fa-tree', run: () => this.switchCenter('rainforest') },
+      { title: '切換至「海洋珊瑚」24 處海底珊瑚礁與療癒水族', sub: '庫拉索 4K 海底珊瑚礁、蒙特雷灣夢幻水母與海獺、邁阿密海底珊瑚城、馬約卡與馬德拉 4K 碧藍海灣', badge: '自然療癒', icon: 'fa-water', run: () => this.switchCenter('ocean') },
       { title: '切換至「收藏」專屬視訊牆', sub: `自選常看跨區跨國攝影機 (${this.getFavorites().length})`, badge: '收藏牆', icon: 'fa-star', run: () => this.switchCenter('favorites') }
     ];
 
@@ -31929,7 +33639,10 @@ class MonitorApp {
       korea: '韓國實況',
       apac: '亞太實況',
       europe: '歐洲絕景',
-      americas: '美洲奇觀'
+      americas: '美洲奇觀',
+      polar: '極地極光',
+      rainforest: '雨林生態',
+      ocean: '海洋珊瑚'
     };
 
     const brandTitleEl = document.getElementById('brandTitle');
@@ -31966,7 +33679,10 @@ class MonitorApp {
         korea: '快搜首爾漢江、盤浦噴泉、東大門 DDP、景福宮、弘大、釜山廣安大橋或 4K...',
         apac: '快搜雪梨港灣、蘇美島、曼谷、新加坡、奧克蘭、峇里島、香港維港或 4K...',
         europe: '快搜威尼斯里亞托橋、阿姆斯特丹、瑞士阿爾卑斯、巴黎鐵塔、倫敦、極光峽灣或 4K...',
-        americas: '快搜洛杉磯海灘、太空站地球、拉斯維加斯、星艦基地、夏威夷、紐約時代廣場或 4K...'
+        americas: '快搜洛杉磯海灘、太空站地球、拉斯維加斯、星艦基地、夏威夷、紐約時代廣場或 4K...',
+        polar: '快搜拉普蘭極光、格陵蘭冰峽灣、冰島活火山、聖誕老人村、北極熊、烏斯懷亞、企鵝或 4K...',
+        rainforest: '快搜熱帶雨林、哥斯大黎加金剛鸚鵡、大嘴鳥、巴拿馬蜂鳥、康乃爾森林、納米比亞大象水坑或 4K...',
+        ocean: '快搜海底珊瑚礁、蒙特雷灣水母、海獺、庫拉索、邁阿密水下、馬約卡、馬德拉海灣或 4K...'
       };
       searchInput.placeholder = placeholderMap[centerId] || '快搜路名、交流道、九份、4K 或捷運周邊...';
     }
@@ -31979,7 +33695,10 @@ class MonitorApp {
         korea: '<i class="fa-solid fa-map-location-dot"></i> 韓國全境地理雷達',
         apac: '<i class="fa-solid fa-map-location-dot"></i> 亞太洲際地理雷達',
         europe: '<i class="fa-solid fa-map-location-dot"></i> 歐洲洲際地理雷達',
-        americas: '<i class="fa-solid fa-map-location-dot"></i> 美洲洲際地理雷達'
+        americas: '<i class="fa-solid fa-map-location-dot"></i> 美洲洲際地理雷達',
+        polar: '<i class="fa-solid fa-snowflake"></i> 南北極圈與火山地理雷達',
+        rainforest: '<i class="fa-solid fa-tree"></i> 雨林與野生保護區雷達',
+        ocean: '<i class="fa-solid fa-water"></i> 海洋珊瑚礁與海島雷達'
       };
       radarTitleEl.innerHTML = radarTitleMap[centerId] || '<i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達';
     }
@@ -32114,7 +33833,7 @@ class MonitorApp {
         if (centerId === 'dual') {
           sortIndicator.innerText = '雙埔公平呈現：青埔與新埔各半均分 (零切角自適應)';
         } else if (centerId === 'world') {
-          sortIndicator.innerText = '全球 4K 旗艦總覽 64 處：依「原生 4K 畫質 × 同時觀看人氣」優先排序 ‧ 自動鎖定最高畫質播放';
+          sortIndicator.innerText = '全球 4K 旗艦總覽 80 處：集結八大洲際與極地、雨林、海洋最高畫質 2160P 與最高即時人氣直播';
         } else if (centerId === 'japan') {
           sortIndicator.innerText = '日本全境 80 處即時實況：依「4K 高畫質 × 即時人氣」優先排序（東京台場 4K ‧ 澀谷 4K ‧ 富士山 4K ‧ 道頓堀 ‧ 北海道）';
         } else if (centerId === 'korea') {
@@ -32125,6 +33844,12 @@ class MonitorApp {
           sortIndicator.innerText = '歐洲絕景 30 處即時實況：依「4K 高畫質 × 即時人氣」優先排序（威尼斯里亞托橋 4K ‧ 阿姆斯特丹 4K ‧ 倫敦 4K ‧ 阿爾卑斯雪山）';
         } else if (centerId === 'americas') {
           sortIndicator.innerText = '美洲奇觀 30 處即時實況：依「4K 高畫質 × 即時人氣」優先排序（洛杉磯海灘 4K ‧ 太空站地球 4K ‧ 拉斯維加斯 4K ‧ 星艦基地 4K）';
+        } else if (centerId === 'polar') {
+          sortIndicator.innerText = '極地極光 26 處即時實況：依「4K 高畫質 × 即時人氣」優先排序（拉普蘭極光 4K ‧ 格陵蘭浮冰 4K ‧ 冰島活火山 4K ‧ 北極熊 ‧ 南極門戶）';
+        } else if (centerId === 'rainforest') {
+          sortIndicator.innerText = '雨林生態 26 處即時實況：依「4K 高畫質 × 即時人氣」優先排序（康乃爾森林 4K ‧ 哥斯大黎加與巴拿馬熱帶雨林 ‧ 波札那與納米比亞大象水坑）';
+        } else if (centerId === 'ocean') {
+          sortIndicator.innerText = '海洋珊瑚 24 處即時實況：依「4K 高畫質 × 即時人氣」優先排序（庫拉索 4K 水下珊瑚礁 ‧ 馬約卡 4K 碧灣 ‧ 蒙特雷灣療癒水母與海獺）';
         } else if (centerId === 'favorites') {
           sortIndicator.innerText = `自選專屬視訊牆：已收藏 ${this.currentCameras.length} 處即時鏡頭 (點擊畫面星號 ★ 自由增刪)`;
         } else if (centerId === 'tourist') {
@@ -32335,7 +34060,13 @@ class MonitorApp {
           if (tag === '東南亞') return t.includes('東南亞') || t.includes('泰國') || t.includes('蘇美島') || t.includes('曼谷') || t.includes('新加坡') || t.includes('越南') || t.includes('峇里島');
           if (tag === '紐澳') return t.includes('紐澳') || t.includes('澳洲') || t.includes('雪梨') || t.includes('墨爾本') || t.includes('紐西蘭') || t.includes('奧克蘭') || t.includes('威靈頓');
           if (tag === '阿爾卑斯') return t.includes('阿爾卑斯') || t.includes('alps');
-          if (tag === '極光') return t.includes('極光') || t.includes('峽灣') || t.includes('冰島') || t.includes('拉普蘭');
+          if (tag === '極光') return t.includes('極光') || t.includes('峽灣') || t.includes('拉普蘭') || t.includes('雪原') || t.includes('aurora');
+          if (tag === '格陵蘭') return t.includes('格陵蘭') || t.includes('冰島') || t.includes('冰山') || t.includes('火山') || t.includes('greenland') || t.includes('iceland');
+          if (tag === '企鵝') return t.includes('企鵝') || t.includes('北極熊') || t.includes('麝牛') || t.includes('烏斯懷亞') || t.includes('南極') || t.includes('penguin') || t.includes('polar bear');
+          if (tag === '雨林') return t.includes('雨林') || t.includes('森林') || t.includes('鸚鵡') || t.includes('大嘴鳥') || t.includes('蜂鳥') || t.includes('飛羽') || t.includes('rainforest');
+          if (tag === '水坑') return t.includes('水坑') || t.includes('納米比') || t.includes('波札那') || t.includes('肯亞') || t.includes('南非') || t.includes('象群') || t.includes('河馬') || t.includes('犀牛');
+          if (tag === '珊瑚') return t.includes('珊瑚') || t.includes('海底') || t.includes('水下') || t.includes('潛水') || t.includes('熱帶魚') || t.includes('海藻') || t.includes('reef');
+          if (tag === '水母') return t.includes('水母') || t.includes('海獺') || t.includes('鯊魚') || t.includes('水族') || t.includes('海龜') || t.includes('jelly') || t.includes('otter');
           if (tag === '運河') return t.includes('運河') || t.includes('威尼斯') || t.includes('阿姆斯特丹') || t.includes('泰晤士河') || t.includes('布拉格');
           if (tag === '海灘') return t.includes('海灘') || t.includes('衝浪') || t.includes('夏威夷') || t.includes('里約') || t.includes('海島') || t.includes('塞席爾');
           if (tag === '太空') return t.includes('太空') || t.includes('spacex') || t.includes('星艦') || t.includes('starbase') || t.includes('earth from space');
