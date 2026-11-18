@@ -72,7 +72,16 @@ const cache = {
   intlTransitMap: new Map(),
   intlTripMap: new Map(),
   cityBikesDir: { data: null, expireAt: 0 },
-  cityBikesNetMap: new Map()
+  cityBikesNetMap: new Map(),
+  traStationsAll: { data: null, expireAt: 0 },
+  traNearbyMap: new Map(),
+  parkingStatic: { taipei: null, taipeiExp: 0, ntpc: null, ntpcExp: 0 },
+  parkingLive: { taipei: null, taipeiExp: 0, ntpc: null, ntpcExp: 0, tycg: null, tycgExp: 0 },
+  parkingNearbyMap: new Map(),
+  freewaySections: { data: null, expireAt: 0 },
+  freewayLive: { data: null, expireAt: 0 },
+  travelToolkit: { fx: null, fxExp: 0, kp: null, kpExp: 0 },
+  wallSyncMap: new Map()
 };
 
 // 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
@@ -2420,14 +2429,61 @@ async function fetchMetNorwayWeatherFallback(lat, lon, tz = 'Asia/Taipei') {
   const hourlyProbs = [];
   const hourlyTemps = [];
   const hourlyUvs = [];
+  const dailyBuckets = new Map();
   for (const step of series.slice(0, 168)) {
     const ms = Date.parse(step.time);
     if (!Number.isFinite(ms)) continue;
     const d = step.data?.instant?.details || {};
-    hourlyTimes.push(toLocalIso(ms));
-    hourlyProbs.push(estimateRainProb(step));
-    hourlyTemps.push(Number(d.air_temperature ?? 20));
+    const localIso = toLocalIso(ms);
+    const prob = estimateRainProb(step);
+    const temp = Number(d.air_temperature ?? 20);
+    const nStep = step?.data?.next_1_hours || step?.data?.next_6_hours || step?.data?.next_12_hours || {};
+    const wmo = symbolToWmo(nStep?.summary?.symbol_code);
+    hourlyTimes.push(localIso);
+    hourlyProbs.push(prob);
+    hourlyTemps.push(temp);
     hourlyUvs.push(Number(d.ultraviolet_index_clear_sky ?? 0));
+
+    const dayKey = localIso.slice(0, 10);
+    const hrNum = parseInt(localIso.slice(11, 13), 10) || 0;
+    let bucket = dailyBuckets.get(dayKey);
+    if (!bucket) {
+      bucket = { maxT: -Infinity, minT: Infinity, maxRain: 0, daytimeCode: null, worstCode: 0 };
+      dailyBuckets.set(dayKey, bucket);
+    }
+    if (temp > bucket.maxT) bucket.maxT = temp;
+    if (temp < bucket.minT) bucket.minT = temp;
+    if (prob > bucket.maxRain) bucket.maxRain = prob;
+    if (wmo > bucket.worstCode) bucket.worstCode = wmo;
+    if (hrNum >= 9 && hrNum <= 15 && bucket.daytimeCode === null) {
+      bucket.daytimeCode = wmo;
+    }
+  }
+  // 補充超過 48 小時之 6 小時步進預報，確保穩定湊齊未來 7 日高低溫與天氣狀態
+  for (const step of series.slice(48)) {
+    if (dailyBuckets.size >= 8) break;
+    const ms = Date.parse(step.time);
+    if (!Number.isFinite(ms)) continue;
+    const d = step.data?.instant?.details || {};
+    const localIso = toLocalIso(ms);
+    const dayKey = localIso.slice(0, 10);
+    const temp = Number(d.air_temperature ?? 20);
+    const prob = estimateRainProb(step);
+    const nStep = step?.data?.next_6_hours || step?.data?.next_12_hours || step?.data?.next_1_hours || {};
+    const wmo = symbolToWmo(nStep?.summary?.symbol_code);
+    let bucket = dailyBuckets.get(dayKey);
+    if (!bucket) {
+      bucket = { maxT: -Infinity, minT: Infinity, maxRain: 0, daytimeCode: null, worstCode: 0 };
+      dailyBuckets.set(dayKey, bucket);
+    }
+    if (temp > bucket.maxT) bucket.maxT = temp;
+    if (temp < bucket.minT) bucket.minT = temp;
+    const n6Max = Number(step?.data?.next_6_hours?.details?.air_temperature_max);
+    const n6Min = Number(step?.data?.next_6_hours?.details?.air_temperature_min);
+    if (Number.isFinite(n6Max) && n6Max > bucket.maxT) bucket.maxT = n6Max;
+    if (Number.isFinite(n6Min) && n6Min < bucket.minT) bucket.minT = n6Min;
+    if (prob > bucket.maxRain) bucket.maxRain = prob;
+    if (wmo > bucket.worstCode) bucket.worstCode = wmo;
   }
 
   let sunriseLocal = `${localToday}T06:00`;
@@ -2437,6 +2493,19 @@ async function fetchMetNorwayWeatherFallback(lat, lon, tz = 'Asia/Taipei') {
     const ssRaw = sunRes.value.properties.sunset?.time;
     if (typeof srRaw === 'string' && srRaw.length >= 16) sunriseLocal = srRaw.slice(0, 16);
     if (typeof ssRaw === 'string' && ssRaw.length >= 16) sunsetLocal = ssRaw.slice(0, 16);
+  }
+
+  const dailyTimes = [];
+  const dailyCodes = [];
+  const dailyMaxTemps = [];
+  const dailyMinTemps = [];
+  const dailyRainProbs = [];
+  for (const [dKey, b] of Array.from(dailyBuckets.entries()).sort((a, z) => a[0].localeCompare(z[0])).slice(0, 7)) {
+    dailyTimes.push(dKey);
+    dailyCodes.push(b.worstCode >= 61 ? b.worstCode : (b.daytimeCode != null ? b.daytimeCode : b.worstCode));
+    dailyMaxTemps.push(Number.isFinite(b.maxT) ? +(b.maxT.toFixed(1)) : 24);
+    dailyMinTemps.push(Number.isFinite(b.minT) ? +(b.minT.toFixed(1)) : 18);
+    dailyRainProbs.push(Math.round(b.maxRain));
   }
 
   return {
@@ -2462,6 +2531,11 @@ async function fetchMetNorwayWeatherFallback(lat, lon, tz = 'Asia/Taipei') {
       visibility: Math.round(Math.max(1200, 10000 - fogPct * 160))
     },
     daily: {
+      time: dailyTimes,
+      weather_code: dailyCodes,
+      temperature_2m_max: dailyMaxTemps,
+      temperature_2m_min: dailyMinTemps,
+      precipitation_probability_max: dailyRainProbs,
       sunrise: [sunriseLocal],
       sunset: [sunsetLocal]
     },
@@ -2501,7 +2575,7 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw, tzRaw) {
     return;
   }
 
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset&hourly=precipitation_probability,temperature_2m,uv_index&timezone=${encodedTz}`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,uv_index,visibility&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=precipitation_probability,temperature_2m,uv_index&timezone=${encodedTz}`;
   const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=${encodedTz}`;
 
   try {
@@ -2532,6 +2606,720 @@ async function handleWeatherProxy(req, res, latRaw, lonRaw, tzRaw) {
     res.writeHead(502);
     res.end(JSON.stringify({ success: false, error: '無法取得氣象與空氣品質資料', detail: err.message }));
   }
+}
+
+// ============================================================================
+// TWD97 二度分帶 (EPSG:3826, 中央經線 121°E) 轉 WGS84 經緯度精準公式
+// ============================================================================
+function twd97ToWgs84(xRaw, yRaw) {
+  const x = Number(xRaw);
+  const y = Number(yRaw);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 100000 || x > 450000 || y < 2350000 || y > 2900000) {
+    return null;
+  }
+  const a = 6378137.0;
+  const b = 6356752.314245;
+  const lon0 = 121 * Math.PI / 180;
+  const k0 = 0.9999;
+  const dx = 250000;
+  const e = Math.sqrt(1 - (b * b) / (a * a));
+  const e2 = (e * e) / (1 - e * e);
+  const xAdj = x - dx;
+  const M = y / k0;
+  const mu = M / (a * (1 - Math.pow(e, 2) / 4 - 3 * Math.pow(e, 4) / 64 - 5 * Math.pow(e, 6) / 256));
+  const e1 = (1 - Math.sqrt(1 - e * e)) / (1 + Math.sqrt(1 - e * e));
+  const J1 = (3 * e1 / 2 - 27 * Math.pow(e1, 3) / 32);
+  const J2 = (21 * Math.pow(e1, 2) / 16 - 55 * Math.pow(e1, 4) / 32);
+  const J3 = (151 * Math.pow(e1, 3) / 96);
+  const J4 = (1097 * Math.pow(e1, 4) / 512);
+  const fp = mu + J1 * Math.sin(2 * mu) + J2 * Math.sin(4 * mu) + J3 * Math.sin(6 * mu) + J4 * Math.sin(8 * mu);
+  const sinFp = Math.sin(fp);
+  const cosFp = Math.cos(fp);
+  const tanFp = Math.tan(fp);
+  const C1 = e2 * cosFp * cosFp;
+  const T1 = tanFp * tanFp;
+  const R1 = a * (1 - e * e) / Math.pow(1 - e * e * sinFp * sinFp, 1.5);
+  const N1 = a / Math.sqrt(1 - e * e * sinFp * sinFp);
+  const D = xAdj / (N1 * k0);
+  const Q1 = N1 * tanFp / R1;
+  const Q2 = (D * D / 2);
+  const Q3 = (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * e2) * Math.pow(D, 4) / 24;
+  const Q4 = (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 3 * C1 * C1 - 252 * e2) * Math.pow(D, 6) / 720;
+  const lat = (fp - Q1 * (Q2 - Q3 + Q4)) * 180 / Math.PI;
+  const Q5 = D;
+  const Q6 = (1 + 2 * T1 + C1) * Math.pow(D, 3) / 6;
+  const Q7 = (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * e2 + 24 * T1 * T1) * Math.pow(D, 5) / 120;
+  const lon = (lon0 + (Q5 - Q6 + Q7) / cosFp) * 180 / Math.PI;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { lat: +lat.toFixed(6), lon: +lon.toFixed(6) };
+}
+
+function normalizeTraTrainType(rawType) {
+  const s = String(rawType || '').trim();
+  if (!s) return '列車';
+  if (s.includes('3000')) return '新自強';
+  if (s.includes('普悠瑪')) return '普悠瑪';
+  if (s.includes('太魯閣')) return '太魯閣';
+  if (s.includes('區間快')) return '區間快';
+  if (s.includes('區間')) return '區間';
+  if (s.includes('自強')) return '自強';
+  if (s.includes('莒光')) return '莒光';
+  return s.replace(/\(.*?\)/g, '').trim().slice(0, 5) || '列車';
+}
+
+// 台鐵最近車站空間檢索與即時誤點列車看板 (/api/rail/tra-nearby)
+async function handleTraNearbyProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  const reqIdx = Math.max(0, Math.min(3, parseInt(parsedUrl.searchParams.get('stationIdx') || '0', 10) || 0));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度參數' }));
+    return;
+  }
+
+  const cacheKey = `${lat.toFixed(3)},${lon.toFixed(3)},${reqIdx}`;
+  const now = Date.now();
+  const cached = cache.traNearbyMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.payload);
+    return;
+  }
+
+  try {
+    if (!cache.traStationsAll.data || now >= cache.traStationsAll.expireAt) {
+      const allRaw = await fetchTdxProxyJson('/v2/Rail/TRA/Station', {
+        '$select': 'StationID,StationName,StationPosition,StationAddress',
+        '$format': 'JSON'
+      }, 6500);
+      if (Array.isArray(allRaw) && allRaw.length > 0) {
+        cache.traStationsAll = { data: allRaw, expireAt: now + 12 * 3600000 };
+      }
+    }
+    const rawStations = cache.traStationsAll.data || [];
+
+    const stations = rawStations
+      .map(st => {
+        const sLat = Number(st?.StationPosition?.PositionLat);
+        const sLon = Number(st?.StationPosition?.PositionLon);
+        if (!st?.StationID || !Number.isFinite(sLat) || !Number.isFinite(sLon)) return null;
+        return {
+          stationId: String(st.StationID),
+          name: String(st?.StationName?.Zh_tw || st.StationID).trim(),
+          address: String(st?.StationAddress || '').trim(),
+          lat: sLat,
+          lon: sLon,
+          distMeters: calcDistanceMeters(lat, lon, sLat, sLon)
+        };
+      })
+      .filter(st => st && st.distMeters <= 8000)
+      .sort((a, b) => a.distMeters - b.distMeters)
+      .slice(0, 4);
+
+    if (stations.length === 0) {
+      const emptyPayload = JSON.stringify({
+        success: true,
+        stations: [],
+        activeStationIndex: 0,
+        station: null,
+        trains: [],
+        updateTimeDisplay: getTaiwanTimeHHMMSS()
+      });
+      setBoundedMap(cache.traNearbyMap, cacheKey, { payload: emptyPayload, expireAt: now + 30000 }, 120);
+      res.writeHead(200);
+      res.end(emptyPayload);
+      return;
+    }
+
+    const activeIdx = Math.min(reqIdx, stations.length - 1);
+    const activeStation = stations[activeIdx];
+    const liveResp = await fetchTdxProxyJson(`/v2/Rail/TRA/LiveBoard/Station/${encodeURIComponent(activeStation.stationId)}`, {
+      '$top': '40',
+      '$format': 'JSON'
+    }, 5500).catch(() => []);
+    const liveRows = Array.isArray(liveResp?.StationLiveBoards) ? liveResp.StationLiveBoards : (Array.isArray(liveResp) ? liveResp : []);
+
+    const twNowStr = getTaiwanTimeHHMMSS();
+    const [curH, curM] = twNowStr.split(':').map(n => parseInt(n, 10) || 0);
+    const curTotalMin = curH * 60 + curM;
+
+    const trains = [];
+    for (const row of (Array.isArray(liveRows) ? liveRows : [])) {
+      const schedRaw = String(row?.ScheduledDepartureTime || row?.ScheduledArrivalTime || '').slice(0, 5);
+      if (!/^\d{2}:\d{2}$/.test(schedRaw)) continue;
+      const [sh, sm] = schedRaw.split(':').map(n => parseInt(n, 10) || 0);
+      const delayMin = Math.max(0, parseInt(row?.DelayTime, 10) || 0);
+      let estMin = sh * 60 + sm + delayMin;
+      let diffMin = estMin - curTotalMin;
+      if (diffMin < -720) diffMin += 1440;
+      if (diffMin > 720) diffMin -= 1440;
+      if (diffMin < -1 || diffMin > 240) continue;
+
+      trains.push({
+        trainNo: String(row?.TrainNo || '').trim(),
+        trainType: normalizeTraTrainType(row?.TrainTypeName?.Zh_tw),
+        direction: Number(row?.Direction ?? 0), // 0: 順行(北上), 1: 逆行(南下)
+        destination: String(row?.EndingStationName?.Zh_tw || '').trim(),
+        depTime: schedRaw,
+        delayMin,
+        remainMin: Math.max(0, diffMin),
+        remainSec: Math.max(0, diffMin * 60)
+      });
+    }
+
+    trains.sort((a, b) => a.remainMin - b.remainMin);
+    const payload = JSON.stringify({
+      success: true,
+      stations,
+      activeStationIndex: activeIdx,
+      station: activeStation,
+      trains: trains.slice(0, 14),
+      updateTimeDisplay: twNowStr
+    });
+    setBoundedMap(cache.traNearbyMap, cacheKey, { payload, expireAt: now + 20000 }, 150);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得台鐵即時列車動態', detail: err.message }));
+  }
+}
+
+function summarizeParkingFare(rawFare) {
+  const s = String(rawFare || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '依現場公告計費';
+  const mHr = s.match(/(\d{2,3})\s*元?\s*\/\s*(?:小時|時|hr)/i) || s.match(/(?:臨停|計時|小型車)[^0-9]{0,6}(\d{2,3})\s*元/i);
+  if (mHr) return `約 ${mHr[1]} 元/時`;
+  return s.length > 26 ? `${s.slice(0, 26)}…` : s;
+}
+
+function parseTycgParkingXml(xmlText) {
+  const lots = [];
+  const blockRegex = /<parkingLot>([\s\S]*?)<\/parkingLot>/gi;
+  const pickTag = (src, tag) => {
+    const m = src.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+    return m ? m[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim() : '';
+  };
+  let m;
+  while ((m = blockRegex.exec(String(xmlText || ''))) !== null) {
+    const blk = m[1];
+    let wgsX = parseFloat(pickTag(blk, 'wgsX'));
+    let wgsY = parseFloat(pickTag(blk, 'wgsY'));
+    if (!Number.isFinite(wgsX) || !Number.isFinite(wgsY)) continue;
+    // 防禦桃園市政府開放資料 XML 欄位命名：<wgsX> 實為緯度 (~24.9)、<wgsY> 實為經度 (~121.2)
+    const lat = wgsX <= 90 ? wgsX : wgsY;
+    const lon = wgsX <= 90 ? wgsY : wgsX;
+    if (lat < 21.5 || lat > 26.5 || lon < 119.0 || lon > 122.5) continue;
+
+    const surplusRaw = pickTag(blk, 'surplusSpace');
+    const total = parseInt(pickTag(blk, 'totalSpace'), 10) || 0;
+    let available = -1;
+    if (/已滿|滿車/.test(surplusRaw)) available = 0;
+    else if (/^\d+$/.test(surplusRaw)) available = parseInt(surplusRaw, 10);
+    if (available < 0 || total <= 0) continue;
+
+    const area = pickTag(blk, 'areaName');
+    const name = pickTag(blk, 'parkName');
+    if (!name) continue;
+    lots.push({
+      id: `TY_${pickTag(blk, 'parkId') || name}`,
+      city: '桃園市',
+      area,
+      name,
+      address: pickTag(blk, 'address'),
+      fare: summarizeParkingFare(pickTag(blk, 'payGuide')),
+      available,
+      total,
+      lat: +lat.toFixed(6),
+      lon: +lon.toFixed(6)
+    });
+  }
+  return lots;
+}
+
+// 周邊路外停車場即時剩餘空位整合代理 (/api/parking/nearby)
+async function handleParkingNearbyProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度參數' }));
+    return;
+  }
+
+  const cacheKey = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+  const now = Date.now();
+  const cached = cache.parkingNearbyMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.payload);
+    return;
+  }
+
+  const inNorthMetroBox = lat >= 24.75 && lat <= 25.32 && lon >= 120.98 && lon <= 122.02;
+  const needTaipeiNtpc = inNorthMetroBox && lon >= 121.32;
+  const needTaoyuan = inNorthMetroBox && lon <= 121.48;
+
+  try {
+    const pool = [];
+
+    // 1. 臺北市與新北市官方路外停車場即時剩餘車位
+    if (needTaipeiNtpc) {
+      const loadTaipei = async () => {
+        if (!cache.parkingStatic.taipei || now >= cache.parkingStatic.taipeiExp) {
+          const descJson = await fetchJsonWithRetry('https://tcgbusfs.blob.core.windows.net/blobtcmsv/TCMSV_alldesc.json', 0, 6500);
+          const map = new Map();
+          for (const p of (descJson?.data?.park || [])) {
+            if (!p?.id || !p?.name) continue;
+            let coord = twd97ToWgs84(p.tw97x, p.tw97y);
+            if (!coord && Array.isArray(p?.EntranceCoord?.EntrancecoordInfo) && p.EntranceCoord.EntrancecoordInfo[0]) {
+              const ec = p.EntranceCoord.EntrancecoordInfo[0];
+              const eLat = parseFloat(ec.Xcod);
+              const eLon = parseFloat(ec.Ycod);
+              if (Number.isFinite(eLat) && Number.isFinite(eLon)) coord = { lat: eLat, lon: eLon };
+            }
+            if (!coord) continue;
+            map.set(String(p.id), {
+              id: `TPE_${p.id}`,
+              city: '臺北市',
+              area: String(p.area || ''),
+              name: String(p.name).trim(),
+              address: String(p.address || '').trim(),
+              fare: summarizeParkingFare(p.payex),
+              total: Math.max(0, parseInt(p.totalcar, 10) || 0),
+              lat: coord.lat,
+              lon: coord.lon
+            });
+          }
+          if (map.size > 0) {
+            cache.parkingStatic.taipei = map;
+            cache.parkingStatic.taipeiExp = now + 6 * 3600000;
+          }
+        }
+        if (!cache.parkingLive.taipei || now >= cache.parkingLive.taipeiExp) {
+          const availJson = await fetchJsonWithRetry('https://tcgbusfs.blob.core.windows.net/blobtcmsv/TCMSV_allavailable.json', 0, 5500);
+          const availMap = new Map();
+          for (const a of (availJson?.data?.park || [])) {
+            const av = parseInt(a?.availablecar, 10);
+            if (a?.id && Number.isFinite(av) && av >= 0) {
+              availMap.set(String(a.id), av);
+            }
+          }
+          cache.parkingLive.taipei = availMap;
+          cache.parkingLive.taipeiExp = now + 35000;
+        }
+        if (cache.parkingStatic.taipei && cache.parkingLive.taipei) {
+          for (const [id, meta] of cache.parkingStatic.taipei.entries()) {
+            if (!cache.parkingLive.taipei.has(id)) continue;
+            const dMeters = calcDistanceMeters(lat, lon, meta.lat, meta.lon);
+            if (dMeters <= 2500) {
+              pool.push({ ...meta, available: cache.parkingLive.taipei.get(id), distMeters: dMeters });
+            }
+          }
+        }
+      };
+
+      const loadNtpc = async () => {
+        if (!cache.parkingStatic.ntpc || now >= cache.parkingStatic.ntpcExp) {
+          const [p0, p1] = await Promise.all([
+            fetchJsonWithRetry('https://data.ntpc.gov.tw/api/datasets/B1464EF0-9C7C-4A6F-ABF7-6BDF32847E68/json?page=0&size=1000', 0, 6500).catch(() => []),
+            fetchJsonWithRetry('https://data.ntpc.gov.tw/api/datasets/B1464EF0-9C7C-4A6F-ABF7-6BDF32847E68/json?page=1&size=1000', 0, 6500).catch(() => [])
+          ]);
+          const map = new Map();
+          for (const p of [...(Array.isArray(p0) ? p0 : []), ...(Array.isArray(p1) ? p1 : [])]) {
+            if (!p?.ID || !p?.NAME) continue;
+            const coord = twd97ToWgs84(p.TW97X, p.TW97Y);
+            if (!coord) continue;
+            map.set(String(p.ID), {
+              id: `NTPC_${p.ID}`,
+              city: '新北市',
+              area: String(p.AREA || ''),
+              name: String(p.NAME).trim(),
+              address: String(p.ADDRESS || '').trim(),
+              fare: summarizeParkingFare(p.PAYEX),
+              total: Math.max(0, parseInt(p.TOTALCAR, 10) || 0),
+              lat: coord.lat,
+              lon: coord.lon
+            });
+          }
+          if (map.size > 0) {
+            cache.parkingStatic.ntpc = map;
+            cache.parkingStatic.ntpcExp = now + 6 * 3600000;
+          }
+        }
+        if (!cache.parkingLive.ntpc || now >= cache.parkingLive.ntpcExp) {
+          const [a0, a1] = await Promise.all([
+            fetchJsonWithRetry('https://data.ntpc.gov.tw/api/datasets/E09B35A5-A738-48CC-B0F5-570B67AD9C78/json?page=0&size=1000', 0, 5500).catch(() => []),
+            fetchJsonWithRetry('https://data.ntpc.gov.tw/api/datasets/E09B35A5-A738-48CC-B0F5-570B67AD9C78/json?page=1&size=1000', 0, 5500).catch(() => [])
+          ]);
+          const availMap = new Map();
+          for (const a of [...(Array.isArray(a0) ? a0 : []), ...(Array.isArray(a1) ? a1 : [])]) {
+            const av = parseInt(a?.AVAILABLECAR, 10);
+            if (a?.ID && Number.isFinite(av) && av >= 0) {
+              availMap.set(String(a.ID), av);
+            }
+          }
+          cache.parkingLive.ntpc = availMap;
+          cache.parkingLive.ntpcExp = now + 35000;
+        }
+        if (cache.parkingStatic.ntpc && cache.parkingLive.ntpc) {
+          for (const [id, meta] of cache.parkingStatic.ntpc.entries()) {
+            if (!cache.parkingLive.ntpc.has(id)) continue;
+            const dMeters = calcDistanceMeters(lat, lon, meta.lat, meta.lon);
+            if (dMeters <= 2500) {
+              pool.push({ ...meta, available: cache.parkingLive.ntpc.get(id), distMeters: dMeters });
+            }
+          }
+        }
+      };
+
+      await Promise.allSettled([loadTaipei(), loadNtpc()]);
+    }
+
+    // 2. 桃園市官方路外停車場即時剩餘車位 XML + 高鐵桃園／板橋站專屬即時停車場
+    if (needTaoyuan) {
+      try {
+        if (!cache.parkingLive.tycg || now >= cache.parkingLive.tycgExp) {
+          const tyXmlUrl = 'https://opendata.tycg.gov.tw/api/dataset/f4cc0b12-86ac-40f9-8745-885bddc18f79/resource/0daad6e6-0632-44f5-bd25-5e1de1e9146f/download';
+          const xmlRes = await fetch(tyXmlUrl, { signal: AbortSignal.timeout(6000) });
+          if (xmlRes.ok) {
+            const xmlText = await xmlRes.text();
+            const parsedLots = parseTycgParkingXml(xmlText);
+            if (parsedLots.length > 0) {
+              cache.parkingLive.tycg = parsedLots;
+              cache.parkingLive.tycgExp = now + 40000;
+            }
+          }
+        }
+        for (const lot of (cache.parkingLive.tycg || [])) {
+          const dMeters = calcDistanceMeters(lat, lon, lot.lat, lot.lon);
+          if (dMeters <= 2600) {
+            pool.push({ ...lot, distMeters: dMeters });
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. 高鐵桃園站 P1/P2/P3 與板橋站即時剩餘車位補充
+    if (inNorthMetroBox) {
+      try {
+        const thsrLots = await fetchThsrParkingData();
+        for (const tl of (Array.isArray(thsrLots) ? thsrLots : [])) {
+          const isTy = tl.name.includes('桃園');
+          const tLat = isTy ? 25.0134 : 25.0141;
+          const tLon = isTy ? 121.2148 : 121.4638;
+          const dMeters = calcDistanceMeters(lat, lon, tLat, tLon);
+          if (dMeters <= 2600) {
+            const dup = pool.some(p => p.name.includes(tl.name.replace(/\s+/g, '')) && Math.abs(p.distMeters - dMeters) < 250);
+            if (!dup) {
+              pool.push({
+                id: `THSR_${tl.name}`,
+                city: isTy ? '桃園高鐵' : '板橋高鐵',
+                area: isTy ? '中壢青埔' : '板橋特區',
+                name: tl.name,
+                address: isTy ? '高鐵北路一段 (高鐵桃園站特區)' : '縣民大道二段7號',
+                fare: '高鐵轉乘計時收費',
+                available: Math.max(0, Number(tl.available) || 0),
+                total: Math.max(0, Number(tl.total) || 0),
+                lat: tLat,
+                lon: tLon,
+                distMeters: dMeters
+              });
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    pool.sort((a, b) => a.distMeters - b.distMeters);
+    const payload = JSON.stringify({
+      success: true,
+      coverageSupported: inNorthMetroBox,
+      lots: pool.slice(0, 10),
+      updateTimeDisplay: getTaiwanTimeHHMMSS()
+    });
+    setBoundedMap(cache.parkingNearbyMap, cacheKey, { payload, expireAt: now + 25000 }, 150);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得周邊停車場即時空位', detail: err.message }));
+  }
+}
+
+function classifyFreewaySpeed(speedKmh) {
+  const sp = Math.round(Number(speedKmh) || 0);
+  if (sp >= 80) return { level: 'ok', text: '順暢' };
+  if (sp >= 60) return { level: 'busy', text: '車多' };
+  if (sp >= 40) return { level: 'slow', text: '壅塞' };
+  if (sp >= 20) return { level: 'jam', text: '嚴重' };
+  return { level: 'gridlock', text: '紫爆' };
+}
+
+// 國道高公局即時路段車速與壅塞指標代理 (/api/freeway/live)
+async function handleFreewayLiveProxy(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const now = Date.now();
+  if (cache.freewayLive.data && now < cache.freewayLive.expireAt) {
+    res.writeHead(200);
+    res.end(cache.freewayLive.data);
+    return;
+  }
+
+  try {
+    if (!cache.freewaySections.data || now >= cache.freewaySections.expireAt) {
+      const secResp = await fetchTdxProxyJson('/v2/Road/Traffic/Section/Freeway', {
+        '$select': 'SectionID,SectionName,RoadID,RoadName,RoadDirection,SpeedLimit',
+        '$format': 'JSON'
+      }, 6500);
+      const secArr = Array.isArray(secResp?.Sections) ? secResp.Sections : (Array.isArray(secResp) ? secResp : []);
+      const secMap = new Map();
+      for (const s of (Array.isArray(secArr) ? secArr : [])) {
+        if (!s?.SectionID || !s?.SectionName) continue;
+        secMap.set(String(s.SectionID), {
+          sectionId: String(s.SectionID),
+          name: String(s.SectionName).trim(),
+          roadName: String(s.RoadName || '').trim(),
+          dir: String(s.RoadDirection || '').trim(),
+          speedLimit: parseInt(s.SpeedLimit, 10) || 100
+        });
+      }
+      if (secMap.size > 0) {
+        cache.freewaySections = { data: secMap, expireAt: now + 6 * 3600000 };
+      }
+    }
+
+    const liveResp = await fetchTdxProxyJson('/v2/Road/Traffic/Live/Freeway', {
+      '$format': 'JSON'
+    }, 6500);
+    const liveList = Array.isArray(liveResp?.LiveTraffics)
+      ? liveResp.LiveTraffics
+      : (Array.isArray(liveResp) ? liveResp : []);
+    const secMap = cache.freewaySections.data || new Map();
+
+    const allValid = [];
+    for (const item of liveList) {
+      const sid = String(item?.SectionID || '');
+      const sp = Number(item?.TravelSpeed);
+      if (!sid || !Number.isFinite(sp) || sp < 0 || sp > 155) continue;
+      const meta = secMap.get(sid);
+      if (!meta) continue;
+      const cls = classifyFreewaySpeed(sp);
+      allValid.push({
+        sectionId: sid,
+        name: meta.name,
+        roadName: meta.roadName,
+        dir: meta.dir,
+        speed: Math.round(sp),
+        level: cls.level,
+        statusText: cls.text
+      });
+    }
+
+    // 精選北部與雙埔通勤核心走廊代表路段 + 全台重要瓶頸路段
+    const corridorMatchers = [
+      { key: 'n1_wugu_linkou', shortLabel: '國1 五股-林口', road: '國道1號', kw: ['五股', '林口'] },
+      { key: 'n1_taoyuan_neili', shortLabel: '國1 桃園-內壢', road: '國道1號', kw: ['桃園', '內壢'] },
+      { key: 'n1_neili_zhongli', shortLabel: '國1 內壢-中壢', road: '國道1號', kw: ['內壢', '中壢'] },
+      { key: 'n2_dazhu_airport', shortLabel: '國2 大竹-機場系統', road: '國道2號', kw: ['大竹', '機場系統'] },
+      { key: 'n2_dayuan_dazhu', shortLabel: '國2 大園-大竹(青埔)', road: '國道2號', kw: ['大園', '大竹'] },
+      { key: 'n3_zhonghe_tucheng', shortLabel: '國3 中和-土城(板橋)', road: '國道3號', kw: ['中和', '土城'] },
+      { key: 'n5_nangang_toucheng', shortLabel: '國5 石碇-坪林(雪隧)', road: '國道5號', kw: ['石碇', '坪林'] },
+      { key: 'n1_hsinchu', shortLabel: '國1 湖口-竹北', road: '國道1號', kw: ['湖口', '竹北'] },
+      { key: 'n1_taichung', shortLabel: '國1 大雅-台中', road: '國道1號', kw: ['大雅', '台中'] },
+      { key: 'n1_kaohsiung', shortLabel: '國1 鼎金-高雄', road: '國道1號', kw: ['鼎金', '高雄'] }
+    ];
+
+    const corridors = [];
+    for (const cm of corridorMatchers) {
+      const matched = allValid.filter(s => s.roadName.includes(cm.road) && cm.kw.every(k => s.name.includes(k)));
+      const pick = matched.length > 0
+        ? matched.reduce((worst, cur) => (cur.speed < worst.speed ? cur : worst), matched[0])
+        : allValid.find(s => s.roadName.includes(cm.road) && cm.kw.some(k => s.name.includes(k)));
+      if (pick) {
+        const cls = classifyFreewaySpeed(pick.speed);
+        corridors.push({
+          key: cm.key,
+          shortLabel: cm.shortLabel,
+          fullSectionName: pick.name,
+          roadName: cm.road,
+          speed: pick.speed,
+          level: cls.level,
+          statusText: cls.text
+        });
+      }
+    }
+
+    const payload = JSON.stringify({
+      success: true,
+      updateTimeDisplay: getTaiwanTimeHHMMSS(),
+      corridors,
+      sections: allValid.slice(0, 260)
+    });
+    cache.freewayLive = { data: payload, expireAt: now + 45000 };
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    if (cache.freewayLive.data) {
+      res.writeHead(200);
+      res.end(cache.freewayLive.data);
+      return;
+    }
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得國道即時車速資料', detail: err.message }));
+  }
+}
+
+// 跨國旅遊百寶箱代理：新台幣即時匯率 + NOAA 全球極光 Kp 指數 (/api/travel/toolkit)
+async function handleTravelToolkitProxy(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const now = Date.now();
+  try {
+    const fetchFx = async () => {
+      if (cache.travelToolkit.fx && now < cache.travelToolkit.fxExp) return cache.travelToolkit.fx;
+      const j = await fetchJsonWithRetry('https://open.er-api.com/v6/latest/TWD', 0, 5000);
+      if (j && j.rates) {
+        const fxObj = {
+          base: 'TWD',
+          updatedUtc: j.time_last_update_utc || new Date().toISOString(),
+          rates: j.rates
+        };
+        cache.travelToolkit.fx = fxObj;
+        cache.travelToolkit.fxExp = now + 30 * 60000;
+        return fxObj;
+      }
+      return cache.travelToolkit.fx;
+    };
+
+    const fetchKp = async () => {
+      if (cache.travelToolkit.kp && now < cache.travelToolkit.kpExp) return cache.travelToolkit.kp;
+      const arr = await fetchJsonWithRetry('https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json', 0, 5000);
+      if (Array.isArray(arr) && arr.length > 0) {
+        const last = arr[arr.length - 1];
+        const kpVal = typeof last === 'object' && !Array.isArray(last)
+          ? parseFloat(last.Kp)
+          : parseFloat(Array.isArray(last) ? last[1] : NaN);
+        const timeTag = typeof last === 'object' && !Array.isArray(last)
+          ? String(last.time_tag || '')
+          : String(Array.isArray(last) ? (last[0] || '') : '');
+        if (Number.isFinite(kpVal)) {
+          const kpObj = {
+            kp: +kpVal.toFixed(2),
+            timeTagUtc: timeTag
+          };
+          cache.travelToolkit.kp = kpObj;
+          cache.travelToolkit.kpExp = now + 10 * 60000;
+          return kpObj;
+        }
+      }
+      return cache.travelToolkit.kp;
+    };
+
+    const [fxSettled, kpSettled] = await Promise.allSettled([fetchFx(), fetchKp()]);
+    const fx = fxSettled.status === 'fulfilled' ? fxSettled.value : cache.travelToolkit.fx;
+    const kp = kpSettled.status === 'fulfilled' ? kpSettled.value : cache.travelToolkit.kp;
+
+    res.writeHead(200);
+    res.end(JSON.stringify({
+      success: true,
+      fx: fx || null,
+      auroraKp: kp || null,
+      fetchedAt: new Date().toISOString()
+    }));
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得跨國匯率與極光指數', detail: err.message }));
+  }
+}
+
+// 跨裝置收藏牆與情境預設集 4 位數配對同步 (/api/wall-sync)
+function handleWallSyncApi(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const now = Date.now();
+  for (const [k, v] of cache.wallSyncMap.entries()) {
+    if (!v || now >= v.expireAt) cache.wallSyncMap.delete(k);
+  }
+
+  if (req.method === 'GET') {
+    const code = String(parsedUrl.searchParams.get('code') || '').trim();
+    if (!/^\d{4}$/.test(code)) {
+      res.writeHead(400);
+      res.end(JSON.stringify({ success: false, error: '請輸入有效的 4 位數配對編號' }));
+      return;
+    }
+    const entry = cache.wallSyncMap.get(code);
+    if (!entry || now >= entry.expireAt) {
+      res.writeHead(404);
+      res.end(JSON.stringify({ success: false, error: '配對編號不存在或已逾 20 分鐘有效期限' }));
+      return;
+    }
+    res.writeHead(200);
+    res.end(JSON.stringify({ success: true, code, data: entry.data }));
+    return;
+  }
+
+  if (req.method === 'POST') {
+    let rawBody = '';
+    let aborted = false;
+    req.on('data', chunk => {
+      rawBody += chunk.toString('utf8');
+      if (rawBody.length > 49152) {
+        aborted = true;
+        res.writeHead(413);
+        res.end(JSON.stringify({ success: false, error: '同步資料超過容量上限' }));
+        req.destroy();
+      }
+    });
+    req.on('end', () => {
+      if (aborted) return;
+      try {
+        const parsed = JSON.parse(rawBody || '{}');
+        if (!parsed || typeof parsed !== 'object') throw new Error('格式無效');
+        const safeData = {
+          favorites: Array.isArray(parsed.favorites) ? parsed.favorites.slice(0, 80).map(String) : [],
+          presets: Array.isArray(parsed.presets) ? parsed.presets.slice(0, 12) : [],
+          activePresetId: String(parsed.activePresetId || 'default').slice(0, 40),
+          favoriteMeta: (parsed.favoriteMeta && typeof parsed.favoriteMeta === 'object') ? parsed.favoriteMeta : {},
+          syncedAt: new Date().toISOString()
+        };
+        let code = String(Math.floor(1000 + Math.random() * 9000));
+        for (let tries = 0; tries < 20; tries++) {
+          if (!cache.wallSyncMap.has(code)) break;
+          code = String(Math.floor(1000 + Math.random() * 9000));
+        }
+        setBoundedMap(cache.wallSyncMap, code, { data: safeData, expireAt: now + 20 * 60000 }, 200);
+        res.writeHead(200);
+        res.end(JSON.stringify({ success: true, code, expiresInSec: 1200 }));
+      } catch (e) {
+        res.writeHead(400);
+        res.end(JSON.stringify({ success: false, error: '無法解析同步內容' }));
+      }
+    });
+    return;
+  }
+
+  res.writeHead(405);
+  res.end(JSON.stringify({ success: false, error: '不支援的請求方法' }));
 }
 
 // 建立 HTTP 伺服器
@@ -2639,6 +3427,26 @@ const server = http.createServer((req, res) => {
     handleGlobalBikesProxy(req, res, parsedUrl);
     return;
   }
+  if (pathname === '/api/rail/tra-nearby') {
+    handleTraNearbyProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/parking/nearby') {
+    handleParkingNearbyProxy(req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/freeway/live') {
+    handleFreewayLiveProxy(req, res);
+    return;
+  }
+  if (pathname === '/api/travel/toolkit') {
+    handleTravelToolkitProxy(req, res);
+    return;
+  }
+  if (pathname === '/api/wall-sync') {
+    handleWallSyncApi(req, res, parsedUrl);
+    return;
+  }
   if (pathname === '/api/bote/prewarm') {
     handleBotePrewarm(req, res, parsedUrl);
     return;
@@ -2732,6 +3540,7 @@ server.fetchThsrParkingData = fetchThsrParkingData;
 server.getTaiwanDateString = getTaiwanDateString;
 server.decodeCompressedBuffer = decodeCompressedBuffer;
 server.setBoundedMap = setBoundedMap;
+server.twd97ToWgs84 = twd97ToWgs84;
 server._internal = { cache, boteCookieJar, botePrewarmCooldown };
 
 module.exports = server;

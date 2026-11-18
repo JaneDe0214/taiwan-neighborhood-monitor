@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- 震動權限 (支援公車／台鐵進站倒數鬧鐘強震動提醒) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <!-- 定位權限 (支援「附近」自動定位功能) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -43,6 +46,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:screenOrientation="unspecified">
             <!-- 手機版主畫面啟動器 -->

@@ -1,6 +1,7 @@
 package com.example.taiwanneighborhoodmonitor
 
 import android.annotation.SuppressLint
+import android.app.PictureInPictureParams
 import android.app.UiModeManager
 import android.content.ContentValues
 import android.content.Context
@@ -14,8 +15,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Rational
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.View
@@ -100,6 +105,8 @@ class MainActivity : ComponentActivity() {
     private var lastTriggerRefreshMs: Long = 0L
     @Volatile
     private var hadNetworkLoss: Boolean = false
+    @Volatile
+    private var inNativePipMode: Boolean = false
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -147,15 +154,19 @@ class MainActivity : ComponentActivity() {
         rootLayoutRef = rootLayout
         applyNativeSystemBarTheme(initialSystemLight)
 
-        // 手機與平板動態套用狀態列、挖孔鏡頭區、底部手勢列與虛擬鍵盤安全邊距，徹底杜絕遮擋
+        // 手機與平板動態套用狀態列、挖孔鏡頭區、底部手勢列與虛擬鍵盤安全邊距，徹底杜絕遮擋（子母畫面 PiP 模式下自動歸零邊距以填滿 16:9 視窗）
         if (!isTvDevice) {
             ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { v, windowInsets ->
-                val insets = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() or
-                        WindowInsetsCompat.Type.displayCutout() or
-                        WindowInsetsCompat.Type.ime()
-                )
-                v.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+                if (inNativePipMode) {
+                    v.setPadding(0, 0, 0, 0)
+                } else {
+                    val insets = windowInsets.getInsets(
+                        WindowInsetsCompat.Type.systemBars() or
+                            WindowInsetsCompat.Type.displayCutout() or
+                            WindowInsetsCompat.Type.ime()
+                    )
+                    v.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+                }
                 WindowInsetsCompat.CONSUMED
             }
         }
@@ -225,6 +236,11 @@ class MainActivity : ComponentActivity() {
                         const cp = document.getElementById('commandPaletteOverlay');
                         if (cp && cp.classList.contains('active')) {
                             cp.classList.remove('active');
+                            return true;
+                        }
+                        const syncModal = document.getElementById('wallSyncModal');
+                        if (syncModal && syncModal.classList.contains('active')) {
+                            syncModal.classList.remove('active');
                             return true;
                         }
                         const modal = document.getElementById('cameraModal');
@@ -826,6 +842,44 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        inNativePipMode = isInPictureInPictureMode
+        rootLayoutRef?.let { layout ->
+            if (isInPictureInPictureMode) {
+                layout.setPadding(0, 0, 0, 0)
+            } else {
+                ViewCompat.requestApplyInsets(layout)
+            }
+        }
+        if (::webView.isInitialized) {
+            webView.evaluateJavascript(
+                """
+                (function() {
+                    document.body.classList.toggle('in-pip-mode', $isInPictureInPictureMode);
+                    if (window.monitorApp && typeof window.monitorApp.onNativePipModeChanged === 'function') {
+                        window.monitorApp.onNativePipModeChanged($isInPictureInPictureMode);
+                    }
+                })();
+                """.trimIndent(),
+                null
+            )
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (::webView.isInitialized) {
+            webView.onResume()
+        }
+        if (::nativeBridge.isInitialized) {
+            nativeBridge.setForegroundActive(true)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         webView.onResume()
@@ -835,9 +889,18 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        nativeBridge.setForegroundActive(false)
+        val keepPlayingInPip = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode
+        if (!keepPlayingInPip) {
+            nativeBridge.setForegroundActive(false)
+            webView.onPause()
+        }
         super.onPause()
+    }
+
+    override fun onStop() {
+        nativeBridge.setForegroundActive(false)
         webView.onPause()
+        super.onStop()
     }
 
     override fun onDestroy() {
@@ -914,6 +977,68 @@ class AndroidNativeBridge(
                 webView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             } catch (_: Exception) {}
         }
+    }
+
+    /**
+     * 公車／台鐵進站倒數鬧鐘強震動提醒（雙脈衝震動波形，無震動馬達裝置自動退回長按觸覺回饋）
+     */
+    @JavascriptInterface
+    fun triggerAlertVibration() {
+        if (isTv) return
+        activity.runOnUiThread {
+            try {
+                val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val vm = activity.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                    vm?.defaultVibrator
+                } else {
+                    @Suppress("DEPRECATION")
+                    activity.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                }
+                if (vibrator != null && vibrator.hasVibrator()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0L, 220L, 120L, 280L), -1))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(longArrayOf(0L, 220L, 120L, 280L), -1)
+                    }
+                } else {
+                    webView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                }
+            } catch (_: Exception) {
+                try {
+                    webView.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    /**
+     * 查詢目前裝置是否支援 Android 原生子母畫面 (Picture-in-Picture)
+     */
+    @JavascriptInterface
+    fun isPipSupported(): Boolean {
+        if (isTv) return false
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            activity.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+    }
+
+    /**
+     * 進入 Android 原生 16:9 子母畫面懸浮監看視窗
+     */
+    @JavascriptInterface
+    fun enterNativePipMode(): Boolean {
+        if (!isPipSupported()) return false
+        activity.runOnUiThread {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val params = PictureInPictureParams.Builder()
+                        .setAspectRatio(Rational(16, 9))
+                        .build()
+                    activity.enterPictureInPictureMode(params)
+                }
+            } catch (_: Exception) {}
+        }
+        return true
     }
 
     /**
@@ -2102,7 +2227,10 @@ internal object WebAssetRouting {
         "citybik.es",
         "bigdatacloud.net",
         "tfl.gov.uk",
-        "opendata.ch"
+        "opendata.ch",
+        "tcgbusfs.blob.core.windows.net",
+        "open.er-api.com",
+        "services.swpc.noaa.gov"
     )
 
     fun isNativeInterceptHost(rawHost: String?): Boolean {
