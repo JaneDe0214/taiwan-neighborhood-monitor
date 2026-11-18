@@ -6,7 +6,7 @@
 
 - **新北市 YouBike 2.0 即時資料**：
   - 資料集：新北市政府資料開放平台 [新北市公共自行車租賃系統(YouBike2.0)](https://data.ntpc.gov.tw/datasets/010e5b15-3823-4b20-b401-b1cf000550c5)
-  - OpenAPI 規格：新北市政府交通局 OpenAPI (代碼 1130000)
+  - OpenAPI 規格：新北市政府交通局 OpenAPI (資料集編號 1130000)
 - **桃園市 YouBike 2.0 即時資料**：
   - 資料集：桃園市政府資料開放平台 [桃園公共自行車即時服務資料](https://opendata.tycg.gov.tw/datalist/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c)
 

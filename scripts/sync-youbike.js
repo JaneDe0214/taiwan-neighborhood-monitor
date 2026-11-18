@@ -3,14 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
+const server = require('../server.js');
+
 function decodeResponseBuffer(buffer, contentEncoding) {
-  const enc = String(contentEncoding || '').toLowerCase();
-  if (enc.includes('gzip') || enc.includes('x-gzip')) return zlib.gunzipSync(buffer);
-  if (enc.includes('deflate')) {
-    try { return zlib.inflateSync(buffer); } catch (e) { return zlib.inflateRawSync(buffer); }
-  }
-  if (enc.includes('br') && typeof zlib.brotliDecompressSync === 'function') return zlib.brotliDecompressSync(buffer);
-  return buffer;
+  return server.decodeCompressedBuffer(buffer, contentEncoding);
 }
 
 function fetchUrl(url, hopCount = 0) {
@@ -21,6 +17,7 @@ function fetchUrl(url, hopCount = 0) {
         'Accept-Encoding': 'gzip, deflate, br'
       }
     }, res => {
+      res.on('error', reject);
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
         if (hopCount >= 5) return reject(new Error('重新導向次數過多'));
@@ -94,25 +91,27 @@ const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88
 
 async function sync() {
   console.log('[YouBike 同步] 正在抓取新北市與桃園市官方即時車況...');
-  const [ntpcRaw, tycgRaw] = await Promise.all([
+  const [ntpcSettled, tycgSettled] = await Promise.allSettled([
     fetchUrl(NTPC_URL),
     fetchUrl(TYCG_URL)
   ]);
 
-  const ntpcList = parseCsvToJson(ntpcRaw);
+  const ntpcList = ntpcSettled.status === 'fulfilled' ? parseCsvToJson(ntpcSettled.value) : [];
   let tycgList = [];
-  try {
-    const parsed = JSON.parse(tycgRaw);
-    tycgList = Array.isArray(parsed) ? parsed : (parsed.retVal || []);
-  } catch (e) {
-    console.error('桃園資料解析失敗:', e.message);
+  if (tycgSettled.status === 'fulfilled') {
+    try {
+      const parsed = JSON.parse(tycgSettled.value);
+      tycgList = Array.isArray(parsed) ? parsed : (parsed.retVal || []);
+    } catch (e) {
+      console.error('桃園資料解析失敗:', e.message);
+    }
+  } else {
+    console.error('桃園資料抓取失敗:', tycgSettled.reason?.message || 'unknown');
   }
 
-  const d = new Date();
-  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-  const twDate = new Date(utc + (3600000 * 8));
-  const hh = String(twDate.getHours()).padStart(2, '0');
-  const mm = String(twDate.getMinutes()).padStart(2, '0');
+  const twDate = new Date(Date.now() + (3600000 * 8));
+  const hh = String(twDate.getUTCHours()).padStart(2, '0');
+  const mm = String(twDate.getUTCMinutes()).padStart(2, '0');
   const updateTime = `${hh}:${mm}`;
 
   const outDir = path.join(__dirname, '../data');

@@ -44,5 +44,14 @@ jobs:
           git add data/*.json
           if ! git diff --cached --quiet; then
             git commit -m "chore: 極速更新全線大眾運輸與 YouBike 即時資料 [skip ci]"
-            git push || (git pull --rebase origin main && git push)
+            if ! git push; then
+              git fetch origin main --depth=20
+              git rebase -X theirs origin/main
+              node scripts/sync-all.js
+              git add data/*.json
+              if ! git diff --cached --quiet; then
+                git commit --amend --no-edit
+              fi
+              git push
+            fi
           fi

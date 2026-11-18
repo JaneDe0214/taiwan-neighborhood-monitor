@@ -17,12 +17,14 @@ class AppUnitTest {
         assertEquals("index.html", WebAssetRouting.resolveAssetPath("/assets/"))
         assertEquals("data/thsr.json", WebAssetRouting.resolveAssetPath("/assets/data/thsr.json"))
         assertEquals("data/cameras/taipei.json", WebAssetRouting.resolveAssetPath("data/cameras/taipei.json"))
+        assertEquals("data/cameras/taipei.json", WebAssetRouting.resolveAssetPath("\\assets//data\\\\cameras/taipei.json"))
     }
 
     @Test
     fun resolveAssetPath_rejectsDirectoryTraversal() {
         assertNull(WebAssetRouting.resolveAssetPath("/../secrets.txt"))
         assertNull(WebAssetRouting.resolveAssetPath("assets/../../etc/passwd"))
+        assertNull(WebAssetRouting.resolveAssetPath("/.git/HEAD"))
     }
 
     @Test
@@ -150,6 +152,8 @@ class AppUnitTest {
 
         val t1 = trains.getJSONObject(1)
         assertEquals("1609", t1.getString("trainNo"))
+        assertTrue(t1.getBoolean("isExpress"))
+        assertEquals("16xx特快", t1.getString("type"))
 
         val t2 = trains.getJSONObject(2)
         assertEquals("0837", t2.getString("trainNo"))
@@ -193,7 +197,15 @@ class AppUnitTest {
     @Test
     fun extractFirstJpegFrame_extractsSingleFrameFromMultipartStream() {
         val header = "--myboundary\r\nContent-Type: image/jpeg\r\n\r\n".toByteArray()
-        val fakeJpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte(), 0x00, 0x10, 0x11, 0x22, 0xFF.toByte(), 0xD9.toByte())
+        // 含 EXIF (APP1 FF E1) 內嵌假 FF D8 ... FF D9 縮圖，接著 SOS (FF DA) 主影像資料與最後真正的 FF D9
+        val fakeJpeg = byteArrayOf(
+            0xFF.toByte(), 0xD8.toByte(),
+            0xFF.toByte(), 0xE1.toByte(), 0x00, 0x08, // APP1 length = 8 bytes (含2位元組長度+6位元組EXIF縮圖含假FFD9)
+            0xFF.toByte(), 0xD8.toByte(), 0x11, 0x22, 0xFF.toByte(), 0xD9.toByte(),
+            0xFF.toByte(), 0xDA.toByte(), 0x00, 0x04, 0x33, 0x44, // SOS header + entropy scan
+            0x55, 0x66,
+            0xFF.toByte(), 0xD9.toByte()
+        )
         val secondChunk = "--myboundary\r\nEXTRA_IGNORED_DATA".toByteArray()
         val stream = ByteArrayInputStream(header + fakeJpeg + secondChunk)
 
@@ -251,6 +263,10 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("services.swpc.noaa.gov"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("www.tymetro.com.tw"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.rainviewer.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("tilecache.rainviewer.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("tile.openstreetmap.org"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("server.arcgisonline.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("cctvtraffic.tycg.gov.tw"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("air-quality-api.open-meteo.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.met.no"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("cwaopendata.s3.ap-northeast-1.amazonaws.com"))

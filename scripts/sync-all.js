@@ -21,6 +21,7 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
         'Accept-Encoding': 'gzip, deflate, br'
       }
     }, res => {
+      res.on('error', reject);
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
         if (hopCount >= 5) {
@@ -39,7 +40,6 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
       }
       const chunks = [];
       res.on('data', c => chunks.push(c));
-      res.on('error', reject);
       res.on('end', () => {
         try {
           resolve(server.decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
@@ -92,16 +92,20 @@ function parseCsvToJson(csvStr) {
 }
 
 function getTaiwanNow() {
-  const d = new Date();
-  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-  return new Date(utc + (3600000 * 8));
+  return new Date(Date.now() + (3600000 * 8));
 }
 
 function getTaiwanTimeString() {
   const tw = getTaiwanNow();
-  const hh = String(tw.getHours()).padStart(2, '0');
-  const mm = String(tw.getMinutes()).padStart(2, '0');
+  const hh = String(tw.getUTCHours()).padStart(2, '0');
+  const mm = String(tw.getUTCMinutes()).padStart(2, '0');
   return `${hh}:${mm}`;
+}
+
+function writeFileAtomic(targetPath, dataStr) {
+  const tmpPath = `${targetPath}.tmp`;
+  fs.writeFileSync(tmpPath, dataStr, 'utf8');
+  fs.renameSync(tmpPath, targetPath);
 }
 
 // 1. 同步 YouBike 2.0 (首選 opendata.vip，備援官方端點；精煉壓縮欄位)
@@ -151,15 +155,20 @@ async function syncYouBike(outDir) {
     return Number.isFinite(n) ? Math.round(n * 100000) / 100000 : undefined;
   };
 
+  const toIntOrZero = (v, fallback = '0') => {
+    const n = parseInt(String(v ?? fallback).trim(), 10);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  };
+
   const slimNtpc = ntpcList.map(s => ({
     uid: s.uid || s.sno || s.StationUID,
     name: s.name || s.sna,
     lat: roundCoord(s.lat),
     lng: roundCoord(s.lng != null ? s.lng : s.lon),
     ar: s.address || s.ar || undefined,
-    bikes: s.bikes != null ? s.bikes : parseInt(s.sbi_quantity != null ? s.sbi_quantity : (s.sbi || '0'), 10),
-    empty: s.empty != null ? s.empty : parseInt(s.bemp || '0', 10),
-    eBikes: s.eBikes != null ? s.eBikes : parseInt(s.eyb_quantity || (s.sbi_detail && s.sbi_detail.eyb) || '0', 10),
+    bikes: s.bikes != null ? s.bikes : toIntOrZero(s.sbi_quantity != null ? s.sbi_quantity : s.sbi),
+    empty: s.empty != null ? s.empty : toIntOrZero(s.bemp),
+    eBikes: s.eBikes != null ? s.eBikes : toIntOrZero(s.eyb_quantity || (s.sbi_detail && s.sbi_detail.eyb)),
     time: s.time || s.mday || ''
   }));
 
@@ -169,9 +178,9 @@ async function syncYouBike(outDir) {
     lat: roundCoord(s.lat),
     lng: roundCoord(s.lng != null ? s.lng : s.lon),
     ar: s.address || s.ar || undefined,
-    bikes: s.bikes != null ? s.bikes : parseInt(s.sbi != null ? s.sbi : (s.sbi_quantity || '0'), 10),
-    empty: s.empty != null ? s.empty : parseInt(s.bemp || '0', 10),
-    eBikes: s.eBikes != null ? s.eBikes : parseInt((s.sbi_detail && s.sbi_detail.eyb) || s.eyb_quantity || '0', 10),
+    bikes: s.bikes != null ? s.bikes : toIntOrZero(s.sbi != null ? s.sbi : s.sbi_quantity),
+    empty: s.empty != null ? s.empty : toIntOrZero(s.bemp),
+    eBikes: s.eBikes != null ? s.eBikes : toIntOrZero((s.sbi_detail && s.sbi_detail.eyb) || s.eyb_quantity),
     time: s.time || s.mday || ''
   }));
 
@@ -187,7 +196,7 @@ async function syncYouBike(outDir) {
   const finalTycg = slimTycg.length > 0 ? slimTycg : (Array.isArray(existingData.tycg) ? existingData.tycg : []);
 
   if (finalNtpc.length === 0 && finalTycg.length === 0) {
-    console.warn('  - YouBike 雙端點均無有效資料，略過寫入以保護本地快照');
+    console.warn('  - YouBike 雙端點均無有效資料，略過寫入以保護本機快照');
     return;
   }
 
@@ -201,7 +210,7 @@ async function syncYouBike(outDir) {
     tycg: finalTycg
   };
 
-  fs.writeFileSync(outFile, JSON.stringify(payload));
+  writeFileAtomic(outFile, JSON.stringify(payload));
   console.log(`  -> 已寫入 ${outFile} (更新時間: ${payload.updateTimeDisplay}，精煉站點: ${finalNtpc.length + finalTycg.length} 站)`);
 }
 
@@ -213,16 +222,19 @@ async function syncThsr(outDir) {
       server.fetchOfficialThsrTimetable('BanQiao', 'TaoYuan'),
       server.fetchOfficialThsrTimetable('TaoYuan', 'BanQiao')
     ]);
+    if (!southTrains.length || !northTrains.length) {
+      throw new Error('高鐵班表數量異常空白');
+    }
 
     const payload = {
-      date: server.getTaiwanDateString(),
+      date: server.getTaiwanDateString(true),
       updatedAt: new Date().toISOString(),
       south: { count: southTrains.length, trains: southTrains },
       north: { count: northTrains.length, trains: northTrains }
     };
 
     const outFile = path.join(outDir, 'thsr.json');
-    fs.writeFileSync(outFile, JSON.stringify(payload));
+    writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (南下: ${southTrains.length} 班, 北上: ${northTrains.length} 班)`);
   } catch (err) {
     console.error('  - 高鐵同步失敗 (維持既有快照):', err.message);
@@ -237,16 +249,19 @@ async function syncTymetro(outDir) {
       server.fetchOfficialTymetroTimetable('south'),
       server.fetchOfficialTymetroTimetable('north')
     ]);
+    if (!southTrains.length || !northTrains.length) {
+      throw new Error('機捷班表數量異常空白');
+    }
 
     const payload = {
-      date: server.getTaiwanDateString(),
+      date: server.getTaiwanDateString(true),
       updatedAt: new Date().toISOString(),
       south: { count: southTrains.length, trains: southTrains },
       north: { count: northTrains.length, trains: northTrains }
     };
 
     const outFile = path.join(outDir, 'tymetro.json');
-    fs.writeFileSync(outFile, JSON.stringify(payload));
+    writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (南下: ${southTrains.length} 班, 北上: ${northTrains.length} 班)`);
   } catch (err) {
     console.error('  - 機捷同步失敗 (維持既有快照):', err.message);
@@ -286,7 +301,7 @@ async function syncMetroLive(outDir) {
       carWeight: hasFreshWeight ? carWeightData : (existingData.carWeight || {})
     };
 
-    fs.writeFileSync(outFile, JSON.stringify(payload));
+    writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (看板共 ${payload.trains.length} 筆即時進站資訊，車廂擁擠度涵蓋 ${Object.keys(payload.carWeight).length} 站)`);
   } catch (err) {
     console.error('  - 捷運看板同步失敗 (維持既有快照):', err.message);
@@ -313,7 +328,7 @@ async function syncParking(outDir) {
       lots: lots.length > 0 ? lots : existingLots
     };
 
-    fs.writeFileSync(outFile, JSON.stringify(payload));
+    writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (停車場共 ${payload.lots.length} 處即時車位資料)`);
   } catch (err) {
     console.error('  - 高鐵停車場同步失敗 (維持既有快照):', err.message);
