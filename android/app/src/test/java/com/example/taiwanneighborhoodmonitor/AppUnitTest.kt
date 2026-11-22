@@ -222,7 +222,32 @@ class AppUnitTest {
         val capped = WebAssetRouting.readBoundedBytes(ByteArrayInputStream(sample), maxBytes = 32)
         assertArrayEquals(sample.copyOfRange(0, 32), capped)
 
+        assertNull(WebAssetRouting.readBoundedBytes(ByteArrayInputStream(sample), maxBytes = 32, rejectOnOverflow = true))
+        val exactFit = WebAssetRouting.readBoundedBytes(ByteArrayInputStream(sample), maxBytes = 100, rejectOnOverflow = true)
+        assertArrayEquals(sample, exactFit)
+
         assertNull(WebAssetRouting.readBoundedBytes(ByteArrayInputStream(ByteArray(0))))
+    }
+
+    @Test
+    fun parseOfficialThsr_classifies5xxAnd15xxCommuterAndFilters2xxExpress() {
+        val json = """
+            {
+              "data": {
+                "DepartureTable": {
+                  "TrainItem": [
+                    { "TrainNumber": "0502", "DepartureTime": "06:34", "DestinationTime": "06:47" },
+                    { "TrainNumber": "1504", "DepartureTime": "07:05", "DestinationTime": "07:18" },
+                    { "TrainNumber": "0205", "DepartureTime": "08:10", "DestinationTime": "08:22" }
+                  ]
+                }
+              }
+            }
+        """.trimIndent()
+        val trains = TransitParsers.parseOfficialThsr(json)
+        assertEquals(2, trains.length())
+        assertEquals("5xx區間", trains.getJSONObject(0).getString("type"))
+        assertEquals("15xx區間", trains.getJSONObject(1).getString("type"))
     }
 
     @Test
@@ -270,6 +295,10 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("air-quality-api.open-meteo.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.met.no"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("cwaopendata.s3.ap-northeast-1.amazonaws.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("apis.youbike.com.tw"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("cdn.star.nesdis.noaa.gov"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("panodata.panomax.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("media-tyo.hls.nhkworld.jp"))
 
         assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
         assertFalse(WebAssetRouting.isNativeInterceptHost("evil-opendata.vip"))

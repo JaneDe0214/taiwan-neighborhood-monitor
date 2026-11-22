@@ -127,7 +127,7 @@ function saveBoteSetCookies(camKey, setCookieHeaders) {
     if (eqIdx > 0) {
       const k = firstPart.slice(0, eqIdx).trim();
       const v = firstPart.slice(eqIdx + 1).trim();
-      if (k) camMap.set(k, v);
+      if (k) setBoundedMap(camMap, k, v, 30);
     }
   }
 }
@@ -143,8 +143,14 @@ function isAllowedBotePath(targetPath) {
 }
 
 function requestBoteUpstream(targetPath, reqHeaders, onResponse, onError, clientRes, hopCount = 0) {
+  let settled = false;
+  const failOnce = (code, err) => {
+    if (settled) return;
+    settled = true;
+    onError(code, err);
+  };
   if (!isAllowedBotePath(targetPath)) {
-    onError(400, new Error('不允許的臺北市交控串流路徑'));
+    failOnce(400, new Error('不允許的臺北市交控串流路徑'));
     return;
   }
   const camKey = extractBoteCamKey(targetPath);
@@ -167,8 +173,9 @@ function requestBoteUpstream(targetPath, reqHeaders, onResponse, onError, client
     agent: boteHttpsAgent,
     headers
   }, (upstreamRes) => {
+    clearTimeout(totalTimer);
     upstreamRes.on('error', (err) => {
-      onError(502, err);
+      failOnce(502, err);
     });
     saveBoteSetCookies(camKey, upstreamRes.headers['set-cookie']);
     if (upstreamRes.statusCode === 401 || upstreamRes.statusCode === 403) {
@@ -179,13 +186,13 @@ function requestBoteUpstream(targetPath, reqHeaders, onResponse, onError, client
       upstreamRes.resume();
       try {
         const nextUrl = new URL(upstreamRes.headers.location, BOTE_ORIGIN + targetPath);
-        if (nextUrl.hostname !== 'hls.bote.gov.taipei') {
-          onError(403, new Error('禁止跨網域重新導向'));
+        if (nextUrl.hostname !== 'hls.bote.gov.taipei' || nextUrl.protocol !== 'https:') {
+          failOnce(403, new Error('禁止跨網域重新導向'));
           return;
         }
         requestBoteUpstream(nextUrl.pathname + nextUrl.search, reqHeaders, onResponse, onError, clientRes, hopCount + 1);
       } catch (e) {
-        onError(502, e);
+        failOnce(502, e);
       }
       return;
     }
@@ -193,16 +200,21 @@ function requestBoteUpstream(targetPath, reqHeaders, onResponse, onError, client
     onResponse(upstreamRes, targetPath);
   });
 
+  const totalTimer = setTimeout(() => {
+    upstreamReq.destroy(new Error('臺北市交控上游連線總逾時'));
+  }, 10000);
+
   upstreamReq.setTimeout(10000, () => {
     upstreamReq.destroy(new Error('臺北市交控上游連線逾時'));
   });
 
   upstreamReq.on('error', (err) => {
-    onError(502, err);
+    clearTimeout(totalTimer);
+    failOnce(502, err);
   });
 
-  if (clientRes) {
-    clientRes.on('close', () => {
+  if (clientRes && hopCount === 0) {
+    clientRes.once('close', () => {
       if (!clientRes.writableFinished) {
         try { upstreamReq.destroy(); } catch (_) {}
       }
@@ -246,21 +258,38 @@ function handleBoteProxy(req, res, parsedUrl) {
           return;
         }
         const chunks = [];
-        upstreamRes.on('data', (chunk) => chunks.push(chunk));
+        let totalBytes = 0;
+        let overflowed = false;
+        upstreamRes.on('data', (chunk) => {
+          totalBytes += chunk.length;
+          if (totalBytes > 2 * 1024 * 1024) {
+            overflowed = true;
+            upstreamRes.destroy(new Error('M3U8 回應超過安全大小上限'));
+            return;
+          }
+          chunks.push(chunk);
+        });
         upstreamRes.on('close', () => {
-          if (!upstreamRes.complete && !res.headersSent && !res.writableEnded && !res.destroyed) {
+          if ((!upstreamRes.complete || overflowed) && !res.headersSent && !res.writableEnded && !res.destroyed) {
             res.writeHead(502);
             res.end('Upstream closed prematurely');
           }
         });
         upstreamRes.on('end', () => {
-          if (res.headersSent || res.writableEnded || res.destroyed) return;
-          let body = Buffer.concat(chunks).toString('utf8');
-          body = body.replace(/(^|\n|URI=")(\/(?:hls|streamapi_[^/"\s]+|live)\/)/g, '$1/api/bote$2');
-          res.setHeader('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8');
-          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-          res.writeHead(status);
-          res.end(body);
+          if (overflowed || res.headersSent || res.writableEnded || res.destroyed) return;
+          try {
+            let body = decodeCompressedBuffer(Buffer.concat(chunks), upstreamRes.headers['content-encoding']).toString('utf8');
+            body = body.replace(/(^|\n|URI=")(\/(?:hls|streamapi_[^/"\s]+|live)\/)/g, '$1/api/bote$2');
+            res.setHeader('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8');
+            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+            res.writeHead(status);
+            res.end(body);
+          } catch (_) {
+            if (!res.headersSent && !res.writableEnded && !res.destroyed) {
+              res.writeHead(502);
+              res.end('Invalid upstream playlist');
+            }
+          }
         });
         return;
       }
@@ -291,7 +320,7 @@ function handleBoteProxy(req, res, parsedUrl) {
       }
       res.writeHead(status);
       upstreamRes.on('error', () => {
-        if (!res.writableEnded) res.destroy();
+        if (!res.writableEnded && !res.destroyed) res.destroy();
       });
       res.on('error', () => {
         if (!upstreamRes.destroyed) upstreamRes.destroy();
@@ -304,13 +333,14 @@ function handleBoteProxy(req, res, parsedUrl) {
         res.writeHead(statusCode || 502);
         res.end(JSON.stringify({ success: false, error: '臺北市交控代理失敗', detail: err ? err.message : '' }));
       } else {
-        try { if (!res.writableEnded) res.end(); } catch (_) {}
+        try { if (!res.destroyed) res.destroy(); } catch (_) {}
       }
     },
     res
   );
 }
 
+let _lastBotePrewarmBatchMs = 0;
 function handleBotePrewarm(req, res, parsedUrl) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -325,68 +355,111 @@ function handleBotePrewarm(req, res, parsedUrl) {
 
   const now = Date.now();
   const warmedIds = [];
-  for (const id of validIds) {
-    const last = botePrewarmCooldown.get(id) || 0;
-    if (now - last < 20000) continue;
-    setBoundedMap(botePrewarmCooldown, id, now, 200);
-    warmedIds.push(id);
-    requestBoteUpstream(
-      `/hls/${id}/index.m3u8`,
-      null,
-      (upstreamRes) => {
-        upstreamRes.on('error', () => {});
-        upstreamRes.resume();
-      },
-      () => {},
-      null
-    );
+  if (now - _lastBotePrewarmBatchMs >= 2000) {
+    _lastBotePrewarmBatchMs = now;
+    for (const id of validIds) {
+      const last = botePrewarmCooldown.get(id) || 0;
+      if (now - last < 20000) continue;
+      setBoundedMap(botePrewarmCooldown, id, now, 200);
+      warmedIds.push(id);
+      requestBoteUpstream(
+        `/hls/${id}/index.m3u8`,
+        null,
+        (upstreamRes) => {
+          upstreamRes.on('error', () => {});
+          upstreamRes.resume();
+        },
+        () => {},
+        null
+      );
+    }
   }
 
   res.writeHead(200);
   res.end(JSON.stringify({ ok: true, prewarmed: warmedIds, totalRequested: validIds.length }));
 }
 
+function isDisallowedRedirectHost(hostname) {
+  const h = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '');
+  if (!h || h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal') || h === '::1' || h === '0.0.0.0') return true;
+  if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)) return true;
+  if (/^(fc|fd|fe80):/i.test(h)) return true;
+  return false;
+}
+
 // 共用遠端文字抓取函式 (支援相對路徑重新導向、跳轉上限、壓縮解碼、Buffer 安全解碼與連線清理)
 function fetchRemoteText(url, acceptHeader, timeoutMs = 8000, hopCount = 0) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, {
+    let parsedTarget;
+    try {
+      parsedTarget = new URL(url);
+      if ((parsedTarget.protocol !== 'https:' && parsedTarget.protocol !== 'http:') || isDisallowedRedirectHost(parsedTarget.hostname)) {
+        return reject(new Error(`不允許的遠端網址: ${url}`));
+      }
+    } catch (e) {
+      return reject(e);
+    }
+    const clientMod = parsedTarget.protocol === 'http:' ? http : https;
+    let settled = false;
+    const doneResolve = (val) => { if (!settled) { settled = true; clearTimeout(totalTimer); resolve(val); } };
+    const doneReject = (err) => { if (!settled) { settled = true; clearTimeout(totalTimer); reject(err); } };
+
+    const req = clientMod.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': acceptHeader,
         'Accept-Encoding': 'gzip, deflate, br'
       }
     }, (res) => {
-      res.on('error', reject);
+      res.on('error', doneReject);
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
         if (hopCount >= 5) {
-          return reject(new Error('重新導向次數過多'));
+          return doneReject(new Error('重新導向次數過多'));
         }
         try {
-          const nextUrl = new URL(res.headers.location, url).toString();
-          return fetchRemoteText(nextUrl, acceptHeader, timeoutMs, hopCount + 1).then(resolve).catch(reject);
+          const nextObj = new URL(res.headers.location, url);
+          if ((nextObj.protocol !== 'https:' && nextObj.protocol !== 'http:') || isDisallowedRedirectHost(nextObj.hostname)) {
+            return doneReject(new Error('重新導向目標不安全'));
+          }
+          clearTimeout(totalTimer);
+          settled = true;
+          return fetchRemoteText(nextObj.toString(), acceptHeader, timeoutMs, hopCount + 1).then(resolve).catch(reject);
         } catch (e) {
-          return reject(e);
+          return doneReject(e);
         }
       }
       if (res.statusCode !== 200) {
         res.resume();
-        return reject(new Error(`HTTP Status ${res.statusCode}`));
+        return doneReject(new Error(`HTTP Status ${res.statusCode}`));
       }
       const chunks = [];
-      res.on('data', chunk => chunks.push(chunk));
+      let totalBytes = 0;
+      res.on('data', chunk => {
+        totalBytes += chunk.length;
+        if (totalBytes > 16 * 1024 * 1024) {
+          req.destroy();
+          doneReject(new Error('遠端回應超過 16MB 安全上限'));
+          return;
+        }
+        chunks.push(chunk);
+      });
       res.on('end', () => {
         try {
-          resolve(decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
+          doneResolve(decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
         } catch (e) {
-          reject(new Error(`解碼遠端回應失敗: ${e.message}`));
+          doneReject(new Error(`解碼遠端回應失敗: ${e.message}`));
         }
       });
     });
-    req.on('error', reject);
+    const totalTimer = setTimeout(() => {
+      req.destroy();
+      doneReject(new Error(`連線總逾時: ${url}`));
+    }, timeoutMs + 1500);
+    req.on('error', doneReject);
     req.setTimeout(timeoutMs, () => {
       req.destroy();
-      reject(new Error(`連線逾時: ${url}`));
+      doneReject(new Error(`連線逾時: ${url}`));
     });
   });
 }
@@ -441,7 +514,16 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
         return reject(new Error(`HTTP Status ${res.statusCode}`));
       }
       const chunks = [];
-      res.on('data', chunk => chunks.push(chunk));
+      let totalBytes = 0;
+      res.on('data', chunk => {
+        totalBytes += chunk.length;
+        if (totalBytes > 8 * 1024 * 1024) {
+          req.destroy();
+          reject(new Error('高鐵回應超過安全容量上限'));
+          return;
+        }
+        chunks.push(chunk);
+      });
       res.on('end', () => {
         try {
           const rawData = decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8');
@@ -457,8 +539,8 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
               const hasBanQiao = stInfo.some(st => st?.Show && String(st.StationName || '').includes('板橋'));
               const hasTaoYuan = stInfo.some(st => st?.Show && String(st.StationName || '').includes('桃園'));
               if (!hasBanQiao || !hasTaoYuan) continue;
-            } else if (/^(?:1\d{2}|11\d{2}|12\d{2})$/.test(cleanNo)) {
-              // 無 StationInfo 時，僅排除不停靠板橋/桃園之 1xx、11xx、12xx 直達台中車次（保留 13xx/15xx 通勤及 16xx 特快）
+            } else if (/^(?:1\d{2}|2\d{2}|11\d{2}|12\d{2})$/.test(cleanNo)) {
+              // 無 StationInfo 時，僅排除不停靠板橋/桃園之 1xx、2xx、11xx、12xx 直達台中車次（保留 5xx/13xx/15xx 通勤及 6xx/16xx 特快）
               continue;
             }
             if (!t.DepartureTime || !t.DestinationTime) continue;
@@ -470,9 +552,11 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
             let duration = (arrParts[0] * 60 + arrParts[1]) - (depParts[0] * 60 + depParts[1]);
             if (duration < 0) duration += 1440;
             const isExpress = cleanNo.startsWith('6') || cleanNo.startsWith('16');
-            const trainTypeLabel = cleanNo.startsWith('16')
-              ? '16xx特快'
-              : (isExpress ? '6xx特快' : ((cleanNo.startsWith('15') || cleanNo.startsWith('13')) ? `${cleanNo.slice(0, 2)}xx區間` : '8xx全停'));
+            let trainTypeLabel = '8xx全停';
+            if (cleanNo.startsWith('16')) trainTypeLabel = '16xx特快';
+            else if (isExpress) trainTypeLabel = '6xx特快';
+            else if (cleanNo.length === 3 && cleanNo.startsWith('5')) trainTypeLabel = '5xx區間';
+            else if (cleanNo.startsWith('15') || cleanNo.startsWith('13')) trainTypeLabel = `${cleanNo.slice(0, 2)}xx區間`;
             const depOpH = depParts[0] < 4 ? depParts[0] + 24 : depParts[0];
             const depMinutes = depOpH * 60 + depParts[1];
             cleanTrains.push({
@@ -578,7 +662,16 @@ function fetchOfficialTymetroTimetable(direction) {
         return reject(new Error(`HTTP Status ${res.statusCode}`));
       }
       const chunks = [];
-      res.on('data', chunk => chunks.push(chunk));
+      let totalBytes = 0;
+      res.on('data', chunk => {
+        totalBytes += chunk.length;
+        if (totalBytes > 8 * 1024 * 1024) {
+          req.destroy();
+          reject(new Error('機捷回應超過安全容量上限'));
+          return;
+        }
+        chunks.push(chunk);
+      });
       res.on('end', () => {
         try {
           const rawData = decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8');
@@ -629,6 +722,9 @@ function fetchOfficialTymetroTimetable(direction) {
             });
           });
 
+          if (list.length === 0) {
+            return reject(new Error('機捷官方回傳空白班表'));
+          }
           list.sort((a, b) => a.depMinutes - b.depMinutes);
           resolve(list);
         } catch (e) {
@@ -693,33 +789,51 @@ async function handleTymetroProxy(req, res, direction) {
   }
 }
 
-// 解析 CSV 字串為 JSON 物件陣列
+// 解析 CSV 字串為 JSON 物件陣列 (支援 RFC 4180 引號轉義 "" 與引號內逗號/換行)
 function parseCsvToJson(csvStr) {
-  const lines = csvStr.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headerLine = lines[0].replace(/^\uFEFF/, '');
-  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const list = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const values = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let c = 0; c < line.length; c++) {
-      const ch = line[c];
+  const raw = String(csvStr || '').replace(/^\uFEFF/, '');
+  if (!raw.trim()) return [];
+  const rows = [];
+  let row = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (inQuotes) {
       if (ch === '"') {
-        inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes) {
-        values.push(cur.trim().replace(/^"|"$/g, ''));
-        cur = '';
+        if (i + 1 < raw.length && raw[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
       } else {
         cur += ch;
       }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      row.push(cur.trim());
+      cur = '';
+    } else if (ch === '\r' || ch === '\n') {
+      if (ch === '\r' && i + 1 < raw.length && raw[i + 1] === '\n') i++;
+      row.push(cur.trim());
+      cur = '';
+      if (row.some(cell => cell.length > 0)) rows.push(row);
+      row = [];
+    } else {
+      cur += ch;
     }
-    values.push(cur.trim().replace(/^"|"$/g, ''));
-
+  }
+  if (cur.length > 0 || row.length > 0) {
+    row.push(cur.trim());
+    if (row.some(cell => cell.length > 0)) rows.push(row);
+  }
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(h => h.replace(/^"|"$/g, '').trim());
+  const list = [];
+  for (let r = 1; r < rows.length; r++) {
+    const values = rows[r];
     const obj = {};
     for (let h = 0; h < headers.length; h++) {
       obj[headers[h]] = values[h] != null ? values[h] : '';
@@ -798,12 +912,16 @@ function parseDepartureHtml(html, defaultStation = '') {
     const from = m[1].trim();
     const to = m[2].trim();
     const countdown = m[3].trim();
+    if (/擷取|無資料|收班|停駛|維護|--:--/.test(countdown)) continue;
     let totalSec = 0;
     if (countdown.includes(':')) {
       const parts = countdown.split(':').map(Number);
+      if (parts.length < 2 || !Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) continue;
       totalSec = parts[0] * 60 + parts[1];
     } else if (countdown === '進站中' || countdown === '列車進站' || countdown === '即將進站') {
       totalSec = 20;
+    } else {
+      continue;
     }
     list.push({
       station: from || defaultStation,
@@ -861,12 +979,14 @@ async function handleMetroLiveProxy(req, res) {
       updatedAt: new Date().toISOString(),
       data: list
     });
-    cache.metroLive = {
-      data: serialized,
-      expireAt: now + 15000 // 快取 15 秒
-    };
+    if (list.length > 0 || !cache.metroLive.data) {
+      cache.metroLive = {
+        data: serialized,
+        expireAt: now + 15000 // 快取 15 秒
+      };
+    }
     res.writeHead(200);
-    res.end(serialized);
+    res.end(list.length > 0 ? serialized : (cache.metroLive.data || serialized));
   } catch (err) {
     if (cache.metroLive.data) {
       res.writeHead(200);
@@ -997,7 +1117,7 @@ async function handleCarWeightProxy(req, res, targetCode) {
   }
 }
 
-// 抓取高鐵即時剩餘停車位 (桃園站 P1/P2/P3 與板橋站)
+// 抓取高鐵即時剩餘停車位 (桃園站 P1/P2/P3 與板橋站，附完整座標與轉乘資訊)
 function parseParkingHtml(html) {
   const lots = [];
   const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -1019,7 +1139,21 @@ function parseParkingHtml(html) {
           available = (Number.isFinite(avParsed) && avParsed >= 0) ? avParsed : 0;
           total = (Number.isFinite(totParsed) && totParsed >= 0) ? totParsed : 0;
         }
-        lots.push({ name, available, total, spaceText, status });
+        const isTy = name.includes('桃園');
+        lots.push({
+          id: `THSR_${name}`,
+          city: isTy ? '桃園高鐵' : '板橋高鐵',
+          area: isTy ? '中壢青埔' : '板橋特區',
+          name,
+          address: isTy ? '高鐵北路一段 (高鐵桃園站特區)' : '縣民大道二段7號',
+          fare: '高鐵轉乘計時收費',
+          available,
+          total,
+          spaceText,
+          status,
+          lat: isTy ? 25.0134 : 25.0141,
+          lon: isTy ? 121.2148 : 121.4638
+        });
       }
     }
   }
@@ -1058,12 +1192,14 @@ async function handleParkingThsrProxy(req, res) {
       updatedAt: new Date().toISOString(),
       lots
     });
-    cache.parkingThsr = {
-      data: serialized,
-      expireAt: now + 20000 // 快取 20 秒極速更新
-    };
+    if (lots.length > 0 || !cache.parkingThsr.data) {
+      cache.parkingThsr = {
+        data: serialized,
+        expireAt: now + 20000 // 快取 20 秒極速更新
+      };
+    }
     res.writeHead(200);
-    res.end(serialized);
+    res.end(lots.length > 0 ? serialized : (cache.parkingThsr.data || serialized));
   } catch (err) {
     if (cache.parkingThsr.data) {
       res.writeHead(200);
@@ -1273,11 +1409,27 @@ async function handleYouBikeCityProxy(req, res, parsedUrl) {
       res.writeHead(200);
       res.end(cached.data);
     } else {
-      res.writeHead(200);
-      res.end('[]');
+      res.writeHead(502);
+      res.end(JSON.stringify({ success: false, error: '無法取得該縣市 YouBike 即時資料', detail: err.message }));
     }
   }
 }
+
+const BUILT_IN_TW_BUS_STOPS = [
+  { id: 'tw-taiwan-tdx_TAO12619', name: '青峰路一段', lat: 25.0156, lon: 121.2194, address: '桃園市中壢區青峰路一段' },
+  { id: 'tw-taiwan-tdx_TAO2595', name: '青昇一街口', lat: 25.0154, lon: 121.2215, address: '桃園市中壢區青昇路' },
+  { id: 'tw-taiwan-tdx_TAO12618', name: '青昇宮', lat: 25.0145, lon: 121.2217, address: '桃園市中壢區領航南路四段' },
+  { id: 'tw-taiwan-tdx_TAO20027', name: '青園國小', lat: 25.0176, lon: 121.2202, address: '桃園市中壢區青昇路' },
+  { id: 'tw-taiwan-tdx_TAO12620', name: '高鐵桃園站', lat: 25.0128, lon: 121.2151, address: '桃園市中壢區高鐵北路一段' },
+  { id: 'tw-taiwan-tdx_NWT122385', name: '捷運新埔站', lat: 25.0226, lon: 121.4686, address: '新北市板橋區民生路二段' },
+  { id: 'tw-taiwan-tdx_NWT122386', name: '板橋花市', lat: 25.0223, lon: 121.4688, address: '新北市板橋區民生路二段' },
+  { id: 'tw-taiwan-tdx_NWT127467', name: '捷運新埔站(文化路)', lat: 25.0235, lon: 121.4682, address: '新北市板橋區文化路一段' },
+  { id: 'tw-taiwan-tdx_NWT185324', name: '新北板橋公車站', lat: 25.0145, lon: 121.4633, address: '新北市板橋區站前路' },
+  { id: 'tw-taiwan-tdx_TPE10421', name: '臺北車站(忠孝)', lat: 25.0463, lon: 121.5175, address: '臺北市中正區忠孝西路一段' },
+  { id: 'tw-taiwan-tdx_TXG10120', name: '臺中車站', lat: 24.1369, lon: 120.6848, address: '臺中市中區臺灣大道一段' },
+  { id: 'tw-taiwan-tdx_TNN10010', name: '臺南火車站', lat: 22.9972, lon: 120.2125, address: '臺南市東區北門路二段' },
+  { id: 'tw-taiwan-tdx_KHH10010', name: '高雄車站', lat: 22.6384, lon: 120.3019, address: '高雄市三民區建國二路' }
+];
 
 async function discoverNearbyBusStations(lat, lon, primaryTdxCity, extraHub = null) {
   const stationCacheKey = `${lat.toFixed(4)},${lon.toFixed(4)},${primaryTdxCity},${extraHub ? `${extraHub.lat.toFixed(4)}_${extraHub.lon.toFixed(4)}` : ''}`;
@@ -1291,91 +1443,146 @@ async function discoverNearbyBusStations(lat, lon, primaryTdxCity, extraHub = nu
   if (primaryTdxCity === 'NewTaipei') queryCities.push('Taipei');
   else if (primaryTdxCity === 'Taipei') queryCities.push('NewTaipei');
 
-  const fetchRadiusBatch = async (cLat, cLon, radius, includeInterCity = false) => {
-    const out = [];
-    for (const c of queryCities) {
-      const arr = await fetchTdxProxyJson(`/v2/Bus/Station/City/${c}`, {
-        '$spatialFilter': `nearby(${cLat},${cLon},${radius})`,
-        '$top': '18',
-        '$format': 'JSON'
-      }, 5500).catch(() => []);
-      out.push({ city: c, arr: Array.isArray(arr) ? arr : [] });
+  const transitousHeaders = {
+    'Accept': 'application/json',
+    'User-Agent': 'TaiwanNeighborhoodMonitor/2.0 (https://github.com/JaneDe0214/taiwan-neighborhood-monitor)'
+  };
+  const fetchTransitousStops = async (cLat, cLon) => {
+    try {
+      const r = await fetch(`https://api.transitous.org/api/v1/reverse-geocode?place=${cLat.toFixed(5)},${cLon.toFixed(5)}&type=STOP`, {
+        headers: transitousHeaders,
+        signal: AbortSignal.timeout(4500)
+      });
+      if (!r.ok) return [];
+      const arr = await r.json();
+      return Array.isArray(arr) ? arr : [];
+    } catch (_) {
+      return [];
     }
-    const cityStopCount = out.reduce((s, b) => s + b.arr.length, 0);
-    if (includeInterCity || cityStopCount < 4) {
-      const icArr = await fetchTdxProxyJson('/v2/Bus/Station/InterCity', {
-        '$spatialFilter': `nearby(${cLat},${cLon},${radius})`,
-        '$top': '10',
-        '$format': 'JSON'
-      }, 5000).catch(() => []);
-      out.push({ city: 'InterCity', arr: Array.isArray(icArr) ? icArr : [] });
-    }
-    return out;
   };
 
-  let batches = await fetchRadiusBatch(lat, lon, 480, false);
-  const totalRaw = batches.reduce((s, b) => s + b.arr.length, 0);
-  if (totalRaw < 2) {
-    batches = await fetchRadiusBatch(lat, lon, 980, true);
+  const rawCandidates = [];
+  const [nearStops, hubStops] = await Promise.all([
+    fetchTransitousStops(lat, lon),
+    (extraHub && Number.isFinite(extraHub.lat) && Number.isFinite(extraHub.lon))
+      ? fetchTransitousStops(extraHub.lat, extraHub.lon)
+      : Promise.resolve([])
+  ]);
+
+  for (const st of [...nearStops, ...hubStops]) {
+    if (!st?.id || !st?.name || !Number.isFinite(st.lat) || !Number.isFinite(st.lon)) continue;
+    if (/_(THSR|TRA|TRTC|TYMC|KRTC|TMRT)_/.test(String(st.id))) continue;
+    rawCandidates.push({
+      transitousId: String(st.id),
+      name: String(st.name).trim(),
+      lat: Number(st.lat),
+      lon: Number(st.lon),
+      address: ''
+    });
   }
-  if (extraHub && Number.isFinite(extraHub.lat) && Number.isFinite(extraHub.lon)) {
-    const hubBatch = await fetchRadiusBatch(extraHub.lat, extraHub.lon, 350, false);
-    batches.push(...hubBatch);
+
+  for (const fb of BUILT_IN_TW_BUS_STOPS) {
+    const d1 = calcDistanceMeters(lat, lon, fb.lat, fb.lon);
+    const d2 = (extraHub && Number.isFinite(extraHub.lat) && Number.isFinite(extraHub.lon))
+      ? calcDistanceMeters(extraHub.lat, extraHub.lon, fb.lat, fb.lon)
+      : Infinity;
+    if (d1 <= 2600 || d2 <= 1200) {
+      rawCandidates.push({
+        transitousId: fb.id,
+        name: fb.name,
+        lat: fb.lat,
+        lon: fb.lon,
+        address: fb.address || ''
+      });
+    }
   }
 
   const groups = new Map();
-  for (const { city, arr } of batches) {
-    for (const st of arr) {
-      const name = String(st?.StationName?.Zh_tw || '').trim();
-      const sLat = Number(st?.StationPosition?.PositionLat);
-      const sLon = Number(st?.StationPosition?.PositionLon);
-      if (!name || !Number.isFinite(sLat) || !Number.isFinite(sLon)) continue;
-      const distMeters = calcDistanceMeters(lat, lon, sLat, sLon);
-      const baseClean = name.replace(/[（(].*?[）)]/g, '').trim();
-      let grp = groups.get(name);
-      if (!grp && baseClean) {
-        for (const existing of groups.values()) {
-          const exBase = existing.name.replace(/[（(].*?[）)]/g, '').trim();
-          if (exBase === baseClean && calcDistanceMeters(sLat, sLon, existing.lat, existing.lon) <= 45) {
-            grp = existing;
-            break;
-          }
-        }
-      }
-      if (!grp) {
-        grp = {
-          name,
-          lat: sLat,
-          lon: sLon,
-          distMeters,
-          address: String(st.StationAddress || '').trim(),
-          stops: []
-        };
-        groups.set(name, grp);
-      } else if (distMeters < grp.distMeters) {
+  for (const st of rawCandidates) {
+    const name = String(st.name || '').trim();
+    const baseClean = name.replace(/[（(].*?[）)]/g, '').trim() || name;
+    const distMeters = calcDistanceMeters(lat, lon, st.lat, st.lon);
+    if (distMeters > 3500) continue;
+    let grp = groups.get(baseClean);
+    if (!grp) {
+      grp = {
+        name: baseClean,
+        baseName: baseClean,
+        transitousId: st.transitousId || '',
+        lat: st.lat,
+        lon: st.lon,
+        distMeters,
+        address: st.address || '',
+        stops: [],
+        etaItems: [],
+        etaFetchedAt: 0
+      };
+      groups.set(baseClean, grp);
+    } else {
+      if (distMeters < grp.distMeters) {
         grp.distMeters = distMeters;
-        grp.lat = sLat;
-        grp.lon = sLon;
-        if (st.StationAddress) grp.address = String(st.StationAddress).trim();
+        grp.lat = st.lat;
+        grp.lon = st.lon;
       }
-      const seenStopUid = new Set(grp.stops.map(x => `${x.city}|${x.stopUid}|${x.routeUid}`));
-      for (const sp of (st.Stops || [])) {
-        const stopUid = String(sp?.StopUID || '').trim();
-        const routeName = String(sp?.RouteName?.Zh_tw || '').trim();
-        const routeUid = String(sp?.RouteUID || sp?.RouteID || routeName).trim();
-        if (!stopUid || !routeName) continue;
-        const dedup = `${city}|${stopUid}|${routeUid}`;
-        if (seenStopUid.has(dedup)) continue;
-        seenStopUid.add(dedup);
-        grp.stops.push({
-          city,
-          stopUid,
-          routeUid,
-          routeId: String(sp?.RouteID || '').trim(),
-          routeName
-        });
+      if (!grp.transitousId && st.transitousId) grp.transitousId = st.transitousId;
+      if (!grp.address && st.address) grp.address = st.address;
+    }
+  }
+
+  const candidateGroups = [...groups.values()].sort((a, b) => a.distMeters - b.distMeters);
+  const queryNames = [...new Set([
+    ...candidateGroups.slice(0, 6).map(g => g.baseName),
+    ...(extraHub && extraHub.keyword ? [extraHub.keyword] : [])
+  ])].filter(Boolean).slice(0, 6);
+
+  if (queryNames.length > 0) {
+    const filterExpr = queryNames.map(n => `contains(StopName/Zh_tw,'${n.replace(/'/g, "''")}')`).join(' or ');
+    const cityEtaBatches = await Promise.all(queryCities.map(async (c) => {
+      const arr = await fetchTdxProxyJson(`/v2/Bus/EstimatedTimeOfArrival/City/${c}/`, {
+        '$filter': filterExpr,
+        '$select': 'StopUID,StopName,RouteUID,RouteID,RouteName,SubRouteName,Direction,EstimateTime,StopStatus,NextBusTime,PlateNumb,SrcUpdateTime',
+        '$top': '220',
+        '$format': 'JSON'
+      }, 5500).catch(() => []);
+      return { city: c, arr: Array.isArray(arr) ? arr : [] };
+    }));
+
+    for (const { city, arr } of cityEtaBatches) {
+      for (const e of arr) {
+        const stopUid = String(e?.StopUID || '').trim();
+        const stopNameRaw = String(e?.StopName?.Zh_tw || '').trim();
+        const routeName = String(e?.SubRouteName?.Zh_tw || e?.RouteName?.Zh_tw || '').trim();
+        const baseRouteName = String(e?.RouteName?.Zh_tw || routeName).trim();
+        const routeUid = String(e?.RouteUID || e?.RouteID || baseRouteName).trim();
+        if (!stopUid || !stopNameRaw || !routeName) continue;
+
+        const eBase = stopNameRaw.replace(/[（(].*?[）)]/g, '').trim() || stopNameRaw;
+        let matchedGrp = groups.get(eBase);
+        if (!matchedGrp) {
+          matchedGrp = candidateGroups.find(g => eBase.includes(g.baseName) || g.baseName.includes(eBase));
+        }
+        if (!matchedGrp) continue;
+
+        const dedupKey = `${city}|${stopUid}|${routeUid}|${e.Direction ?? 0}`;
+        if (!matchedGrp._seenKeys) matchedGrp._seenKeys = new Set();
+        if (!matchedGrp._seenKeys.has(dedupKey)) {
+          matchedGrp._seenKeys.add(dedupKey);
+          matchedGrp.stops.push({
+            city,
+            stopUid,
+            routeUid,
+            routeId: String(e?.RouteID || '').trim(),
+            routeName: baseRouteName
+          });
+        }
+        matchedGrp.etaItems.push({ ...e, _city: city });
+        matchedGrp.etaFetchedAt = Date.now();
       }
     }
+  }
+
+  for (const g of groups.values()) {
+    delete g._seenKeys;
   }
 
   const sorted = [...groups.values()]
@@ -1472,77 +1679,63 @@ async function handleBusNearbyProxy(req, res, parsedUrl) {
 
     const activeStopIndex = Math.min(stopIdxReq, stations.length - 1);
     const activeStop = stations[activeStopIndex];
+    const stopBaseName = (activeStop.baseName || activeStop.name || '').replace(/[（(].*?[）)]/g, '').trim() || activeStop.name;
 
-    // Group activeStop StopUIDs & RouteUIDs by city, chunking <= 18 per OData $filter
-    const byCity = {};
-    for (const sp of activeStop.stops) {
-      if (!byCity[sp.city]) byCity[sp.city] = { stopUids: new Set(), routeUids: new Set() };
-      byCity[sp.city].stopUids.add(sp.stopUid);
-      if (sp.routeUid) byCity[sp.city].routeUids.add(sp.routeUid);
+    const citiesToFetch = [...new Set(activeStop.stops.map(s => s.city).filter(Boolean))];
+    if (citiesToFetch.length === 0) citiesToFetch.push(primaryTdxCity);
+
+    const hasFreshCachedEtas = Array.isArray(activeStop.etaItems) && activeStop.etaItems.length > 0 && (now - (activeStop.etaFetchedAt || 0) < 14000);
+
+    const [liveEtaBatches, transitousStopTimes] = await Promise.all([
+      hasFreshCachedEtas
+        ? Promise.resolve([{ city: primaryTdxCity, arr: activeStop.etaItems }])
+        : Promise.all(citiesToFetch.map(async (city) => {
+            const p = city === 'InterCity' ? '/v2/Bus/EstimatedTimeOfArrival/InterCity' : `/v2/Bus/EstimatedTimeOfArrival/City/${city}/`;
+            const arr = await fetchTdxProxyJson(p, {
+              '$filter': `contains(StopName/Zh_tw,'${stopBaseName.replace(/'/g, "''")}')`,
+              '$select': 'StopUID,StopName,RouteUID,RouteID,RouteName,SubRouteName,Direction,EstimateTime,StopStatus,NextBusTime,PlateNumb,SrcUpdateTime',
+              '$top': '180',
+              '$format': 'JSON'
+            }, 5500).catch(() => []);
+            return { city, arr: Array.isArray(arr) ? arr : [] };
+          })),
+      activeStop.transitousId
+        ? fetch(`https://api.transitous.org/api/v1/stoptimes?stopId=${encodeURIComponent(activeStop.transitousId)}&n=30`, {
+            headers: { 'Accept': 'application/json', 'User-Agent': 'TaiwanNeighborhoodMonitor/2.0' },
+            signal: AbortSignal.timeout(2800)
+          }).then(r => r.ok ? r.json() : null).catch(() => null)
+        : Promise.resolve(null)
+    ]);
+
+    const headsignMap = new Map();
+    if (Array.isArray(transitousStopTimes?.stopTimes)) {
+      for (const st of transitousStopTimes.stopTimes) {
+        const rShort = String(st.routeShortName || st.displayName || '').trim();
+        const headsign = String(st.headsign || st.tripTo?.name || '').trim();
+        if (rShort && headsign) {
+          const cleanR = rShort.replace(/[^\dA-Za-z\u4e00-\u9fa5].*$/, '').trim() || rShort;
+          if (!headsignMap.has(cleanR)) headsignMap.set(cleanR, headsign);
+          if (!headsignMap.has(rShort)) headsignMap.set(rShort, headsign);
+        }
+      }
     }
 
-    const chunkArray = (arr, size) => {
-      const out = [];
-      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-      return out;
-    };
-
     const etaByStopUid = new Map();
-
-    await Promise.all(Object.entries(byCity).map(async ([city, sets]) => {
-      const uidChunks = chunkArray([...sets.stopUids], 18).slice(0, 6);
-      const missingRouteUids = [...sets.routeUids].filter(rid => !cache.busRouteMetaMap.has(`${city}|${rid}`));
-      const routeChunks = chunkArray(missingRouteUids, 18).slice(0, 4);
-
-      const etaTasks = uidChunks.map(chunk => {
-        const f = chunk.map(u => `StopUID eq '${u.replace(/'/g, "''")}'`).join(' or ');
-        const p = city === 'InterCity' ? '/v2/Bus/EstimatedTimeOfArrival/InterCity' : `/v2/Bus/EstimatedTimeOfArrival/City/${city}/`;
-        return fetchTdxProxyJson(p, {
-          '$filter': f,
-          '$select': 'StopUID,RouteUID,RouteID,RouteName,SubRouteName,Direction,EstimateTime,StopStatus,NextBusTime,PlateNumb,SrcUpdateTime',
-          '$top': '150',
-          '$format': 'JSON'
-        }, 5500).catch(() => []);
-      });
-
-      const routeTasks = routeChunks.map(chunk => {
-        const f = chunk.map(r => `RouteUID eq '${r.replace(/'/g, "''")}'`).join(' or ');
-        const p = city === 'InterCity' ? '/v2/Bus/Route/InterCity' : `/v2/Bus/Route/City/${city}`;
-        return fetchTdxProxyJson(p, {
-          '$filter': f,
-          '$select': 'RouteUID,RouteID,RouteName,DepartureStopNameZh,DestinationStopNameZh',
-          '$top': '80',
-          '$format': 'JSON'
-        }, 5500).catch(() => []);
-      });
-
-      const [etaResults, routeResults] = await Promise.all([
-        Promise.all(etaTasks),
-        Promise.all(routeTasks)
-      ]);
-
-      for (const rArr of routeResults) {
-        if (!Array.isArray(rArr)) continue;
-        for (const rt of rArr) {
-          if (rt && rt.RouteUID) {
-            setBoundedMap(cache.busRouteMetaMap, `${city}|${rt.RouteUID}`, rt, 800);
-            if (rt.RouteName?.Zh_tw) {
-              setBoundedMap(cache.busRouteMetaMap, `${city}|name:${rt.RouteName.Zh_tw}`, rt, 800);
-            }
-          }
-        }
+    const allLiveEtas = [];
+    for (const { city, arr } of liveEtaBatches) {
+      for (const eItem of arr) {
+        if (!eItem?.StopUID) continue;
+        const itemWithCity = { ...eItem, _city: eItem._city || city };
+        allLiveEtas.push(itemWithCity);
+        const list = etaByStopUid.get(eItem.StopUID) || [];
+        list.push(itemWithCity);
+        etaByStopUid.set(eItem.StopUID, list);
       }
-
-      for (const eArr of etaResults) {
-        if (!Array.isArray(eArr)) continue;
-        for (const eItem of eArr) {
-          if (!eItem?.StopUID) continue;
-          const list = etaByStopUid.get(eItem.StopUID) || [];
-          list.push({ ...eItem, _city: city });
-          etaByStopUid.set(eItem.StopUID, list);
-        }
-      }
-    }));
+    }
+    if (!hasFreshCachedEtas && allLiveEtas.length > 0) {
+      activeStop.etaItems = allLiveEtas;
+      activeStop.etaFetchedAt = Date.now();
+    }
 
     // Merge station routes + real-time ETAs, deduplicating by (routeName, direction)
     const mergedRouteMap = new Map();
@@ -1556,7 +1749,6 @@ async function handleBusNearbyProxy(req, res, parsedUrl) {
 
     for (const sp of activeStop.stops) {
       const rawEtaList = etaByStopUid.get(sp.stopUid) || [];
-      // InterCity 或 共構站牌須核對 RouteUID / RouteName，避免跨線誤植
       const matchedEtaList = rawEtaList.filter(e => {
         const eUid = String(e.RouteUID || '').trim();
         const eRouteName = String(e.RouteName?.Zh_tw || e.SubRouteName?.Zh_tw || '').trim();
@@ -1577,6 +1769,9 @@ async function handleBusNearbyProxy(req, res, parsedUrl) {
             dest = dir === 1
               ? (rtMeta.DepartureStopNameZh || rtMeta.DestinationStopNameZh || '')
               : (rtMeta.DestinationStopNameZh || rtMeta.DepartureStopNameZh || '');
+          }
+          if (!dest) {
+            dest = headsignMap.get(rName) || headsignMap.get(sp.routeName) || (dir === 1 ? '返程方向' : '去程方向');
           }
           const statusObj = formatBusStatusInfo(e.EstimateTime, e.StopStatus, e.NextBusTime);
           const plate = e.PlateNumb || '';
@@ -1601,7 +1796,8 @@ async function handleBusNearbyProxy(req, res, parsedUrl) {
       } else {
         const rtMeta = cache.busRouteMetaMap.get(`${sp.city}|${sp.routeUid}`) ||
                        cache.busRouteMetaMap.get(`${sp.city}|name:${sp.routeName}`);
-        const dest = rtMeta ? (rtMeta.DestinationStopNameZh || rtMeta.DepartureStopNameZh || '') : '';
+        const dest = (rtMeta ? (rtMeta.DestinationStopNameZh || rtMeta.DepartureStopNameZh || '') : '') ||
+                     headsignMap.get(sp.routeName) || '去程方向';
         registerCandidate({
           city: sp.city,
           stopUid: sp.stopUid,
@@ -2837,17 +3033,82 @@ function twd97ToWgs84(xRaw, yRaw) {
   return { lat: +lat.toFixed(6), lon: +lon.toFixed(6) };
 }
 
+const BUILT_IN_TRA_STATIONS = [
+  { stationId: '0900', name: '基隆', lat: 25.1341, lon: 121.7399, address: '基隆市仁愛區港西街5號' },
+  { stationId: '0920', name: '八堵', lat: 25.1084, lon: 121.7290, address: '基隆市暖暖區八堵路142號' },
+  { stationId: '0930', name: '七堵', lat: 25.0929, lon: 121.7142, address: '基隆市七堵區東新街2號' },
+  { stationId: '0960', name: '汐止', lat: 25.0689, lon: 121.6612, address: '新北市汐止區信義路1號' },
+  { stationId: '0980', name: '南港', lat: 25.0531, lon: 121.6071, address: '臺北市南港區南港路一段313號' },
+  { stationId: '0990', name: '松山', lat: 25.0494, lon: 121.5783, address: '臺北市信義區松山路11號' },
+  { stationId: '1000', name: '臺北', lat: 25.0479, lon: 121.5171, address: '臺北市中正區北平西路3號' },
+  { stationId: '1010', name: '萬華', lat: 25.0334, lon: 121.5003, address: '臺北市萬華區康定路382號' },
+  { stationId: '1020', name: '板橋', lat: 25.0143, lon: 121.4638, address: '新北市板橋區縣民大道二段7號' },
+  { stationId: '1030', name: '浮洲', lat: 25.0042, lon: 121.4447, address: '新北市板橋區大觀路二段' },
+  { stationId: '1040', name: '樹林', lat: 24.9912, lon: 121.4244, address: '新北市樹林區鎮前街112號' },
+  { stationId: '1050', name: '南樹林', lat: 24.9803, lon: 121.4089, address: '新北市樹林區中山路二段230號' },
+  { stationId: '1060', name: '山佳', lat: 24.9723, lon: 121.3926, address: '新北市樹林區山佳街28號' },
+  { stationId: '1070', name: '鶯歌', lat: 24.9547, lon: 121.3556, address: '新北市鶯歌區文化路68號' },
+  { stationId: '1075', name: '鳳鳴', lat: 24.9708, lon: 121.3323, address: '新北市鶯歌區大湖路700號' },
+  { stationId: '1080', name: '桃園', lat: 24.9892, lon: 121.3135, address: '桃園市桃園區中正路1號' },
+  { stationId: '1090', name: '內壢', lat: 24.9728, lon: 121.2582, address: '桃園市中壢區中華路一段267號' },
+  { stationId: '1100', name: '中壢', lat: 24.9537, lon: 121.2256, address: '桃園市中壢區中和路139號' },
+  { stationId: '1110', name: '埔心', lat: 24.9194, lon: 121.1837, address: '桃園市楊梅區永美路208號' },
+  { stationId: '1120', name: '楊梅', lat: 24.9143, lon: 121.1462, address: '桃園市楊梅區大成路256號' },
+  { stationId: '1130', name: '富岡', lat: 24.9344, lon: 121.0831, address: '桃園市楊梅區成功路37號' },
+  { stationId: '1160', name: '湖口', lat: 24.9029, lon: 121.0442, address: '新竹縣湖口鄉仁勢村中山路二段121號' },
+  { stationId: '1170', name: '新豐', lat: 24.8696, lon: 120.9963, address: '新竹縣新豐鄉新興路202號' },
+  { stationId: '1180', name: '竹北', lat: 24.8390, lon: 121.0094, address: '新竹縣竹北市和平街59號' },
+  { stationId: '1190', name: '北新竹', lat: 24.8087, lon: 120.9839, address: '新竹市東區中華路一段291之2號' },
+  { stationId: '1210', name: '新竹', lat: 24.8016, lon: 120.9716, address: '新竹市東區中華路二段445號' },
+  { stationId: '1220', name: '三姓橋', lat: 24.7875, lon: 120.9288, address: '新竹市香山區元培街32巷30號' },
+  { stationId: '1230', name: '香山', lat: 24.7631, lon: 120.9142, address: '新竹市香山區中華路五段347巷2弄27號' },
+  { stationId: '1250', name: '竹南', lat: 24.6865, lon: 120.8808, address: '苗栗縣竹南鎮中山路166號' },
+  { stationId: '3160', name: '苗栗', lat: 24.5700, lon: 120.8224, address: '苗栗縣苗栗市為公路1號' },
+  { stationId: '3230', name: '豐原', lat: 24.2541, lon: 120.7229, address: '臺中市豐原區中正路1之1號' },
+  { stationId: '3300', name: '臺中', lat: 24.1368, lon: 120.6850, address: '臺中市中區臺灣大道一段1號' },
+  { stationId: '3340', name: '新烏日', lat: 24.1095, lon: 120.6143, address: '臺中市烏日區高鐵東一路26號' },
+  { stationId: '3360', name: '彰化', lat: 24.0818, lon: 120.5385, address: '彰化縣彰化市三民路1號' },
+  { stationId: '3390', name: '員林', lat: 23.9593, lon: 120.5698, address: '彰化縣員林市民權街55號' },
+  { stationId: '3470', name: '斗六', lat: 23.7118, lon: 120.5411, address: '雲林縣斗六市民生路187號' },
+  { stationId: '4080', name: '嘉義', lat: 23.4791, lon: 120.4411, address: '嘉義市西區中山路528號' },
+  { stationId: '4120', name: '新營', lat: 23.3067, lon: 120.3228, address: '臺南市新營區中山路1號' },
+  { stationId: '4220', name: '臺南', lat: 22.9971, lon: 120.2129, address: '臺南市東區北門路二段4號' },
+  { stationId: '4272', name: '沙崙', lat: 22.9242, lon: 120.2863, address: '臺南市歸仁區歸仁大道102號' },
+  { stationId: '4310', name: '岡山', lat: 22.7922, lon: 120.3001, address: '高雄市岡山區岡燕路111號' },
+  { stationId: '4340', name: '新左營', lat: 22.6874, lon: 120.3075, address: '高雄市左營區站前北路1號' },
+  { stationId: '4400', name: '高雄', lat: 22.6396, lon: 120.3026, address: '高雄市三民區建國二路318號' },
+  { stationId: '4440', name: '鳳山', lat: 22.6311, lon: 120.3578, address: '高雄市鳳山區曹公路68號' },
+  { stationId: '5000', name: '屏東', lat: 22.6691, lon: 120.4862, address: '屏東縣屏東市公勇路62號' },
+  { stationId: '5050', name: '潮州', lat: 22.5501, lon: 120.5363, address: '屏東縣潮州鎮信義路111號' },
+  { stationId: '7360', name: '瑞芳', lat: 25.1089, lon: 121.8062, address: '新北市瑞芳區明燈路三段82號' },
+  { stationId: '7230', name: '頭城', lat: 24.8590, lon: 121.8226, address: '宜蘭縣頭城鎮纘祥路59號' },
+  { stationId: '7210', name: '礁溪', lat: 24.8270, lon: 121.7753, address: '宜蘭縣礁溪鄉溫泉路1號' },
+  { stationId: '7190', name: '宜蘭', lat: 24.7546, lon: 121.7582, address: '宜蘭縣宜蘭市光復路1號' },
+  { stationId: '7160', name: '羅東', lat: 24.6779, lon: 121.7745, address: '宜蘭縣羅東鎮公正路2號' },
+  { stationId: '7130', name: '蘇澳新', lat: 24.6091, lon: 121.8271, address: '宜蘭縣蘇澳鎮中山路二段238巷1號' },
+  { stationId: '7120', name: '蘇澳', lat: 24.5952, lon: 121.8514, address: '宜蘭縣蘇澳鎮太平路1號' },
+  { stationId: '7000', name: '花蓮', lat: 23.9928, lon: 121.6014, address: '花蓮縣花蓮市國聯一路100號' },
+  { stationId: '6250', name: '吉安', lat: 23.9682, lon: 121.5835, address: '花蓮縣吉安鄉南昌村文化街200號' },
+  { stationId: '6240', name: '志學', lat: 23.9073, lon: 121.5295, address: '花蓮縣壽豐鄉志學村中正路1號' },
+  { stationId: '6230', name: '壽豐', lat: 23.8691, lon: 121.5106, address: '花蓮縣壽豐鄉壽豐村壽山路1號' },
+  { stationId: '6130', name: '瑞穗', lat: 23.4975, lon: 121.3768, address: '花蓮縣瑞穗鄉瑞美村四維街13號' },
+  { stationId: '6110', name: '玉里', lat: 23.3316, lon: 121.3117, address: '花蓮縣玉里鎮康樂街39號' },
+  { stationId: '6050', name: '池上', lat: 23.1260, lon: 121.2192, address: '臺東縣池上鄉福文村鐵花路30號' },
+  { stationId: '6030', name: '關山', lat: 23.0457, lon: 121.1643, address: '臺東縣關山鎮博愛路2號' },
+  { stationId: '6000', name: '臺東', lat: 22.7937, lon: 121.1232, address: '臺東縣臺東市岩灣路101巷598號' }
+];
+
 function normalizeTraTrainType(rawType) {
   const s = String(rawType || '').trim();
-  if (!s) return '列車';
-  if (s.includes('3000')) return '新自強';
-  if (s.includes('普悠瑪')) return '普悠瑪';
-  if (s.includes('太魯閣')) return '太魯閣';
-  if (s.includes('區間快')) return '區間快';
-  if (s.includes('區間')) return '區間';
-  if (s.includes('自強')) return '自強';
-  if (s.includes('莒光')) return '莒光';
-  return s.replace(/\(.*?\)/g, '').trim().slice(0, 5) || '列車';
+  if (!s) return '區間';
+  if (s.includes('3000') || s === '110G' || s === '110H' || s === '110K' || s === '110M') return '新自強';
+  if (s.includes('普悠瑪') || s === '1107') return '普悠瑪';
+  if (s.includes('太魯閣') || /^110[6A-F]$/i.test(s)) return '太魯閣';
+  if (s.includes('區間快') || s === '1132') return '區間快';
+  if (s.includes('區間') || s === '1131' || /^113/.test(s)) return '區間';
+  if (s.includes('自強') || /^110/.test(s)) return '自強';
+  if (s.includes('莒光') || /^111/.test(s)) return '莒光';
+  return s.replace(/\(.*?\)/g, '').trim().slice(0, 5) || '區間';
 }
 
 // 台鐵最近車站空間檢索與即時誤點列車看板 (/api/rail/tra-nearby)
@@ -2875,32 +3136,16 @@ async function handleTraNearbyProxy(req, res, parsedUrl) {
   }
 
   try {
-    if (!cache.traStationsAll.data || now >= cache.traStationsAll.expireAt) {
-      const allRaw = await fetchTdxProxyJson('/v2/Rail/TRA/Station', {
-        '$select': 'StationID,StationName,StationPosition,StationAddress',
-        '$format': 'JSON'
-      }, 6500);
-      if (Array.isArray(allRaw) && allRaw.length > 0) {
-        cache.traStationsAll = { data: allRaw, expireAt: now + 12 * 3600000 };
-      }
-    }
-    const rawStations = cache.traStationsAll.data || [];
-
-    const stations = rawStations
-      .map(st => {
-        const sLat = Number(st?.StationPosition?.PositionLat);
-        const sLon = Number(st?.StationPosition?.PositionLon);
-        if (!st?.StationID || !Number.isFinite(sLat) || !Number.isFinite(sLon)) return null;
-        return {
-          stationId: String(st.StationID),
-          name: String(st?.StationName?.Zh_tw || st.StationID).trim(),
-          address: String(st?.StationAddress || '').trim(),
-          lat: sLat,
-          lon: sLon,
-          distMeters: calcDistanceMeters(lat, lon, sLat, sLon)
-        };
-      })
-      .filter(st => st && st.distMeters <= 8000)
+    const stations = BUILT_IN_TRA_STATIONS
+      .map(st => ({
+        stationId: st.stationId,
+        name: st.name,
+        address: st.address,
+        lat: st.lat,
+        lon: st.lon,
+        distMeters: calcDistanceMeters(lat, lon, st.lat, st.lon)
+      }))
+      .filter(st => st.distMeters <= 10500)
       .sort((a, b) => a.distMeters - b.distMeters)
       .slice(0, 4);
 
@@ -2921,56 +3166,107 @@ async function handleTraNearbyProxy(req, res, parsedUrl) {
 
     const activeIdx = Math.min(reqIdx, stations.length - 1);
     const activeStation = stations[activeIdx];
-    const isEastTrunk = /^[67]\d{3}$/.test(activeStation.stationId);
-    const liveResp = await fetchTdxProxyJson(`/v2/Rail/TRA/LiveBoard/Station/${encodeURIComponent(activeStation.stationId)}`, {
-      '$top': '40',
-      '$format': 'JSON'
-    }, 5500);
-    const liveRows = Array.isArray(liveResp?.StationLiveBoards) ? liveResp.StationLiveBoards : (Array.isArray(liveResp) ? liveResp : []);
+    const sid = activeStation.stationId;
+    const sName = activeStation.name;
+    const isEastTrunk = /^[67]\d{3}$/.test(sid);
 
     const twNowStr = getTaiwanTimeHHMMSS();
     const [curH, curM, curS] = twNowStr.split(':').map(n => parseInt(n, 10) || 0);
     const curTotalSec = curH * 3600 + curM * 60 + curS;
 
-    const trains = [];
-    for (const row of (Array.isArray(liveRows) ? liveRows : [])) {
-      const endId = String(row?.EndingStationID || '').trim();
-      const endName = String(row?.EndingStationName?.Zh_tw || '').trim();
-      // 排除終點站即為本站之進站下車車次 (避免顯示如 基隆➔往基隆)
-      if ((endId && endId === activeStation.stationId) || (endName && endName === activeStation.name)) {
-        continue;
+    const [liveHtmlRes, transitousRes] = await Promise.allSettled([
+      fetchRemoteHtml(`https://www.opendata.vip/tdx/trainLiveBoard/${encodeURIComponent(sid)}`, 5500),
+      fetch(`https://api.transitous.org/api/v1/stoptimes?stopId=tw-taiwan-tdx_TRA_${encodeURIComponent(sid)}&n=24`, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'TaiwanNeighborhoodMonitor/2.0' },
+        signal: AbortSignal.timeout(5500)
+      }).then(r => r.ok ? r.json() : null)
+    ]);
+
+    const liveDelayMap = new Map();
+    const trainsMap = new Map();
+
+    // 1. 解析 opendata.vip TDX 即時到離站看板 HTML (含即時晚 N 分誤點)
+    if (liveHtmlRes.status === 'fulfilled' && liveHtmlRes.value) {
+      const tbody = (liveHtmlRes.value.match(/<table class="tlb-table">[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/i) || [])[1] || '';
+      const rowMatches = [...tbody.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)].map(m => m[1]);
+      for (const rowHtml of rowMatches) {
+        const depTime = (rowHtml.match(/<span class="tlb-time">(\d{2}:\d{2})<\/span>/) || [])[1] || '';
+        const trainNo = (rowHtml.match(/trainTodayInfo\/(\d+)/) || [])[1] || '';
+        const rawType = (rowHtml.match(/<span class="tlb-type"[^>]*>([^<]+)<\/span>/) || [])[1] || '';
+        const destMatch = rowHtml.match(/trainLiveBoard\/(\d+)">([^<]+)<\/a>/);
+        const endId = destMatch ? destMatch[1].trim() : '';
+        const endName = destMatch ? destMatch[2].trim() : '';
+        const badgeText = ((rowHtml.match(/<span class="tlb-badge[^"]*">([^<]+)<\/span>/) || [])[1] || '').trim();
+        const lateM = badgeText.match(/晚\s*(\d+)\s*分/);
+        const delayMin = lateM ? parseInt(lateM[1], 10) : 0;
+        if (!trainNo || !depTime || endId === sid || endName === sName) continue;
+        liveDelayMap.set(trainNo, delayMin);
+
+        const [sh, sm] = depTime.split(':').map(n => parseInt(n, 10) || 0);
+        let diffSec = (sh * 60 + sm + delayMin) * 60 - curTotalSec;
+        if (diffSec < -43200) diffSec += 86400;
+        if (diffSec > 43200) diffSec -= 86400;
+        if (diffSec < -60 || diffSec > 21600) continue;
+        const dirNum = (endId && parseInt(endId, 10) < parseInt(sid, 10)) ? 0 : 1;
+        // 東部幹線 (宜蘭/北迴/臺東 6xxx/7xxx) Direction 0(順行)為南下、1(逆行)為北上；西部幹線 0(順行)為北上、1(逆行)為南下
+        const directionLabel = isEastTrunk
+          ? (dirNum === 0 ? '南下' : '北上')
+          : (dirNum === 0 ? '北上' : '南下');
+        const clampedSec = Math.max(0, diffSec);
+        trainsMap.set(trainNo, {
+          trainNo,
+          trainType: normalizeTraTrainType(rawType),
+          direction: dirNum,
+          directionLabel,
+          destination: endName,
+          depTime,
+          delayMin,
+          remainMin: Math.floor(clampedSec / 60),
+          remainSec: clampedSec
+        });
       }
-      const schedRaw = String(row?.ScheduledDepartureTime || row?.ScheduledArrivalTime || '').slice(0, 5);
-      if (!/^\d{2}:\d{2}$/.test(schedRaw)) continue;
-      const [sh, sm] = schedRaw.split(':').map(n => parseInt(n, 10) || 0);
-      const delayMin = Math.max(0, parseInt(row?.DelayTime, 10) || 0);
-      const estSec = (sh * 60 + sm + delayMin) * 60;
-      let diffSec = estSec - curTotalSec;
-      if (diffSec < -43200) diffSec += 86400;
-      if (diffSec > 43200) diffSec -= 86400;
-      if (diffSec < -30 || diffSec > 14400) continue;
-
-      const dirNum = Number(row?.Direction) === 1 ? 1 : 0;
-      // 東部幹線 (宜蘭/北迴/臺東 6xxx/7xxx) Direction 0(順行)為南下、1(逆行)為北上；西部幹線 0(順行)為北上、1(逆行)為南下
-      const directionLabel = isEastTrunk
-        ? (dirNum === 0 ? '南下' : '北上')
-        : (dirNum === 0 ? '北上' : '南下');
-
-      const clampedSec = Math.max(0, diffSec);
-      trains.push({
-        trainNo: String(row?.TrainNo || '').trim(),
-        trainType: normalizeTraTrainType(row?.TrainTypeName?.Zh_tw),
-        direction: dirNum,
-        directionLabel,
-        destination: endName,
-        depTime: schedRaw,
-        delayMin,
-        remainMin: Math.floor(clampedSec / 60),
-        remainSec: clampedSec
-      });
     }
 
-    trains.sort((a, b) => a.remainSec - b.remainSec);
+    // 2. 融合 Transitous 台灣 TDX GTFS 時刻表 (補充跨夜與後續即將發車班次)
+    if (transitousRes.status === 'fulfilled' && Array.isArray(transitousRes.value?.stopTimes)) {
+      for (const st of transitousRes.value.stopTimes) {
+        const rm = String(st.routeId || '').match(/TRA_(\d+)_([01])_([A-Za-z0-9]+)/);
+        const trainNo = rm ? rm[1] : String(st.tripShortName || '').trim();
+        if (!trainNo) continue;
+        const endName = String(st.headsign || st.tripTo?.name || '').trim().replace(/臺/g, '台');
+        if (!endName || endName === sName.replace(/臺/g, '台')) continue;
+        const depIso = st.place?.departure || st.place?.scheduledDeparture || st.place?.arrival;
+        const depMs = depIso ? Date.parse(depIso) : NaN;
+        if (!Number.isFinite(depMs)) continue;
+        const delayMin = liveDelayMap.get(trainNo) || 0;
+        const remainSec = Math.max(0, Math.round((depMs + delayMin * 60000 - Date.now()) / 1000));
+        if (remainSec > 32400) continue;
+        const twDep = new Date(depMs + 8 * 3600000).toISOString().slice(11, 16);
+        const dirNum = rm ? (parseInt(rm[2], 10) || 0) : (Number(st.directionId) === 1 ? 1 : 0);
+        const directionLabel = isEastTrunk
+          ? (dirNum === 0 ? '南下' : '北上')
+          : (dirNum === 0 ? '北上' : '南下');
+        if (!trainsMap.has(trainNo)) {
+          trainsMap.set(trainNo, {
+            trainNo,
+            trainType: normalizeTraTrainType(rm ? rm[3] : ''),
+            direction: dirNum,
+            directionLabel,
+            destination: endName,
+            depTime: twDep,
+            delayMin,
+            remainMin: Math.floor(remainSec / 60),
+            remainSec
+          });
+        } else {
+          const existing = trainsMap.get(trainNo);
+          existing.direction = dirNum;
+          existing.directionLabel = directionLabel;
+        }
+      }
+    }
+
+    const trains = [...trainsMap.values()].sort((a, b) => a.remainSec - b.remainSec);
     const payload = JSON.stringify({
       success: true,
       stations,
@@ -3324,33 +3620,64 @@ async function handleFreewayLiveProxy(req, res) {
 
   try {
     if (!cache.freewaySections.data || now >= cache.freewaySections.expireAt) {
-      const secResp = await fetchTdxProxyJson('/v2/Road/Traffic/Section/Freeway', {
-        '$select': 'SectionID,SectionName,RoadID,RoadName,RoadDirection,SpeedLimit',
-        '$format': 'JSON'
-      }, 6500);
-      const secArr = Array.isArray(secResp?.Sections) ? secResp.Sections : (Array.isArray(secResp) ? secResp : []);
       const secMap = new Map();
-      for (const s of (Array.isArray(secArr) ? secArr : [])) {
-        if (!s?.SectionID || !s?.SectionName) continue;
-        secMap.set(String(s.SectionID), {
-          sectionId: String(s.SectionID),
-          name: String(s.SectionName).trim(),
-          roadName: String(s.RoadName || '').trim(),
-          dir: String(s.RoadDirection || '').trim(),
-          speedLimit: parseInt(s.SpeedLimit, 10) || 100
-        });
+      try {
+        const secXml = await fetchRemoteText('https://tisvcloud.freeway.gov.tw/history/motc20/Section.xml', 'application/xml, text/xml, */*', 6000);
+        const secBlocks = secXml.match(/<Section>[\s\S]*?<\/Section>/g) || [];
+        for (const b of secBlocks) {
+          const sid = (b.match(/<SectionID>([^<]+)<\/SectionID>/) || [])[1]?.trim();
+          const sname = (b.match(/<SectionName>([^<]+)<\/SectionName>/) || [])[1]?.trim();
+          if (!sid || !sname) continue;
+          secMap.set(sid, {
+            sectionId: sid,
+            name: sname,
+            roadName: ((b.match(/<RoadName>([^<]+)<\/RoadName>/) || [])[1] || '').trim(),
+            dir: ((b.match(/<RoadDirection>([^<]+)<\/RoadDirection>/) || [])[1] || '').trim(),
+            speedLimit: parseInt(((b.match(/<SpeedLimit>([^<]+)<\/SpeedLimit>/) || [])[1] || '100'), 10) || 100
+          });
+        }
+      } catch (_) {}
+      if (secMap.size === 0) {
+        const secResp = await fetchTdxProxyJson('/v2/Road/Traffic/Section/Freeway', {
+          '$select': 'SectionID,SectionName,RoadID,RoadName,RoadDirection,SpeedLimit',
+          '$format': 'JSON'
+        }, 6500);
+        const secArr = Array.isArray(secResp?.Sections) ? secResp.Sections : (Array.isArray(secResp) ? secResp : []);
+        for (const s of (Array.isArray(secArr) ? secArr : [])) {
+          if (!s?.SectionID || !s?.SectionName) continue;
+          secMap.set(String(s.SectionID), {
+            sectionId: String(s.SectionID),
+            name: String(s.SectionName).trim(),
+            roadName: String(s.RoadName || '').trim(),
+            dir: String(s.RoadDirection || '').trim(),
+            speedLimit: parseInt(s.SpeedLimit, 10) || 100
+          });
+        }
       }
       if (secMap.size > 0) {
         cache.freewaySections = { data: secMap, expireAt: now + 6 * 3600000 };
       }
     }
 
-    const liveResp = await fetchTdxProxyJson('/v2/Road/Traffic/Live/Freeway', {
-      '$format': 'JSON'
-    }, 6500);
-    const liveList = Array.isArray(liveResp?.LiveTraffics)
-      ? liveResp.LiveTraffics
-      : (Array.isArray(liveResp) ? liveResp : []);
+    let liveList = [];
+    try {
+      const liveXml = await fetchRemoteText('https://tisvcloud.freeway.gov.tw/history/motc20/LiveTraffic.xml', 'application/xml, text/xml, */*', 6000);
+      const liveBlocks = liveXml.match(/<LiveTraffic>[\s\S]*?<\/LiveTraffic>/g) || [];
+      for (const b of liveBlocks) {
+        const SectionID = (b.match(/<SectionID>([^<]+)<\/SectionID>/) || [])[1]?.trim();
+        const TravelSpeed = (b.match(/<TravelSpeed>([^<]+)<\/TravelSpeed>/) || [])[1]?.trim();
+        const CongestionLevel = (b.match(/<CongestionLevel>([^<]+)<\/CongestionLevel>/) || [])[1]?.trim();
+        if (SectionID) liveList.push({ SectionID, TravelSpeed, CongestionLevel });
+      }
+    } catch (_) {}
+    if (liveList.length === 0) {
+      const liveResp = await fetchTdxProxyJson('/v2/Road/Traffic/Live/Freeway', {
+        '$format': 'JSON'
+      }, 6500);
+      liveList = Array.isArray(liveResp?.LiveTraffics)
+        ? liveResp.LiveTraffics
+        : (Array.isArray(liveResp) ? liveResp : []);
+    }
     const secMap = cache.freewaySections.data || new Map();
 
     const allValid = [];
@@ -3390,11 +3717,12 @@ async function handleFreewayLiveProxy(req, res) {
 
     const corridors = [];
     for (const cm of corridorMatchers) {
+      const normName = (n) => String(n || '').replace(/臺/g, '台');
       let matched = Array.isArray(cm.pairs)
-        ? allValid.filter(s => s.roadName.includes(cm.road) && cm.pairs.some(pair => pair.every(k => s.name.includes(k))))
-        : allValid.filter(s => s.roadName.includes(cm.road) && cm.kw.every(k => s.name.includes(k)));
+        ? allValid.filter(s => s.roadName.includes(cm.road) && cm.pairs.some(pair => pair.every(k => normName(s.name).includes(k))))
+        : allValid.filter(s => s.roadName.includes(cm.road) && cm.kw.every(k => normName(s.name).includes(k)));
       if (matched.length === 0) {
-        matched = allValid.filter(s => s.roadName.includes(cm.road) && cm.kw.some(k => s.name.includes(k)));
+        matched = allValid.filter(s => s.roadName.includes(cm.road) && normName(s.name).includes(cm.kw[0]));
       }
       const pick = matched.length > 0
         ? matched.reduce((worst, cur) => (cur.speed < worst.speed ? cur : worst), matched[0])
@@ -3505,6 +3833,7 @@ async function handleTravelToolkitProxy(req, res) {
 }
 
 // 跨裝置收藏牆與情境預設集 4 位數配對同步 (/api/wall-sync)
+const crypto = require('crypto');
 function handleWallSyncApi(req, res, parsedUrl) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -3539,6 +3868,14 @@ function handleWallSyncApi(req, res, parsedUrl) {
     const chunks = [];
     let totalBytes = 0;
     let aborted = false;
+    req.setTimeout(6000, () => {
+      aborted = true;
+      if (!res.headersSent && !res.writableEnded) {
+        res.writeHead(408);
+        res.end(JSON.stringify({ success: false, error: '讀取同步內容逾時' }));
+      }
+      req.destroy();
+    });
     req.on('error', () => {
       aborted = true;
       if (!res.headersSent && !res.writableEnded) {
@@ -3590,18 +3927,21 @@ function handleWallSyncApi(req, res, parsedUrl) {
           : [];
         const safeMeta = {};
         if (parsed.favoriteMeta && typeof parsed.favoriteMeta === 'object' && !Array.isArray(parsed.favoriteMeta)) {
-          for (const [k, m] of Object.entries(parsed.favoriteMeta)) {
+          for (const [k, m] of Object.entries(parsed.favoriteMeta).slice(0, 80)) {
             const safeK = cleanId(k);
             if (!safeK || !m || typeof m !== 'object' || Array.isArray(m)) continue;
             const safeUrl = (u) => {
               const s = String(u || '').trim();
-              return /^https?:\/\//i.test(s) ? s.slice(0, 400) : '';
+              if (!/^https?:\/\//i.test(s) || /["'<>\\\s\x00-\x1f]/.test(s)) return '';
+              return s.slice(0, 400);
             };
+            const allowedTypes = new Set(['hls', 'flv', 'mjpeg', 'snapshot', 'youtube', 'iframe']);
+            const rawType = String(m.type || '').trim().toLowerCase();
             safeMeta[safeK] = {
               id: safeK,
               name: String(m.name || safeK).trim().slice(0, 80),
               areaTag: String(m.areaTag || '').trim().slice(0, 24),
-              type: String(m.type || '').trim().slice(0, 20),
+              type: allowedTypes.has(rawType) ? rawType : 'youtube',
               videoId: /^[A-Za-z0-9_-]{6,20}$/.test(String(m.videoId || '')) ? String(m.videoId) : '',
               streamUrl: safeUrl(m.streamUrl),
               sourceUrl: safeUrl(m.sourceUrl),
@@ -3619,10 +3959,10 @@ function handleWallSyncApi(req, res, parsedUrl) {
           favoriteMeta: safeMeta,
           syncedAt: new Date().toISOString()
         };
-        let code = String(Math.floor(1000 + Math.random() * 9000));
-        for (let tries = 0; tries < 20; tries++) {
+        let code = String(crypto.randomInt(1000, 10000));
+        for (let tries = 0; tries < 25; tries++) {
           if (!cache.wallSyncMap.has(code)) break;
-          code = String(Math.floor(1000 + Math.random() * 9000));
+          code = String(crypto.randomInt(1000, 10000));
         }
         setBoundedMap(cache.wallSyncMap, code, { data: safeData, expireAt: now + 20 * 60000 }, 200);
         res.writeHead(200);
@@ -3641,12 +3981,12 @@ function handleWallSyncApi(req, res, parsedUrl) {
   res.end(JSON.stringify({ success: false, error: '不支援的請求方法' }));
 }
 
-const STATIC_ROOT_ALLOWLIST = new Set([
-  'index.html',
-  'manifest.json',
-  'favicon.png',
-  'dpulogo.jpg',
-  'dpulogo_icon.png'
+const STATIC_ROOT_ALLOWMAP = new Map([
+  ['index.html', 'index.html'],
+  ['manifest.json', 'manifest.json'],
+  ['favicon.png', 'favicon.png'],
+  ['dpulogo.jpg', 'dpuLogo.jpg'],
+  ['dpulogo_icon.png', 'dpuLogo_icon.png']
 ]);
 
 function runAsyncRoute(fn, req, res, ...args) {
@@ -3675,7 +4015,7 @@ const server = http.createServer((req, res) => {
       res.end('403 Forbidden');
       return;
     }
-    parsedUrl = new URL(safeReqUrl, `http://${req.headers.host || 'localhost'}`);
+    parsedUrl = new URL(safeReqUrl, 'http://localhost');
     pathname = decodeURIComponent(parsedUrl.pathname);
     if (pathname.includes('\0') || pathname.includes(':') || pathname.split(/[\\/]/).some(seg => seg === '..')) {
       res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -3801,15 +4141,15 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (pathname === '/api/wall-sync') {
-    handleWallSyncApi(req, res, parsedUrl);
+    runAsyncRoute(handleWallSyncApi, req, res, parsedUrl);
     return;
   }
   if (pathname === '/api/bote/prewarm') {
-    handleBotePrewarm(req, res, parsedUrl);
+    runAsyncRoute(handleBotePrewarm, req, res, parsedUrl);
     return;
   }
   if (pathname.startsWith('/api/bote/')) {
-    handleBoteProxy(req, res, parsedUrl);
+    runAsyncRoute(handleBoteProxy, req, res, parsedUrl);
     return;
   }
   if (pathname.startsWith('/api/')) {
@@ -3832,7 +4172,7 @@ const server = http.createServer((req, res) => {
   const hasBadSegment = normRelPath.split('/').some(seg => !seg || seg === '.' || seg === '..' || seg.startsWith('.') || /[. ]$/.test(seg));
 
   const isAllowedDataFile = normLower.startsWith('data/') && normLower.endsWith('.json') && !hasBadSegment;
-  const isAllowedRootFile = STATIC_ROOT_ALLOWLIST.has(normLower) && !hasBadSegment;
+  const isAllowedRootFile = STATIC_ROOT_ALLOWMAP.has(normLower) && !hasBadSegment;
 
   if (!normRelPath || hasBadSegment || (!isAllowedRootFile && !isAllowedDataFile)) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -3840,7 +4180,8 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const filePath = path.resolve(PUBLIC_DIR, normRelPath);
+  const resolvedRel = isAllowedRootFile ? STATIC_ROOT_ALLOWMAP.get(normLower) : normLower;
+  const filePath = path.resolve(PUBLIC_DIR, resolvedRel);
   const relFromPub = path.relative(PUBLIC_DIR, filePath);
   if (!relFromPub || relFromPub.startsWith('..') || path.isAbsolute(relFromPub)) {
     res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -3875,30 +4216,44 @@ const server = http.createServer((req, res) => {
     };
 
     const contentType = mimeTypes[ext] || 'application/octet-stream';
+    const cacheCtrl = normLower.startsWith('data/') ? 'no-cache' : 'public, max-age=30';
     if (req.method === 'HEAD') {
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Content-Length': stats.size
+        'Content-Length': stats.size,
+        'Cache-Control': cacheCtrl
       });
       res.end();
       return;
     }
 
     fs.readFile(filePath, (readErr, content) => {
+      if (res.headersSent || res.writableEnded || res.destroyed) return;
       if (readErr) {
-        res.writeHead(500);
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end('伺服器讀取檔案失敗');
         return;
       }
-      res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': content.length });
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Length': content.length,
+        'Cache-Control': cacheCtrl
+      });
       res.end(content);
     });
   });
 });
 
+server.requestTimeout = 30000;
+server.headersTimeout = 15000;
+server.keepAliveTimeout = 5000;
+
 if (require.main === module) {
+  server.on('error', (err) => {
+    console.error(`[雙埔監控系統] 伺服器啟動或運行異常 (${err.code || 'ERROR'}):`, err.message);
+  });
   server.listen(PORT, () => {
-    console.log(`[雙埔監控系統] 本機伺服器已啟動: http://localhost:${PORT}`);
+    console.log(`[雙埔生活 × 世界即時之窗] 本機伺服器已啟動: http://localhost:${PORT}`);
     console.log(`[API 代理] 新北市 YouBike 2.0: http://localhost:${PORT}/api/youbike/ntpc`);
     console.log(`[API 代理] 桃園市 YouBike 2.0: http://localhost:${PORT}/api/youbike/tycg`);
     console.log(`[API 代理] 台灣高鐵 (板橋➔桃園): http://localhost:${PORT}/api/thsr/south`);
@@ -3916,8 +4271,14 @@ server.fetchOfficialTymetroTimetable = fetchOfficialTymetroTimetable;
 server.fetchMetroLiveBoard = fetchMetroLiveBoard;
 server.fetchCarWeightData = fetchCarWeightData;
 server.fetchThsrParkingData = fetchThsrParkingData;
+server.handleParkingNearbyProxy = handleParkingNearbyProxy;
+server.handleBusNearbyProxy = handleBusNearbyProxy;
+server.handleTraNearbyProxy = handleTraNearbyProxy;
+server.handleFreewayLiveProxy = handleFreewayLiveProxy;
 server.getTaiwanDateString = getTaiwanDateString;
 server.decodeCompressedBuffer = decodeCompressedBuffer;
+server.parseCsvToJson = parseCsvToJson;
+server.parseTycgParkingXml = parseTycgParkingXml;
 server.setBoundedMap = setBoundedMap;
 server.twd97ToWgs84 = twd97ToWgs84;
 server._internal = { cache, boteCookieJar, botePrewarmCooldown };

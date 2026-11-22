@@ -279,11 +279,6 @@ class MainActivity : ComponentActivity() {
                             }
                             return true;
                         }
-                        const presetCancel = document.getElementById('newScenePresetCancelBtn');
-                        if (presetCancel) {
-                            presetCancel.click();
-                            return true;
-                        }
                         const modal = document.getElementById('cameraModal');
                         if (modal && modal.classList.contains('active')) {
                             const closeBtn = document.getElementById('modalCloseBtn');
@@ -294,6 +289,7 @@ class MainActivity : ComponentActivity() {
                     })();
                     """.trimIndent()
                 ) { handled ->
+                    if (isFinishing || isDestroyed) return@evaluateJavascript
                     if (handled == "true") return@evaluateJavascript
                     if (webView.canGoBack()) {
                         webView.goBack()
@@ -316,6 +312,9 @@ class MainActivity : ComponentActivity() {
             customFullscreenCallback?.onCustomViewHidden()
             WindowCompat.getInsetsController(window, window.decorView)
                 .show(WindowInsetsCompat.Type.systemBars())
+            if (::webView.isInitialized) {
+                webView.requestFocus()
+            }
         } catch (_: Exception) {}
         customFullscreenView = null
         customFullscreenCallback = null
@@ -473,7 +472,8 @@ class MainActivity : ComponentActivity() {
                 defaultValue: String?,
                 result: JsPromptResult?
             ): Boolean {
-                if (isFinishing || isDestroyed) {
+                val isTrusted = url?.startsWith("https://appassets.androidplatform.net/") == true
+                if (isFinishing || isDestroyed || !isTrusted) {
                     result?.cancel()
                     return true
                 }
@@ -497,7 +497,8 @@ class MainActivity : ComponentActivity() {
                 message: String?,
                 result: JsResult?
             ): Boolean {
-                if (isFinishing || isDestroyed) {
+                val isTrusted = url?.startsWith("https://appassets.androidplatform.net/") == true
+                if (isFinishing || isDestroyed || !isTrusted) {
                     result?.cancel()
                     return true
                 }
@@ -514,6 +515,13 @@ class MainActivity : ComponentActivity() {
                 origin: String?,
                 callback: android.webkit.GeolocationPermissions.Callback?
             ) {
+                val originUri = origin?.toUri()
+                val isTrustedOrigin = originUri?.scheme.equals("https", ignoreCase = true) &&
+                    originUri?.host.equals("appassets.androidplatform.net", ignoreCase = true)
+                if (!isTrustedOrigin) {
+                    callback?.invoke(origin, false, false)
+                    return
+                }
                 if (androidx.core.content.ContextCompat.checkSelfPermission(
                         this@MainActivity,
                         android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -833,78 +841,90 @@ class MainActivity : ComponentActivity() {
             }
 
             val resp = finalResp ?: return null
-            val code = resp.code
-            if (code in 200..299) {
-                val rawContentType = resp.header("Content-Type") ?: ""
-                val cleanPath = currentUrl.substringBefore("?").lowercase(Locale.US)
-                val isM3u8 = cleanPath.endsWith(".m3u8") || rawContentType.contains("mpegurl", ignoreCase = true)
-                val isTs = cleanPath.endsWith(".ts")
-                val isMp4 = cleanPath.endsWith(".mp4")
-                val isM4s = cleanPath.endsWith(".m4s") || cleanPath.endsWith(".m4v") || cleanPath.endsWith(".m4a")
-                val isBinary = isTs || isMp4 || isM4s || cleanPath.endsWith(".png") || cleanPath.endsWith(".jpg") || cleanPath.endsWith(".ico")
+            var handedOff = false
+            try {
+                val code = resp.code
+                if (code in 200..299) {
+                    val rawContentType = resp.header("Content-Type") ?: ""
+                    val cleanPath = currentUrl.substringBefore("?").lowercase(Locale.US)
+                    val isM3u8 = cleanPath.endsWith(".m3u8") || rawContentType.contains("mpegurl", ignoreCase = true)
+                    val isTs = cleanPath.endsWith(".ts")
+                    val isMp4 = cleanPath.endsWith(".mp4")
+                    val isM4s = cleanPath.endsWith(".m4s") || cleanPath.endsWith(".m4v") || cleanPath.endsWith(".m4a")
+                    val isBinary = isTs || isMp4 || isM4s || cleanPath.endsWith(".png") || cleanPath.endsWith(".jpg") || cleanPath.endsWith(".ico")
 
-                val mimeType = when {
-                    isM3u8 -> "application/vnd.apple.mpegurl"
-                    isTs -> "video/mp2t"
-                    isMp4 -> "video/mp4"
-                    isM4s -> "video/iso.segment"
-                    cleanPath.endsWith(".js") -> "application/javascript"
-                    cleanPath.endsWith(".css") -> "text/css"
-                    cleanPath.endsWith(".html") || (currentUrl.contains("/live/") && !cleanPath.substringAfterLast("/").contains(".")) -> "text/html"
-                    rawContentType.isNotEmpty() -> rawContentType.split(";")[0].trim()
-                    else -> "application/octet-stream"
-                }
+                    val mimeType = when {
+                        isM3u8 -> "application/vnd.apple.mpegurl"
+                        isTs -> "video/mp2t"
+                        isMp4 -> "video/mp4"
+                        isM4s -> "video/iso.segment"
+                        cleanPath.endsWith(".js") -> "application/javascript"
+                        cleanPath.endsWith(".css") -> "text/css"
+                        cleanPath.endsWith(".html") || (currentUrl.contains("/live/") && !cleanPath.substringAfterLast("/").contains(".")) -> "text/html"
+                        rawContentType.isNotEmpty() -> rawContentType.split(";")[0].trim()
+                        else -> "application/octet-stream"
+                    }
 
-                // 針對二進位視訊切片 (.ts / .mp4 / .m4s) 與圖檔，encoding 必須傳入 null，避免 UTF-8 破壞位元組造成解碼失敗
-                val encoding = if (isBinary) null else {
-                    if (rawContentType.contains("charset=", ignoreCase = true)) {
-                        rawContentType.substringAfter("charset=").substringBefore(";").trim().ifEmpty { "utf-8" }
+                    val encoding = if (isBinary) null else {
+                        if (rawContentType.contains("charset=", ignoreCase = true)) {
+                            rawContentType.substringAfter("charset=").substringBefore(";").trim().ifEmpty { "utf-8" }
+                        } else {
+                            "utf-8"
+                        }
+                    }
+
+                    val contentRangeHeader = if (code == 206) resp.header("Content-Range") else null
+                    val contentLenHeader = resp.header("Content-Length")
+                    val contentEncHeader = resp.header("Content-Encoding")
+
+                    val headers = corsHeaders().apply {
+                        put("Cache-Control", "no-cache, no-store, must-revalidate")
+                        put("Accept-Ranges", "bytes")
+                        if (!contentRangeHeader.isNullOrBlank()) {
+                            put("Content-Range", contentRangeHeader)
+                        }
+                        if (!contentEncHeader.isNullOrBlank()) {
+                            put("Content-Encoding", contentEncHeader)
+                        }
+                        if (method != "HEAD" && !contentLenHeader.isNullOrBlank()) {
+                            put("Content-Length", contentLenHeader)
+                        }
+                    }
+
+                    val bodyStream: InputStream = if (method == "HEAD") {
+                        resp.close()
+                        handedOff = true
+                        ByteArrayInputStream(ByteArray(0))
                     } else {
-                        "utf-8"
-                    }
-                }
-
-                val contentRangeHeader = if (code == 206) resp.header("Content-Range") else null
-                val contentLenHeader = resp.header("Content-Length")
-
-                val headers = corsHeaders().apply {
-                    put("Cache-Control", "no-cache, no-store, must-revalidate")
-                    put("Accept-Ranges", "bytes")
-                    if (!contentRangeHeader.isNullOrBlank()) {
-                        put("Content-Range", contentRangeHeader)
-                    }
-                    if (method != "HEAD" && !contentLenHeader.isNullOrBlank()) {
-                        put("Content-Length", contentLenHeader)
-                    }
-                }
-
-                val bodyStream: InputStream = if (method == "HEAD") {
-                    resp.close()
-                    ByteArrayInputStream(ByteArray(0))
-                } else {
-                    val rawStream = resp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-                    object : FilterInputStream(rawStream) {
-                        override fun close() {
-                            try {
-                                super.close()
-                            } finally {
-                                resp.close()
+                        val rawStream = resp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+                        object : FilterInputStream(rawStream) {
+                            override fun close() {
+                                try {
+                                    super.close()
+                                } finally {
+                                    resp.close()
+                                }
                             }
                         }
                     }
-                }
 
-                WebResourceResponse(
-                    mimeType,
-                    encoding,
-                    code,
-                    if (code == 206) "Partial Content" else "OK",
-                    headers,
-                    bodyStream
-                )
-            } else {
-                resp.close()
-                null
+                    val webResp = WebResourceResponse(
+                        mimeType,
+                        encoding,
+                        code,
+                        if (code == 206) "Partial Content" else "OK",
+                        headers,
+                        bodyStream
+                    )
+                    handedOff = true
+                    webResp
+                } else {
+                    null
+                }
+            } finally {
+                if (!handedOff) {
+                    try { resp.close() } catch (_: Exception) {}
+                }
             }
         } catch (_: Exception) {
             null
@@ -922,9 +942,10 @@ class MainActivity : ComponentActivity() {
         return try {
             val host = urlString.toUri().host.orEmpty().lowercase(Locale.US)
             val isOsmTile = host == "tile.openstreetmap.org" || host.endsWith(".tile.openstreetmap.org")
+            val isMapTile = isOsmTile || host == "server.arcgisonline.com"
             val reqBuilder = Request.Builder()
                 .url(urlString)
-                .header("User-Agent", "TaiwanNeighborhoodMonitor-Android/1.0 (+https://github.com/JaneDe0214/taiwan-neighborhood-monitor)")
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36 TaiwanNeighborhoodMonitor/1.0")
                 .header("Accept", "*/*")
             if (isOsmTile) {
                 reqBuilder.header("Referer", "https://appassets.androidplatform.net/")
@@ -935,43 +956,64 @@ class MainActivity : ComponentActivity() {
             if (method == "HEAD") reqBuilder.head() else reqBuilder.get()
 
             val response = interceptHttpClient.newCall(reqBuilder.build()).execute()
-            val code = response.code
-            val contentType = response.header("Content-Type") ?: "application/json"
-            val mimeType = contentType.split(";")[0].trim().ifEmpty { "application/json" }
-            val isBinary = mimeType.startsWith("image/") || mimeType.startsWith("video/") || mimeType == "application/octet-stream"
-            val encoding = if (isBinary) {
-                null
-            } else if (contentType.contains("charset=", ignoreCase = true)) {
-                contentType.substringAfter("charset=").substringBefore(";").trim().ifEmpty { "utf-8" }
-            } else {
-                "utf-8"
-            }
-
-            val headers = corsHeaders().apply {
-                put("Cache-Control", if (isBinary) "public, max-age=300" else "no-store")
-                if (code == 206) {
-                    response.header("Content-Range")?.let { put("Content-Range", it) }
+            var handedOff = false
+            try {
+                val rawCode = response.code
+                val code = if (rawCode in 200..299 || rawCode in 400..599) rawCode else 502
+                val contentType = response.header("Content-Type") ?: "application/octet-stream"
+                val mimeType = contentType.split(";")[0].trim().ifEmpty { "application/octet-stream" }
+                val isMultipart = mimeType.startsWith("multipart/", ignoreCase = true)
+                val isBinary = isMultipart || mimeType.startsWith("image/") || mimeType.startsWith("video/") ||
+                    mimeType.startsWith("audio/") || mimeType.startsWith("font/") ||
+                    mimeType == "application/octet-stream" || mimeType == "application/mp2t"
+                val encoding = if (isBinary) {
+                    null
+                } else if (contentType.contains("charset=", ignoreCase = true)) {
+                    contentType.substringAfter("charset=").substringBefore(";").trim().ifEmpty { "utf-8" }
+                } else {
+                    "utf-8"
                 }
-                response.header("Content-Length")?.let { put("Content-Length", it) }
-            }
-            val reason = response.message.ifBlank { if (code in 200..299) "OK" else "HTTP $code" }
 
-            val bodyStream: InputStream = if (method == "HEAD") {
-                response.close()
-                ByteArrayInputStream(ByteArray(0))
-            } else {
-                val rawStream = response.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
-                object : FilterInputStream(rawStream) {
-                    override fun close() {
-                        try {
-                            super.close()
-                        } finally {
-                            response.close()
+                val headers = corsHeaders().apply {
+                    put("Cache-Control", if (isMapTile) "public, max-age=300" else "no-store")
+                    if (isMultipart) {
+                        put("Content-Type", contentType)
+                    }
+                    if (code == 206) {
+                        response.header("Content-Range")?.let { put("Content-Range", it) }
+                    }
+                    response.header("Content-Encoding")?.let { put("Content-Encoding", it) }
+                    if (method != "HEAD") {
+                        response.header("Content-Length")?.let { put("Content-Length", it) }
+                    }
+                }
+                val rawMsg = response.message.replace(Regex("[^\\x20-\\x7E]"), "").trim()
+                val reason = rawMsg.ifBlank { if (code in 200..299) "OK" else "HTTP $code" }
+
+                val bodyStream: InputStream = if (method == "HEAD") {
+                    response.close()
+                    handedOff = true
+                    ByteArrayInputStream(ByteArray(0))
+                } else {
+                    val rawStream = response.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+                    object : FilterInputStream(rawStream) {
+                        override fun close() {
+                            try {
+                                super.close()
+                            } finally {
+                                response.close()
+                            }
                         }
                     }
                 }
+                val webResp = WebResourceResponse(mimeType, encoding, code, reason, headers, bodyStream)
+                handedOff = true
+                webResp
+            } finally {
+                if (!handedOff) {
+                    try { response.close() } catch (_: Exception) {}
+                }
             }
-            WebResourceResponse(mimeType, encoding, code, reason, headers, bodyStream)
         } catch (_: Exception) {
             null
         }
@@ -1011,13 +1053,14 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * 強制全域立即重新整理大眾運輸、車廂擁擠度與 YouBike 資料
+     * 強制或依冷卻時間全域重新整理大眾運輸、車廂擁擠度與 YouBike 資料
      */
     private fun triggerForceRefreshAll(force: Boolean = false) {
+        if (!::nativeBridge.isInitialized || !::webView.isInitialized) return
         val now = System.currentTimeMillis()
         if (!force && now - lastTriggerRefreshMs < 4000L) return
         lastTriggerRefreshMs = now
-        nativeBridge.forceRefreshAll()
+        nativeBridge.refreshAllWithFlag(force)
         webView.evaluateJavascript(
             """
             (function() {
@@ -1132,8 +1175,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         applyKeepScreenOn(false, updatePreference = false)
-        nativeBridge.setForegroundActive(false)
-        webView.onPause()
+        if (::nativeBridge.isInitialized) {
+            nativeBridge.setForegroundActive(false)
+        }
+        if (::webView.isInitialized) {
+            webView.onPause()
+        }
         super.onStop()
     }
 
@@ -1145,9 +1192,22 @@ class MainActivity : ComponentActivity() {
             }
         } catch (_: Exception) {}
         networkCallback = null
+        synchronized(pendingLocationRequests) {
+            pendingLocationRequests.clear()
+        }
         hideCustomFullscreenView()
-        nativeBridge.cancelScope()
-        webView.destroy()
+        if (::nativeBridge.isInitialized) {
+            nativeBridge.cancelScope()
+        }
+        if (::webView.isInitialized) {
+            try {
+                webView.stopLoading()
+                webView.removeJavascriptInterface("AndroidBridge")
+                (webView.parent as? ViewGroup)?.removeView(webView)
+                webView.destroy()
+            } catch (_: Exception) {}
+        }
+        rootLayoutRef = null
         super.onDestroy()
     }
 }
@@ -1174,10 +1234,13 @@ class AndroidNativeBridge(
     fun isForeground(): Boolean = isForegroundActive
 
     /**
-     * 取消所有背景協程，防止 Activity 銷毀後記憶體洩漏
+     * 取消所有背景協程與網路連線，防止 Activity 銷毀後記憶體洩漏
      */
     fun cancelScope() {
         bridgeScope.cancel()
+        try {
+            okHttpClient.dispatcher.cancelAll()
+        } catch (_: Exception) {}
     }
 
     @JavascriptInterface
@@ -1189,7 +1252,7 @@ class AndroidNativeBridge(
     private fun isActivityAlive(): Boolean = !activity.isFinishing && !activity.isDestroyed
 
     private fun isTrustedOrigin(): Boolean {
-        return (activity as? MainActivity)?.trustedMainFrameActive ?: true
+        return (activity as? MainActivity)?.trustedMainFrameActive ?: false
     }
 
     @JavascriptInterface
@@ -1230,8 +1293,9 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun performHapticFeedback() {
-        if (isTv) return
+        if (isTv || !isTrustedOrigin()) return
         activity.runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
             try {
                 webView.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             } catch (_: Exception) {}
@@ -1243,8 +1307,9 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun triggerAlertVibration() {
-        if (isTv) return
+        if (isTv || !isTrustedOrigin()) return
         activity.runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
             try {
                 val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val vm = activity.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
@@ -1400,6 +1465,7 @@ class AndroidNativeBridge(
         if (!dataUrl.startsWith("data:image/")) return false
         val commaIdx = dataUrl.indexOf(',')
         if (commaIdx <= 0 || commaIdx >= dataUrl.length - 1) return false
+        if (dataUrl.length - commaIdx > 22 * 1024 * 1024) return false
         bridgeScope.launch {
             var savedName: String? = null
             try {
@@ -1513,21 +1579,17 @@ class AndroidNativeBridge(
                 .header("Accept", "application/json, text/plain, */*")
                 .build()
 
-            val client = if (safeTimeoutMs != 4000) {
-                okHttpClient.newBuilder()
-                    .followRedirects(false)
-                    .followSslRedirects(false)
-                    .connectTimeout(safeTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
-                    .readTimeout(safeTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
-                    .build()
-            } else {
-                okHttpClient
-            }
+            val client = okHttpClient.newBuilder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .connectTimeout(safeTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                .readTimeout(safeTimeoutMs.toLong(), TimeUnit.MILLISECONDS)
+                .build()
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
                     val stream = response.body?.byteStream() ?: return ""
-                    val bounded = WebAssetRouting.readBoundedBytes(stream, maxBytes = 4 * 1024 * 1024) ?: return ""
+                    val bounded = WebAssetRouting.readBoundedBytes(stream, maxBytes = 10 * 1024 * 1024, rejectOnOverflow = true) ?: return ""
                     String(bounded, Charsets.UTF_8)
                 } else {
                     ""
@@ -1570,7 +1632,7 @@ class AndroidNativeBridge(
                 .header("Origin", "https://www.thsrc.com.tw")
                 .build()
 
-            val client = if (timeoutMs > 0 && timeoutMs != 6000) {
+            val client = if (timeoutMs > 0 && timeoutMs != 4000) {
                 okHttpClient.newBuilder()
                     .connectTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
                     .readTimeout(timeoutMs.toLong(), TimeUnit.MILLISECONDS)
@@ -1581,7 +1643,9 @@ class AndroidNativeBridge(
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    response.body?.string() ?: ""
+                    val stream = response.body?.byteStream() ?: return ""
+                    val bounded = WebAssetRouting.readBoundedBytes(stream, maxBytes = 8 * 1024 * 1024, rejectOnOverflow = true) ?: return ""
+                    String(bounded, Charsets.UTF_8)
                 } else {
                     ""
                 }
@@ -2099,6 +2163,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getCachedData(dataType: String): String {
+        if (!isTrustedOrigin()) return ""
         val key = if (dataType == "metro") "metro-live" else dataType
         return dataMemoryCache[key] ?: ""
     }
@@ -2108,6 +2173,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getRealtimeYouBike(): String {
+        if (!isTrustedOrigin()) return ""
         bridgeScope.launch { refreshYouBikeAsync() }
         return dataMemoryCache["youbike"] ?: ""
     }
@@ -2117,6 +2183,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getRealtimeMetroLive(): String {
+        if (!isTrustedOrigin()) return ""
         bridgeScope.launch { refreshMetroLiveAsync() }
         return dataMemoryCache["metro-live"] ?: ""
     }
@@ -2126,6 +2193,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getRealtimeParking(): String {
+        if (!isTrustedOrigin()) return ""
         bridgeScope.launch { refreshParkingAsync() }
         val cached = dataMemoryCache["parking"]
         if (!cached.isNullOrBlank()) return cached
@@ -2139,6 +2207,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getRealtimeThsr(): String {
+        if (!isTrustedOrigin()) return ""
         bridgeScope.launch { refreshThsrAsync() }
         val cached = dataMemoryCache["thsr"]
         if (!cached.isNullOrBlank()) return cached
@@ -2152,6 +2221,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getRealtimeTymetro(): String {
+        if (!isTrustedOrigin()) return ""
         bridgeScope.launch { refreshTymetroAsync() }
         val cached = dataMemoryCache["tymetro"]
         if (!cached.isNullOrBlank()) return cached
@@ -2165,6 +2235,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun getLatestCloudData(dataType: String): String {
+        if (!isTrustedOrigin()) return ""
         val key = if (dataType == "metro") "metro-live" else dataType
         val cached = dataMemoryCache[key]
         if (!cached.isNullOrBlank()) return cached
@@ -2175,22 +2246,28 @@ class AndroidNativeBridge(
             "thsr" -> getRealtimeThsr()
             "tymetro" -> getRealtimeTymetro()
             else -> {
-                val asset = fetchAsset("data/$dataType.json")
-                if (asset.isNotBlank()) dataMemoryCache[dataType] = asset
+                val safeRel = WebAssetRouting.resolveAssetPath("data/$dataType.json") ?: return ""
+                val asset = fetchAsset(safeRel)
+                if (asset.isNotBlank() && dataMemoryCache.size < 64) dataMemoryCache[safeRel] = asset
                 asset
             }
         }
     }
 
+    internal fun refreshAllWithFlag(force: Boolean) {
+        bridgeScope.launch {
+            launch { refreshYouBikeAsync(force = force) }
+            launch { refreshMetroLiveAsync(force = force) }
+            launch { refreshParkingAsync(force = force) }
+            launch { refreshThsrAsync(force = force) }
+            launch { refreshTymetroAsync(force = force) }
+        }
+    }
+
     @JavascriptInterface
     fun forceRefreshAll() {
-        bridgeScope.launch {
-            launch { refreshYouBikeAsync(force = true) }
-            launch { refreshMetroLiveAsync(force = true) }
-            launch { refreshParkingAsync(force = true) }
-            launch { refreshThsrAsync(force = true) }
-            launch { refreshTymetroAsync(force = true) }
-        }
+        if (!isTrustedOrigin()) return
+        refreshAllWithFlag(force = true)
     }
 }
 
@@ -2378,8 +2455,8 @@ internal object TransitParsers {
                         if (sName.contains("桃園")) hasTaoYuan = true
                     }
                     if (!hasBanQiao || !hasTaoYuan) continue
-                } else if (cleanNo.matches(Regex("^(?:1\\d{2}|11\\d{2}|12\\d{2})$"))) {
-                    // 無 StationInfo 時僅排除不停靠板橋/桃園之 1xx、11xx、12xx 直達台中車次（保留 13xx/15xx 通勤及 16xx 特快）
+                } else if (cleanNo.matches(Regex("^(?:1\\d{2}|2\\d{2}|11\\d{2}|12\\d{2})$"))) {
+                    // 無 StationInfo 時僅排除不停靠板橋/桃園之 1xx、2xx、11xx、12xx 直達台中車次（保留 5xx/13xx/15xx 通勤及 6xx/16xx 特快）
                     continue
                 }
                 val depTime = t.optString("DepartureTime", "")
@@ -2394,6 +2471,7 @@ internal object TransitParsers {
                         val typeLabel = when {
                             cleanNo.startsWith("16") -> "16xx特快"
                             isExpress -> "6xx特快"
+                            cleanNo.length == 3 && cleanNo.startsWith("5") -> "5xx區間"
                             cleanNo.startsWith("15") || cleanNo.startsWith("13") -> "${cleanNo.take(2)}xx區間"
                             else -> "8xx全停"
                         }
@@ -2626,7 +2704,15 @@ internal object WebAssetRouting {
         "apis.youbike.com.tw",
         "youbike.com.tw",
         "open.er-api.com",
-        "services.swpc.noaa.gov"
+        "services.swpc.noaa.gov",
+        "noaa.gov",
+        "nasa.gov",
+        "panomax.com",
+        "nps.gov",
+        "nhkworld.jp",
+        "akamaized.net",
+        "france24.com",
+        "skycdp.com"
     )
 
     fun isNativeInterceptHost(rawHost: String?): Boolean {
@@ -2690,76 +2776,96 @@ internal object WebAssetRouting {
     }
 
     /**
-     * 從無盡 multipart/x-mixed-replace MJPEG 串流串流式擷取第一張完整 JPEG 畫格 (解析區段長度跳過 APP1/EXIF 內嵌縮圖之 FF D9，直到 SOS 後真結尾，上限 8 MB 防溢位)
+     * 從無盡 multipart/x-mixed-replace MJPEG 串流串流式擷取第一張完整 JPEG 畫格 (逐塊讀取並解析區段長度跳過 APP1/EXIF 內嵌縮圖之 FF D9，直到 SOS 後真結尾即刻停止讀取，上限 8 MB 防溢位)
      */
     fun extractFirstJpegFrame(input: InputStream, maxScanBytes: Int = 8 * 1024 * 1024): ByteArray? {
-        val raw = readBoundedBytes(input, maxScanBytes) ?: return null
+        val out = ByteArrayOutputStream()
+        val buf = ByteArray(4096)
+        var totalRead = 0
         var startIdx = -1
-        for (i in 0 until raw.size - 1) {
-            if ((raw[i].toInt() and 0xFF) == 0xFF && (raw[i + 1].toInt() and 0xFF) == 0xD8) {
-                startIdx = i
-                break
-            }
-        }
-        if (startIdx < 0) return null
-
-        var pos = startIdx + 2
+        var scanPos = 0
         var inEntropyData = false
-        while (pos < raw.size - 1) {
-            val b0 = raw[pos].toInt() and 0xFF
-            if (!inEntropyData) {
-                if (b0 != 0xFF) {
-                    pos++
-                    continue
-                }
-                while (pos < raw.size && (raw[pos].toInt() and 0xFF) == 0xFF) pos++
-                if (pos >= raw.size) break
-                val marker = raw[pos].toInt() and 0xFF
-                pos++
-                if (marker == 0x00 || (marker in 0xD0..0xD8)) continue
-                if (marker == 0xD9) {
-                    return raw.copyOfRange(startIdx, pos)
-                }
-                if (marker == 0xDA) {
-                    if (pos + 2 <= raw.size) {
-                        val segLen = ((raw[pos].toInt() and 0xFF) shl 8) or (raw[pos + 1].toInt() and 0xFF)
-                        pos += maxOf(2, segLen)
+
+        while (totalRead < maxScanBytes) {
+            val toRead = minOf(buf.size, maxScanBytes - totalRead)
+            val n = input.read(buf, 0, toRead)
+            if (n <= 0) break
+            out.write(buf, 0, n)
+            totalRead += n
+            val raw = out.toByteArray()
+
+            if (startIdx < 0) {
+                for (i in 0 until raw.size - 1) {
+                    if ((raw[i].toInt() and 0xFF) == 0xFF && (raw[i + 1].toInt() and 0xFF) == 0xD8) {
+                        startIdx = i
+                        scanPos = i + 2
+                        break
                     }
-                    inEntropyData = true
-                } else {
-                    if (pos + 2 > raw.size) break
-                    val segLen = ((raw[pos].toInt() and 0xFF) shl 8) or (raw[pos + 1].toInt() and 0xFF)
-                    pos += maxOf(2, segLen)
                 }
-            } else {
-                if (b0 == 0xFF) {
-                    val b1 = raw[pos + 1].toInt() and 0xFF
-                    if (b1 == 0xD9) {
-                        return raw.copyOfRange(startIdx, pos + 2)
-                    }
-                    if (b1 == 0x00 || (b1 in 0xD0..0xD7) || b1 == 0xFF) {
-                        pos += if (b1 == 0xFF) 1 else 2
+            }
+            if (startIdx < 0) continue
+
+            while (scanPos < raw.size - 1) {
+                val b0 = raw[scanPos].toInt() and 0xFF
+                if (!inEntropyData) {
+                    if (b0 != 0xFF) {
+                        scanPos++
                         continue
                     }
-                    pos += 2
-                    continue
+                    var ffEnd = scanPos
+                    while (ffEnd < raw.size && (raw[ffEnd].toInt() and 0xFF) == 0xFF) ffEnd++
+                    if (ffEnd >= raw.size) break
+                    val marker = raw[ffEnd].toInt() and 0xFF
+                    val afterMarker = ffEnd + 1
+                    if (marker == 0x00 || (marker in 0xD0..0xD8)) {
+                        scanPos = afterMarker
+                        continue
+                    }
+                    if (marker == 0xD9) {
+                        return raw.copyOfRange(startIdx, afterMarker)
+                    }
+                    if (afterMarker + 2 > raw.size) break
+                    val segLen = ((raw[afterMarker].toInt() and 0xFF) shl 8) or (raw[afterMarker + 1].toInt() and 0xFF)
+                    val nextPos = afterMarker + maxOf(2, segLen)
+                    if (nextPos > raw.size) break
+                    scanPos = nextPos
+                    if (marker == 0xDA) {
+                        inEntropyData = true
+                    }
+                } else {
+                    if (b0 == 0xFF) {
+                        val b1 = raw[scanPos + 1].toInt() and 0xFF
+                        if (b1 == 0xD9) {
+                            return raw.copyOfRange(startIdx, scanPos + 2)
+                        }
+                        if (b1 == 0x00 || (b1 in 0xD0..0xD7) || b1 == 0xFF) {
+                            scanPos += if (b1 == 0xFF) 1 else 2
+                            continue
+                        }
+                        scanPos += 2
+                        continue
+                    }
+                    scanPos++
                 }
-                pos++
             }
         }
         return null
     }
 
-    fun readBoundedBytes(input: InputStream, maxBytes: Int = 8 * 1024 * 1024): ByteArray? {
+    fun readBoundedBytes(input: InputStream, maxBytes: Int = 8 * 1024 * 1024, rejectOnOverflow: Boolean = false): ByteArray? {
         val out = ByteArrayOutputStream()
         val buf = ByteArray(8192)
         var totalRead = 0
-        while (totalRead < maxBytes) {
-            val toRead = minOf(buf.size, maxBytes - totalRead)
+        val limit = if (rejectOnOverflow) maxBytes + 1 else maxBytes
+        while (totalRead < limit) {
+            val toRead = minOf(buf.size, limit - totalRead)
             val n = input.read(buf, 0, toRead)
             if (n <= 0) break
             out.write(buf, 0, n)
             totalRead += n
+            if (rejectOnOverflow && totalRead > maxBytes) {
+                return null
+            }
         }
         return if (out.size() > 0) out.toByteArray() else null
     }

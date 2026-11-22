@@ -254,8 +254,8 @@
       "lat": 24.9856,
       "lon": 121.4468,
       "type": "hls",
-      "streamUrl": "https://cctvatis6.ntpc.gov.tw/hls/C000142/live.m3u8",
-      "sourceUrl": "https://atis.ntpc.gov.tw"
+      "streamUrl": "https://cctvatis2.ntpc.gov.tw/live/C000018/index.m3u8",
+      "sourceUrl": "https://cctvatis2.ntpc.gov.tw/live/C000018/index.m3u8"
     },
     {
       "id": "C000150",

@@ -2,5 +2,7 @@
 -keepclassmembers class com.example.taiwanneighborhoodmonitor.AndroidNativeBridge {
     @android.webkit.JavascriptInterface <methods>;
 }
--keepattributes JavascriptInterface,Annotation
--keep class com.example.taiwanneighborhoodmonitor.AndroidNativeBridge { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-keep class com.example.taiwanneighborhoodmonitor.AndroidNativeBridge {
+    @android.webkit.JavascriptInterface <methods>;
+}

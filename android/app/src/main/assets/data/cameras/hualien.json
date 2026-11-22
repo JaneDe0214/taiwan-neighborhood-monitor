@@ -6,36 +6,42 @@
   "cameras": [
     {
       "id": "HL_001",
-      "name": "花蓮市 國聯一路與中山路口 (花蓮火車站前站門戶)",
+      "name": "花蓮縣 富里鄉 ‧ 六十石山花東縱谷雲海 4K",
       "authority": "花蓮縣警察局智慧交控",
-      "district": "花蓮市",
-      "lat": 23.9932,
-      "lon": 121.6015,
-      "type": "hls",
-      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-054-000-01.m3u8",
-      "sourceUrl": "https://hlpb.gov.tw"
+      "district": "富里鄉",
+      "lat": 23.2225,
+      "lon": 121.3125,
+      "type": "youtube",
+      "streamUrl": "https://www.youtube.com/watch?v=DliL9uMtPrI",
+      "sourceUrl": "https://www.youtube.com/watch?v=DliL9uMtPrI",
+      "videoId": "DliL9uMtPrI",
+      "maxRes": 2160
     },
     {
       "id": "HL_002",
-      "name": "花蓮市 中正路與中正橋口 (花蓮市東大門夜市商圈門戶)",
+      "name": "花蓮縣 豐濱鄉 ‧ 東海岸大石鼻山太平洋海景 4K",
       "authority": "花蓮縣警察局智慧交控",
-      "district": "花蓮市",
-      "lat": 23.9785,
-      "lon": 121.6095,
-      "type": "hls",
-      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-054-000-02.m3u8",
-      "sourceUrl": "https://hlpb.gov.tw"
+      "district": "豐濱鄉",
+      "lat": 23.6691,
+      "lon": 121.5453,
+      "type": "youtube",
+      "streamUrl": "https://www.youtube.com/watch?v=JkoXcXI04Qk",
+      "sourceUrl": "https://www.youtube.com/watch?v=JkoXcXI04Qk",
+      "videoId": "JkoXcXI04Qk",
+      "maxRes": 2160
     },
     {
       "id": "HL_003",
-      "name": "秀林鄉 台9線蘇花公路崇德段 (太魯閣大橋北端 ‧ 清水斷崖門戶)",
+      "name": "花蓮縣 新城鄉 ‧ 七星潭月牙灣海岸北埔實況",
       "authority": "交通部公路局東區養護工程分局",
-      "district": "秀林鄉",
-      "lat": 24.1612,
-      "lon": 121.6522,
-      "type": "hls",
-      "streamUrl": "https://cctv1.freeway.gov.tw/live/R-15-054-000-03.m3u8",
-      "sourceUrl": "https://thb.gov.tw"
+      "district": "新城鄉",
+      "lat": 24.0306,
+      "lon": 121.6285,
+      "type": "youtube",
+      "streamUrl": "https://www.youtube.com/watch?v=qg-aHp2mvS8",
+      "sourceUrl": "https://www.youtube.com/watch?v=qg-aHp2mvS8",
+      "videoId": "qg-aHp2mvS8",
+      "maxRes": 1080
     }
   ]
 }

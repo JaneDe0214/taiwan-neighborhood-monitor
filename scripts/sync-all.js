@@ -1,12 +1,13 @@
 /**
- * 雙埔生活 - 全大眾運輸與 YouBike 雲端定時同步整合中樞 (高頻極速最佳化版)
+ * 雙埔生活 × 世界即時之窗 - 全大眾運輸與 YouBike 雲端定時同步整合中樞 (高頻極速最佳化版)
  * 特色：
- * 1. 極速平行抓取：YouBike (opendata.vip 優先 + 官方 CSV 備援) + 高鐵官網 + 桃捷官網 + 捷運新埔即時看板
+ * 1. 極速平行抓取：YouBike (官方全台 JSON / opendata.vip + 官方 CSV 備援) + 高鐵官網 + 桃捷官網 + 捷運即時看板 + 停車場/公車/台鐵/國道靜態快照
  * 2. 資料極致精簡：過濾 YouBike 冗餘英文字串，保留精簡座標支援附近雷達，瘦身防止高頻 Git 膨脹
- * 3. 智慧防抖與靜態保護：網路異常或外部逾時時，確保本機已有資料永不被破壞
+ * 3. 智慧去彈跳與靜態保護：網路異常或外部逾時時，確保本機已有資料永不被破壞，也不偽造空白更新時間
  */
 
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
@@ -14,81 +15,123 @@ const server = require('../server.js');
 
 function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch (e) {
+      return reject(e);
+    }
+    const mod = parsed.protocol === 'http:' ? http : https;
+    let settled = false;
+    const doneResolve = (v) => { if (!settled) { settled = true; clearTimeout(totalTimer); resolve(v); } };
+    const doneReject = (e) => { if (!settled) { settled = true; clearTimeout(totalTimer); reject(e); } };
+
+    const req = mod.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8',
         'Accept-Encoding': 'gzip, deflate, br'
       }
     }, res => {
-      res.on('error', reject);
+      res.on('error', doneReject);
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
         if (hopCount >= 5) {
-          return reject(new Error('重新導向次數過多'));
+          return doneReject(new Error('重新導向次數過多'));
         }
         try {
           const nextUrl = new URL(res.headers.location, url).toString();
+          clearTimeout(totalTimer);
+          settled = true;
           return fetchUrl(nextUrl, timeoutMs, hopCount + 1).then(resolve).catch(reject);
         } catch (e) {
-          return reject(e);
+          return doneReject(e);
         }
       }
       if (res.statusCode < 200 || res.statusCode >= 300) {
         res.resume();
-        return reject(new Error(`HTTP Status ${res.statusCode}`));
+        return doneReject(new Error(`HTTP Status ${res.statusCode}`));
       }
       const chunks = [];
-      res.on('data', c => chunks.push(c));
+      let totalBytes = 0;
+      res.on('data', c => {
+        totalBytes += c.length;
+        if (totalBytes > 16 * 1024 * 1024) {
+          req.destroy();
+          doneReject(new Error('回應超過 16MB 安全上限'));
+          return;
+        }
+        chunks.push(c);
+      });
       res.on('end', () => {
         try {
-          resolve(server.decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
+          doneResolve(server.decodeCompressedBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
         } catch (e) {
-          reject(new Error(`解碼回應失敗: ${e.message}`));
+          doneReject(new Error(`解碼回應失敗: ${e.message}`));
         }
       });
     });
-    req.on('error', reject);
+    const totalTimer = setTimeout(() => {
+      req.destroy();
+      doneReject(new Error(`連線總逾時: ${url}`));
+    }, timeoutMs + 1500);
+    req.on('error', doneReject);
     req.setTimeout(timeoutMs, () => {
       req.destroy();
-      reject(new Error(`連線逾時: ${url}`));
+      doneReject(new Error(`連線逾時: ${url}`));
     });
   });
 }
 
-function parseCsvToJson(csvStr) {
-  const lines = csvStr.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headerLine = lines[0].replace(/^\uFEFF/, '');
-  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const list = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const values = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let c = 0; c < line.length; c++) {
-      const ch = line[c];
-      if (ch === '"') {
-        inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes) {
-        values.push(cur.trim().replace(/^"|"$/g, ''));
-        cur = '';
-      } else {
-        cur += ch;
-      }
+function invokeServerApi(urlPath) {
+  return new Promise((resolve) => {
+    const headers = {};
+    let statusCode = 200;
+    const chunks = [];
+    const mockReq = {
+      method: 'GET',
+      url: urlPath,
+      headers: { host: 'localhost' },
+      on: () => {},
+      once: () => {},
+      setTimeout: () => {},
+      destroy: () => {}
+    };
+    const mockRes = {
+      headersSent: false,
+      writableEnded: false,
+      destroyed: false,
+      setHeader: (k, v) => { headers[String(k).toLowerCase()] = v; },
+      writeHead: (code, h) => {
+        statusCode = code;
+        mockRes.headersSent = true;
+        if (h) {
+          for (const [k, v] of Object.entries(h)) headers[String(k).toLowerCase()] = v;
+        }
+      },
+      end: (body) => {
+        mockRes.writableEnded = true;
+        if (body) chunks.push(Buffer.isBuffer(body) ? body : Buffer.from(String(body), 'utf8'));
+        try {
+          const raw = Buffer.concat(chunks).toString('utf8');
+          resolve(statusCode === 200 ? JSON.parse(raw) : null);
+        } catch (_) {
+          resolve(null);
+        }
+      },
+      destroy: () => {
+        mockRes.destroyed = true;
+        resolve(null);
+      },
+      on: () => {},
+      once: () => {}
+    };
+    try {
+      server.emit('request', mockReq, mockRes);
+    } catch (_) {
+      resolve(null);
     }
-    values.push(cur.trim().replace(/^"|"$/g, ''));
-
-    const obj = {};
-    for (let h = 0; h < headers.length; h++) {
-      obj[headers[h]] = values[h] != null ? values[h] : '';
-    }
-    list.push(obj);
-  }
-  return list;
+  });
 }
 
 function getTaiwanNow() {
@@ -103,53 +146,105 @@ function getTaiwanTimeString() {
 }
 
 function writeFileAtomic(targetPath, dataStr) {
-  const tmpPath = `${targetPath}.tmp`;
-  fs.writeFileSync(tmpPath, dataStr, 'utf8');
-  fs.renameSync(tmpPath, targetPath);
+  const tmpPath = `${targetPath}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    fs.writeFileSync(tmpPath, dataStr, 'utf8');
+    fs.renameSync(tmpPath, targetPath);
+  } catch (err) {
+    try { if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath); } catch (_) {}
+    throw err;
+  }
 }
 
-// 1. 同步 YouBike 2.0 (首選 opendata.vip，備援官方端點；精煉壓縮欄位)
+// 1. 同步 YouBike 2.0 (首選 opendata.vip 逐市獨立抓取，備援官方全台 JSON 與官方 CSV)
 async function syncYouBike(outDir) {
   console.log('[1/5] 正在同步 YouBike 2.0 即時動態...');
   let ntpcList = [];
   let tycgList = [];
 
-  // 嘗試優先從 opendata.vip 高速抓取
-  try {
-    const [ntpcRaw, tycgRaw] = await Promise.all([
-      fetchUrl('https://www.opendata.vip/tdx/youbikeApi/NewTaipei', 6000),
-      fetchUrl('https://www.opendata.vip/tdx/youbikeApi/Taoyuan', 6000)
-    ]);
-    const p1 = JSON.parse(ntpcRaw);
-    const p2 = JSON.parse(tycgRaw);
-    if (Array.isArray(p1) && p1.length > 500) ntpcList = p1;
-    if (Array.isArray(p2) && p2.length > 300) tycgList = p2;
-    console.log(`  - [opendata.vip 優先成功] 新北: ${ntpcList.length} 站, 桃園: ${tycgList.length} 站`);
-  } catch (err) {
-    console.warn('  - opendata.vip 暫時連線異常，切換至官方備援端點:', err.message);
+  const [ntpcSettled, tycgSettled] = await Promise.allSettled([
+    fetchUrl('https://www.opendata.vip/tdx/youbikeApi/NewTaipei', 6000),
+    fetchUrl('https://www.opendata.vip/tdx/youbikeApi/Taoyuan', 6000)
+  ]);
+
+  if (ntpcSettled.status === 'fulfilled') {
+    try {
+      const p1 = JSON.parse(ntpcSettled.value);
+      if (Array.isArray(p1) && p1.length >= 500) ntpcList = p1;
+    } catch (_) {}
+  }
+  if (tycgSettled.status === 'fulfilled') {
+    try {
+      const p2 = JSON.parse(tycgSettled.value);
+      if (Array.isArray(p2) && p2.length >= 200) tycgList = p2;
+    } catch (_) {}
   }
 
-  // 備援：若未成功則切換為新北市官方全量 CSV 與桃園開放資料
+  // 若任一市未成功，優先使用官方全台 YouBike 2.0 JSON 補齊
   if (ntpcList.length === 0 || tycgList.length === 0) {
     try {
-      const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010E5B15-3823-4B20-B401-B1CF000550C5/csv/file';
-      const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download';
-      const [nRaw, tRaw] = await Promise.all([
-        ntpcList.length === 0 ? fetchUrl(NTPC_URL, 10000) : null,
-        tycgList.length === 0 ? fetchUrl(TYCG_URL, 10000) : null
-      ]);
-      if (nRaw) ntpcList = parseCsvToJson(nRaw);
-      if (tRaw) {
-        const p = JSON.parse(tRaw);
-        tycgList = Array.isArray(p) ? p : (p.retVal || []);
+      const yb2Raw = await fetchUrl('https://apis.youbike.com.tw/json/station-yb2.json', 8000);
+      const yb2All = JSON.parse(yb2Raw);
+      if (Array.isArray(yb2All) && yb2All.length > 1000) {
+        if (ntpcList.length === 0) {
+          const nFiltered = yb2All.filter(r => String(r.station_no || '').startsWith('5002') || String(r.area_code || '') === '05');
+          if (nFiltered.length >= 500) {
+            ntpcList = nFiltered.map(r => ({
+              uid: `NWT${r.station_no}`,
+              sno: String(r.station_no || ''),
+              name: r.name_tw,
+              lat: r.lat,
+              lng: r.lng,
+              ar: r.address_tw,
+              bikes: r.available_spaces,
+              empty: r.empty_spaces,
+              eBikes: r.available_spaces_detail ? r.available_spaces_detail.eyb : 0,
+              time: r.time || ''
+            }));
+          }
+        }
+        if (tycgList.length === 0) {
+          const tFiltered = yb2All.filter(r => String(r.station_no || '').startsWith('5003') || String(r.area_code || '') === '07');
+          if (tFiltered.length >= 200) {
+            tycgList = tFiltered.map(r => ({
+              uid: `TAO${r.station_no}`,
+              sno: String(r.station_no || ''),
+              name: r.name_tw,
+              lat: r.lat,
+              lng: r.lng,
+              ar: r.address_tw,
+              bikes: r.available_spaces,
+              empty: r.empty_spaces,
+              eBikes: r.available_spaces_detail ? r.available_spaces_detail.eyb : 0,
+              time: r.time || ''
+            }));
+          }
+        }
       }
-      console.log(`  - [官方備援成功] 新北: ${ntpcList.length} 站, 桃園: ${tycgList.length} 站`);
-    } catch (e2) {
-      console.error('  - 官方備援也遭遇錯誤:', e2.message);
+    } catch (_) {}
+  }
+
+  // 次級備援：新北市官方全量 CSV 與桃園開放資料
+  if (ntpcList.length === 0 || tycgList.length === 0) {
+    const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010E5B15-3823-4B20-B401-B1CF000550C5/csv/file';
+    const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download';
+    const [nSettled, tSettled] = await Promise.allSettled([
+      ntpcList.length === 0 ? fetchUrl(NTPC_URL, 10000) : Promise.resolve(null),
+      tycgList.length === 0 ? fetchUrl(TYCG_URL, 10000) : Promise.resolve(null)
+    ]);
+    if (nSettled.status === 'fulfilled' && nSettled.value) {
+      const parsedN = server.parseCsvToJson(nSettled.value);
+      if (parsedN.length >= 500) ntpcList = parsedN;
+    }
+    if (tSettled.status === 'fulfilled' && tSettled.value) {
+      try {
+        const p = JSON.parse(tSettled.value);
+        const arr = Array.isArray(p) ? p : (p.retVal || []);
+        if (arr.length >= 200) tycgList = arr;
+      } catch (_) {}
     }
   }
 
-  // 核心精煉：只保留比對、附近距離計算與即時車況所需欄位，拿掉多餘英文字串，防止 Git 膨脹
   const roundCoord = (v) => {
     const n = parseFloat(v);
     return Number.isFinite(n) ? Math.round(n * 100000) / 100000 : undefined;
@@ -166,9 +261,9 @@ async function syncYouBike(outDir) {
     lat: roundCoord(s.lat),
     lng: roundCoord(s.lng != null ? s.lng : s.lon),
     ar: s.address || s.ar || undefined,
-    bikes: s.bikes != null ? s.bikes : toIntOrZero(s.sbi_quantity != null ? s.sbi_quantity : s.sbi),
-    empty: s.empty != null ? s.empty : toIntOrZero(s.bemp),
-    eBikes: s.eBikes != null ? s.eBikes : toIntOrZero(s.eyb_quantity || (s.sbi_detail && s.sbi_detail.eyb)),
+    bikes: toIntOrZero(s.bikes != null ? s.bikes : (s.sbi_quantity != null ? s.sbi_quantity : s.sbi)),
+    empty: toIntOrZero(s.empty != null ? s.empty : s.bemp),
+    eBikes: toIntOrZero(s.eBikes != null ? s.eBikes : (s.eyb_quantity || (s.sbi_detail && s.sbi_detail.eyb))),
     time: s.time || s.mday || ''
   }));
 
@@ -178,11 +273,16 @@ async function syncYouBike(outDir) {
     lat: roundCoord(s.lat),
     lng: roundCoord(s.lng != null ? s.lng : s.lon),
     ar: s.address || s.ar || undefined,
-    bikes: s.bikes != null ? s.bikes : toIntOrZero(s.sbi != null ? s.sbi : s.sbi_quantity),
-    empty: s.empty != null ? s.empty : toIntOrZero(s.bemp),
-    eBikes: s.eBikes != null ? s.eBikes : toIntOrZero((s.sbi_detail && s.sbi_detail.eyb) || s.eyb_quantity),
+    bikes: toIntOrZero(s.bikes != null ? s.bikes : (s.sbi != null ? s.sbi : s.sbi_quantity)),
+    empty: toIntOrZero(s.empty != null ? s.empty : s.bemp),
+    eBikes: toIntOrZero(s.eBikes != null ? s.eBikes : ((s.sbi_detail && s.sbi_detail.eyb) || s.eyb_quantity)),
     time: s.time || s.mday || ''
   }));
+
+  if (slimNtpc.length === 0 && slimTycg.length === 0) {
+    console.warn('  - YouBike 本次未取得新資料，略過寫入以保護既有快照與時間戳');
+    return false;
+  }
 
   const outFile = path.join(outDir, 'youbike.json');
   let existingData = {};
@@ -194,16 +294,14 @@ async function syncYouBike(outDir) {
 
   const finalNtpc = slimNtpc.length > 0 ? slimNtpc : (Array.isArray(existingData.ntpc) ? existingData.ntpc : []);
   const finalTycg = slimTycg.length > 0 ? slimTycg : (Array.isArray(existingData.tycg) ? existingData.tycg : []);
-
-  if (finalNtpc.length === 0 && finalTycg.length === 0) {
-    console.warn('  - YouBike 雙端點均無有效資料，略過寫入以保護本機快照');
-    return;
-  }
-
+  const nowIso = new Date().toISOString();
   const timeStr = getTaiwanTimeString();
+
   const payload = {
-    updatedAt: new Date().toISOString(),
-    updateTimeDisplay: (slimNtpc.length > 0 || slimTycg.length > 0) ? timeStr : (existingData.updateTimeDisplay || timeStr),
+    updatedAt: nowIso,
+    ntpcUpdatedAt: slimNtpc.length > 0 ? nowIso : (existingData.ntpcUpdatedAt || existingData.updatedAt || nowIso),
+    tycgUpdatedAt: slimTycg.length > 0 ? nowIso : (existingData.tycgUpdatedAt || existingData.updatedAt || nowIso),
+    updateTimeDisplay: timeStr,
     ntpcCount: finalNtpc.length,
     tycgCount: finalTycg.length,
     ntpc: finalNtpc,
@@ -212,6 +310,7 @@ async function syncYouBike(outDir) {
 
   writeFileAtomic(outFile, JSON.stringify(payload));
   console.log(`  -> 已寫入 ${outFile} (更新時間: ${payload.updateTimeDisplay}，精煉站點: ${finalNtpc.length + finalTycg.length} 站)`);
+  return true;
 }
 
 // 2. 同步台灣高鐵當日時刻表 (南下: 板橋➔桃園 / 北上: 桃園➔板橋)
@@ -236,8 +335,10 @@ async function syncThsr(outDir) {
     const outFile = path.join(outDir, 'thsr.json');
     writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (南下: ${southTrains.length} 班, 北上: ${northTrains.length} 班)`);
+    return true;
   } catch (err) {
     console.error('  - 高鐵同步失敗 (維持既有快照):', err.message);
+    return false;
   }
 }
 
@@ -263,8 +364,10 @@ async function syncTymetro(outDir) {
     const outFile = path.join(outDir, 'tymetro.json');
     writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (南下: ${southTrains.length} 班, 北上: ${northTrains.length} 班)`);
+    return true;
   } catch (err) {
     console.error('  - 機捷同步失敗 (維持既有快照):', err.message);
+    return false;
   }
 }
 
@@ -283,6 +386,13 @@ async function syncMetroLive(outDir) {
       })
     ]);
 
+    const hasFreshTrains = liveTrains.length > 0;
+    const hasFreshWeight = carWeightData && Object.keys(carWeightData).length > 0;
+    if (!hasFreshTrains && !hasFreshWeight) {
+      console.warn('  - 捷運看板與車廂擁擠度均無新資料，略過寫入以保護既有快照');
+      return false;
+    }
+
     const outFile = path.join(outDir, 'metro-live.json');
     let existingData = {};
     if (fs.existsSync(outFile)) {
@@ -291,11 +401,9 @@ async function syncMetroLive(outDir) {
       } catch (e) {}
     }
 
-    const hasFreshTrains = liveTrains.length > 0;
-    const hasFreshWeight = carWeightData && Object.keys(carWeightData).length > 0;
     const payload = {
-      updatedAt: (hasFreshTrains || hasFreshWeight) ? new Date().toISOString() : (existingData.updatedAt || new Date().toISOString()),
-      updateTimeDisplay: (hasFreshTrains || hasFreshWeight) ? getTaiwanTimeString() : (existingData.updateTimeDisplay || getTaiwanTimeString()),
+      updatedAt: new Date().toISOString(),
+      updateTimeDisplay: getTaiwanTimeString(),
       count: hasFreshTrains ? liveTrains.length : (existingData.count || 0),
       trains: hasFreshTrains ? liveTrains : (existingData.trains || []),
       carWeight: hasFreshWeight ? carWeightData : (existingData.carWeight || {})
@@ -303,16 +411,28 @@ async function syncMetroLive(outDir) {
 
     writeFileAtomic(outFile, JSON.stringify(payload));
     console.log(`  -> 已寫入 ${outFile} (看板共 ${payload.trains.length} 筆即時進站資訊，車廂擁擠度涵蓋 ${Object.keys(payload.carWeight).length} 站)`);
+    return true;
   } catch (err) {
     console.error('  - 捷運看板同步失敗 (維持既有快照):', err.message);
+    return false;
   }
 }
 
-// 5. 同步高鐵桃園站即時剩餘停車位 (P1/P2/P3 停車場)
+// 5. 同步高鐵桃園站即時剩餘停車位 + 雙埔周邊停車場/公車/台鐵/國道靜態網頁同源備援快照
 async function syncParking(outDir) {
-  console.log('[5/5] 正在自 opendata.vip 同步高鐵即時停車場剩餘車位...');
+  console.log('[5/5] 正在同步高鐵停車場及雙埔周邊公車/台鐵/停車場/國道同源快照...');
   try {
-    const lots = await server.fetchThsrParkingData();
+    const [lots, qpParking, bpParking, qpBus, bpBus, qpTra, bpTra, fwLive] = await Promise.all([
+      server.fetchThsrParkingData().catch(() => []),
+      invokeServerApi('/api/parking/nearby?lat=25.0134&lon=121.2148'),
+      invokeServerApi('/api/parking/nearby?lat=25.0225&lon=121.4685'),
+      invokeServerApi('/api/bus/nearby?lat=25.0134&lon=121.2148'),
+      invokeServerApi('/api/bus/nearby?lat=25.0225&lon=121.4685'),
+      invokeServerApi('/api/rail/tra-nearby?lat=25.0134&lon=121.2148'),
+      invokeServerApi('/api/rail/tra-nearby?lat=25.0225&lon=121.4685'),
+      invokeServerApi('/api/freeway/live')
+    ]);
+
     const outFile = path.join(outDir, 'parking.json');
     let existingData = {};
     if (fs.existsSync(outFile)) {
@@ -320,18 +440,45 @@ async function syncParking(outDir) {
         existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
       } catch (e) {}
     }
-    const existingLots = Array.isArray(existingData.lots) ? existingData.lots : [];
 
+    const hasFreshThsr = Array.isArray(lots) && lots.length > 0;
+    const hasFreshQpLots = Array.isArray(qpParking?.lots) && qpParking.lots.length > 0;
+    const hasFreshBpLots = Array.isArray(bpParking?.lots) && bpParking.lots.length > 0;
+    const hasFreshQpBus = Array.isArray(qpBus?.stations) && qpBus.stations.length > 0;
+    const hasFreshBpBus = Array.isArray(bpBus?.stations) && bpBus.stations.length > 0;
+    const hasFreshQpTra = Array.isArray(qpTra?.stations) && qpTra.stations.length > 0;
+    const hasFreshBpTra = Array.isArray(bpTra?.stations) && bpTra.stations.length > 0;
+    const hasFreshFw = Array.isArray(fwLive?.corridors) && fwLive.corridors.length > 0;
+
+    if (!hasFreshThsr && !hasFreshQpLots && !hasFreshBpLots && !hasFreshQpBus && !hasFreshBpBus && !hasFreshQpTra && !hasFreshBpTra && !hasFreshFw) {
+      console.warn('  - 停車場與周邊交通快照均無新資料，略過寫入以保護既有快照');
+      return false;
+    }
+
+    const existingLots = Array.isArray(existingData.lots) ? existingData.lots : [];
     const payload = {
-      updatedAt: lots.length > 0 ? new Date().toISOString() : (existingData.updatedAt || new Date().toISOString()),
-      updateTimeDisplay: lots.length > 0 ? getTaiwanTimeString() : (existingData.updateTimeDisplay || getTaiwanTimeString()),
-      lots: lots.length > 0 ? lots : existingLots
+      updatedAt: new Date().toISOString(),
+      updateTimeDisplay: getTaiwanTimeString(),
+      lots: hasFreshThsr ? lots : existingLots,
+      qpLots: hasFreshQpLots ? qpParking.lots : (existingData.qpLots || []),
+      bpLots: hasFreshBpLots ? bpParking.lots : (existingData.bpLots || []),
+      busDual: {
+        qingpu: hasFreshQpBus ? qpBus : (existingData.busDual?.qingpu || null),
+        banqiao: hasFreshBpBus ? bpBus : (existingData.busDual?.banqiao || null)
+      },
+      traDual: {
+        qingpu: hasFreshQpTra ? qpTra : (existingData.traDual?.qingpu || null),
+        banqiao: hasFreshBpTra ? bpTra : (existingData.traDual?.banqiao || null)
+      },
+      freewayLive: hasFreshFw ? fwLive : (existingData.freewayLive || null)
     };
 
     writeFileAtomic(outFile, JSON.stringify(payload));
-    console.log(`  -> 已寫入 ${outFile} (停車場共 ${payload.lots.length} 處即時車位資料)`);
+    console.log(`  -> 已寫入 ${outFile} (高鐵車位: ${payload.lots.length} 處, 青埔車位: ${payload.qpLots.length} 處, 板橋車位: ${payload.bpLots.length} 處, 國道走廊: ${payload.freewayLive?.corridors?.length || 0} 條)`);
+    return true;
   } catch (err) {
-    console.error('  - 高鐵停車場同步失敗 (維持既有快照):', err.message);
+    console.error('  - 高鐵停車場與周邊快照同步失敗 (維持既有快照):', err.message);
+    return false;
   }
 }
 
@@ -344,8 +491,7 @@ async function main() {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
-  // 平行執行五大資料同步任務
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     syncYouBike(outDir),
     syncThsr(outDir),
     syncTymetro(outDir),
@@ -353,7 +499,18 @@ async function main() {
     syncParking(outDir)
   ]);
 
-  console.log(`\n=== 全域同步作業圓滿完成！(總耗時: ${Date.now() - t0} ms) ===`);
+  const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+  console.log(`\n=== 全域同步作業完成！(成功更新: ${successCount}/5 項，總耗時: ${Date.now() - t0} ms) ===`);
+  if (successCount === 0) {
+    process.exitCode = 1;
+  }
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch(err => {
+    console.error(err);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { syncYouBike, syncThsr, syncTymetro, syncMetroLive, syncParking, writeFileAtomic };

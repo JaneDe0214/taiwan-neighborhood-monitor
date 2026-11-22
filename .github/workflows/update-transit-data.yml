@@ -2,15 +2,16 @@ name: 自動更新雙埔大眾運輸與 YouBike 資料
 
 on:
   schedule:
-    # 錯峰高頻排程 (避開全球整點 :00 與 :30 嚴重排隊塞車)
-    # 台灣日間營運時間 06:00 ~ 24:00 (UTC 22:00 ~ 16:00)：每 6 分鐘錯峰執行
-    - cron: '3,9,15,21,27,33,39,45,51,57 22-23,0-15 * * *'
-    # 台灣深夜收班時間 00:00 ~ 06:00 (UTC 16:00 ~ 22:00)：每 30 分鐘執行一次 (大幅節省 70% 額度，避免月中額度歸零被降級)
+    # 台灣日間營運時間 06:00 ~ 24:00 (UTC 22:00 ~ 15:59)：每 15 分鐘錯峰保底執行，避免高頻排程遭 GitHub Actions 佇列節流丟棄
+    - cron: '7,22,37,52 22-23,0-15 * * *'
+    # 台灣深夜收班時間 00:00 ~ 06:00 (UTC 16:00 ~ 21:59)：每 30 分鐘執行一次
     - cron: '17,47 16-21 * * *'
   workflow_dispatch:
   # 支援外部高優先級 Webhook 秒級觸發 (如 cron-job.org / Cloudflare Workers / UptimeRobot)
   repository_dispatch:
     types: [sync-transit-data, webhook-trigger]
+
+permissions: {}
 
 # 避免高頻執行時 Git push 衝突，確保同一時間僅有一組更新作業執行
 concurrency:
@@ -27,7 +28,7 @@ jobs:
       - name: 檢出專案程式碼 (淺層檢出極速加速)
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 2
 
       - name: 設定 Node.js 環境
         uses: actions/setup-node@v4
@@ -39,19 +40,22 @@ jobs:
 
       - name: 提交並推送最新資料至 GitHub Pages 同源資料庫
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/*.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: 極速更新全線大眾運輸與 YouBike 即時資料 [skip ci]"
-            if ! git push; then
-              git fetch origin main --depth=20
-              git rebase -X theirs origin/main
-              node scripts/sync-all.js
-              git add data/*.json
-              if ! git diff --cached --quiet; then
-                git commit --amend --no-edit
-              fi
-              git push
+          set -euo pipefail
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git add data/*.json
+            if git diff --cached --quiet; then
+              echo "無資料異動，略過提交"
+              exit 0
             fi
-          fi
+            git commit -m "chore: 極速更新全線大眾運輸與 YouBike 即時資料 [skip ci]"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "推送發生遠端更新衝突，重設至最新 origin/main 後重新執行同步 (第 ${attempt} 次)..."
+            git fetch origin main --depth=2
+            git reset --hard origin/main
+            node scripts/sync-all.js
+          done
+          exit 1

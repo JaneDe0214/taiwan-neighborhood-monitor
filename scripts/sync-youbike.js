@@ -1,150 +1,26 @@
-const https = require('https');
+/**
+ * 雙埔生活 - YouBike 2.0 單獨同步腳本 (共用 sync-all.js 核心精煉與原子寫入實作)
+ */
 const fs = require('fs');
 const path = require('path');
-const zlib = require('zlib');
+const { syncYouBike } = require('./sync-all.js');
 
-const server = require('../server.js');
-
-function decodeResponseBuffer(buffer, contentEncoding) {
-  return server.decodeCompressedBuffer(buffer, contentEncoding);
-}
-
-function fetchUrl(url, hopCount = 0) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0',
-        'Accept-Encoding': 'gzip, deflate, br'
-      }
-    }, res => {
-      res.on('error', reject);
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume();
-        if (hopCount >= 5) return reject(new Error('重新導向次數過多'));
-        try {
-          const nextUrl = new URL(res.headers.location, url).toString();
-          return fetchUrl(nextUrl, hopCount + 1).then(resolve).catch(reject);
-        } catch (e) {
-          return reject(e);
-        }
-      }
-      if (res.statusCode < 200 || res.statusCode >= 300) {
-        res.resume();
-        return reject(new Error(`HTTP Status ${res.statusCode}`));
-      }
-      const chunks = [];
-      res.on('data', c => chunks.push(c));
-      res.on('error', reject);
-      res.on('end', () => {
-        try {
-          resolve(decodeResponseBuffer(Buffer.concat(chunks), res.headers['content-encoding']).toString('utf8'));
-        } catch (e) {
-          reject(new Error(`解碼回應失敗: ${e.message}`));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.setTimeout(10000, () => {
-      req.destroy();
-      reject(new Error(`連線逾時: ${url}`));
-    });
-  });
-}
-
-function parseCsvToJson(csvStr) {
-  const lines = csvStr.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headerLine = lines[0].replace(/^\uFEFF/, '');
-  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const list = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const values = [];
-    let cur = '';
-    let inQuotes = false;
-    for (let c = 0; c < line.length; c++) {
-      const ch = line[c];
-      if (ch === '"') {
-        inQuotes = !inQuotes;
-      } else if (ch === ',' && !inQuotes) {
-        values.push(cur.trim().replace(/^"|"$/g, ''));
-        cur = '';
-      } else {
-        cur += ch;
-      }
-    }
-    values.push(cur.trim().replace(/^"|"$/g, ''));
-
-    const obj = {};
-    for (let h = 0; h < headers.length; h++) {
-      obj[headers[h]] = values[h] != null ? values[h] : '';
-    }
-    list.push(obj);
-  }
-  return list;
-}
-
-const NTPC_URL = 'https://data.ntpc.gov.tw/api/datasets/010E5B15-3823-4B20-B401-B1CF000550C5/csv/file';
-const TYCG_URL = 'https://opendata.tycg.gov.tw/api/dataset/5ca2bfc7-9ace-4719-88ae-4034b9a5a55c/resource/08274d61-edbe-419d-8fcc-7a643831283d/download';
-
-async function sync() {
-  console.log('[YouBike 同步] 正在抓取新北市與桃園市官方即時車況...');
-  const [ntpcSettled, tycgSettled] = await Promise.allSettled([
-    fetchUrl(NTPC_URL),
-    fetchUrl(TYCG_URL)
-  ]);
-
-  const ntpcList = ntpcSettled.status === 'fulfilled' ? parseCsvToJson(ntpcSettled.value) : [];
-  let tycgList = [];
-  if (tycgSettled.status === 'fulfilled') {
-    try {
-      const parsed = JSON.parse(tycgSettled.value);
-      tycgList = Array.isArray(parsed) ? parsed : (parsed.retVal || []);
-    } catch (e) {
-      console.error('桃園資料解析失敗:', e.message);
-    }
-  } else {
-    console.error('桃園資料抓取失敗:', tycgSettled.reason?.message || 'unknown');
-  }
-
-  const twDate = new Date(Date.now() + (3600000 * 8));
-  const hh = String(twDate.getUTCHours()).padStart(2, '0');
-  const mm = String(twDate.getUTCMinutes()).padStart(2, '0');
-  const updateTime = `${hh}:${mm}`;
-
+async function run() {
   const outDir = path.join(__dirname, '../data');
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
   }
-
-  const outFile = path.join(outDir, 'youbike.json');
-  let existingData = {};
-  if (fs.existsSync(outFile)) {
-    try {
-      existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
-    } catch (_e) {}
+  const ok = await syncYouBike(outDir);
+  if (!ok) {
+    process.exitCode = 1;
   }
-
-  const finalNtpc = ntpcList.length > 0 ? ntpcList : (Array.isArray(existingData.ntpc) ? existingData.ntpc : []);
-  const finalTycg = tycgList.length > 0 ? tycgList : (Array.isArray(existingData.tycg) ? existingData.tycg : []);
-  if (finalNtpc.length === 0 && finalTycg.length === 0) {
-    console.warn('[YouBike 同步] 兩市均無有效資料，保留既有檔案');
-    return;
-  }
-
-  const payload = {
-    updatedAt: new Date().toISOString(),
-    updateTimeDisplay: updateTime,
-    ntpcCount: finalNtpc.length,
-    tycgCount: finalTycg.length,
-    ntpc: finalNtpc,
-    tycg: finalTycg
-  };
-
-  fs.writeFileSync(outFile, JSON.stringify(payload));
-  console.log(`[YouBike 同步完成] 已儲存至 ${outFile}，新北: ${finalNtpc.length} 站，桃園: ${finalTycg.length} 站，更新時間: ${updateTime}`);
 }
 
-sync().catch(console.error);
+if (require.main === module) {
+  run().catch(err => {
+    console.error(err);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { run };
