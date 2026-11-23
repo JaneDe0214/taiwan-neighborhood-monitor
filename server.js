@@ -4342,6 +4342,156 @@ const TAIWAN_FIXED_HOLIDAYS = [
   { mmdd: '12-25', localName: '行憲紀念日／聖誕節', name: 'Constitution Day' }
 ];
 
+const COUNTRY_NEWS_QUERY_MAP = {
+  TW: '台灣 桃園 新北 台北 生活 交通',
+  JP: '日本 東京 北海道 大阪 觀光 氣象',
+  KR: '韓國 首爾 釜山 觀光',
+  AU: '澳洲 雪梨 觀光',
+  NZ: '紐西蘭 奧克蘭 觀光',
+  SG: '新加坡 城市 觀光',
+  TH: '泰國 曼谷 蘇美島 觀光',
+  ID: '峇里島 印尼 觀光',
+  HK: '香港 維多利亞港',
+  AE: '杜拜 阿聯 觀光',
+  SA: '沙烏地阿拉伯 吉達 紅海',
+  CH: '瑞士 阿爾卑斯 蘇黎世 策馬特',
+  GB: '英國 倫敦 泰晤士河',
+  FR: '法國 巴黎 觀光',
+  IT: '義大利 威尼斯 西西里',
+  NL: '荷蘭 阿姆斯特丹 運河',
+  DE: '德國 柏林',
+  AT: '奧地利 薩爾茨堡 哈爾施塔特',
+  ES: '西班牙 馬約卡 巴塞隆納',
+  PT: '葡萄牙 馬德拉 里斯本',
+  NO: '挪威 峽灣 極光 特羅姆瑟',
+  FI: '芬蘭 羅瓦涅米 拉普蘭 極光',
+  IS: '冰島 雷克雅維克 火山 極光',
+  GL: '格陵蘭 冰川 極地',
+  US: '美國 紐約 洛杉磯 夏威夷',
+  CA: '加拿大 溫哥華 洛磯山',
+  CR: '哥斯大黎加 熱帶雨林 生態',
+  PA: '巴拿馬 運河 雨林',
+  BR: '巴西 里約熱內盧',
+  AR: '阿根廷 烏斯懷亞 南極',
+  CW: '加勒比海 珊瑚礁 海洋'
+};
+
+function decodeXmlEntitiesSimple(str) {
+  return String(str || '')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .trim();
+}
+
+async function fetchLocalNewsHeadlines(cc = 'TW', cityHint = '') {
+  const cleanCc = String(cc || 'TW').trim().toUpperCase();
+  const baseQuery = COUNTRY_NEWS_QUERY_MAP[cleanCc] || `${cityHint || cleanCc} 國際新聞`;
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(baseQuery)}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant`;
+  try {
+    const xml = await fetchRemoteHtml(url, 4500);
+    const items = [];
+    const seenTitles = new Set();
+    const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
+    for (const m of itemMatches) {
+      const block = m[1];
+      const rawTitle = decodeXmlEntitiesSimple((block.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || '');
+      const link = decodeXmlEntitiesSimple((block.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || '');
+      const pubDate = decodeXmlEntitiesSimple((block.match(/<pubDate>([\s\S]*?)<\/pubDate>/) || [])[1] || '');
+      let source = decodeXmlEntitiesSimple((block.match(/<source[^>]*>([\s\S]*?)<\/source>/) || [])[1] || '');
+      let cleanTitle = normalizeIntlTwLabel(rawTitle);
+      const dashIdx = cleanTitle.lastIndexOf(' - ');
+      if (dashIdx > 8) {
+        if (!source) source = cleanTitle.slice(dashIdx + 3).trim();
+        cleanTitle = cleanTitle.slice(0, dashIdx).trim();
+      }
+      if (!cleanTitle || !link) continue;
+      const dedupKey = cleanTitle.slice(0, 14);
+      if (seenTitles.has(dedupKey)) continue;
+      seenTitles.add(dedupKey);
+      items.push({
+        title: cleanTitle,
+        source: normalizeIntlTwLabel(source || '即時新聞'),
+        link,
+        pubDate
+      });
+      if (items.length >= 4) break;
+    }
+    return items;
+  } catch (_) {
+    return [];
+  }
+}
+
+let issTelemetryCache = { data: null, expireAt: 0 };
+async function fetchIssTelemetry() {
+  const now = Date.now();
+  if (issTelemetryCache.data && now < issTelemetryCache.expireAt) {
+    return issTelemetryCache.data;
+  }
+  try {
+    const j = await fetchJsonWithRetry('https://api.wheretheiss.at/v1/satellites/25544', 0, 3800);
+    if (j && Number.isFinite(Number(j.latitude)) && Number.isFinite(Number(j.longitude))) {
+      const data = {
+        lat: +Number(j.latitude).toFixed(4),
+        lon: +Number(j.longitude).toFixed(4),
+        altKm: +Number(j.altitude || 420).toFixed(1),
+        velocityKmh: Math.round(Number(j.velocity || 27550)),
+        visibility: String(j.visibility || 'daylight'),
+        footprintKm: Math.round(Number(j.footprint || 4500)),
+        timestamp: Number(j.timestamp) || Math.floor(now / 1000)
+      };
+      issTelemetryCache = { data, expireAt: now + 15000 };
+      return data;
+    }
+  } catch (_) {}
+  return issTelemetryCache.data || null;
+}
+
+function analyzeHourlyTideSeries(times = [], levels = []) {
+  if (!Array.isArray(times) || !Array.isArray(levels) || levels.length < 6) return null;
+  const nowMs = Date.now();
+  let curIdx = 0;
+  let minDiff = Infinity;
+  for (let i = 0; i < times.length; i++) {
+    const tMs = Date.parse(times[i] + 'Z');
+    const diff = Math.abs(tMs - nowMs);
+    if (Number.isFinite(diff) && diff < minDiff) {
+      minDiff = diff;
+      curIdx = i;
+    }
+  }
+  const curVal = Number(levels[curIdx]);
+  const nextVal = Number(levels[Math.min(levels.length - 1, curIdx + 1)]);
+  if (!Number.isFinite(curVal)) return null;
+  const isRising = Number.isFinite(nextVal) ? nextVal >= curVal : true;
+  let nextHigh = null;
+  let nextLow = null;
+  for (let i = Math.max(1, curIdx); i < levels.length - 1; i++) {
+    const prev = Number(levels[i - 1]);
+    const v = Number(levels[i]);
+    const nxt = Number(levels[i + 1]);
+    if (!Number.isFinite(prev) || !Number.isFinite(v) || !Number.isFinite(nxt)) continue;
+    const hhmm = String(times[i] || '').slice(11, 16);
+    if (!nextHigh && v >= prev && v >= nxt && v > curVal - 0.05) {
+      nextHigh = { time: hhmm, heightM: +v.toFixed(2) };
+    }
+    if (!nextLow && v <= prev && v <= nxt && v < curVal + 0.05) {
+      nextLow = { time: hhmm, heightM: +v.toFixed(2) };
+    }
+    if (nextHigh && nextLow) break;
+  }
+  return {
+    tideState: isRising ? 'RISING' : 'FALLING',
+    tideLabelZh: isRising ? '漲潮中 ▲' : '退潮中 ▼',
+    nextHighTide: nextHigh,
+    nextLowTide: nextLow
+  };
+}
+
 async function handleImmersiveLocalProxy(req, res, parsedUrl) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -4369,16 +4519,46 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
 
   try {
     const fetchMarine = async () => {
-      const u = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature`;
-      const j = await fetchJsonWithRetry(u, 0, 4000);
+      const u = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl&hourly=sea_level_height_msl&forecast_days=2`;
+      const j = await fetchJsonWithRetry(u, 0, 4200);
       const cur = j?.current;
-      if (!cur || (cur.wave_height == null && cur.sea_surface_temperature == null)) return null;
+      if (!cur || (cur.wave_height == null && cur.sea_surface_temperature == null && cur.sea_level_height_msl == null)) return null;
+      const tideInfo = analyzeHourlyTideSeries(j?.hourly?.time, j?.hourly?.sea_level_height_msl);
       return {
         waveHeightM: cur.wave_height != null ? +Number(cur.wave_height).toFixed(2) : null,
         waveDirDeg: cur.wave_direction != null ? Math.round(Number(cur.wave_direction)) : null,
         wavePeriodSec: cur.wave_period != null ? +Number(cur.wave_period).toFixed(1) : null,
         swellHeightM: cur.swell_wave_height != null ? +Number(cur.swell_wave_height).toFixed(2) : null,
-        seaTempC: cur.sea_surface_temperature != null ? +Number(cur.sea_surface_temperature).toFixed(1) : null
+        seaTempC: cur.sea_surface_temperature != null ? +Number(cur.sea_surface_temperature).toFixed(1) : null,
+        seaLevelM: cur.sea_level_height_msl != null ? +Number(cur.sea_level_height_msl).toFixed(2) : null,
+        currentVelKmh: cur.ocean_current_velocity != null ? +Number(cur.ocean_current_velocity).toFixed(1) : null,
+        currentDirDeg: cur.ocean_current_direction != null ? Math.round(Number(cur.ocean_current_direction)) : null,
+        tideState: tideInfo?.tideState || null,
+        tideLabelZh: tideInfo?.tideLabelZh || null,
+        nextHighTide: tideInfo?.nextHighTide || null,
+        nextLowTide: tideInfo?.nextLowTide || null
+      };
+    };
+
+    const fetchAlpine = async () => {
+      const u = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,snowfall,snow_depth&hourly=freezing_level_height&forecast_days=1`;
+      const j = await fetchJsonWithRetry(u, 0, 4000);
+      if (!j) return null;
+      const elevM = Number.isFinite(Number(j.elevation)) ? Math.round(Number(j.elevation)) : null;
+      const cur = j.current || {};
+      const snowDepthCm = cur.snow_depth != null ? Math.round(Number(cur.snow_depth) * 100) : 0;
+      const snowfallCmHr = cur.snowfall != null ? +Number(cur.snowfall).toFixed(1) : 0;
+      const freezeArr = j.hourly?.freezing_level_height;
+      const firstFreeze = Array.isArray(freezeArr) ? freezeArr.find(v => v != null && Number.isFinite(Number(v))) : null;
+      const curTemp = Number(cur.temperature_2m);
+      const freezingLevelM = firstFreeze != null
+        ? Math.round(Number(firstFreeze))
+        : (Number.isFinite(curTemp) ? (curTemp <= 0 ? 0 : Math.round((elevM || 0) + (curTemp / 6.5) * 1000)) : null);
+      return {
+        elevationM: elevM,
+        snowDepthCm,
+        snowfallCmHr,
+        freezingLevelM
       };
     };
 
@@ -4421,14 +4601,16 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
         if (!title || seen.has(title)) continue;
         seen.add(title);
         const distMeters = Math.round(Number(item?.dist) || calcDistanceMeters(lat, lon, Number(item.lat), Number(item.lon)));
+        const wikiUrl = item.lang === 'en'
+          ? `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title)}`
+          : `https://zh.wikipedia.org/zh-tw/${encodeURIComponent(item.title)}`;
         out.push({
           title,
           distMeters,
           lat: Number(item.lat),
           lon: Number(item.lon),
-          wikiUrl: item.lang === 'en'
-            ? `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title)}`
-            : `https://zh.wikipedia.org/zh-tw/${encodeURIComponent(item.title)}`
+          url: wikiUrl,
+          wikiUrl
         });
       }
       return out.slice(0, 5);
@@ -4455,18 +4637,29 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
       }));
     };
 
-    const [marineRes, radiosRes, landmarksRes, holidaysRes] = await Promise.allSettled([
+    const [marineRes, alpineRes, radiosRes, landmarksRes, holidaysRes, newsRes, issRes] = await Promise.allSettled([
       fetchMarine(),
+      fetchAlpine(),
       fetchRadios(),
       fetchLandmarks(),
-      fetchHolidays()
+      fetchHolidays(),
+      fetchLocalNewsHeadlines(cc, nearestAirport.city),
+      fetchIssTelemetry()
     ]);
+
+    let issData = issRes.status === 'fulfilled' && issRes.value ? { ...issRes.value } : null;
+    if (issData) {
+      issData.distKm = Math.round(calcDistanceMeters(lat, lon, issData.lat, issData.lon) / 1000);
+    }
 
     const payload = JSON.stringify({
       success: true,
       countryCode: cc,
       countryName: nearestAirport.country || cc,
       marine: marineRes.status === 'fulfilled' ? marineRes.value : null,
+      alpine: alpineRes.status === 'fulfilled' ? alpineRes.value : null,
+      iss: issData,
+      news: newsRes.status === 'fulfilled' ? newsRes.value : [],
       radios: radiosRes.status === 'fulfilled' ? radiosRes.value : [],
       landmarks: landmarksRes.status === 'fulfilled' ? landmarksRes.value : [],
       holidays: holidaysRes.status === 'fulfilled' ? holidaysRes.value : [],
@@ -4935,6 +5128,8 @@ server.handleFreewayLiveProxy = handleFreewayLiveProxy;
 server.handleFlightsNearbyProxy = handleFlightsNearbyProxy;
 server.handleImmersiveLocalProxy = handleImmersiveLocalProxy;
 server.fetchNearbyFlightsData = fetchNearbyFlightsData;
+server.fetchLocalNewsHeadlines = fetchLocalNewsHeadlines;
+server.fetchIssTelemetry = fetchIssTelemetry;
 server.getTaiwanDateString = getTaiwanDateString;
 server.decodeCompressedBuffer = decodeCompressedBuffer;
 server.parseCsvToJson = parseCsvToJson;

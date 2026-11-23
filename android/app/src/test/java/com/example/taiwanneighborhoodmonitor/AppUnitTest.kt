@@ -306,6 +306,8 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("de1.api.radio-browser.info"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("zh.wikipedia.org"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("date.nager.at"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.wheretheiss.at"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("news.google.com"))
 
         assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
         assertFalse(WebAssetRouting.isNativeInterceptHost("evil-opendata.vip"))

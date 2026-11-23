@@ -437,8 +437,9 @@ async function syncParking(outDir) {
       { key: 'CUR', lat: 12.1889, lon: -68.9598 },
       { key: 'PMI', lat: 39.5517, lon: 2.7388 }
     ];
+    const newsCountries = ['TW', 'JP', 'KR', 'AU', 'SG', 'TH', 'CH', 'GB', 'FR', 'IT', 'NO', 'FI', 'IS', 'US', 'CA', 'CR', 'BR', 'CW', 'ES'];
 
-    const [lots, qpParking, bpParking, qpBus, bpBus, qpTra, bpTra, fwLive, flightHubList] = await Promise.all([
+    const [lots, qpParking, bpParking, qpBus, bpBus, qpTra, bpTra, fwLive, flightHubList, newsCountryList] = await Promise.all([
       server.fetchThsrParkingData().catch(() => []),
       invokeServerApi('/api/parking/nearby?lat=25.0134&lon=121.2148'),
       invokeServerApi('/api/parking/nearby?lat=25.0225&lon=121.4685'),
@@ -454,6 +455,15 @@ async function syncParking(outDir) {
             if (d && d.airport && Array.isArray(d.flights)) {
               return [h.key, { ...d, flights: d.flights.slice(0, 18) }];
             }
+          }
+        } catch (_) {}
+        return null;
+      })),
+      Promise.all(newsCountries.map(async (cc) => {
+        try {
+          if (typeof server.fetchLocalNewsHeadlines === 'function') {
+            const list = await server.fetchLocalNewsHeadlines(cc);
+            if (Array.isArray(list) && list.length > 0) return [cc, list.slice(0, 3)];
           }
         } catch (_) {}
         return null;
@@ -474,6 +484,13 @@ async function syncParking(outDir) {
       if (pair && pair[0] && pair[1] && Array.isArray(pair[1].flights) && pair[1].flights.length > 0) {
         flightsLive[pair[0]] = pair[1];
         freshFlightHubCount++;
+      }
+    }
+
+    const newsLive = { ...(existingData.newsLive || {}) };
+    for (const pair of (newsCountryList || [])) {
+      if (pair && pair[0] && Array.isArray(pair[1]) && pair[1].length > 0) {
+        newsLive[pair[0]] = pair[1];
       }
     }
 
@@ -507,11 +524,12 @@ async function syncParking(outDir) {
         banqiao: hasFreshBpTra ? bpTra : (existingData.traDual?.banqiao || null)
       },
       freewayLive: hasFreshFw ? fwLive : (existingData.freewayLive || null),
-      flightsLive
+      flightsLive,
+      newsLive
     };
 
     writeFileAtomic(outFile, JSON.stringify(payload));
-    console.log(`  -> 已寫入 ${outFile} (高鐵車位: ${payload.lots.length} 處, 青埔車位: ${payload.qpLots.length} 處, 板橋車位: ${payload.bpLots.length} 處, 國道走廊: ${payload.freewayLive?.corridors?.length || 0} 條, 機場航班雷達: ${Object.keys(payload.flightsLive || {}).length} 座樞紐)`);
+    console.log(`  -> 已寫入 ${outFile} (高鐵車位: ${payload.lots.length} 處, 青埔車位: ${payload.qpLots.length} 處, 板橋車位: ${payload.bpLots.length} 處, 國道走廊: ${payload.freewayLive?.corridors?.length || 0} 條, 機場航班雷達: ${Object.keys(payload.flightsLive || {}).length} 座樞紐, 各國新聞脈動: ${Object.keys(payload.newsLive || {}).length} 國)`);
     return true;
   } catch (err) {
     console.error('  - 高鐵停車場與周邊快照同步失敗 (維持既有快照):', err.message);

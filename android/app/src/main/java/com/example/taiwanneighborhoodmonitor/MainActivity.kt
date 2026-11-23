@@ -2719,7 +2719,9 @@ internal object WebAssetRouting {
         "adsbdb.com",
         "radio-browser.info",
         "wikipedia.org",
-        "nager.at"
+        "nager.at",
+        "wheretheiss.at",
+        "news.google.com"
     )
 
     fun isNativeInterceptHost(rawHost: String?): Boolean {

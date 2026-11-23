@@ -10681,6 +10681,240 @@ html[data-theme="light"] .landmark-dist-pill {
   color: #065f46 !important;
 }
 
+/* 自然環境音場混音列 ‧ 各國道地會話真人發音卡 ‧ 在地文化速查 ‧ 山岳積雪結冰線 ‧ 潮汐洋流 ‧ 太空站軌道 ‧ 當地新聞頭條 */
+.ambient-soundscape-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+.ambient-sound-pill {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 5px;
+  border-radius: 5px;
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  background: rgba(15, 23, 42, 0.72);
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.16s ease;
+}
+.ambient-sound-pill:hover {
+  border-color: #d8b4fe;
+  color: #ffffff;
+}
+.ambient-sound-pill.active {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border-color: #7dd3fc;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+.immersive-phrase-box {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.13), rgba(15, 23, 42, 0.78));
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 8px;
+  padding: 7px 9px;
+  margin-bottom: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.phrase-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+}
+.phrase-speak-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: rgba(15, 23, 42, 0.75);
+  color: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.16s ease;
+  min-width: 0;
+}
+.phrase-speak-btn:hover {
+  border-color: #fbbf24;
+  background: rgba(30, 41, 59, 0.92);
+  transform: translateY(-1px);
+}
+.phrase-native-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4px;
+}
+.phrase-native-txt {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #fde68a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phrase-sub-txt {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.immersive-culture-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  margin-top: 2px;
+}
+.culture-fact-pill {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 0.63rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.immersive-alpine-box {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 0.80));
+  border: 1px solid rgba(125, 211, 252, 0.34);
+  border-radius: 8px;
+  padding: 7px 9px;
+  margin-bottom: 7px;
+}
+.marine-tide-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 5px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  font-size: 0.65rem;
+  color: #bae6fd;
+  flex-wrap: wrap;
+}
+.immersive-iss-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(15, 23, 42, 0.82));
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  margin-bottom: 7px;
+}
+.iss-jump-btn {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(129, 140, 248, 0.5);
+  background: rgba(99, 102, 241, 0.28);
+  color: #e0e7ff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+}
+.iss-jump-btn:hover {
+  background: rgba(99, 102, 241, 0.48);
+  border-color: #a5b4fc;
+}
+.immersive-news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.immersive-news-item {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-left: 2.5px solid #c084fc;
+  border-radius: 6px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.immersive-news-link {
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  text-decoration: none;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.immersive-news-link:hover {
+  color: #00f0ff;
+  text-decoration: underline;
+}
+.immersive-news-meta {
+  font-size: 0.61rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+html[data-theme="light"] .ambient-sound-pill,
+html[data-theme="light"] .phrase-speak-btn,
+html[data-theme="light"] .culture-fact-pill,
+html[data-theme="light"] .marine-tide-strip,
+html[data-theme="light"] .immersive-news-item {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #1e293b !important;
+}
+html[data-theme="light"] .ambient-sound-pill.active {
+  background: #0284c7 !important;
+  border-color: #0369a1 !important;
+  color: #ffffff !important;
+}
+html[data-theme="light"] .immersive-phrase-box {
+  background: linear-gradient(135deg, #fef3c7, #f8fafc) !important;
+  border-color: rgba(217, 119, 6, 0.30) !important;
+}
+html[data-theme="light"] .phrase-native-txt {
+  color: #92400e !important;
+}
+html[data-theme="light"] .immersive-alpine-box {
+  background: linear-gradient(135deg, #e0f2fe, #f8fafc) !important;
+  border-color: rgba(2, 132, 199, 0.28) !important;
+}
+html[data-theme="light"] .immersive-iss-banner {
+  background: linear-gradient(135deg, #e0e7ff, #f8fafc) !important;
+  border-color: rgba(79, 70, 229, 0.28) !important;
+}
+html[data-theme="light"] .iss-jump-btn {
+  background: #4f46e5 !important;
+  border-color: #4338ca !important;
+  color: #ffffff !important;
+}
+html[data-theme="light"] .immersive-news-link {
+  color: #0f172a !important;
+}
+
 </style>
 </head>
 <body>
@@ -19127,6 +19361,43 @@ class NeighborhoodRadarMap {
         this._lastFlightPayload.summary
       );
     }
+    if (this._lastIssData) {
+      this.updateIssMarker(this._lastIssData);
+    }
+  }
+
+  // 即時繪製國際太空站 (ISS) 軌道標記於地理雷達地圖
+  updateIssMarker(issData) {
+    this._lastIssData = issData;
+    if (!this.map || typeof L === 'undefined') return;
+    if (this.issMarker) {
+      try { this.map.removeLayer(this.issMarker); } catch (_) {}
+      this.issMarker = null;
+    }
+    if (!issData || !Number.isFinite(Number(issData.lat)) || !Number.isFinite(Number(issData.lon))) return;
+    const issIcon = L.divIcon({
+      className: 'iss-orbital-pin',
+      html: `
+        <div style="display:inline-flex;align-items:center;gap:3px;background:#1e1b4b;color:#c7d2fe;border:1.5px solid #818cf8;border-radius:999px;padding:1px 6px;font-size:9.5px;font-weight:800;white-space:nowrap;box-shadow:0 0 12px rgba(129,140,248,0.65);">
+          <i class="fa-solid fa-satellite"></i> ISS 太空站
+        </div>
+      `,
+      iconSize: [76, 20],
+      iconAnchor: [38, 10]
+    });
+    const visLabel = issData.visibility === 'eclipsed' ? '🌑 地球本影區' : '☀️ 軌道日照區';
+    this.issMarker = L.marker([Number(issData.lat), Number(issData.lon)], { icon: issIcon, zIndexOffset: 500 })
+      .addTo(this.map)
+      .bindPopup(`
+        <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:185px;">
+          <b style="color:#4f46e5;"><i class="fa-solid fa-satellite"></i> 國際太空站 (ISS 25544)</b><br/>
+          <span style="color:#334155;font-size:0.74rem;">軌道高度：<b>${Number(issData.altKm || 420)} km</b> ‧ 時速：<b>${Number(issData.velocityKmh || 27550).toLocaleString()} km/h</b></span><br/>
+          <span style="color:#475569;font-size:0.73rem;">光照狀態：${visLabel} ‧ 距目前鏡頭 <b>${Number(issData.distKm || 0).toLocaleString()} km</b></span><br/>
+          <button onclick="window.immersivePulseService?.jumpToIssCamera()" style="margin-top:5px;width:100%;background:#4f46e5;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.74rem;font-weight:700;">
+            🎥 切換太空站俯瞰地球 4K 視角
+          </button>
+        </div>
+      `);
   }
 
   // 即時飛航雷達圖層：於地理雷達地圖繪製最近國際機場塔台與空中入出境航班動態航向圖標
@@ -35389,10 +35660,13 @@ class FlightRadarService {
 
 /* ==========================================================================
    身歷其境 ‧ 當地即時生活脈動服務 (ImmersiveLocalPulseService)
-   - 1. 📻 當地國家／城市即時廣播電台環境音播放器 (Radio Browser API + 精選各國高穩定電台)
-   - 2. 🌅 當地太陽仰角攝影時刻（黃金時刻 Golden Hour／藍調時刻 Blue Hour）與月相照明度 + 國家節慶 (Nager.Date)
-   - 3. 🌊 海岸／港灣／海島即時浪高、湧浪週期與海表水溫 (Open-Meteo Marine API)
-   - 4. 🏛️ 鏡頭周邊真實世界地標導覽 (Wikipedia GeoSearch API + 360° 街景)
+   - 1. 📻 當地國家／城市即時廣播電台 + 🎧 WebAudio 現場自然環境白噪音混音器 (海浪/微雨/森林/柴火)
+   - 2. 🗣️ 各國道地日常會話與一鍵真人母語發音卡 (Web Speech TTS) + 🧭 在地文化生存速查 (小費/插座/飲水/急救)
+   - 3. 🌅 當地太陽仰角攝影時刻（黃金時刻 Golden Hour／藍調時刻 Blue Hour）與月相照明度 + 國家節慶 (Nager.Date)
+   - 4. 🌊 海岸／港灣／海島即時浪高、潮汐漲退潮 (滿潮/乾潮/潮位 MSL)、洋流流速與海表水溫 (Open-Meteo Marine API)
+   - 5. 🏔️ 山岳／雪場／極地鏡頭即時海拔高度、地表積雪深度與 0°C 零度結冰線高度 (Open-Meteo Alpine Telemetry)
+   - 6. 🛰️ 國際太空站 (ISS) 即時軌道距離、時速、日照狀態與一鍵太空 4K 視角切換 (WhereTheISS API)
+   - 7. 📰 當地國家／城市繁體中文即時新聞頭條脈動 ＆ 🏛️ 鏡頭周邊真實世界維基地標導覽
    ========================================================================== */
 class ImmersiveLocalPulseService {
   constructor() {
@@ -35403,7 +35677,13 @@ class ImmersiveLocalPulseService {
     this.selectedRadioIdx = 0;
     this.isPlayingRadio = false;
     this.audioEl = null;
+    this.ambientMode = ''; // '' | 'ocean' | 'rain' | 'forest' | 'fire'
+    this._ambientCtx = null;
+    this._ambientNodes = [];
     this.marine = null;
+    this.alpine = null;
+    this.iss = null;
+    this.news = [];
     this.landmarks = [];
     this.holidays = [];
     this.astro = null;
@@ -35411,6 +35691,294 @@ class ImmersiveLocalPulseService {
     this.isLoading = false;
     this._reqToken = 0;
     this._lastFetchKey = '';
+
+    this.countryCultureCatalog = {
+      TW: {
+        countryName: '台灣', langName: '國語／台語', langCode: 'zh-TW',
+        morning: { native: '早安，呷飽未！', phonetic: 'Zǎo ān / Chia̍h-pá--bē', zh: '早安親切問候' },
+        afternoon: { native: '午安，你好！', phonetic: 'Wǔ ān, nǐ hǎo', zh: '午安問候' },
+        evening: { native: '晚安，平安順心！', phonetic: 'Wǎn ān', zh: '晚安祝福' },
+        phrases: [
+          { native: '多謝／謝謝！', phonetic: 'To-siā / Xièxie', zh: '表達感謝' },
+          { native: '請問這個多少錢？', phonetic: 'Zhège duōshǎo qián?', zh: '詢問價格' },
+          { native: '太讚了！乎乾啦！', phonetic: 'Ho͘-ta--lah!', zh: '熱情乾杯讚賞' }
+        ],
+        tipping: '💡 免小費（餐廳多含10%服務費）',
+        plug: '🔌 110V ‧ 雙平腳 A/B型',
+        water: '🚰 建議煮沸或飲用飲水機',
+        emergency: '🆘 警察110 ‧ 救護119 ‧ 靠右行駛'
+      },
+      JP: {
+        countryName: '日本', langName: '日本語', langCode: 'ja-JP',
+        morning: { native: 'おはようございます', phonetic: 'Ohayō gozaimasu', zh: '早安' },
+        afternoon: { native: 'こんにちは', phonetic: 'Konnichiwa', zh: '午安／你好' },
+        evening: { native: 'こんばんは', phonetic: 'Konbanwa', zh: '晚上好' },
+        phrases: [
+          { native: 'ありがとうございます', phonetic: 'Arigatō gozaimasu', zh: '非常謝謝您' },
+          { native: 'すみません、いくらですか？', phonetic: 'Sumimasen, ikura desu ka?', zh: '請問這個多少錢？' },
+          { native: '美味しい！乾杯！', phonetic: 'Oishii! Kanpai!', zh: '太美味了！乾杯！' }
+        ],
+        tipping: '💡 免小費文化（服務已含於定價）',
+        plug: '🔌 100V ‧ 雙平腳 A型（與台灣相容）',
+        water: '🚰 自來水符合生飲標準',
+        emergency: '🆘 警察110 ‧ 救護119 ‧ 靠左行駛'
+      },
+      KR: {
+        countryName: '韓國', langName: '한국어', langCode: 'ko-KR',
+        morning: { native: '좋은 아침입니다', phonetic: 'Joeun achimimnida', zh: '早安' },
+        afternoon: { native: '안녕하세요', phonetic: 'Annyeonghaseyo', zh: '你好／午安' },
+        evening: { native: '좋은 저녁입니다', phonetic: 'Joeun jeonyeogimnida', zh: '晚上好' },
+        phrases: [
+          { native: '감사합니다', phonetic: 'Gamsahamnida', zh: '謝謝您' },
+          { native: '이거 얼마예요?', phonetic: 'Igeo eolmayeyo?', zh: '請問這個多少錢？' },
+          { native: '맛있어요! 건배!', phonetic: 'Masisseoyo! Geonbae!', zh: '真好吃！乾杯！' }
+        ],
+        tipping: '💡 免小費文化（刷卡極度普及）',
+        plug: '🔌 220V ‧ 雙圓腳 C/F型',
+        water: '🚰 多飲用淨水器或瓶裝水',
+        emergency: '🆘 警察112 ‧ 救護119 ‧ 靠右行駛'
+      },
+      CH: {
+        countryName: '瑞士', langName: 'Schweizerdeutsch', langCode: 'de-DE',
+        morning: { native: 'Guete Morge', phonetic: 'Guete Morge', zh: '瑞士德語早安' },
+        afternoon: { native: 'Grüezi mitenand', phonetic: 'Grüezi mitenand', zh: '瑞士道地問候你好' },
+        evening: { native: 'Guete Abig', phonetic: 'Guete Abig', zh: '晚上好' },
+        phrases: [
+          { native: 'Merci vielmal!', phonetic: 'Merci vielmal', zh: '非常感謝（瑞式德法混用）' },
+          { native: 'Was kostet das?', phonetic: 'Vas kostet das?', zh: '請問這個多少錢？' },
+          { native: 'Wunderbar! Prost!', phonetic: 'Vunderbar! Prost!', zh: '太美了！乾杯！' }
+        ],
+        tipping: '💡 帳單已含服務費（可湊整數）',
+        plug: '🔌 230V ‧ 瑞士三圓孔 J型',
+        water: '🚰 阿爾卑斯山泉生水可直接飲用',
+        emergency: '🆘 歐盟急救112 ‧ 警察117 ‧ 靠右'
+      },
+      GB: {
+        countryName: '英國', langName: 'English (UK)', langCode: 'en-GB',
+        morning: { native: 'Good morning! Lovely day!', phonetic: 'Gud mɔːnɪŋ', zh: '英式早安問候' },
+        afternoon: { native: 'Good afternoon! Mate!', phonetic: 'Gud ɑːftənuːn', zh: '午安問候' },
+        evening: { native: 'Good evening!', phonetic: 'Gud iːvnɪŋ', zh: '晚上好' },
+        phrases: [
+          { native: 'Cheers! Thank you very much!', phonetic: 'Tʃɪəz! Θæŋk juː', zh: '英式道地謝謝／乾杯' },
+          { native: 'How much is this, please?', phonetic: 'Haʊ mʌtʃ ɪz ðɪs', zh: '請問這個多少錢？' },
+          { native: 'Brilliant! Lovely!', phonetic: 'Brɪljənt! Lʌvli!', zh: '太棒了！極好！' }
+        ],
+        tipping: '💡 餐廳約 10~12.5%（多列於帳單）',
+        plug: '🔌 230V ‧ 英規三方腳 G型',
+        water: '🚰 標示飲用水龍頭可生飲',
+        emergency: '🆘 緊急救援 999 / 112 ‧ 靠左行駛'
+      },
+      FR: {
+        countryName: '法國', langName: 'Français', langCode: 'fr-FR',
+        morning: { native: 'Bonjour !', phonetic: 'Bɔ̃ʒuʁ', zh: '早安／日間你好（進店必說）' },
+        afternoon: { native: 'Bonjour, bel après-midi !', phonetic: 'Bɔ̃ʒuʁ', zh: '午安美好的一天' },
+        evening: { native: 'Bonsoir !', phonetic: 'Bɔ̃swaʁ', zh: '晚上好' },
+        phrases: [
+          { native: 'Merci beaucoup !', phonetic: 'Mɛʁsi boku', zh: '非常謝謝您' },
+          { native: 'Combien ça coûte, s’il vous plaît ?', phonetic: 'Kɔ̃bjɛ̃ sa kut', zh: '請問這個多少錢？' },
+          { native: 'Magnifique ! Santé !', phonetic: 'Maɲifik! Sɑ̃te!', zh: '太迷人了！乾杯！' }
+        ],
+        tipping: '💡 帳單已含服務費（留零錢1~2€即可）',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/E型',
+        water: '🚰 餐廳點 Carafe d’eau 免費生飲水',
+        emergency: '🆘 歐盟急救112 ‧ 警察17 ‧ 靠右'
+      },
+      IT: {
+        countryName: '義大利', langName: 'Italiano', langCode: 'it-IT',
+        morning: { native: 'Buongiorno!', phonetic: 'Bwɔnˈdʒorno', zh: '早安／你好' },
+        afternoon: { native: 'Buon pomeriggio!', phonetic: 'Bwɔn pomeˈriddʒo', zh: '午安' },
+        evening: { native: 'Buonasera!', phonetic: 'Bwɔnaˈsera', zh: '晚上好' },
+        phrases: [
+          { native: 'Grazie mille!', phonetic: 'ˈGrattsje ˈmille', zh: '萬分感謝' },
+          { native: 'Quanto costa, per favore?', phonetic: 'ˈKwanto ˈkɔsta', zh: '請問這個多少錢？' },
+          { native: 'Bellissimo! Cin cin!', phonetic: 'Belˈlissimo! Tʃin tʃin!', zh: '太美了！乾杯！' }
+        ],
+        tipping: '💡 多收桌費 Coperto（免額外小費）',
+        plug: '🔌 230V ‧ 雙圓／三圓孔 C/F/L型',
+        water: '🚰 街頭湧泉 Nasone 可直接生飲',
+        emergency: '🆘 歐盟急救112 ‧ 靠右行駛'
+      },
+      NL: {
+        countryName: '荷蘭', langName: 'Nederlands', langCode: 'nl-NL',
+        morning: { native: 'Goedemorgen!', phonetic: 'ɣudəˈmɔrɣə', zh: '荷蘭語早安' },
+        afternoon: { native: 'Goedemiddag!', phonetic: 'ɣudəˈmɪdɑx', zh: '午安' },
+        evening: { native: 'Goedenavond!', phonetic: 'ɣudəˈnaːvɔnt', zh: '晚上好' },
+        phrases: [
+          { native: 'Dank u wel!', phonetic: 'Dɑŋk y ʋɛl', zh: '非常謝謝' },
+          { native: 'Wat kost dit?', phonetic: 'Ʋɑt kɔst dɪt?', zh: '請問多少錢？' },
+          { native: 'Gezellig! Proost!', phonetic: 'ɣəˈzɛləx! Proːst!', zh: '溫馨愉快！乾杯！' }
+        ],
+        tipping: '💡 服務極佳可湊整 5~10%',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/F型',
+        water: '🚰 自來水質極佳可直接生飲',
+        emergency: '🆘 歐盟急救112 ‧ 單車道優先'
+      },
+      ES: {
+        countryName: '西班牙', langName: 'Español', langCode: 'es-ES',
+        morning: { native: '¡Buenos días!', phonetic: 'ˈBwenos ˈðias', zh: '早安' },
+        afternoon: { native: '¡Buenas tardes!', phonetic: 'ˈBwenas ˈtarðes', zh: '午安' },
+        evening: { native: '¡Buenas noches!', phonetic: 'ˈBwenas ˈnotʃes', zh: '晚上好' },
+        phrases: [
+          { native: '¡Muchas gracias!', phonetic: 'ˈMutʃas ˈɣɾaθjas', zh: '非常感謝' },
+          { native: '¿Cuánto cuesta esto?', phonetic: 'ˈKwanto ˈkwesta', zh: '請問多少錢？' },
+          { native: '¡Qué hermoso! ¡Salud!', phonetic: 'Ke eɾˈmoso! Saˈluð!', zh: '太美了！乾杯！' }
+        ],
+        tipping: '💡 小費非強制（滿意可留 5%）',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/F型',
+        water: '🚰 多數城市自來水可生飲',
+        emergency: '🆘 歐盟急救112 ‧ 晚餐多於20點後'
+      },
+      PT: {
+        countryName: '葡萄牙', langName: 'Português', langCode: 'pt-PT',
+        morning: { native: 'Bom dia!', phonetic: 'Bõ ˈdi.ɐ', zh: '早安' },
+        afternoon: { native: 'Boa tarde!', phonetic: 'ˈBo.ɐ ˈtaɾ.dɨ', zh: '午安' },
+        evening: { native: 'Boa noite!', phonetic: 'ˈBo.ɐ ˈnoj.tɨ', zh: '晚上好' },
+        phrases: [
+          { native: 'Muito obrigado!', phonetic: 'ˈMũj.tu o.bɾi.ˈɣa.du', zh: '非常謝謝' },
+          { native: 'Quanto custa?', phonetic: 'ˈKwɐ̃.tu ˈkuʃ.tɐ', zh: '請問多少錢？' },
+          { native: 'Maravilhoso! Saúde!', phonetic: 'Saˈu.dɨ!', zh: '太棒了！乾杯！' }
+        ],
+        tipping: '💡 餐廳約留 5~10% 小費',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/F型',
+        water: '🚰 自來水可安全生飲',
+        emergency: '🆘 歐盟急救112 ‧ 靠右行駛'
+      },
+      NO: {
+        countryName: '挪威', langName: 'Norsk', langCode: 'nb-NO',
+        morning: { native: 'God morgen!', phonetic: 'Guː ˈmɔrən', zh: '挪威語早安' },
+        afternoon: { native: 'Hei! God dag!', phonetic: 'Hæɪ! Guː dɑːɡ', zh: '你好／日安' },
+        evening: { native: 'God kveld!', phonetic: 'Guː kvɛlː', zh: '晚上好' },
+        phrases: [
+          { native: 'Tusen takk!', phonetic: 'ˈTʉːsn̩ tɑkː', zh: '萬分感謝' },
+          { native: 'Hvor mye koster det?', phonetic: 'Vuɾ ˈmyːə ˈkɔstəɾ də', zh: '請問多少錢？' },
+          { native: 'Fantastisk! Skål!', phonetic: 'Fɑnˈtɑstɪsk! Skoːl!', zh: '太壯觀了！乾杯！' }
+        ],
+        tipping: '💡 服務費已含（全境刷卡無現金）',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/F型',
+        water: '🚰 北極圈冰川生水極純可直接飲用',
+        emergency: '🆘 警察112 ‧ 救護113 ‧ 靠右行駛'
+      },
+      FI: {
+        countryName: '芬蘭', langName: 'Suomi', langCode: 'fi-FI',
+        morning: { native: 'Hyvää huomenta!', phonetic: 'ˈHyʋæː ˈhuo̯mentɑ', zh: '芬蘭語早安' },
+        afternoon: { native: 'Hei! Hyvää päivää!', phonetic: 'ˈHyʋæː ˈpæi̯ʋæː', zh: '你好／午安' },
+        evening: { native: 'Hyvää iltaa!', phonetic: 'ˈHyʋæː ˈiltɑː', zh: '晚上好' },
+        phrases: [
+          { native: 'Kiitos paljon!', phonetic: 'ˈKiːtos ˈpɑljon', zh: '非常謝謝' },
+          { native: 'Paljonko tämä maksaa?', phonetic: 'ˈPɑljoŋko ˈtæmæ ˈmɑksɑː', zh: '請問多少錢？' },
+          { native: 'Upea revontuli! Kippis!', phonetic: 'ˈKipːis!', zh: '極光太美了！乾杯！' }
+        ],
+        tipping: '💡 免小費文化（桑拿國度）',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/F型',
+        water: '🚰 全球最純淨自來水可直接生飲',
+        emergency: '🆘 歐盟急救112 ‧ 靠右行駛'
+      },
+      IS: {
+        countryName: '冰島', langName: 'Íslenska', langCode: 'is-IS',
+        morning: { native: 'Góðan daginn!', phonetic: 'ˈKouːðan ˈtaiːjɪn', zh: '冰島語早安／日安' },
+        afternoon: { native: 'Halló! Góðan dag!', phonetic: 'ˈKouːðan ˈtaːɣ', zh: '你好／午安' },
+        evening: { native: 'Gott kvöld!', phonetic: 'ˈKɔht ˈkʰvœlt', zh: '晚上好' },
+        phrases: [
+          { native: 'Takk fyrir!', phonetic: 'ˈTʰahk ˈfɪːrɪr', zh: '謝謝您' },
+          { native: 'Hvað kostar þetta?', phonetic: 'ˈKʰvaːð ˈkʰɔstar', zh: '請問多少錢？' },
+          { native: 'Þetta reddast! Skál!', phonetic: 'ˈΘɛhta ˈrɛhtast! Skauːl!', zh: '船到橋頭自然直！乾杯！' }
+        ],
+        tipping: '💡 免小費（全境刷卡連公廁皆可刷）',
+        plug: '🔌 230V ‧ 歐洲雙圓孔 C/F型',
+        water: '🚰 冷水龍頭為純淨冰川水可直飲',
+        emergency: '🆘 緊急救援 112 ‧ 靠右行駛'
+      },
+      TH: {
+        countryName: '泰國', langName: 'ภาษาไทย', langCode: 'th-TH',
+        morning: { native: 'สวัสดีครับ / ค่ะ', phonetic: 'Sawasdee khrap / kha', zh: '早安／你好（合十禮）' },
+        afternoon: { native: 'สวัสดีตอนบ่าย', phonetic: 'Sawasdee ton bai', zh: '午安問候' },
+        evening: { native: 'สวัสดีตอนเย็น', phonetic: 'Sawasdee ton yen', zh: '晚上好' },
+        phrases: [
+          { native: 'ขอบคุณมากครับ / ค่ะ', phonetic: 'Khob khun mak khrap', zh: '非常謝謝您' },
+          { native: 'อันนี้เท่าไหร่ครับ?', phonetic: 'An nee thao rai?', zh: '請問這個多少錢？' },
+          { native: 'อร่อยมาก! ชนแก้ว!', phonetic: 'Aroi mak! Chon kaew!', zh: '太好吃了！乾杯！' }
+        ],
+        tipping: '💡 按摩／提行李建議 20~50 泰銖紙鈔',
+        plug: '🔌 220V ‧ 雙平／圓孔相容台灣插頭',
+        water: '🚰 請飲用瓶裝水',
+        emergency: '🆘 觀光警察1155 ‧ 急救1669 ‧ 靠左'
+      },
+      SG: {
+        countryName: '新加坡', langName: 'English / 華語', langCode: 'en-GB',
+        morning: { native: 'Good morning! 早安！', phonetic: 'Good morning, Lah!', zh: '星國雙語早安' },
+        afternoon: { native: 'Good afternoon! 吃飽沒？', phonetic: 'Makan already?', zh: '星式道地問候（吃飽沒）' },
+        evening: { native: 'Good evening!', phonetic: 'Good evening', zh: '晚上好' },
+        phrases: [
+          { native: 'Thank you! 謝謝！Terima kasih!', phonetic: 'Terima kasih', zh: '多元文化感謝' },
+          { native: 'How much is this?', phonetic: 'How much is this?', zh: '請問多少錢？' },
+          { native: 'Shiok! Yam Seng! 飲勝！', phonetic: 'Shiok! Yam Seng!', zh: '太過癮了！星式乾杯！' }
+        ],
+        tipping: '💡 帳單已含10%服務費（免額外小費）',
+        plug: '🔌 230V ‧ 英規三方腳 G型',
+        water: '🚰 自來水符合生飲標準',
+        emergency: '🆘 警察999 ‧ 救護995 ‧ 靠左行駛'
+      },
+      AU: {
+        countryName: '澳洲', langName: 'Aussie English', langCode: 'en-AU',
+        morning: { native: 'G’day mate! Good morning!', phonetic: 'Gəˈdeɪ meɪt', zh: '澳式熱情早安' },
+        afternoon: { native: 'Good arvo, mate!', phonetic: 'Gud ˈɑːvəʊ', zh: '澳式午安（Arvo = Afternoon）' },
+        evening: { native: 'Good evening, mate!', phonetic: 'Gud ˈiːvnɪŋ', zh: '晚上好' },
+        phrases: [
+          { native: 'Ta! Cheers mate!', phonetic: 'Tɑː! Tʃɪəz meɪt!', zh: '澳式道地謝謝' },
+          { native: 'How much is this one?', phonetic: 'Haʊ mʌtʃ ɪz ðɪs', zh: '請問這個多少錢？' },
+          { native: 'No worries! Ripper!', phonetic: 'Nəʊ ˈwʌriz!', zh: '沒問題！太讚了！' }
+        ],
+        tipping: '💡 免強制小費（高級餐廳可給10%）',
+        plug: '🔌 230V ‧ 八字斜腳 I型',
+        water: '🚰 自來水可直接生飲',
+        emergency: '🆘 全國緊急救援 000 ‧ 靠左行駛'
+      },
+      US: {
+        countryName: '美國', langName: 'English (US)', langCode: 'en-US',
+        morning: { native: 'Good morning! How’s it going?', phonetic: 'Gʊd ˈmɔrnɪŋ', zh: '美式親切早安' },
+        afternoon: { native: 'Good afternoon! Have a good one!', phonetic: 'Gʊd ˌæftərˈnun', zh: '午安愉快' },
+        evening: { native: 'Good evening!', phonetic: 'Gʊd ˈivnɪŋ', zh: '晚上好' },
+        phrases: [
+          { native: 'Thank you so much! Appreciate it!', phonetic: 'Θæŋk ju soʊ mʌtʃ', zh: '非常感謝您' },
+          { native: 'How much is this before tax?', phonetic: 'Haʊ mʌtʃ ɪz ðɪs', zh: '請問這未稅多少錢？' },
+          { native: 'Awesome! Cheers!', phonetic: 'ˈɔsəm! Tʃɪrz!', zh: '太棒了！乾杯！' }
+        ],
+        tipping: '💡 餐廳小費文化 15%~20%',
+        plug: '🔌 120V ‧ 雙平腳 A/B型（相容台灣）',
+        water: '🚰 多數城市直飲水台可生飲',
+        emergency: '🆘 緊急救援 911 ‧ 靠右行駛'
+      },
+      CR: {
+        countryName: '哥斯大黎加', langName: 'Español (Tico)', langCode: 'es-ES',
+        morning: { native: '¡Buenos días! ¡Pura Vida!', phonetic: 'ˈPuɾa ˈβiða', zh: '早安！純粹生命（國民問候語）' },
+        afternoon: { native: '¡Buenas tardes! ¡Pura Vida!', phonetic: 'ˈBwenas ˈtarðes', zh: '午安！Pura Vida！' },
+        evening: { native: '¡Buenas noches!', phonetic: 'ˈBwenas ˈnotʃes', zh: '晚上好' },
+        phrases: [
+          { native: '¡Muchas gracias! ¡Pura Vida!', phonetic: 'ˈMutʃas ˈɣɾasjas', zh: '非常感謝（萬用祝福）' },
+          { native: '¿Cuánto cuesta?', phonetic: 'ˈKwanto ˈkwesta', zh: '請問多少錢？' },
+          { native: '¡Qué chiva! ¡Salud!', phonetic: 'Ke ˈtʃiβa! Saˈluð!', zh: '太酷了！乾杯！' }
+        ],
+        tipping: '💡 帳單已含10%服務稅（可另給5%）',
+        plug: '🔌 120V ‧ 雙平腳 A/B型（相容台灣）',
+        water: '🚰 都市可飲，雨林區建議瓶裝水',
+        emergency: '🆘 緊急救援 911 ‧ 靠右行駛'
+      },
+      BR: {
+        countryName: '巴西', langName: 'Português (BR)', langCode: 'pt-BR',
+        morning: { native: 'Bom dia! Tudo bem?', phonetic: 'Bõ ˈdʒi.ɐ! ˈTu.du ˈbẽj', zh: '巴葡早安！一切好嗎？' },
+        afternoon: { native: 'Boa tarde! Tudo joia?', phonetic: 'ˈBo.ɐ ˈtaʁ.dʒi', zh: '午安問候' },
+        evening: { native: 'Boa noite!', phonetic: 'ˈBo.ɐ ˈnoj.tʃi', zh: '晚上好' },
+        phrases: [
+          { native: 'Muito obrigado! Valeu!', phonetic: 'ˈMũj.tu o.bɾi.ˈɡa.du', zh: '非常感謝！謝啦！' },
+          { native: 'Quanto custa isso?', phonetic: 'ˈKwɐ̃.tu ˈkus.tɐ', zh: '請問這個多少錢？' },
+          { native: 'Que lindo! Saúde!', phonetic: 'Ki ˈlĩ.du! Saˈu.dʒi!', zh: '太美了！乾杯！' }
+        ],
+        tipping: '💡 餐廳帳單多含 10% 服務費',
+        plug: '🔌 127/220V ‧ 三圓孔 N型 / 雙圓 C型',
+        water: '🚰 請飲用過濾水或瓶裝水',
+        emergency: '🆘 警察190 ‧ 救護192 ‧ 靠右行駛'
+      }
+    };
 
     this.curatedRadios = {
       TW: [
@@ -35494,11 +36062,199 @@ class ImmersiveLocalPulseService {
     return 'US';
   }
 
+  getCultureProfile(cc) {
+    const mapAlias = {
+      DE: 'CH', AT: 'CH', NZ: 'AU', CA: 'US', MX: 'ES', AR: 'ES', PA: 'CR', CW: 'NL', GL: 'IS', HK: 'TW', ID: 'TH', VN: 'TH', AE: 'GB', SA: 'GB'
+    };
+    return this.countryCultureCatalog[cc] || this.countryCultureCatalog[mapAlias[cc]] || this.countryCultureCatalog.US;
+  }
+
+  // 一鍵真人母語語音發音 (Web Speech API speechSynthesis) 並複製原文
+  speakPhrase(nativeText, langCode = 'en-US', zhMeaning = '') {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(nativeText).catch(() => {});
+      }
+    } catch (_) {}
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') {
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(nativeText);
+        utter.lang = langCode || 'en-US';
+        utter.rate = 0.96;
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+        const prefix = String(langCode || 'en').split('-')[0].toLowerCase();
+        const exactVoice = voices.find(v => String(v.lang || '').toLowerCase() === String(langCode).toLowerCase()) ||
+                           voices.find(v => String(v.lang || '').toLowerCase().startsWith(prefix));
+        if (exactVoice) utter.voice = exactVoice;
+        window.speechSynthesis.speak(utter);
+      } catch (_) {}
+    }
+    if (typeof window !== 'undefined' && window.showToast) {
+      window.showToast(`🔊 當地語音發音：${nativeText}${zhMeaning ? ` (${zhMeaning})` : ''}`, 'info');
+    }
+  }
+
+  // WebAudio 純程序化自然環境音場合成器 (零外部音檔依賴、100% 離線與跨網域可用)
+  toggleAmbientSound(mode = '') {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    if (!mode || this.ambientMode === mode) {
+      this.stopAmbientSound();
+      this.renderWidget();
+      return;
+    }
+    this.stopAmbientSound();
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!this._ambientCtx) this._ambientCtx = new AudioCtx();
+      const ctx = this._ambientCtx;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      // 產生 4 秒粉紅／棕噪音緩衝區循環
+      const bufSize = ctx.sampleRate * 4;
+      const noiseBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const out = noiseBuf.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        out[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+        b6 = white * 0.115926;
+      }
+
+      const src = ctx.createBufferSource();
+      src.buffer = noiseBuf;
+      src.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      const masterGain = ctx.createGain();
+      const nodes = [src, filter, masterGain];
+
+      if (mode === 'ocean') {
+        filter.type = 'lowpass';
+        filter.frequency.value = 460;
+        masterGain.gain.value = 0.22;
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 0.14; // 約 7 秒一波海浪拍岸週期
+        lfoGain.gain.value = 0.16;
+        lfo.connect(lfoGain);
+        lfoGain.connect(masterGain.gain);
+        lfo.start();
+        nodes.push(lfo, lfoGain);
+      } else if (mode === 'rain') {
+        filter.type = 'bandpass';
+        filter.frequency.value = 1150;
+        filter.Q.value = 0.65;
+        masterGain.gain.value = 0.24;
+      } else if (mode === 'forest') {
+        filter.type = 'bandpass';
+        filter.frequency.value = 520;
+        filter.Q.value = 1.4;
+        masterGain.gain.value = 0.20;
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 0.09;
+        lfoGain.gain.value = 190;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+        nodes.push(lfo, lfoGain);
+      } else if (mode === 'fire') {
+        filter.type = 'lowpass';
+        filter.frequency.value = 240;
+        masterGain.gain.value = 0.32;
+      }
+
+      src.connect(filter);
+      filter.connect(masterGain);
+      masterGain.connect(ctx.destination);
+      src.start();
+      this._ambientNodes = nodes;
+      this.ambientMode = mode;
+      const modeNames = { ocean: '🌊 海岸浪濤環境音', rain: '🌧️ 街頭微雨環境音', forest: '🌲 森林微風環境音', fire: '🔥 極地壁爐柴火音' };
+      if (window.showToast) window.showToast(`🎧 已開啟身歷其境音場：${modeNames[mode] || mode}`, 'info');
+    } catch (_) {
+      this.ambientMode = '';
+    }
+    this.renderWidget();
+  }
+
+  stopAmbientSound() {
+    this.ambientMode = '';
+    if (Array.isArray(this._ambientNodes)) {
+      for (const n of this._ambientNodes) {
+        try { if (typeof n.stop === 'function') n.stop(); } catch (_) {}
+        try { if (typeof n.disconnect === 'function') n.disconnect(); } catch (_) {}
+      }
+    }
+    this._ambientNodes = [];
+  }
+
+  // 一鍵跳轉至國際太空站 (ISS) 4K 俯瞰地球實況鏡頭
+  async jumpToIssCamera() {
+    if (!window.monitorApp) return;
+    if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    await window.monitorApp.switchCenter('americas');
+    window.monitorApp.scrollToCamera('am-02-iss-earth-live');
+    if (window.showToast) {
+      window.showToast('🛰️ 已切換至國際太空站 (ISS) 420km 軌道俯瞰地球即時視角', 'success');
+    }
+  }
+
+  static analyzeClientTideSeries(times = [], levels = []) {
+    if (!Array.isArray(times) || !Array.isArray(levels) || levels.length < 6) return null;
+    const nowMs = Date.now();
+    let curIdx = 0;
+    let minDiff = Infinity;
+    for (let i = 0; i < times.length; i++) {
+      const tMs = Date.parse(times[i] + 'Z');
+      const diff = Math.abs(tMs - nowMs);
+      if (Number.isFinite(diff) && diff < minDiff) {
+        minDiff = diff;
+        curIdx = i;
+      }
+    }
+    const curVal = Number(levels[curIdx]);
+    const nextVal = Number(levels[Math.min(levels.length - 1, curIdx + 1)]);
+    if (!Number.isFinite(curVal)) return null;
+    const isRising = Number.isFinite(nextVal) ? nextVal >= curVal : true;
+    let nextHigh = null;
+    let nextLow = null;
+    for (let i = Math.max(1, curIdx); i < levels.length - 1; i++) {
+      const prev = Number(levels[i - 1]);
+      const v = Number(levels[i]);
+      const nxt = Number(levels[i + 1]);
+      if (!Number.isFinite(prev) || !Number.isFinite(v) || !Number.isFinite(nxt)) continue;
+      const hhmm = String(times[i] || '').slice(11, 16);
+      if (!nextHigh && v >= prev && v >= nxt && v > curVal - 0.05) {
+        nextHigh = { time: hhmm, heightM: +v.toFixed(2) };
+      }
+      if (!nextLow && v <= prev && v <= nxt && v < curVal + 0.05) {
+        nextLow = { time: hhmm, heightM: +v.toFixed(2) };
+      }
+      if (nextHigh && nextLow) break;
+    }
+    return {
+      tideState: isRising ? 'RISING' : 'FALLING',
+      tideLabelZh: isRising ? '漲潮中 ▲' : '退潮中 ▼',
+      nextHighTide: nextHigh,
+      nextLowTide: nextLow
+    };
+  }
+
   // 即時計算當地太陽仰角（黃金時刻 Golden Hour／藍調時刻 Blue Hour）與月相照明度
   computeSolarAndLunarPulse(lat, lon) {
     const now = new Date();
     const rad = Math.PI / 180;
-    // 1. 計算太陽仰角 (Solar Elevation Angle)
     const dayOfYear = Math.floor((now - new Date(Date.UTC(now.getUTCFullYear(), 0, 0))) / 86400000);
     const utcHours = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
     const gamma = ((2 * Math.PI) / 365) * (dayOfYear - 1 + (utcHours - 12) / 24);
@@ -35508,6 +36264,7 @@ class ImmersiveLocalPulseService {
     const ha = (tst / 4 < 0 ? tst / 4 + 180 : tst / 4 - 180) * rad;
     const sinElev = Math.sin(lat * rad) * Math.sin(decl) + Math.cos(lat * rad) * Math.cos(decl) * Math.cos(ha);
     const elevDeg = +(Math.asin(Math.max(-1, Math.min(1, sinElev))) / rad).toFixed(1);
+    const localSolarHour = Math.floor(tst / 60);
 
     let lightTitle = '☀️ 日間明朗';
     let lightSub = `太陽仰角 ${elevDeg}° ‧ 日間自然光`;
@@ -35526,7 +36283,6 @@ class ImmersiveLocalPulseService {
       lightColor = '#a855f7';
     }
 
-    // 2. 計算月相與照明度 (Lunar Phase & Illumination)
     const synodicMonth = 29.530588853;
     const knownNewMoonMs = Date.UTC(2000, 0, 6, 18, 14, 0);
     const ageDays = (((now.getTime() - knownNewMoonMs) / 86400000) % synodicMonth + synodicMonth) % synodicMonth;
@@ -35544,6 +36300,7 @@ class ImmersiveLocalPulseService {
 
     return {
       elevDeg,
+      localSolarHour,
       lightTitle,
       lightSub,
       lightColor,
@@ -35577,19 +36334,25 @@ class ImmersiveLocalPulseService {
       }
       if (prevCc !== cc) {
         this.holidays = [];
+        this.news = Array.isArray(this._snapCache?.newsLive?.[cc]) ? this._snapCache.newsLive[cc] : [];
       }
+    }
+    if (this.news.length === 0 && Array.isArray(this._snapCache?.newsLive?.[cc])) {
+      this.news = this._snapCache.newsLive[cc];
     }
 
     const fetchKey = `${lat.toFixed(2)},${lon.toFixed(2)}:${cc}`;
-    if (!force && fetchKey === this._lastFetchKey && this.landmarks.length > 0) {
+    if (!force && fetchKey === this._lastFetchKey && (this.isLoading || this.landmarks.length > 0 || (Date.now() - (this._lastFetchMs || 0) < 12000))) {
       this.renderWidget();
       return;
     }
     if (this.target && calculateDistanceKm(lat, lon, this.target.lat, this.target.lon) > 35) {
       this.marine = null;
+      this.alpine = null;
       this.landmarks = [];
     }
     this._lastFetchKey = fetchKey;
+    this._lastFetchMs = Date.now();
     this.target = { lat, lon, label, cc };
     this.renderWidget();
     this.refreshNow(true);
@@ -35608,6 +36371,14 @@ class ImmersiveLocalPulseService {
       if (token !== this._reqToken) return;
       if (data) {
         this.marine = data.marine || null;
+        this.alpine = data.alpine || null;
+        this.iss = data.iss || null;
+        if (this.iss && window.monitorApp?.radarMap && typeof window.monitorApp.radarMap.updateIssMarker === 'function') {
+          window.monitorApp.radarMap.updateIssMarker(this.iss);
+        }
+        if (Array.isArray(data.news) && data.news.length > 0) {
+          this.news = data.news;
+        }
         if (Array.isArray(data.radios) && data.radios.length > 0) {
           this.radios = data.radios;
           if (this.selectedRadioIdx >= this.radios.length) this.selectedRadioIdx = 0;
@@ -35638,40 +36409,112 @@ class ImmersiveLocalPulseService {
       } catch (_) {}
     }
 
-    // 純前端 CORS 直連模式 (Open-Meteo Marine、Radio Browser、Wikipedia origin=*、Nager.Date 均原生支援 Access-Control-Allow-Origin: *)
+    // 純前端 CORS 直連模式 (Open-Meteo Marine/Forecast、WhereTheISS、Radio Browser、Wikipedia origin=*、Nager.Date 均原生支援 Access-Control-Allow-Origin: *)
     const normTw = (s) => (typeof LocalGeoBusService !== 'undefined' && typeof LocalGeoBusService.normalizeIntlTwLabel === 'function')
       ? LocalGeoBusService.normalizeIntlTwLabel(s)
       : String(s || '');
 
-    const [marineRes, wikiRes, radioRes, holidayRes] = await Promise.allSettled([
-      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature`, {
-        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+    const getCachedSnap = async () => {
+      if (this._snapCache && (Date.now() - (this._snapCacheTs || 0) < 60000)) return this._snapCache;
+      const j = await fetch(`./data/parking.json?_t=${Math.floor(Date.now() / 60000)}`, {
+        cache: 'no-store',
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(3500) : undefined
+      }).then(r => r.ok ? r.json() : null).catch(() => null);
+      if (j) { this._snapCache = j; this._snapCacheTs = Date.now(); }
+      return j;
+    };
+
+    const getCachedIss = async () => {
+      if (this._issRawCache && (Date.now() - (this._issRawCacheTs || 0) < 20000)) return this._issRawCache;
+      const j = await fetch('https://api.wheretheiss.at/v1/satellites/25544', {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(2800) : undefined
+      }).then(r => r.ok ? r.json() : null).catch(() => null);
+      if (j && Number.isFinite(Number(j.latitude))) { this._issRawCache = j; this._issRawCacheTs = Date.now(); }
+      return j || this._issRawCache || null;
+    };
+
+    const [marineRes, alpineRes, issRes, wikiRes, radioRes, holidayRes, snapRes] = await Promise.allSettled([
+      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl&hourly=sea_level_height_msl&forecast_days=2`, {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(3200) : undefined
       }).then(r => r.ok ? r.json() : null),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,snowfall,snow_depth&hourly=freezing_level_height&forecast_days=1`, {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(3200) : undefined
+      }).then(r => r.ok ? r.json() : null),
+      getCachedIss(),
       fetch(`https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat.toFixed(4)}|${lon.toFixed(4)}&gsradius=10000&gslimit=5&format=json&origin=*`, {
-        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(3000) : undefined
       }).then(r => r.ok ? r.json() : null),
-      fetch(`https://de1.api.radio-browser.info/json/stations/search?countrycode=${encodeURIComponent(cc)}&hidebroken=true&order=clickcount&reverse=true&limit=8&https=true`, {
-        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
-      }).then(r => r.ok ? r.json() : null),
+      fetch(`https://de1.api.radio-browser.info/json/stations/search?countrycode=${encodeURIComponent(cc)}&hidebroken=true&order=clickcount&reverse=true&limit=6&https=true`, {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(1100) : undefined
+      }).then(r => r.ok ? r.json() : null).catch(() => null),
       cc === 'TW'
         ? Promise.resolve(null)
         : fetch(`https://date.nager.at/api/v3/NextPublicHolidays/${encodeURIComponent(cc)}`, {
-            signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
-          }).then(r => r.ok ? r.json() : null)
+            signal: window.createTimeoutSignal ? window.createTimeoutSignal(2800) : undefined
+          }).then(r => r.ok ? r.json() : null),
+      getCachedSnap()
     ]);
 
     let marine = null;
     if (marineRes.status === 'fulfilled' && marineRes.value?.current) {
       const mc = marineRes.value.current;
-      if (mc.wave_height != null || mc.sea_surface_temperature != null) {
+      if (mc.wave_height != null || mc.sea_surface_temperature != null || mc.sea_level_height_msl != null) {
+        const tideInfo = ImmersiveLocalPulseService.analyzeClientTideSeries(
+          marineRes.value.hourly?.time,
+          marineRes.value.hourly?.sea_level_height_msl
+        );
         marine = {
           waveHeightM: mc.wave_height != null ? +Number(mc.wave_height).toFixed(2) : null,
           waveDirDeg: mc.wave_direction != null ? Math.round(Number(mc.wave_direction)) : null,
           wavePeriodSec: mc.wave_period != null ? +Number(mc.wave_period).toFixed(1) : null,
           swellHeightM: mc.swell_wave_height != null ? +Number(mc.swell_wave_height).toFixed(2) : null,
-          seaTempC: mc.sea_surface_temperature != null ? +Number(mc.sea_surface_temperature).toFixed(1) : null
+          seaTempC: mc.sea_surface_temperature != null ? +Number(mc.sea_surface_temperature).toFixed(1) : null,
+          seaLevelM: mc.sea_level_height_msl != null ? +Number(mc.sea_level_height_msl).toFixed(2) : null,
+          currentVelKmh: mc.ocean_current_velocity != null ? +Number(mc.ocean_current_velocity).toFixed(1) : null,
+          currentDirDeg: mc.ocean_current_direction != null ? Math.round(Number(mc.ocean_current_direction)) : null,
+          tideState: tideInfo?.tideState || null,
+          tideLabelZh: tideInfo?.tideLabelZh || null,
+          nextHighTide: tideInfo?.nextHighTide || null,
+          nextLowTide: tideInfo?.nextLowTide || null
         };
       }
+    }
+
+    let alpine = null;
+    if (alpineRes.status === 'fulfilled' && alpineRes.value) {
+      const aj = alpineRes.value;
+      const elevM = Number.isFinite(Number(aj.elevation)) ? Math.round(Number(aj.elevation)) : null;
+      const ac = aj.current || {};
+      const snowDepthCm = ac.snow_depth != null ? Math.round(Number(ac.snow_depth) * 100) : 0;
+      const snowfallCmHr = ac.snowfall != null ? +Number(ac.snowfall).toFixed(1) : 0;
+      const fz = aj.hourly?.freezing_level_height;
+      const firstFz = Array.isArray(fz) ? fz.find(v => v != null && Number.isFinite(Number(v))) : null;
+      const curTemp = Number(ac.temperature_2m);
+      const freezingLevelM = firstFz != null
+        ? Math.round(Number(firstFz))
+        : (Number.isFinite(curTemp) ? (curTemp <= 0 ? 0 : Math.round((elevM || 0) + (curTemp / 6.5) * 1000)) : null);
+      alpine = { elevationM: elevM, snowDepthCm, snowfallCmHr, freezingLevelM };
+    }
+
+    let iss = null;
+    if (issRes.status === 'fulfilled' && issRes.value && Number.isFinite(Number(issRes.value.latitude))) {
+      const ij = issRes.value;
+      const iLat = +Number(ij.latitude).toFixed(4);
+      const iLon = +Number(ij.longitude).toFixed(4);
+      iss = {
+        lat: iLat,
+        lon: iLon,
+        altKm: +Number(ij.altitude || 420).toFixed(1),
+        velocityKmh: Math.round(Number(ij.velocity || 27550)),
+        visibility: String(ij.visibility || 'daylight'),
+        distKm: Math.round(calculateDistanceKm(lat, lon, iLat, iLon))
+      };
+    }
+
+    let news = [];
+    if (snapRes.status === 'fulfilled' && snapRes.value?.newsLive) {
+      const byCc = snapRes.value.newsLive[cc] || snapRes.value.newsLive.TW;
+      if (Array.isArray(byCc)) news = byCc;
     }
 
     const landmarks = [];
@@ -35679,6 +36522,7 @@ class ImmersiveLocalPulseService {
     for (const item of geoList.slice(0, 5)) {
       const title = normTw(item.title || '');
       if (!title) continue;
+      const wikiUrl = `https://zh.wikipedia.org/zh-tw/${encodeURIComponent(item.title)}`;
       landmarks.push({
         pageId: item.pageid,
         title,
@@ -35686,7 +36530,8 @@ class ImmersiveLocalPulseService {
         lat: Number(item.lat),
         lon: Number(item.lon),
         summary: '',
-        url: `https://zh.wikipedia.org/wiki/${encodeURIComponent(item.title)}`
+        url: wikiUrl,
+        wikiUrl
       });
     }
 
@@ -35737,6 +36582,9 @@ class ImmersiveLocalPulseService {
       success: true,
       countryCode: cc,
       marine,
+      alpine,
+      iss,
+      news,
       radios,
       landmarks,
       holidays: holidays.slice(0, 3)
@@ -35779,7 +36627,6 @@ class ImmersiveLocalPulseService {
       const playPromise = this.audioEl.play();
       if (playPromise && typeof playPromise.catch === 'function') {
         playPromise.catch(() => {
-          // 若社群電台串流瞬斷，自動切換至下一台高穩定電台
           if (this.radios.length > 1 && this.selectedRadioIdx === 0) {
             this.selectedRadioIdx = 1;
             const fallbackSt = this.radios[1];
@@ -35824,6 +36671,7 @@ class ImmersiveLocalPulseService {
     const card = document.getElementById('immersivePulseWidgetCard');
     if (!card) return;
     const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    const eJs = (typeof window !== 'undefined' && window.escJsAttr) ? window.escJsAttr : (v => String(v ?? ''));
 
     const astro = this.astro || this.computeSolarAndLunarPulse(this.target?.lat || 25.0153, this.target?.lon || 121.2213);
     const activeRadio = this.radios[this.selectedRadioIdx] || this.radios[0] || null;
@@ -35832,11 +36680,12 @@ class ImmersiveLocalPulseService {
       ? `${nextHoliday.isToday ? '🎉 今日節慶：' : '🗓️ 即將到來：'}${nextHoliday.date.slice(5)} ${nextHoliday.localName}`
       : '🗓️ 平日生活作息';
 
+    // 1. 當地廣播電台 + WebAudio 自然環境音場混音器
     const radioBoxHtml = activeRadio ? `
       <div class="immersive-radio-box">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
           <span style="font-size:0.70rem;font-weight:800;color:#d8b4fe;">
-            <i class="fa-solid fa-radio" style="margin-right:4px;"></i>當地即時廣播 ‧ 環境之聲 (${eHtml(this.countryCode)})
+            <i class="fa-solid fa-radio" style="margin-right:4px;"></i>當地即時廣播 ‧ 環境音場 (${eHtml(this.countryCode)})
           </span>
           <span style="font-size:0.64rem;color:var(--text-dim);">${eHtml(activeRadio.genre || '即時放送')}</span>
         </div>
@@ -35852,14 +36701,69 @@ class ImmersiveLocalPulseService {
             ${this.radios.map((r, i) => `<option value="${i}" ${i === this.selectedRadioIdx ? 'selected' : ''}>${eHtml(r.name)}${r.city ? ` (${eHtml(r.city)})` : ''}</option>`).join('')}
           </select>
         </div>
+        <div class="ambient-soundscape-bar" role="group" aria-label="自然環境音場混音器">
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'ocean' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('ocean')" title="疊加療癒海岸浪濤自然環境音">🌊 海浪音</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'rain' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('rain')" title="疊加街頭微雨放鬆白噪音">🌧️ 微雨聲</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'forest' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('forest')" title="疊加山林微風吹拂環境音">🌲 森林風</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'fire' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('fire')" title="疊加極地木屋壁爐溫暖柴火音">🔥 壁爐火</button>
+        </div>
       </div>
     ` : '';
 
-    const marineHtml = (this.marine && (this.marine.waveHeightM != null || this.marine.seaTempC != null)) ? `
+    // 2. 各國道地日常會話與一鍵真人母語發音卡 + 在地生活文化生存速查
+    const culture = this.getCultureProfile(this.countryCode);
+    const hr = astro.localSolarHour != null ? astro.localSolarHour : 12;
+    const timeGreeting = (hr >= 5 && hr < 11) ? culture.morning : ((hr >= 11 && hr < 18) ? culture.afternoon : culture.evening);
+    const phraseList = [timeGreeting, ...(culture.phrases || [])].slice(0, 4);
+    const phraseBoxHtml = `
+      <div class="immersive-phrase-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span style="font-size:0.70rem;font-weight:800;color:#fbbf24;">
+            <i class="fa-solid fa-volume-high" style="margin-right:4px;"></i>${eHtml(culture.countryName)}道地會話 ‧ 點擊真人發音
+          </span>
+          <span style="font-size:0.62rem;color:var(--text-dim);">${eHtml(culture.langName)}</span>
+        </div>
+        <div class="phrase-chip-grid">
+          ${phraseList.map(p => `
+            <button type="button" class="phrase-speak-btn"
+                    onclick="window.immersivePulseService?.speakPhrase('${eJs(p.native)}', '${eJs(culture.langCode)}', '${eJs(p.zh)}')"
+                    title="點擊聆聽「${eHtml(p.native)}」真人發音並複製">
+              <div class="phrase-native-row">
+                <span class="phrase-native-txt">${eHtml(p.native)}</span>
+                <i class="fa-solid fa-volume-high" style="font-size:0.62rem;color:#fbbf24;flex-shrink:0;"></i>
+              </div>
+              <span class="phrase-sub-txt">${eHtml(p.zh)} ‧ ${eHtml(p.phonetic)}</span>
+            </button>
+          `).join('')}
+        </div>
+        <div class="immersive-culture-grid">
+          <div class="culture-fact-pill" title="${eHtml(culture.tipping)}">${eHtml(culture.tipping)}</div>
+          <div class="culture-fact-pill" title="${eHtml(culture.plug)}">${eHtml(culture.plug)}</div>
+          <div class="culture-fact-pill" title="${eHtml(culture.water)}">${eHtml(culture.water)}</div>
+          <div class="culture-fact-pill" title="${eHtml(culture.emergency)}">${eHtml(culture.emergency)}</div>
+        </div>
+      </div>
+    `;
+
+    // 3. 海岸／港灣／海島即時浪況、潮汐漲退潮與洋流流速
+    const hasMarine = this.marine && (this.marine.waveHeightM != null || this.marine.seaTempC != null || this.marine.seaLevelM != null);
+    let tideStripHtml = '';
+    if (hasMarine && (this.marine.tideLabelZh || this.marine.seaLevelM != null || this.marine.currentVelKmh != null)) {
+      const highTxt = this.marine.nextHighTide ? `滿潮 ${this.marine.nextHighTide.time}` : '';
+      const lowTxt = this.marine.nextLowTide ? `乾潮 ${this.marine.nextLowTide.time}` : '';
+      const tideTimes = [highTxt, lowTxt].filter(Boolean).join(' ‧ ');
+      tideStripHtml = `
+        <div class="marine-tide-strip">
+          <span><strong>${eHtml(this.marine.tideLabelZh || '潮汐觀測')}</strong>${this.marine.seaLevelM != null ? ` (潮位 ${this.marine.seaLevelM >= 0 ? '+' : ''}${this.marine.seaLevelM}m)` : ''}</span>
+          <span>${eHtml(tideTimes || (this.marine.currentVelKmh != null ? `洋流 ${this.marine.currentVelKmh} km/h` : '海岸即時遙測'))}</span>
+        </div>
+      `;
+    }
+    const marineHtml = hasMarine ? `
       <div class="immersive-marine-box">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <span style="font-size:0.70rem;font-weight:800;color:#67e8f9;">
-            <i class="fa-solid fa-water" style="margin-right:4px;"></i>海岸／港灣即時浪況與海表水溫
+            <i class="fa-solid fa-water" style="margin-right:4px;"></i>海岸即時浪高、潮汐漲退與海溫
           </span>
           <span style="font-size:0.63rem;color:var(--text-dim);">Open-Meteo Marine</span>
         </div>
@@ -35873,17 +36777,99 @@ class ImmersiveLocalPulseService {
             <div class="marine-metric-val">${this.marine.wavePeriodSec != null ? `${this.marine.wavePeriodSec}s` : '--'}</div>
           </div>
           <div class="marine-metric-item">
-            <div class="marine-metric-lbl">長浪湧高</div>
-            <div class="marine-metric-val">${this.marine.swellHeightM != null ? `${this.marine.swellHeightM}m` : '--'}</div>
+            <div class="marine-metric-lbl">長浪／洋流</div>
+            <div class="marine-metric-val">${this.marine.swellHeightM != null ? `${this.marine.swellHeightM}m` : (this.marine.currentVelKmh != null ? `${this.marine.currentVelKmh}k` : '--')}</div>
           </div>
           <div class="marine-metric-item">
             <div class="marine-metric-lbl">海表水溫</div>
             <div class="marine-metric-val">${this.marine.seaTempC != null ? `${this.marine.seaTempC}°C` : '--'}</div>
           </div>
         </div>
+        ${tideStripHtml}
       </div>
     ` : '';
 
+    // 4. 山岳／雪場／極地鏡頭即時海拔高度、積雪深度與 0°C 結冰高度線
+    const showAlpine = this.alpine && (
+      (Number(this.alpine.elevationM) >= 350) ||
+      (Number(this.alpine.snowDepthCm) > 0) ||
+      (Number(this.alpine.snowfallCmHr) > 0) ||
+      this.centerId === 'polar' ||
+      this.centerId === 'scenic'
+    );
+    const alpineHtml = showAlpine ? `
+      <div class="immersive-alpine-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.70rem;font-weight:800;color:#7dd3fc;">
+            <i class="fa-solid fa-mountain-sun" style="margin-right:4px;"></i>山岳海拔、積雪深度與零度結冰線
+          </span>
+          <span style="font-size:0.62rem;color:var(--text-dim);">Alpine Telemetry</span>
+        </div>
+        <div class="immersive-marine-grid">
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">觀測海拔</div>
+            <div class="marine-metric-val">${this.alpine.elevationM != null ? `${this.alpine.elevationM.toLocaleString()}m` : '--'}</div>
+          </div>
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">地表積雪</div>
+            <div class="marine-metric-val">${this.alpine.snowDepthCm != null ? `${this.alpine.snowDepthCm}cm` : '0cm'}</div>
+          </div>
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">即時降雪</div>
+            <div class="marine-metric-val">${this.alpine.snowfallCmHr != null ? `${this.alpine.snowfallCmHr}cm` : '0cm'}</div>
+          </div>
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">0°C 結冰線</div>
+            <div class="marine-metric-val">${this.alpine.freezingLevelM != null ? `${this.alpine.freezingLevelM.toLocaleString()}m` : '--'}</div>
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    // 5. 國際太空站 (ISS) 即時軌道距離與一鍵太空視角切換
+    const issHtml = this.iss ? `
+      <div class="immersive-iss-banner">
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:0.69rem;font-weight:800;color:#c7d2fe;display:flex;align-items:center;gap:4px;">
+            <i class="fa-solid fa-satellite" style="color:#818cf8;"></i>
+            <span>國際太空站 ISS 軌道 ‧ 距此 <strong>${Number(this.iss.distKm || 0).toLocaleString()} km</strong></span>
+          </div>
+          <div style="font-size:0.62rem;color:#94a3b8;margin-top:1px;">
+            軌道高度 ${this.iss.altKm}km ‧ 時速 ${Number(this.iss.velocityKmh || 27550).toLocaleString()}km/h ‧ ${this.iss.visibility === 'eclipsed' ? '🌑 地球本影區' : '☀️ 軌道日照區'}
+          </div>
+        </div>
+        <button type="button" class="iss-jump-btn" onclick="window.immersivePulseService?.jumpToIssCamera()" title="一鍵切換至國際太空站 4K 俯瞰地球實況鏡頭">
+          🎥 太空視角
+        </button>
+      </div>
+    ` : '';
+
+    // 6. 當地國家／城市繁體中文即時新聞頭條脈動
+    const newsHtml = this.news.length > 0 ? `
+      <div style="margin-top:4px;margin-bottom:6px;">
+        <div style="font-size:0.69rem;font-weight:800;color:var(--text-muted);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="fa-regular fa-newspaper" style="color:#c084fc;margin-right:4px;"></i>當地即時新聞頭條脈動 (${eHtml(culture.countryName)})</span>
+          <span style="font-size:0.61rem;color:var(--text-dim);">繁體中文即時</span>
+        </div>
+        <div class="immersive-news-list">
+          ${this.news.slice(0, 3).map(n => `
+            <div class="immersive-news-item">
+              <a class="immersive-news-link" href="${eHtml(n.link)}" target="_blank" rel="noopener noreferrer"
+                 onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, this.href);}"
+                 title="${eHtml(n.title)}">
+                ${eHtml(n.title)}
+              </a>
+              <div class="immersive-news-meta">
+                <span><i class="fa-solid fa-rss" style="font-size:0.56rem;color:#c084fc;margin-right:3px;"></i>${eHtml(n.source || '即時新聞')}</span>
+                <span>點擊閱讀 ↗</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    // 7. 鏡頭周邊真實世界地標導覽
     const landmarksHtml = this.landmarks.length > 0 ? `
       <div style="margin-top:4px;">
         <div style="font-size:0.69rem;font-weight:800;color:var(--text-muted);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;">
@@ -35894,10 +36880,11 @@ class ImmersiveLocalPulseService {
           ${this.landmarks.slice(0, 4).map(lm => {
             const distTxt = lm.distMeters >= 1000 ? `${(lm.distMeters / 1000).toFixed(1)}km` : `${lm.distMeters}m`;
             const svUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(lm.lat)},${encodeURIComponent(lm.lon)}`;
+            const targetWikiUrl = lm.url || lm.wikiUrl || `https://zh.wikipedia.org/zh-tw/${encodeURIComponent(lm.title)}`;
             return `
               <div class="immersive-landmark-item">
                 <div class="landmark-head-row">
-                  <a class="landmark-title-link" href="${eHtml(lm.url)}" target="_blank" rel="noopener noreferrer"
+                  <a class="landmark-title-link" href="${eHtml(targetWikiUrl)}" target="_blank" rel="noopener noreferrer"
                      onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, this.href);}"
                      title="閱讀「${eHtml(lm.title)}」維基百科介紹">
                     <i class="fa-brands fa-wikipedia-w" style="font-size:0.64rem;margin-right:3px;"></i>${eHtml(lm.title)}
@@ -35925,9 +36912,10 @@ class ImmersiveLocalPulseService {
           <i class="fa-solid fa-compass" style="color:#c084fc;"></i>
           <span>身歷其境 ‧ 當地即時脈動</span>
         </div>
-        <span class="widget-badge">${eHtml(this.countryCode)} ‧ 現場感知</span>
+        <span class="widget-badge">${eHtml(culture.countryName)} (${eHtml(this.countryCode)}) ‧ 現場感知</span>
       </div>
       ${radioBoxHtml}
+      ${phraseBoxHtml}
       <div class="immersive-astro-grid">
         <div class="immersive-mini-card">
           <div class="immersive-mini-label"><i class="fa-solid fa-camera-retro" style="color:${astro.lightColor};"></i>當地光影與攝影時刻</div>
@@ -35941,6 +36929,9 @@ class ImmersiveLocalPulseService {
         </div>
       </div>
       ${marineHtml}
+      ${alpineHtml}
+      ${issHtml}
+      ${newsHtml}
       ${landmarksHtml}
     `;
   }
@@ -39494,6 +40485,19 @@ class MonitorApp {
         if (typeof this.updateClockDisplay === 'function') this.updateClockDisplay();
       }
 
+      // 立即並行啟動航班雷達與身歷其境在地脈動，無須等待行政區反向地理編碼完成
+      if (window.flightRadarService) {
+        window.flightRadarService.syncForLocation(cid, { lat, lon, label: spotLabel });
+      }
+      if (window.immersivePulseService) {
+        window.immersivePulseService.syncForLocation(cid, {
+          lat,
+          lon,
+          label: spotLabel,
+          tz: inferredTz
+        });
+      }
+
       const admin = (typeof window !== 'undefined' && window.localBusService)
         ? await window.localBusService.resolveGlobalAdminArea(lat, lon)
         : null;
@@ -39511,15 +40515,12 @@ class MonitorApp {
           tz: inferredTz
         });
       }
-      if (window.flightRadarService) {
-        window.flightRadarService.syncForLocation(cid, { lat, lon, label: areaDisplay });
-      }
-      if (window.immersivePulseService) {
+      if (window.immersivePulseService && admin?.countryCode && admin.countryCode !== window.immersivePulseService.countryCode) {
         window.immersivePulseService.syncForLocation(cid, {
           lat,
           lon,
           label: areaDisplay,
-          countryCode: admin?.countryCode || '',
+          countryCode: admin.countryCode,
           tz: inferredTz
         });
       }
