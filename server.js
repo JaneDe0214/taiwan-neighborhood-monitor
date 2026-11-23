@@ -93,6 +93,8 @@ const cache = {
   freewaySections: { data: null, expireAt: 0 },
   freewayLive: { data: null, expireAt: 0 },
   travelToolkit: { fx: null, fxExp: 0, kp: null, kpExp: 0 },
+  flightsNearbyMap: new Map(),
+  immersiveLocalMap: new Map(),
   wallSyncMap: new Map()
 };
 
@@ -2022,7 +2024,18 @@ const INTL_TERM_NORMALIZE_PAIRS = [
   [/\u987f/g, '頓'],
   [/\u6b27/g, '歐'],
   [/\u8428/g, '薩'],
-  [/\u5fb7/g, '德']
+  [/\u5fb7/g, '德'],
+  [/\u5b66/g, '學'],
+  [/\u8054/g, '聯'],
+  [/\u8f66/g, '車'],
+  [/\u56ed/g, '園'],
+  [/\u5e7f\u573a/g, '廣場'],
+  [/\u6865/g, '橋'],
+  [/\u94c1/g, '鐵'],
+  [/\u9986/g, '館'],
+  [/\u5bab/g, '宮'],
+  [/\u5bfa/g, '寺'],
+  [/\u95e8/g, '門']
 ];
 
 function normalizeIntlTwLabel(raw) {
@@ -3832,6 +3845,642 @@ async function handleTravelToolkitProxy(req, res) {
   }
 }
 
+// ============================================================================
+// 全球與台灣即時飛航雷達（當地國際機場入出境起降航班 + 鏡頭上空巡航）與身歷其境在地脈動代理引擎
+// ============================================================================
+const AIRPORT_HUB_CATALOG = [
+  // 台灣核心機場
+  { iata: 'TPE', icao: 'RCTP', name: '臺灣桃園國際機場', city: '桃園／青埔', country: '台灣', countryCode: 'TW', lat: 25.0777, lon: 121.2328, twinIatas: ['TSA'] },
+  { iata: 'TSA', icao: 'RCSS', name: '臺北松山國際機場', city: '台北／雙北', country: '台灣', countryCode: 'TW', lat: 25.0694, lon: 121.5525, twinIatas: ['TPE'] },
+  { iata: 'RMQ', icao: 'RCMQ', name: '臺中清泉崗國際機場', city: '台中', country: '台灣', countryCode: 'TW', lat: 24.2647, lon: 120.6206, twinIatas: [] },
+  { iata: 'TNN', icao: 'RCNN', name: '臺南國際機場', city: '台南', country: '台灣', countryCode: 'TW', lat: 22.9504, lon: 120.2058, twinIatas: ['KHH'] },
+  { iata: 'KHH', icao: 'RCKH', name: '高雄國際機場', city: '高雄', country: '台灣', countryCode: 'TW', lat: 22.5771, lon: 120.3500, twinIatas: ['TNN'] },
+  { iata: 'HUN', icao: 'RCYU', name: '花蓮機場', city: '花蓮', country: '台灣', countryCode: 'TW', lat: 24.0231, lon: 121.6178, twinIatas: [] },
+  { iata: 'TTT', icao: 'RCFN', name: '臺東豐年機場', city: '台東', country: '台灣', countryCode: 'TW', lat: 22.7550, lon: 121.1019, twinIatas: [] },
+  // 日本核心機場
+  { iata: 'HND', icao: 'RJTT', name: '東京羽田國際機場', city: '東京', country: '日本', countryCode: 'JP', lat: 35.5494, lon: 139.7798, twinIatas: ['NRT'] },
+  { iata: 'NRT', icao: 'RJAA', name: '東京成田國際機場', city: '東京／千葉', country: '日本', countryCode: 'JP', lat: 35.7720, lon: 140.3929, twinIatas: ['HND'] },
+  { iata: 'KIX', icao: 'RJBB', name: '大阪關西國際機場', city: '大阪／京阪神', country: '日本', countryCode: 'JP', lat: 34.4347, lon: 135.2441, twinIatas: ['ITM', 'UKB'] },
+  { iata: 'ITM', icao: 'RJOO', name: '大阪伊丹國際機場', city: '大阪／京都', country: '日本', countryCode: 'JP', lat: 34.7855, lon: 135.4382, twinIatas: ['KIX'] },
+  { iata: 'NGO', icao: 'RJGG', name: '名古屋中部國際機場', city: '名古屋／中部', country: '日本', countryCode: 'JP', lat: 34.8584, lon: 136.8054, twinIatas: ['NKM'] },
+  { iata: 'CTS', icao: 'RJCC', name: '札幌新千歲國際機場', city: '北海道札幌', country: '日本', countryCode: 'JP', lat: 42.7752, lon: 141.6923, twinIatas: ['OKD'] },
+  { iata: 'FUK', icao: 'RJFF', name: '福岡國際機場', city: '九州福岡', country: '日本', countryCode: 'JP', lat: 33.5859, lon: 130.4511, twinIatas: [] },
+  { iata: 'OKA', icao: 'ROAH', name: '沖繩那霸國際機場', city: '沖繩那霸', country: '日本', countryCode: 'JP', lat: 26.1958, lon: 127.6458, twinIatas: [] },
+  // 韓國核心機場
+  { iata: 'ICN', icao: 'RKSI', name: '首爾仁川國際機場', city: '首爾／仁川', country: '韓國', countryCode: 'KR', lat: 37.4602, lon: 126.4407, twinIatas: ['GMP'] },
+  { iata: 'GMP', icao: 'RKSS', name: '首爾金浦國際機場', city: '首爾', country: '韓國', countryCode: 'KR', lat: 37.5583, lon: 126.7906, twinIatas: ['ICN'] },
+  { iata: 'PUS', icao: 'RKPK', name: '釜山金海國際機場', city: '釜山', country: '韓國', countryCode: 'KR', lat: 35.1796, lon: 128.9382, twinIatas: [] },
+  { iata: 'CJU', icao: 'RKPC', name: '濟州國際機場', city: '濟州島', country: '韓國', countryCode: 'KR', lat: 33.5113, lon: 126.4930, twinIatas: [] },
+  // 亞太與中東核心機場
+  { iata: 'SYD', icao: 'YSSY', name: '雪梨金斯福德史密斯機場', city: '雪梨', country: '澳洲', countryCode: 'AU', lat: -33.9399, lon: 151.1753, twinIatas: [] },
+  { iata: 'AKL', icao: 'NZAA', name: '奧克蘭國際機場', city: '奧克蘭', country: '紐西蘭', countryCode: 'NZ', lat: -37.0082, lon: 174.7850, twinIatas: [] },
+  { iata: 'SIN', icao: 'WSSS', name: '新加坡樟宜國際機場', city: '新加坡', country: '新加坡', countryCode: 'SG', lat: 1.3644, lon: 103.9915, twinIatas: [] },
+  { iata: 'BKK', icao: 'VTBS', name: '曼谷素萬那普國際機場', city: '曼谷', country: '泰國', countryCode: 'TH', lat: 13.6900, lon: 100.7501, twinIatas: ['DMK'] },
+  { iata: 'USM', icao: 'VTSM', name: '蘇美島國際機場', city: '蘇美島', country: '泰國', countryCode: 'TH', lat: 9.5478, lon: 100.0623, twinIatas: [] },
+  { iata: 'DPS', icao: 'WADD', name: '峇里島伍拉賴國際機場', city: '峇里島', country: '印尼', countryCode: 'ID', lat: -8.7482, lon: 115.1672, twinIatas: [] },
+  { iata: 'HKG', icao: 'VHHH', name: '香港國際機場', city: '香港', country: '香港', countryCode: 'HK', lat: 22.3080, lon: 113.9185, twinIatas: ['MFM'] },
+  { iata: 'DXB', icao: 'OMDB', name: '杜拜國際機場', city: '杜拜', country: '阿聯', countryCode: 'AE', lat: 25.2532, lon: 55.3657, twinIatas: ['DWC'] },
+  { iata: 'JED', icao: 'OEJN', name: '吉達阿卜杜勒阿齊茲國王機場', city: '麥加／吉達', country: '沙烏地阿拉伯', countryCode: 'SA', lat: 21.6796, lon: 39.1565, twinIatas: [] },
+  // 歐洲與極地核心機場
+  { iata: 'LHR', icao: 'EGLL', name: '倫敦希斯洛國際機場', city: '倫敦', country: '英國', countryCode: 'GB', lat: 51.4700, lon: -0.4543, twinIatas: ['LGW', 'LCY', 'STN'] },
+  { iata: 'CDG', icao: 'LFPG', name: '巴黎戴高樂國際機場', city: '巴黎', country: '法國', countryCode: 'FR', lat: 49.0097, lon: 2.5479, twinIatas: ['ORY'] },
+  { iata: 'ZRH', icao: 'LSZH', name: '蘇黎世國際機場', city: '蘇黎世／阿爾卑斯', country: '瑞士', countryCode: 'CH', lat: 47.4647, lon: 8.5492, twinIatas: ['GVA', 'BSL'] },
+  { iata: 'VCE', icao: 'LIPZ', name: '威尼斯馬可波羅國際機場', city: '威尼斯', country: '義大利', countryCode: 'IT', lat: 45.5053, lon: 12.3519, twinIatas: ['TSF'] },
+  { iata: 'AMS', icao: 'EHAM', name: '阿姆斯特丹史基浦機場', city: '阿姆斯特丹', country: '荷蘭', countryCode: 'NL', lat: 52.3105, lon: 4.7683, twinIatas: [] },
+  { iata: 'BER', icao: 'EDDB', name: '柏林勃蘭登堡國際機場', city: '柏林', country: '德國', countryCode: 'DE', lat: 52.3667, lon: 13.5033, twinIatas: [] },
+  { iata: 'SZG', icao: 'LOWS', name: '薩爾茨堡莫札特機場', city: '哈爾施塔特／薩爾茨堡', country: '奧地利', countryCode: 'AT', lat: 47.7933, lon: 13.0043, twinIatas: ['VIE', 'INN'] },
+  { iata: 'CTA', icao: 'LICC', name: '卡塔尼亞國際機場', city: '西西里島埃特納', country: '義大利', countryCode: 'IT', lat: 37.4668, lon: 15.0664, twinIatas: [] },
+  { iata: 'PMI', icao: 'LEPA', name: '馬約卡島帕爾馬國際機場', city: '馬約卡島', country: '西班牙', countryCode: 'ES', lat: 39.5517, lon: 2.7388, twinIatas: ['BCN', 'IBZ'] },
+  { iata: 'FNC', icao: 'LPMA', name: '馬德拉豐沙爾國際機場', city: '馬德拉島', country: '葡萄牙', countryCode: 'PT', lat: 32.6979, lon: -16.7745, twinIatas: ['LIS'] },
+  { iata: 'MRY', icao: 'KMRY', name: '加州蒙特雷半島機場', city: '蒙特雷灣', country: '美國', countryCode: 'US', lat: 36.5870, lon: -121.8430, twinIatas: ['SFO', 'SJC'] },
+  { iata: 'AES', icao: 'ENAL', name: '奧勒松維格拉機場', city: '蓋朗厄爾峽灣', country: '挪威', countryCode: 'NO', lat: 62.5625, lon: 6.1197, twinIatas: ['OSL', 'BGO'] },
+  { iata: 'RVN', icao: 'EFRO', name: '羅瓦涅米北極圈機場', city: '拉普蘭羅瓦涅米', country: '芬蘭', countryCode: 'FI', lat: 66.5648, lon: 25.8304, twinIatas: ['KTT', 'IVL', 'HEL'] },
+  { iata: 'TOS', icao: 'ENTC', name: '特羅姆瑟朗格內斯機場', city: '北極圈特羅姆瑟', country: '挪威', countryCode: 'NO', lat: 69.6833, lon: 18.9189, twinIatas: ['EVE'] },
+  { iata: 'KEF', icao: 'BIKF', name: '雷克雅維克凱夫拉維克機場', city: '雷克雅維克', country: '冰島', countryCode: 'IS', lat: 63.9850, lon: -22.6056, twinIatas: ['RKV'] },
+  { iata: 'GOH', icao: 'BGGH', name: '格陵蘭努克國際機場', city: '格陵蘭努克', country: '格陵蘭', countryCode: 'GL', lat: 64.1909, lon: -51.6781, twinIatas: ['JAV', 'JHS'] },
+  // 美洲、雨林與海洋核心機場
+  { iata: 'JFK', icao: 'KJFK', name: '紐約甘迺迪國際機場', city: '紐約', country: '美國', countryCode: 'US', lat: 40.6413, lon: -73.7781, twinIatas: ['LGA', 'EWR'] },
+  { iata: 'LAX', icao: 'KLAX', name: '洛杉磯國際機場', city: '洛杉磯', country: '美國', countryCode: 'US', lat: 33.9416, lon: -118.4085, twinIatas: ['BUR', 'SNA', 'LGB'] },
+  { iata: 'LAS', icao: 'KLAS', name: '拉斯維加斯哈里瑞德機場', city: '拉斯維加斯', country: '美國', countryCode: 'US', lat: 36.0840, lon: -115.1537, twinIatas: [] },
+  { iata: 'SFO', icao: 'KSFO', name: '舊金山國際機場', city: '舊金山／加州', country: '美國', countryCode: 'US', lat: 37.6213, lon: -122.3790, twinIatas: ['OAK', 'SJC', 'MRY'] },
+  { iata: 'MIA', icao: 'KMIA', name: '邁阿密國際機場', city: '邁阿密', country: '美國', countryCode: 'US', lat: 25.7959, lon: -80.2870, twinIatas: ['FLL'] },
+  { iata: 'HNL', icao: 'PHNL', name: '夏威夷檀香山國際機場', city: '夏威夷檀香山', country: '美國', countryCode: 'US', lat: 21.3187, lon: -157.9225, twinIatas: ['OGG', 'KOA'] },
+  { iata: 'JAC', icao: 'KJAC', name: '傑克森霍爾機場', city: '懷俄明／黃石公園', country: '美國', countryCode: 'US', lat: 43.6073, lon: -110.7377, twinIatas: ['BZN'] },
+  { iata: 'BUF', icao: 'KBUF', name: '水牛城尼加拉國際機場', city: '尼加拉瀑布', country: '美國', countryCode: 'US', lat: 42.9405, lon: -78.7322, twinIatas: ['YYZ', 'IAG'] },
+  { iata: 'SJO', icao: 'MROC', name: '胡安聖瑪麗亞國際機場', city: '哥斯大黎加聖荷西', country: '哥斯大黎加', countryCode: 'CR', lat: 9.9939, lon: -84.2088, twinIatas: ['LIR'] },
+  { iata: 'PTY', icao: 'MPTO', name: '巴拿馬托庫門國際機場', city: '巴拿馬城', country: '巴拿馬', countryCode: 'PA', lat: 9.0714, lon: -79.3835, twinIatas: [] },
+  { iata: 'GIG', icao: 'SBGL', name: '里約熱內盧加利昂國際機場', city: '里約熱內盧', country: '巴西', countryCode: 'BR', lat: -22.8100, lon: -43.2506, twinIatas: ['SDU', 'GRU'] },
+  { iata: 'USH', icao: 'SAWH', name: '烏斯懷亞馬爾維納斯國際機場', city: '烏斯懷亞（南極門戶）', country: '阿根廷', countryCode: 'AR', lat: -54.8433, lon: -68.2958, twinIatas: [] },
+  { iata: 'CUR', icao: 'TNCC', name: '庫拉索哈托國際機場', city: '加勒比海庫拉索／波奈', country: '荷屬加勒比', countryCode: 'CW', lat: 12.1889, lon: -68.9598, twinIatas: ['BON', 'AUA'] }
+];
+
+const AIRLINE_NAME_ZH_MAP = {
+  CAL: '中華航空', CI: '中華航空',
+  EVA: '長榮航空', BR: '長榮航空',
+  SJX: '星宇航空', JX: '星宇航空',
+  TTW: '台灣虎航', IT: '台灣虎航',
+  MDA: '華信航空', AE: '華信航空',
+  UIA: '立榮航空', B7: '立榮航空',
+  CPA: '國泰航空', CX: '國泰航空',
+  HKE: '香港快運', UO: '香港快運',
+  CRK: '香港航空', HX: '香港航空',
+  AMU: '澳門航空', NX: '澳門航空',
+  ANA: '全日空', NH: '全日空',
+  JAL: '日本航空', JL: '日本航空',
+  APJ: '樂桃航空', MM: '樂桃航空',
+  SJO: 'Zipair 東京', ZG: 'Zipair 東京',
+  SKY: '天馬航空', BC: '天馬航空',
+  SFJ: '星悅航空', '7G': '星悅航空',
+  ADO: '北海道國際航空', HD: '北海道國際航空',
+  SNJ: 'ソラシド航空', '6J': 'ソラシド航空',
+  KAL: '大韓航空', KE: '大韓航空',
+  AAR: '韓亞航空', OZ: '韓亞航空',
+  JJA: '濟州航空', '7C': '濟州航空',
+  JNA: '真航空', LJ: '真航空',
+  TWB: '德威航空', TW: '德威航空',
+  ABL: '釜山航空', BX: '釜山航空',
+  SIA: '新加坡航空', SQ: '新加坡航空',
+  TGW: '酷航', TR: '酷航',
+  THA: '泰國國際航空', TG: '泰國國際航空',
+  AIQ: '泰國亞洲航空', FD: '泰國亞洲航空',
+  MAS: '馬來西亞航空', MH: '馬來西亞航空',
+  AXM: '亞洲航空', AK: '亞洲航空',
+  XAX: '全亞航', D7: '全亞航',
+  HVN: '越南航空', VN: '越南航空',
+  VJC: '越捷航空', VJ: '越捷航空',
+  PAL: '菲律賓航空', PR: '菲律賓航空',
+  CEB: '宿霧太平洋航空', '5J': '宿霧太平洋航空',
+  GIA: '嘉魯達印尼航空', GA: '嘉魯達印尼航空',
+  QFA: '澳洲航空', QF: '澳洲航空',
+  JST: '捷星航空', JQ: '捷星航空',
+  VOZ: '維珍澳洲航空', VA: '維珍澳洲航空',
+  ANZ: '紐西蘭航空', NZ: '紐西蘭航空',
+  UAE: '阿聯酋航空', EK: '阿聯酋航空',
+  ETD: '阿提哈德航空', EY: '阿提哈德航空',
+  QTR: '卡達航空', QR: '卡達航空',
+  THY: '土耳其航空', TK: '土耳其航空',
+  BAW: '英國航空', BA: '英國航空',
+  VIR: '維珍大西洋航空', VS: '維珍大西洋航空',
+  EZY: '易捷航空', U2: '易捷航空',
+  RYR: '瑞安航空', FR: '瑞安航空',
+  AFR: '法國航空', AF: '法國航空',
+  DLH: '德國漢莎航空', LH: '德國漢莎航空',
+  SWR: '瑞士國際航空', LX: '瑞士國際航空',
+  EDW: '瑞士雪絨花航空', WK: '瑞士雪絨花航空',
+  KLM: '荷蘭皇家航空', KL: '荷蘭皇家航空',
+  AUA: '奧地利航空', OS: '奧地利航空',
+  ITY: '義大利航空', AZ: '義大利航空',
+  IBE: '伊比利亞航空', IB: '伊比利亞航空',
+  AEA: '歐洲航空', UX: '歐洲航空',
+  FIN: '芬蘭航空', AY: '芬蘭航空',
+  SAS: '北歐航空', SK: '北歐航空',
+  NOZ: '挪威穿梭航空', DY: '挪威穿梭航空',
+  ICE: '冰島航空', FI: '冰島航空',
+  GRL: '格陵蘭航空', GL: '格陵蘭航空',
+  UAL: '聯合航空', UA: '聯合航空',
+  DAL: '達美航空', DL: '達美航空',
+  AAL: '美國航空', AA: '美國航空',
+  SWA: '西南航空', WN: '西南航空',
+  JBU: '捷藍航空', B6: '捷藍航空',
+  ASA: '阿拉斯加航空', AS: '阿拉斯加航空',
+  HAL: '夏威夷航空', HA: '夏威夷航空',
+  ACA: '加拿大航空', AC: '加拿大航空',
+  WJA: '西捷航空', WS: '西捷航空',
+  CMP: '巴拿馬航空', CM: '巴拿馬航空',
+  LAN: '南美航空', LA: '南美航空',
+  ARG: '阿根廷航空', AR: '阿根廷航空',
+  FDX: '聯邦快遞航空', FX: '聯邦快遞航空',
+  UPS: '優比速航空', '5X': '優比速航空',
+  CLX: '盧森堡貨運航空', CV: '盧森堡貨運航空'
+};
+
+const AIRPORT_IATA_ZH_MAP = {
+  TPE: '桃園 TPE', TSA: '台北松山 TSA', RMQ: '台中 RMQ', TNN: '台南 TNN', KHH: '高雄 KHH',
+  HUN: '花蓮 HUN', TTT: '台東 TTT', MZG: '澎湖 MZG', KNH: '金門 KNH', LZN: '馬祖南竿 LZN',
+  HKG: '香港 HKG', MFM: '澳門 MFM',
+  HND: '東京羽田 HND', NRT: '東京成田 NRT', KIX: '大阪關西 KIX', ITM: '大阪伊丹 ITM',
+  NGO: '名古屋 NGO', CTS: '札幌新千歲 CTS', FUK: '福岡 FUK', OKA: '沖繩那霸 OKA',
+  SDJ: '仙台 SDJ', HIJ: '廣島 HIJ', OKJ: '岡山 OKJ', TAK: '高松 TAK', KMJ: '熊本 KMJ',
+  KOJ: '鹿兒島 KOJ', KKJ: '北九州 KKJ', NGS: '長崎 NGS', KMQ: '小松 KMQ', ISG: '石垣島 ISG', MMY: '宮古島 MMY',
+  ICN: '首爾仁川 ICN', GMP: '首爾金浦 GMP', PUS: '釜山 PUS', CJU: '濟州 CJU', TAE: '大邱 TAE',
+  SIN: '新加坡 SIN', BKK: '曼谷 BKK', DMK: '曼谷廊曼 DMK', CNX: '清邁 CNX', HKT: '普吉島 HKT',
+  USM: '蘇美島 USM', KUL: '吉隆坡 KUL', PEN: '檳城 PEN', BKI: '沙巴亞庇 BKI',
+  SGN: '胡志明市 SGN', HAN: '河內 HAN', DAD: '峴港 DAD', PQC: '富國島 PQC',
+  MNL: '馬尼拉 MNL', CEB: '宿霧 CEB', CRK: '克拉克 CRK',
+  CGK: '雅加達 CGK', DPS: '峇里島 DPS', SUB: '泗水 SUB',
+  ROR: '帛琉 ROR', GUM: '關島 GUM',
+  SYD: '雪梨 SYD', MEL: '墨爾本 MEL', BNE: '布里斯本 BNE', PER: '伯斯 PER',
+  AKL: '奧克蘭 AKL', CHC: '基督城 CHC', ZQN: '皇后鎮 ZQN',
+  DEL: '新德里 DEL', BOM: '孟買 BOM', DXB: '杜拜 DXB', AUH: '阿布達比 AUH',
+  DOH: '多哈 DOH', JED: '吉達 JED', RUH: '利雅德 RUH', IST: '伊斯坦堡 IST',
+  LHR: '倫敦希斯洛 LHR', LGW: '倫敦蓋威克 LGW', LCY: '倫敦城市 LCY', STN: '倫敦史坦斯特 STN',
+  MAN: '曼徹斯特 MAN', EDI: '愛丁堡 EDI', BHX: '伯明罕 BHX', DUB: '都柏林 DUB',
+  CDG: '巴黎戴高樂 CDG', ORY: '巴黎奧利 ORY', NCE: '尼斯 NCE', LYS: '里昂 LYS',
+  AMS: '阿姆斯特丹 AMS', BRU: '布魯塞爾 BRU',
+  FRA: '法蘭克福 FRA', MUC: '慕尼黑 MUC', BER: '柏林 BER', DUS: '杜塞道夫 DUS', HAM: '漢堡 HAM',
+  ZRH: '蘇黎世 ZRH', GVA: '日內瓦 GVA', BSL: '巴塞爾 BSL',
+  VIE: '維也納 VIE', SZG: '薩爾茨堡 SZG', INN: '因斯布魯克 INN',
+  FCO: '羅馬 FCO', MXP: '米蘭 MXP', VCE: '威尼斯 VCE', NAP: '拿坡里 NAP', CTA: '卡塔尼亞 CTA',
+  MAD: '馬德里 MAD', BCN: '巴塞隆納 BCN', PMI: '馬約卡島 PMI',
+  LIS: '里斯本 LIS', FNC: '馬德拉島 FNC', ATH: '雅典 ATH', PRG: '布拉格 PRG',
+  CPH: '哥本哈根 CPH', OSL: '奧斯陸 OSL', BGO: '卑爾根 BGO', AES: '奧勒松 AES', TOS: '特羅姆瑟 TOS',
+  ARN: '斯德哥爾摩 ARN', HEL: '赫爾辛基 HEL', RVN: '羅瓦涅米 RVN',
+  KEF: '雷克雅維克 KEF', GOH: '格陵蘭努克 GOH', FAE: '法羅群島 FAE', LYR: '斯瓦爾巴 LYR',
+  JFK: '紐約甘迺迪 JFK', LGA: '紐約拉瓜地亞 LGA', EWR: '紐華克 EWR',
+  BOS: '波士頓 BOS', IAD: '華盛頓 IAD',DCA: '華盛頓雷根 DCA',
+  ORD: '芝加哥 ORD', ATL: '亞特蘭大 ATL', MIA: '邁阿密 MIA', MCO: '奧蘭多 MCO',
+  DFW: '達拉斯 DFW', IAH: '休士頓 IAH', DEN: '丹佛 DEN', PHX: '鳳凰城 PHX',
+  LAS: '拉斯維加斯 LAS', LAX: '洛杉磯 LAX', SFO: '舊金山 SFO', SEA: '西雅圖 SEA',
+  HNL: '夏威夷檀香山 HNL', ANC: '安克拉治 ANC', JAC: '傑克森霍爾 JAC', BUF: '水牛城 BUF',
+  YVR: '溫哥華 YVR', YYZ: '多倫多 YYZ', YUL: '蒙特婁 YUL', YYC: '卡加利 YYC',
+  MEX: '墨西哥城 MEX', CUN: '坎昆 CUN', SJO: '聖荷西 SJO', PTY: '巴拿馬城 PTY',
+  BOG: '波哥大 BOG', LIM: '利馬 LIM', SCL: '聖地牙哥 SCL',
+  GRU: '聖保羅 GRU', GIG: '里約 GIG', EZE: '布宜諾斯艾利斯 EZE', USH: '烏斯懷亞 USH',
+  CUR: '庫拉索 CUR', BON: '波奈 BON', AUA: '阿魯巴 AUA'
+};
+
+const AIRCRAFT_MODEL_ZH_MAP = {
+  A359: 'A350-900', A35K: 'A350-1000', A339: 'A330-900neo', A333: 'A330-300', A332: 'A330-200',
+  A388: 'A380-800', A321: 'A321', A21N: 'A321neo', A320: 'A320', A20N: 'A320neo', A319: 'A319',
+  BCS1: 'A220-100', BCS3: 'A220-300',
+  B77W: 'B777-300ER', B77L: 'B777-200LR', B772: 'B777-200', B77F: 'B777F 貨機',
+  B788: 'B787-8', B789: 'B787-9 夢幻客機', B78X: 'B787-10 夢幻客機',
+  B744: 'B747-400', B748: 'B747-8', B763: 'B767-300', B752: 'B757-200',
+  B738: 'B737-800', B739: 'B737-900', B38M: 'B737 MAX 8', B39M: 'B737 MAX 9',
+  AT76: 'ATR 72-600', E190: 'E190', E195: 'E195', E290: 'E190-E2', CRJ9: 'CRJ-900'
+};
+
+function findNearestAirportHub(lat, lon) {
+  let best = AIRPORT_HUB_CATALOG[0];
+  let minMeters = Infinity;
+  for (const h of AIRPORT_HUB_CATALOG) {
+    const d = calcDistanceMeters(lat, lon, h.lat, h.lon);
+    if (d < minMeters) {
+      minMeters = d;
+      best = h;
+    }
+  }
+  return { ...best, distKm: +(minMeters / 1000).toFixed(1) };
+}
+
+function resolveAirlineNameZh(flightNo, callsign, airlineIcao) {
+  const icao = String(airlineIcao || '').trim().toUpperCase() || String(callsign || '').trim().slice(0, 3).toUpperCase();
+  if (AIRLINE_NAME_ZH_MAP[icao]) return AIRLINE_NAME_ZH_MAP[icao];
+  const iata = String(flightNo || '').trim().slice(0, 2).toUpperCase();
+  if (AIRLINE_NAME_ZH_MAP[iata]) return AIRLINE_NAME_ZH_MAP[iata];
+  return icao || iata || '民航航班';
+}
+
+function formatAirportCodeZh(iata) {
+  const c = String(iata || '').trim().toUpperCase();
+  if (!c) return '';
+  return AIRPORT_IATA_ZH_MAP[c] || c;
+}
+
+async function fetchNearbyFlightsData(lat, lon) {
+  const airport = findNearestAirportHub(lat, lon);
+  const refLat = airport.distKm <= 160 ? airport.lat : lat;
+  const refLon = airport.distKm <= 160 ? airport.lon : lon;
+  const minLat = Math.max(-85, Math.min(lat, refLat) - 0.52);
+  const maxLat = Math.min(85, Math.max(lat, refLat) + 0.52);
+  const minLon = Math.max(-179.9, Math.min(lon, refLon) - 0.62);
+  const maxLon = Math.min(179.9, Math.max(lon, refLon) + 0.62);
+  const bounds = `${maxLat.toFixed(3)},${minLat.toFixed(3)},${minLon.toFixed(3)},${maxLon.toFixed(3)}`;
+
+  const localIataSet = new Set([airport.iata, ...(airport.twinIatas || [])]);
+  const flightsMap = new Map();
+
+  // 主引擎：FlightRadar24 即時區域雷達 (含完整起降機場 IATA、航班號、機型、高度、地速、升降率)
+  try {
+    const frUrl = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${bounds}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=0&estimated=1&maxage=14400&gliders=0&stats=1`;
+    const frJson = await fetchJsonWithRetry(frUrl, 0, 5000);
+    if (frJson && typeof frJson === 'object') {
+      for (const [k, v] of Object.entries(frJson)) {
+        if (!Array.isArray(v) || v.length < 16) continue;
+        const fLat = Number(v[1]);
+        const fLon = Number(v[2]);
+        if (!Number.isFinite(fLat) || !Number.isFinite(fLon)) continue;
+        const track = Math.round(Number(v[3]) || 0);
+        const altFt = Math.max(0, Math.round(Number(v[4]) || 0));
+        const gsKts = Math.max(0, Math.round(Number(v[5]) || 0));
+        const acCode = String(v[8] || '').trim().toUpperCase();
+        const reg = String(v[9] || '').trim();
+        const origIata = String(v[11] || '').trim().toUpperCase();
+        const destIata = String(v[12] || '').trim().toUpperCase();
+        const iataNo = String(v[13] || '').trim().toUpperCase();
+        const onGround = Number(v[14]) === 1 || altFt === 0;
+        const vRate = Math.round(Number(v[15]) || 0);
+        const callsign = String(v[16] || '').trim().toUpperCase();
+        const airlineIcao = String(v[18] || '').trim().toUpperCase();
+        const flightNo = iataNo || callsign || reg;
+        if (!flightNo || /^@+$/.test(flightNo)) continue;
+
+        const distCamKm = +(calcDistanceMeters(lat, lon, fLat, fLon) / 1000).toFixed(1);
+        const distAptKm = +(calcDistanceMeters(airport.lat, airport.lon, fLat, fLon) / 1000).toFixed(1);
+
+        let phase = 'OVERFLIGHT';
+        if (destIata && localIataSet.has(destIata)) {
+          phase = 'ARRIVAL';
+        } else if (origIata && localIataSet.has(origIata)) {
+          phase = 'DEPARTURE';
+        } else if (distAptKm <= 48) {
+          if (vRate <= -250 && altFt > 0 && altFt <= 16500) phase = 'ARRIVAL';
+          else if ((vRate >= 250 && altFt <= 18500) || (onGround && gsKts >= 3)) phase = 'DEPARTURE';
+        }
+
+        let statusText = '高空巡航';
+        if (phase === 'ARRIVAL') {
+          if (onGround || altFt < 150) statusText = '已降落滑行';
+          else if (altFt <= 2500) statusText = '最後進場降落';
+          else statusText = '下降進場中';
+        } else if (phase === 'DEPARTURE') {
+          if (onGround || altFt < 150) statusText = '跑道滑行待飛';
+          else if (altFt <= 4500) statusText = '剛起飛爬升';
+          else statusText = '出境爬升中';
+        }
+
+        flightsMap.set(flightNo, {
+          id: k,
+          flightNo,
+          callsign: callsign || flightNo,
+          airlineName: resolveAirlineNameZh(iataNo, callsign, airlineIcao),
+          aircraftCode: acCode,
+          aircraftModel: AIRCRAFT_MODEL_ZH_MAP[acCode] || acCode || '民航機',
+          reg,
+          originIata: origIata,
+          originName: formatAirportCodeZh(origIata) || (phase === 'DEPARTURE' ? formatAirportCodeZh(airport.iata) : ''),
+          destIata,
+          destName: formatAirportCodeZh(destIata) || (phase === 'ARRIVAL' ? formatAirportCodeZh(airport.iata) : ''),
+          phase,
+          statusText,
+          altFt,
+          altMeters: Math.round(altFt * 0.3048),
+          speedKts: gsKts,
+          speedKmh: Math.round(gsKts * 1.852),
+          vRate,
+          track,
+          onGround,
+          lat: +fLat.toFixed(4),
+          lon: +fLon.toFixed(4),
+          distKm: distCamKm,
+          distAirportKm: distAptKm
+        });
+      }
+    }
+  } catch (_) {}
+
+  // 備援引擎：opendata.adsb.fi / api.adsb.lol 開放 ADS-B 雷達
+  if (flightsMap.size === 0) {
+    const adsbUrls = [
+      `https://opendata.adsb.fi/api/v2/lat/${refLat.toFixed(4)}/lon/${refLon.toFixed(4)}/dist/50`,
+      `https://api.adsb.lol/v2/point/${refLat.toFixed(4)}/${refLon.toFixed(4)}/50`
+    ];
+    for (const u of adsbUrls) {
+      try {
+        const j = await fetchJsonWithRetry(u, 0, 5000);
+        const list = Array.isArray(j?.aircraft) ? j.aircraft : (Array.isArray(j?.ac) ? j.ac : []);
+        if (list.length === 0) continue;
+        for (const a of list) {
+          const fLat = Number(a.lat), fLon = Number(a.lon);
+          if (!Number.isFinite(fLat) || !Number.isFinite(fLon)) continue;
+          const callsign = String(a.flight || '').trim().toUpperCase();
+          const reg = String(a.r || '').trim();
+          const flightNo = callsign || reg;
+          if (!flightNo || /^@+$/.test(flightNo)) continue;
+          const onGround = a.alt_baro === 'ground';
+          const altFt = onGround ? 0 : Math.max(0, Math.round(Number(a.alt_baro) || 0));
+          const gsKts = Math.max(0, Math.round(Number(a.gs) || 0));
+          const vRate = Math.round(Number(a.baro_rate) || 0);
+          const track = Math.round(Number(a.track) || 0);
+          const acCode = String(a.t || '').trim().toUpperCase();
+          const distCamKm = +(calcDistanceMeters(lat, lon, fLat, fLon) / 1000).toFixed(1);
+          const distAptKm = +(calcDistanceMeters(airport.lat, airport.lon, fLat, fLon) / 1000).toFixed(1);
+
+          let phase = 'OVERFLIGHT';
+          if (distAptKm <= 48) {
+            if (vRate <= -250 && altFt > 0 && altFt <= 16500) phase = 'ARRIVAL';
+            else if ((vRate >= 250 && altFt <= 18500) || (onGround && gsKts >= 3)) phase = 'DEPARTURE';
+          }
+          const statusText = phase === 'ARRIVAL'
+            ? (altFt <= 2500 ? '最後進場降落' : '下降進場中')
+            : (phase === 'DEPARTURE' ? (onGround ? '跑道滑行待飛' : '出境爬升中') : '高空巡航');
+
+          flightsMap.set(flightNo, {
+            id: String(a.hex || flightNo),
+            flightNo,
+            callsign,
+            airlineName: resolveAirlineNameZh('', callsign, ''),
+            aircraftCode: acCode,
+            aircraftModel: AIRCRAFT_MODEL_ZH_MAP[acCode] || a.desc || acCode || '民航機',
+            reg,
+            originIata: phase === 'DEPARTURE' ? airport.iata : '',
+            originName: phase === 'DEPARTURE' ? formatAirportCodeZh(airport.iata) : '',
+            destIata: phase === 'ARRIVAL' ? airport.iata : '',
+            destName: phase === 'ARRIVAL' ? formatAirportCodeZh(airport.iata) : '',
+            phase,
+            statusText,
+            altFt,
+            altMeters: Math.round(altFt * 0.3048),
+            speedKts: gsKts,
+            speedKmh: Math.round(gsKts * 1.852),
+            vRate,
+            track,
+            onGround,
+            lat: +fLat.toFixed(4),
+            lon: +fLon.toFixed(4),
+            distKm: distCamKm,
+            distAirportKm: distAptKm
+          });
+        }
+        break;
+      } catch (_) {}
+    }
+  }
+
+  const allFlights = [...flightsMap.values()].sort((a, b) => {
+    const score = (f) => (f.phase === 'ARRIVAL' || f.phase === 'DEPARTURE' ? 0 : 100) + (f.originIata && f.destIata ? 0 : 30) + Math.min(50, f.distKm);
+    return score(a) - score(b);
+  });
+
+  const summary = {
+    total: allFlights.length,
+    arrivals: allFlights.filter(f => f.phase === 'ARRIVAL').length,
+    departures: allFlights.filter(f => f.phase === 'DEPARTURE').length,
+    overflights: allFlights.filter(f => f.phase === 'OVERFLIGHT').length
+  };
+
+  return {
+    success: true,
+    airport,
+    summary,
+    flights: allFlights.slice(0, 24),
+    updateTimeDisplay: getTaiwanTimeHHMMSS()
+  };
+}
+
+async function handleFlightsNearbyProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度參數' }));
+    return;
+  }
+
+  const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
+  const now = Date.now();
+  const cached = cache.flightsNearbyMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.payload);
+    return;
+  }
+
+  try {
+    const data = await fetchNearbyFlightsData(lat, lon);
+    const payload = JSON.stringify(data);
+    setBoundedMap(cache.flightsNearbyMap, cacheKey, { payload, expireAt: now + 15000 }, 160);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    if (cached && cached.payload) {
+      res.writeHead(200);
+      res.end(cached.payload);
+      return;
+    }
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得即時航班雷達資料', detail: err.message }));
+  }
+}
+
+const CURATED_LOCAL_RADIOS = {
+  TW: [
+    { name: 'ICRT 台灣國際英語廣播 FM 100.7', genre: '台灣都會流行／雙語即時新聞', country: '台灣', streamUrl: 'https://live.leanstream.co/ICRTFM-MP3' },
+    { name: '台北愛樂古典音樂網 Philharmonia', genre: '台灣精緻古典／城市舒壓環境音', country: '台灣', streamUrl: 'https://stream.zeno.fm/0r0xa792kwzuv' }
+  ],
+  JP: [
+    { name: 'J-Pop Sakura 櫻花東京流行電台', genre: '日本東京 J-Pop／澀谷街頭氛圍', country: '日本', streamUrl: 'https://cast1.torontocast.com:2170/;' },
+    { name: 'ビーム FM 東京都市爵士與環境音', genre: '日本都會 City Pop／輕爵士', country: '日本', streamUrl: 'https://ice1.somafm.com/suburbsofgoa-128-mp3' }
+  ],
+  KR: [
+    { name: 'BIG B Radio K-Pop 首爾韓流音樂台', genre: '韓國首爾弘大 K-Pop 即時熱播', country: '韓國', streamUrl: 'https://antares.dribbcast.com/proxy/kpop?mp=/s' }
+  ],
+  CH: [
+    { name: 'Radio Swiss Classic 瑞士國家古典音樂台', genre: '瑞士阿爾卑斯山岳交響樂', country: '瑞士', streamUrl: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128' },
+    { name: 'Radio Swiss Jazz 瑞士國家爵士音樂台', genre: '蘇黎世湖畔經典爵士', country: '瑞士', streamUrl: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' }
+  ],
+  GB: [
+    { name: 'Classic FM UK 倫敦皇家古典電台', genre: '英國倫敦泰晤士河畔古典樂', country: '英國', streamUrl: 'https://media-ice.musicradio.com/ClassicFMMP3' }
+  ],
+  FR: [
+    { name: 'FIP Radio France 巴黎左岸音樂台', genre: '法國巴黎香榭麗舍／塞納河香頌爵士', country: '法國', streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3' }
+  ],
+  US: [
+    { name: 'SomaFM Groove Salad 舊金山灣區環境電台', genre: '美國海岸 Chillout／環境電子', country: '美國', streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+    { name: 'SomaFM Secret Agent 紐約都會爵士電台', genre: '美國都會 Lounge／復古爵士', country: '美國', streamUrl: 'https://ice1.somafm.com/secretagent-128-mp3' }
+  ],
+  NO: [
+    { name: 'NRK Klassisk 挪威國家峽灣古典台', genre: '北歐挪威峽灣與極光交響樂', country: '挪威', streamUrl: 'https://lyd.nrk.no/nrk_radio_klassisk_mp3_h' }
+  ],
+  FI: [
+    { name: 'Yle Klassinen 芬蘭拉普蘭極光古典台', genre: '北極圈拉普蘭靜謐古典環境音', country: '芬蘭', streamUrl: 'https://icecast.live.yle.fi/radio/YleKlassinen/icecast.audio' }
+  ]
+};
+
+const TAIWAN_FIXED_HOLIDAYS = [
+  { mmdd: '01-01', localName: '中華民國開國紀念日（元旦）', name: 'New Year\'s Day' },
+  { mmdd: '02-28', localName: '和平紀念日', name: 'Peace Memorial Day' },
+  { mmdd: '04-04', localName: '兒童節', name: 'Children\'s Day' },
+  { mmdd: '04-05', localName: '民族掃墓節（清明節）', name: 'Tomb Sweeping Day' },
+  { mmdd: '05-01', localName: '勞動節', name: 'Labor Day' },
+  { mmdd: '10-10', localName: '中華民國國慶日（雙十節）', name: 'National Day' },
+  { mmdd: '10-25', localName: '臺灣光復暨金門古寧頭大捷紀念日', name: 'Taiwan Retrocession Day' },
+  { mmdd: '12-25', localName: '行憲紀念日／聖誕節', name: 'Constitution Day' }
+];
+
+async function handleImmersiveLocalProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
+  const lat = parseFloat(parsedUrl.searchParams.get('lat'));
+  const lon = parseFloat(parsedUrl.searchParams.get('lon'));
+  const rawCc = String(parsedUrl.searchParams.get('cc') || '').trim().toUpperCase();
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    res.writeHead(400);
+    res.end(JSON.stringify({ success: false, error: '無效的經緯度參數' }));
+    return;
+  }
+
+  const nearestAirport = findNearestAirportHub(lat, lon);
+  const cc = /^[A-Z]{2}$/.test(rawCc) ? rawCc : (nearestAirport.countryCode || 'TW');
+  const cacheKey = `${lat.toFixed(2)},${lon.toFixed(2)},${cc}`;
+  const now = Date.now();
+  const cached = cache.immersiveLocalMap.get(cacheKey);
+  if (cached && now < cached.expireAt) {
+    res.writeHead(200);
+    res.end(cached.payload);
+    return;
+  }
+
+  try {
+    const fetchMarine = async () => {
+      const u = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature`;
+      const j = await fetchJsonWithRetry(u, 0, 4000);
+      const cur = j?.current;
+      if (!cur || (cur.wave_height == null && cur.sea_surface_temperature == null)) return null;
+      return {
+        waveHeightM: cur.wave_height != null ? +Number(cur.wave_height).toFixed(2) : null,
+        waveDirDeg: cur.wave_direction != null ? Math.round(Number(cur.wave_direction)) : null,
+        wavePeriodSec: cur.wave_period != null ? +Number(cur.wave_period).toFixed(1) : null,
+        swellHeightM: cur.swell_wave_height != null ? +Number(cur.swell_wave_height).toFixed(2) : null,
+        seaTempC: cur.sea_surface_temperature != null ? +Number(cur.sea_surface_temperature).toFixed(1) : null
+      };
+    };
+
+    const fetchRadios = async () => {
+      const curated = [...(CURATED_LOCAL_RADIOS[cc] || CURATED_LOCAL_RADIOS.US || [])];
+      try {
+        const u = `https://de1.api.radio-browser.info/json/stations/search?countrycode=${encodeURIComponent(cc)}&limit=6&hidebroken=true&order=clickcount&reverse=true&is_https=true`;
+        const arr = await fetchJsonWithRetry(u, 0, 4000);
+        if (Array.isArray(arr)) {
+          for (const s of arr) {
+            const streamUrl = String(s?.url_resolved || s?.url || '').trim();
+            const name = normalizeIntlTwLabel(String(s?.name || '').trim());
+            if (!name || !/^https:\/\//i.test(streamUrl) || curated.some(c => c.streamUrl === streamUrl || c.name === name)) continue;
+            curated.push({
+              name: name.slice(0, 42),
+              genre: normalizeIntlTwLabel(String(s?.tags || '').split(',').slice(0, 2).join(' ‧ ')) || '當地即時廣播',
+              country: nearestAirport.country || cc,
+              streamUrl
+            });
+          }
+        }
+      } catch (_) {}
+      return curated.slice(0, 6);
+    };
+
+    const fetchLandmarks = async () => {
+      const zhUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat.toFixed(5)}%7C${lon.toFixed(5)}&gsradius=10000&gslimit=6&format=json&origin=*`;
+      const zhJson = await fetchJsonWithRetry(zhUrl, 0, 4200).catch(() => null);
+      let rawList = Array.isArray(zhJson?.query?.geosearch) ? zhJson.query.geosearch.map(x => ({ ...x, lang: 'zh' })) : [];
+      if (rawList.length < 2) {
+        const enUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat.toFixed(5)}%7C${lon.toFixed(5)}&gsradius=10000&gslimit=5&format=json&origin=*`;
+        const enJson = await fetchJsonWithRetry(enUrl, 0, 4200).catch(() => null);
+        const enList = Array.isArray(enJson?.query?.geosearch) ? enJson.query.geosearch.map(x => ({ ...x, lang: 'en' })) : [];
+        rawList = [...rawList, ...enList];
+      }
+      const seen = new Set();
+      const out = [];
+      for (const item of rawList) {
+        const title = normalizeIntlTwLabel(String(item?.title || '').trim());
+        if (!title || seen.has(title)) continue;
+        seen.add(title);
+        const distMeters = Math.round(Number(item?.dist) || calcDistanceMeters(lat, lon, Number(item.lat), Number(item.lon)));
+        out.push({
+          title,
+          distMeters,
+          lat: Number(item.lat),
+          lon: Number(item.lon),
+          wikiUrl: item.lang === 'en'
+            ? `https://en.wikipedia.org/wiki/${encodeURIComponent(item.title)}`
+            : `https://zh.wikipedia.org/zh-tw/${encodeURIComponent(item.title)}`
+        });
+      }
+      return out.slice(0, 5);
+    };
+
+    const fetchHolidays = async () => {
+      const twNow = new Date(Date.now() + 8 * 3600000);
+      const yr = twNow.getUTCFullYear();
+      const todayIso = twNow.toISOString().slice(0, 10);
+      if (cc === 'TW') {
+        const list = [
+          ...TAIWAN_FIXED_HOLIDAYS.map(h => ({ date: `${yr}-${h.mmdd}`, localName: h.localName, name: h.name, countryCode: 'TW' })),
+          ...TAIWAN_FIXED_HOLIDAYS.map(h => ({ date: `${yr + 1}-${h.mmdd}`, localName: h.localName, name: h.name, countryCode: 'TW' }))
+        ].filter(h => h.date >= todayIso);
+        return list.slice(0, 3);
+      }
+      const arr = await fetchJsonWithRetry(`https://date.nager.at/api/v3/NextPublicHolidays/${encodeURIComponent(cc)}`, 0, 4200);
+      if (!Array.isArray(arr)) return [];
+      return arr.slice(0, 3).map(h => ({
+        date: String(h.date || ''),
+        localName: normalizeIntlTwLabel(String(h.localName || h.name || '')),
+        name: String(h.name || ''),
+        countryCode: cc
+      }));
+    };
+
+    const [marineRes, radiosRes, landmarksRes, holidaysRes] = await Promise.allSettled([
+      fetchMarine(),
+      fetchRadios(),
+      fetchLandmarks(),
+      fetchHolidays()
+    ]);
+
+    const payload = JSON.stringify({
+      success: true,
+      countryCode: cc,
+      countryName: nearestAirport.country || cc,
+      marine: marineRes.status === 'fulfilled' ? marineRes.value : null,
+      radios: radiosRes.status === 'fulfilled' ? radiosRes.value : [],
+      landmarks: landmarksRes.status === 'fulfilled' ? landmarksRes.value : [],
+      holidays: holidaysRes.status === 'fulfilled' ? holidaysRes.value : [],
+      fetchedAt: new Date().toISOString()
+    });
+    setBoundedMap(cache.immersiveLocalMap, cacheKey, { payload, expireAt: now + 180000 }, 160);
+    res.writeHead(200);
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502);
+    res.end(JSON.stringify({ success: false, error: '無法取得身歷其境在地脈動資訊', detail: err.message }));
+  }
+}
+
 // 跨裝置收藏牆與情境預設集 4 位數配對同步 (/api/wall-sync)
 const crypto = require('crypto');
 function handleWallSyncApi(req, res, parsedUrl) {
@@ -4140,6 +4789,14 @@ const server = http.createServer((req, res) => {
     runAsyncRoute(handleTravelToolkitProxy, req, res);
     return;
   }
+  if (pathname === '/api/flights/nearby') {
+    runAsyncRoute(handleFlightsNearbyProxy, req, res, parsedUrl);
+    return;
+  }
+  if (pathname === '/api/immersive/local') {
+    runAsyncRoute(handleImmersiveLocalProxy, req, res, parsedUrl);
+    return;
+  }
   if (pathname === '/api/wall-sync') {
     runAsyncRoute(handleWallSyncApi, req, res, parsedUrl);
     return;
@@ -4275,6 +4932,9 @@ server.handleParkingNearbyProxy = handleParkingNearbyProxy;
 server.handleBusNearbyProxy = handleBusNearbyProxy;
 server.handleTraNearbyProxy = handleTraNearbyProxy;
 server.handleFreewayLiveProxy = handleFreewayLiveProxy;
+server.handleFlightsNearbyProxy = handleFlightsNearbyProxy;
+server.handleImmersiveLocalProxy = handleImmersiveLocalProxy;
+server.fetchNearbyFlightsData = fetchNearbyFlightsData;
 server.getTaiwanDateString = getTaiwanDateString;
 server.decodeCompressedBuffer = decodeCompressedBuffer;
 server.parseCsvToJson = parseCsvToJson;

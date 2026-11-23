@@ -418,11 +418,27 @@ async function syncMetroLive(outDir) {
   }
 }
 
-// 5. 同步高鐵桃園站即時剩餘停車位 + 雙埔周邊停車場/公車/台鐵/國道靜態網頁同源備援快照
+// 5. 同步高鐵桃園站即時剩餘停車位 + 雙埔周邊停車場/公車/台鐵/國道/機場入出境航班雷達靜態網頁同源備援快照
 async function syncParking(outDir) {
-  console.log('[5/5] 正在同步高鐵停車場及雙埔周邊公車/台鐵/停車場/國道同源快照...');
+  console.log('[5/5] 正在同步高鐵停車場及雙埔周邊公車/台鐵/停車場/國道/全球機場航班雷達同源快照...');
   try {
-    const [lots, qpParking, bpParking, qpBus, bpBus, qpTra, bpTra, fwLive] = await Promise.all([
+    const flightHubTargets = [
+      { key: 'TPE', lat: 25.0777, lon: 121.2328 },
+      { key: 'TSA', lat: 25.0694, lon: 121.5525 },
+      { key: 'HND', lat: 35.5494, lon: 139.7798 },
+      { key: 'ICN', lat: 37.4602, lon: 126.4407 },
+      { key: 'SYD', lat: -33.9399, lon: 151.1753 },
+      { key: 'ZRH', lat: 47.4582, lon: 8.5555 },
+      { key: 'LHR', lat: 51.4700, lon: -0.4543 },
+      { key: 'LAX', lat: 33.9416, lon: -118.4085 },
+      { key: 'JFK', lat: 40.6413, lon: -73.7781 },
+      { key: 'RVN', lat: 66.5648, lon: 25.8304 },
+      { key: 'SJO', lat: 9.9939, lon: -84.2088 },
+      { key: 'CUR', lat: 12.1889, lon: -68.9598 },
+      { key: 'PMI', lat: 39.5517, lon: 2.7388 }
+    ];
+
+    const [lots, qpParking, bpParking, qpBus, bpBus, qpTra, bpTra, fwLive, flightHubList] = await Promise.all([
       server.fetchThsrParkingData().catch(() => []),
       invokeServerApi('/api/parking/nearby?lat=25.0134&lon=121.2148'),
       invokeServerApi('/api/parking/nearby?lat=25.0225&lon=121.4685'),
@@ -430,7 +446,18 @@ async function syncParking(outDir) {
       invokeServerApi('/api/bus/nearby?lat=25.0225&lon=121.4685'),
       invokeServerApi('/api/rail/tra-nearby?lat=25.0134&lon=121.2148'),
       invokeServerApi('/api/rail/tra-nearby?lat=25.0225&lon=121.4685'),
-      invokeServerApi('/api/freeway/live')
+      invokeServerApi('/api/freeway/live'),
+      Promise.all(flightHubTargets.map(async (h) => {
+        try {
+          if (typeof server.fetchNearbyFlightsData === 'function') {
+            const d = await server.fetchNearbyFlightsData(h.lat, h.lon);
+            if (d && d.airport && Array.isArray(d.flights)) {
+              return [h.key, { ...d, flights: d.flights.slice(0, 18) }];
+            }
+          }
+        } catch (_) {}
+        return null;
+      }))
     ]);
 
     const outFile = path.join(outDir, 'parking.json');
@@ -439,6 +466,15 @@ async function syncParking(outDir) {
       try {
         existingData = JSON.parse(fs.readFileSync(outFile, 'utf8'));
       } catch (e) {}
+    }
+
+    const flightsLive = { ...(existingData.flightsLive || {}) };
+    let freshFlightHubCount = 0;
+    for (const pair of (flightHubList || [])) {
+      if (pair && pair[0] && pair[1] && Array.isArray(pair[1].flights) && pair[1].flights.length > 0) {
+        flightsLive[pair[0]] = pair[1];
+        freshFlightHubCount++;
+      }
     }
 
     const hasFreshThsr = Array.isArray(lots) && lots.length > 0;
@@ -450,7 +486,7 @@ async function syncParking(outDir) {
     const hasFreshBpTra = Array.isArray(bpTra?.stations) && bpTra.stations.length > 0;
     const hasFreshFw = Array.isArray(fwLive?.corridors) && fwLive.corridors.length > 0;
 
-    if (!hasFreshThsr && !hasFreshQpLots && !hasFreshBpLots && !hasFreshQpBus && !hasFreshBpBus && !hasFreshQpTra && !hasFreshBpTra && !hasFreshFw) {
+    if (!hasFreshThsr && !hasFreshQpLots && !hasFreshBpLots && !hasFreshQpBus && !hasFreshBpBus && !hasFreshQpTra && !hasFreshBpTra && !hasFreshFw && freshFlightHubCount === 0) {
       console.warn('  - 停車場與周邊交通快照均無新資料，略過寫入以保護既有快照');
       return false;
     }
@@ -470,11 +506,12 @@ async function syncParking(outDir) {
         qingpu: hasFreshQpTra ? qpTra : (existingData.traDual?.qingpu || null),
         banqiao: hasFreshBpTra ? bpTra : (existingData.traDual?.banqiao || null)
       },
-      freewayLive: hasFreshFw ? fwLive : (existingData.freewayLive || null)
+      freewayLive: hasFreshFw ? fwLive : (existingData.freewayLive || null),
+      flightsLive
     };
 
     writeFileAtomic(outFile, JSON.stringify(payload));
-    console.log(`  -> 已寫入 ${outFile} (高鐵車位: ${payload.lots.length} 處, 青埔車位: ${payload.qpLots.length} 處, 板橋車位: ${payload.bpLots.length} 處, 國道走廊: ${payload.freewayLive?.corridors?.length || 0} 條)`);
+    console.log(`  -> 已寫入 ${outFile} (高鐵車位: ${payload.lots.length} 處, 青埔車位: ${payload.qpLots.length} 處, 板橋車位: ${payload.bpLots.length} 處, 國道走廊: ${payload.freewayLive?.corridors?.length || 0} 條, 機場航班雷達: ${Object.keys(payload.flightsLive || {}).length} 座樞紐)`);
     return true;
   } catch (err) {
     console.error('  - 高鐵停車場與周邊快照同步失敗 (維持既有快照):', err.message);

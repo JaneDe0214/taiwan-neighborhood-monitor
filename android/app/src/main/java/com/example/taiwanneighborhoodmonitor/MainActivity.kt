@@ -2712,7 +2712,14 @@ internal object WebAssetRouting {
         "nhkworld.jp",
         "akamaized.net",
         "france24.com",
-        "skycdp.com"
+        "skycdp.com",
+        "flightradar24.com",
+        "adsb.fi",
+        "adsb.lol",
+        "adsbdb.com",
+        "radio-browser.info",
+        "wikipedia.org",
+        "nager.at"
     )
 
     fun isNativeInterceptHost(rawHost: String?): Boolean {

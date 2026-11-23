@@ -299,6 +299,13 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("cdn.star.nesdis.noaa.gov"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("panodata.panomax.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("media-tyo.hls.nhkworld.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("data-cloud.flightradar24.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("opendata.adsb.fi"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("api.adsbdb.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("marine-api.open-meteo.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("de1.api.radio-browser.info"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("zh.wikipedia.org"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("date.nager.at"))
 
         assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
         assertFalse(WebAssetRouting.isNativeInterceptHost("evil-opendata.vip"))

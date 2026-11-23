@@ -10205,6 +10205,482 @@ html[data-theme="light"] .daynight-mode-pill.is-dn-active {
   color: #312e81 !important;
 }
 
+/* ==========================================================================
+   當地機場即時入出境航班雷達 (FlightRadarService) ＆ 身歷其境當地脈動 (ImmersiveLocalPulseService)
+   ========================================================================== */
+.flight-airport-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.16), rgba(15, 23, 42, 0.78));
+  border: 1px solid rgba(56, 189, 248, 0.30);
+  margin-bottom: 7px;
+}
+.flight-airport-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.flight-airport-name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.flight-iata-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(0, 240, 255, 0.18);
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  color: #00f0ff;
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.flight-airport-dist {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.flight-summary-chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+.flight-sum-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.20);
+}
+.flight-sum-chip.is-arr {
+  border-color: rgba(0, 240, 255, 0.35);
+  color: #67e8f9;
+}
+.flight-sum-chip.is-dep {
+  border-color: rgba(245, 158, 11, 0.38);
+  color: #fcd34d;
+}
+.flight-sum-chip.is-ovr {
+  border-color: rgba(56, 189, 248, 0.30);
+  color: #93c5fd;
+}
+.flight-filter-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.flight-filter-bar::-webkit-scrollbar { display: none; }
+.flight-filter-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.16s ease;
+}
+.flight-filter-btn:hover {
+  border-color: rgba(0, 240, 255, 0.45);
+  color: #f8fafc;
+}
+.flight-filter-btn.active {
+  background: rgba(0, 240, 255, 0.18);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+}
+.flight-radar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 295px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.flight-item-card {
+  background: rgba(15, 23, 42, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-left: 3px solid #38bdf8;
+  border-radius: 8px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+.flight-item-card:hover {
+  background: rgba(22, 34, 58, 0.92);
+  border-color: rgba(0, 240, 255, 0.45);
+}
+.flight-item-card.cat-ARRIVAL {
+  border-left-color: #00f0ff;
+}
+.flight-item-card.cat-DEPARTURE {
+  border-left-color: #f59e0b;
+}
+.flight-item-card.cat-OVERFLIGHT {
+  border-left-color: #38bdf8;
+}
+.flight-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.flight-ident-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.flight-no-pill {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #f8fafc;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.flight-airline-name {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flight-ac-tag {
+  font-size: 0.64rem;
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.flight-phase-badge {
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.flight-phase-badge.cat-ARRIVAL {
+  background: rgba(0, 240, 255, 0.16);
+  border: 1px solid rgba(0, 240, 255, 0.42);
+  color: #67e8f9;
+}
+.flight-phase-badge.cat-DEPARTURE {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fcd34d;
+}
+.flight-phase-badge.cat-OVERFLIGHT {
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #93c5fd;
+}
+.flight-route-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+.flight-route-airport.is-local {
+  color: #00f0ff;
+  font-weight: 800;
+}
+.flight-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.66rem;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+}
+.flight-map-locate-tag {
+  color: #38bdf8;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* 身歷其境 ‧ 當地即時生活脈動卡片 */
+.immersive-radio-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.16), rgba(15, 23, 42, 0.78));
+  border: 1px solid rgba(192, 132, 252, 0.32);
+  margin-bottom: 7px;
+}
+.immersive-radio-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.radio-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(192, 132, 252, 0.5);
+  background: rgba(168, 85, 247, 0.25);
+  color: #f3e8ff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+.radio-play-btn:hover {
+  background: rgba(168, 85, 247, 0.4);
+  border-color: #d8b4fe;
+}
+.radio-play-btn.is-playing {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: #6ee7b7;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+.radio-station-select {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.immersive-astro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.immersive-mini-card {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.immersive-mini-label {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.immersive-mini-val {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.immersive-mini-sub {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.immersive-marine-box {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.16), rgba(15, 23, 42, 0.78));
+  border: 1px solid rgba(34, 211, 238, 0.32);
+  border-radius: 8px;
+  padding: 7px 9px;
+  margin-bottom: 7px;
+}
+.immersive-marine-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 5px;
+  text-align: center;
+}
+.marine-metric-item {
+  background: rgba(15, 23, 42, 0.65);
+  border-radius: 6px;
+  padding: 4px 3px;
+}
+.marine-metric-lbl {
+  font-size: 0.62rem;
+  color: #94a3b8;
+}
+.marine-metric-val {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: #67e8f9;
+  font-family: var(--font-mono);
+}
+.immersive-landmark-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.immersive-landmark-item {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 7px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.landmark-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.landmark-title-link {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #38bdf8;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.landmark-title-link:hover {
+  color: #00f0ff;
+  text-decoration: underline;
+}
+.landmark-dist-pill {
+  font-size: 0.64rem;
+  font-family: var(--font-mono);
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.32);
+  padding: 0 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.landmark-summary-txt {
+  font-size: 0.66rem;
+  color: #94a3b8;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 淺色主題適配 */
+html[data-theme="light"] .flight-airport-banner {
+  background: linear-gradient(135deg, #e0f2fe, #f8fafc) !important;
+  border-color: rgba(2, 132, 199, 0.30) !important;
+}
+html[data-theme="light"] .flight-airport-name,
+html[data-theme="light"] .flight-airline-name,
+html[data-theme="light"] .immersive-mini-val {
+  color: #0f172a !important;
+}
+html[data-theme="light"] .flight-iata-tag,
+html[data-theme="light"] .flight-no-pill {
+  background: #e0f2fe !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .flight-sum-chip,
+html[data-theme="light"] .flight-filter-btn,
+html[data-theme="light"] .flight-item-card,
+html[data-theme="light"] .immersive-mini-card,
+html[data-theme="light"] .immersive-landmark-item,
+html[data-theme="light"] .marine-metric-item {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #1e293b !important;
+}
+html[data-theme="light"] .flight-filter-btn.active {
+  background: #e0f2fe !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .flight-route-row {
+  color: #334155 !important;
+}
+html[data-theme="light"] .flight-route-airport.is-local,
+html[data-theme="light"] .landmark-title-link,
+html[data-theme="light"] .marine-metric-val {
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .immersive-radio-box {
+  background: linear-gradient(135deg, #f3e8ff, #f8fafc) !important;
+  border-color: rgba(147, 51, 234, 0.28) !important;
+}
+html[data-theme="light"] .radio-play-btn {
+  background: #f3e8ff !important;
+  border-color: #9333ea !important;
+  color: #6b21a8 !important;
+}
+html[data-theme="light"] .radio-play-btn.is-playing {
+  background: #059669 !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+}
+html[data-theme="light"] .radio-station-select {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.2) !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .immersive-marine-box {
+  background: linear-gradient(135deg, #ecfeff, #f8fafc) !important;
+  border-color: rgba(8, 145, 178, 0.28) !important;
+}
+html[data-theme="light"] .landmark-dist-pill {
+  background: #d1fae5 !important;
+  border-color: #10b981 !important;
+  color: #065f46 !important;
+}
+
 </style>
 </head>
 <body>
@@ -10603,6 +11079,12 @@ html[data-theme="light"] .daynight-mode-pill.is-dn-active {
 
       <!-- 跨國旅遊百寶箱 (台灣時差對照 ‧ 即時雙向匯率換算器 ‧ 極光 Kp 與觀景視野指標) -->
       <div class="widget-card" id="intlTravelToolkitCard" style="display:none;"></div>
+
+      <!-- 當地機場即時入出境航班 & 天空飛航雷達 (FlightRadar24 / OpenSky / ADS-B 即時串接) -->
+      <div class="widget-card" id="flightRadarWidgetCard"></div>
+
+      <!-- 身歷其境 ‧ 當地即時生活脈動 (當地廣播環境音 ‧ 海岸浪高水溫 ‧ 黃金/藍調時刻與月相 ‧ 國家節慶 ‧ 周邊真實地標導覽) -->
+      <div class="widget-card" id="immersivePulseWidgetCard"></div>
 
       <!-- 區域 3：空氣品質指標 (AQI) -->
       <div class="widget-card" id="aqiWidgetCard">
@@ -14162,6 +14644,17 @@ class WeatherEnvironmentMonitor {
     this.activeTimezone = targetTz;
     this.activeTzOffsetHours = targetOffset;
     this.activeSingleParams = { lat: safeLat, lon: safeLon, locationName, timezone: targetTz };
+    const initActiveCtr = (typeof window !== 'undefined' && window.monitorApp?.currentCenterId)
+      ? window.monitorApp.currentCenterId
+      : (locationName.includes('新埔') ? 'banqiao' : 'qingpu');
+    if (!isAuto && typeof window !== 'undefined') {
+      if (window.flightRadarService) {
+        window.flightRadarService.syncForLocation(initActiveCtr, { lat: safeLat, lon: safeLon, label: locationName });
+      }
+      if (window.immersivePulseService) {
+        window.immersivePulseService.syncForLocation(initActiveCtr, { lat: safeLat, lon: safeLon, label: locationName, tz: targetTz });
+      }
+    }
 
     try {
       const data = await this.fetchLocationData(safeLat, safeLon, targetTz);
@@ -14222,6 +14715,14 @@ class WeatherEnvironmentMonitor {
     this.activeTimezone = 'Asia/Taipei';
     this.activeTzOffsetHours = 8;
     this.activeDualParams = { qpInfo, bpInfo };
+    if (!isAuto && typeof window !== 'undefined') {
+      if (window.flightRadarService) {
+        window.flightRadarService.syncForLocation('dual');
+      }
+      if (window.immersivePulseService) {
+        window.immersivePulseService.syncForLocation('dual', { lat: qpInfo.lat, lon: qpInfo.lon, label: '雙埔生活圈', countryCode: 'TW' });
+      }
+    }
 
     try {
       const [qpData, bpData] = await Promise.all([
@@ -16989,7 +17490,27 @@ class LocalGeoBusService {
       [/\u4e61/g, '鄉'],
       [/\u91cc\u7ea6/g, '里約'],
       [/\u97e9/g, '韓'],
-      [/\u53f0\u6e7e/g, '台灣']
+      [/\u53f0\u6e7e/g, '台灣'],
+      [/\u5b66/g, '學'],
+      [/\u8054/g, '聯'],
+      [/\u8f66/g, '車'],
+      [/\u9a7f/g, '驛'],
+      [/\u56ed/g, '園'],
+      [/\u5e7f\u573a/g, '廣場'],
+      [/\u6865/g, '橋'],
+      [/\u94c1/g, '鐵'],
+      [/\u9986/g, '館'],
+      [/\u5bab/g, '宮'],
+      [/\u95e8/g, '門'],
+      [/\u53f7/g, '號'],
+      [/\u697c/g, '樓'],
+      [/\u8857\u5934/g, '街頭'],
+      [/\u7535\u89c6/g, '電視'],
+      [/\u4e1c/g, '東'],
+      [/\u98ce/g, '風'],
+      [/\u4e07/g, '萬'],
+      [/\u5723/g, '聖'],
+      [/\u4e9a/g, '亞']
     ];
     for (const [re, rep] of pairs) s = s.replace(re, rep);
     return s;
@@ -18240,6 +18761,10 @@ class NeighborhoodRadarMap {
     this.map = null;
     this.centerMarker = null;
     this.cameraMarkers = [];
+    this.flightMarkers = [];
+    this.flightMarkerMap = new Map();
+    this.airportMarker = null;
+    this._lastFlightPayload = null;
     this.radarLayer = null;        // RainViewer 即時雷達疊加圖層
     this.radarRefreshTimer = null; // 10 分鐘自動更新計時器
   }
@@ -18593,6 +19118,127 @@ class NeighborhoodRadarMap {
       const allMarkers = isDual ? [...this.centerMarkers, ...this.cameraMarkers] : [...this.cameraMarkers];
       const group = L.featureGroup(allMarkers);
       this.map.fitBounds(group.getBounds().pad(0.15));
+    }
+
+    if (this._lastFlightPayload) {
+      this.updateFlightMarkers(
+        this._lastFlightPayload.flights,
+        this._lastFlightPayload.airport,
+        this._lastFlightPayload.summary
+      );
+    }
+  }
+
+  // 即時飛航雷達圖層：於地理雷達地圖繪製最近國際機場塔台與空中入出境航班動態航向圖標
+  updateFlightMarkers(flights = [], airport = null, summary = null) {
+    this._lastFlightPayload = { flights, airport, summary };
+    if (!this.map || typeof L === 'undefined') return;
+
+    if (Array.isArray(this.flightMarkers)) {
+      this.flightMarkers.forEach(m => {
+        try { this.map.removeLayer(m); } catch (_) {}
+      });
+    }
+    this.flightMarkers = [];
+    this.flightMarkerMap = new Map();
+    if (this.airportMarker) {
+      try { this.map.removeLayer(this.airportMarker); } catch (_) {}
+      this.airportMarker = null;
+    }
+
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+
+    if (airport && Number.isFinite(Number(airport.lat)) && Number.isFinite(Number(airport.lon))) {
+      const towerIcon = L.divIcon({
+        className: 'airport-tower-pin',
+        html: `
+          <div style="display:inline-flex;align-items:center;gap:3px;background:#0f172a;color:#00f0ff;border:1.5px solid #00f0ff;border-radius:6px;padding:1px 5px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 0 10px rgba(0,240,255,0.45);">
+            <i class="fa-solid fa-tower-observation"></i> ${eHtml(airport.iata || '')}
+          </div>
+        `,
+        iconSize: [52, 20],
+        iconAnchor: [26, 10]
+      });
+      const arrCnt = summary?.arrivals ?? 0;
+      const depCnt = summary?.departures ?? 0;
+      this.airportMarker = L.marker([Number(airport.lat), Number(airport.lon)], { icon: towerIcon, zIndexOffset: 350 })
+        .addTo(this.map)
+        .bindPopup(`
+          <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:175px;">
+            <b style="color:#0284c7;"><i class="fa-solid fa-plane-up"></i> ${eHtml(airport.name || '')} (${eHtml(airport.iata || '')})</b><br/>
+            <span style="color:#475569;font-size:0.74rem;">距觀測點 ${Number(airport.distKm || 0).toFixed(1)} 公里</span><br/>
+            <span style="color:#0369a1;font-weight:700;font-size:0.75rem;">🛬 入境進場 ${arrCnt} 班 ‧ 🛫 出境起飛 ${depCnt} 班</span>
+          </div>
+        `);
+    }
+
+    const validFlights = Array.isArray(flights)
+      ? flights.filter(f => Number.isFinite(Number(f?.lat)) && Number.isFinite(Number(f?.lon))).slice(0, 24)
+      : [];
+
+    for (const fl of validFlights) {
+      const color = fl.category === 'ARRIVAL'
+        ? '#00f0ff'
+        : (fl.category === 'DEPARTURE' ? '#f59e0b' : '#38bdf8');
+      const trackDeg = Number.isFinite(Number(fl.track)) ? Math.round(Number(fl.track)) : 0;
+      const labelTxt = eHtml(fl.flightNo || fl.callsign || 'FLIGHT');
+      const planeIcon = L.divIcon({
+        className: 'flight-radar-pin',
+        html: `
+          <div style="display:flex;align-items:center;gap:2px;pointer-events:auto;">
+            <div style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 5px ${color});transform:rotate(${trackDeg}deg);">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="${color}" stroke="#0f172a" stroke-width="1.2">
+                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+              </svg>
+            </div>
+            <span style="background:rgba(15,23,42,0.88);color:${color};border:1px solid ${color};border-radius:3px;padding:0 3px;font-size:9px;font-weight:800;font-family:monospace;white-space:nowrap;">${labelTxt}</span>
+          </div>
+        `,
+        iconSize: [64, 20],
+        iconAnchor: [10, 10]
+      });
+
+      const routeHtml = (fl.originIata || fl.destIata)
+        ? `<div style="margin:3px 0;font-weight:700;color:#0f172a;">${eHtml(fl.originZh || fl.originIata || '---')} (${eHtml(fl.originIata || '--')}) ➔ ${eHtml(fl.destZh || fl.destIata || '---')} (${eHtml(fl.destIata || '--')})</div>`
+        : '';
+
+      const m = L.marker([Number(fl.lat), Number(fl.lon)], { icon: planeIcon, zIndexOffset: 420 })
+        .addTo(this.map)
+        .bindPopup(`
+          <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:190px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+              <b style="color:#0284c7;font-size:0.88rem;">✈️ ${eHtml(fl.flightNo || fl.callsign)}</b>
+              <span style="background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:999px;font-size:0.7rem;font-weight:800;">${eHtml(fl.phaseZh || '')}</span>
+            </div>
+            <div style="color:#334155;font-weight:700;font-size:0.76rem;margin-top:2px;">${eHtml(fl.airlineZh || '')} ‧ ${eHtml(fl.aircraftZh || fl.aircraftCode || '')}${fl.reg ? ` (${eHtml(fl.reg)})` : ''}</div>
+            ${routeHtml}
+            <div style="color:#475569;font-size:0.73rem;margin-top:2px;">
+              高度：<b>${Number(fl.altM || 0).toLocaleString()} m</b> (${Number(fl.altFt || 0).toLocaleString()} ft)<br/>
+              時速：<b>${Number(fl.speedKmh || 0)} km/h</b> ‧ 航向：<b>${trackDeg}°</b> ‧ 距鏡頭 <b>${Number(fl.distKm || 0).toFixed(1)} km</b>
+            </div>
+          </div>
+        `);
+      this.flightMarkers.push(m);
+      if (fl.id) this.flightMarkerMap.set(String(fl.id), m);
+    }
+  }
+
+  // 點擊側邊欄航班卡片時，自動平移雷達地圖至該架飛機座標並開啟資訊視窗
+  focusFlightMarker(flightId, lat, lon) {
+    if (!this.map) return;
+    const fLat = Number(lat);
+    const fLon = Number(lon);
+    if (Number.isFinite(fLat) && Number.isFinite(fLon)) {
+      const targetZoom = Math.max(this.map.getZoom() || 10, 10);
+      this.map.setView([fLat, fLon], targetZoom, { animate: true });
+    }
+    const marker = this.flightMarkerMap && this.flightMarkerMap.get(String(flightId));
+    if (marker && typeof marker.openPopup === 'function') {
+      marker.openPopup();
+    }
+    const mapCard = typeof document !== 'undefined' ? document.getElementById('leafletMap') : null;
+    if (mapCard && typeof mapCard.scrollIntoView === 'function') {
+      try { mapCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
     }
   }
 }
@@ -34234,12 +34880,1080 @@ class TravelToolkitService {
   }
 }
 
+/* ==========================================================================
+   當地機場即時入出境航班 & 天空飛航雷達服務 (FlightRadarService)
+   - 自動配對觀測鏡頭最近之台灣與全球 46+ 國際機場，即時分類「🛬 入境進場」、「🛫 出境起飛」、「✈️ 上空巡航」
+   - 同步將飛機即時航向、高度、地速與起訖航線繪製於 Leaflet 周遭地理雷達地圖
+   ========================================================================== */
+class FlightRadarService {
+  constructor() {
+    this.centerId = 'dual';
+    this.dualArea = 'qp'; // 'qp' (桃園國際機場 TPE) | 'bp' (臺北松山國際機場 TSA)
+    this.filterCat = 'ALL'; // 'ALL' | 'ARRIVAL' | 'DEPARTURE' | 'OVERFLIGHT'
+    this.target = null;
+    this.airport = null;
+    this.flights = [];
+    this.summary = { total: 0, arrivals: 0, departures: 0, overflights: 0 };
+    this.updateTime = '';
+    this.source = '';
+    this.isLoading = false;
+    this._reqToken = 0;
+    this._lastFetchKey = '';
+    this._lastFetchMs = 0;
+
+    this.airportCatalog = [
+      { iata: 'TPE', icao: 'RCTP', name: '臺灣桃園國際機場', city: '桃園', country: 'TW', lat: 25.0777, lon: 121.2328 },
+      { iata: 'TSA', icao: 'RCSS', name: '臺北松山國際機場', city: '臺北', country: 'TW', lat: 25.0694, lon: 121.5525 },
+      { iata: 'RMQ', icao: 'RCMQ', name: '臺中清泉崗國際機場', city: '臺中', country: 'TW', lat: 24.2647, lon: 120.6206 },
+      { iata: 'TNN', icao: 'RCNN', name: '臺南機場', city: '臺南', country: 'TW', lat: 22.9504, lon: 120.2058 },
+      { iata: 'KHH', icao: 'RCKH', name: '高雄國際機場', city: '高雄', country: 'TW', lat: 22.5771, lon: 120.3500 },
+      { iata: 'HUN', icao: 'RCYU', name: '花蓮機場', city: '花蓮', country: 'TW', lat: 24.0231, lon: 121.6178 },
+      { iata: 'TTT', icao: 'RCFN', name: '臺東豐年機場', city: '臺東', country: 'TW', lat: 22.7550, lon: 121.1017 },
+      { iata: 'HND', icao: 'RJTT', name: '東京羽田國際機場', city: '東京', country: 'JP', lat: 35.5494, lon: 139.7798 },
+      { iata: 'NRT', icao: 'RJAA', name: '東京成田國際機場', city: '成田', country: 'JP', lat: 35.7720, lon: 140.3929 },
+      { iata: 'KIX', icao: 'RJBB', name: '大阪關西國際機場', city: '大阪', country: 'JP', lat: 34.4347, lon: 135.2440 },
+      { iata: 'ITM', icao: 'RJOO', name: '大阪伊丹機場', city: '大阪', country: 'JP', lat: 34.7855, lon: 135.4380 },
+      { iata: 'NGO', icao: 'RJGG', name: '名古屋中部國際機場', city: '名古屋', country: 'JP', lat: 34.8584, lon: 136.8054 },
+      { iata: 'CTS', icao: 'RJCC', name: '札幌新千歲國際機場', city: '北海道', country: 'JP', lat: 42.7752, lon: 141.6923 },
+      { iata: 'FUK', icao: 'RJFF', name: '福岡國際機場', city: '福岡', country: 'JP', lat: 33.5859, lon: 130.4510 },
+      { iata: 'OKA', icao: 'ROAH', name: '沖繩那霸國際機場', city: '沖繩', country: 'JP', lat: 26.1958, lon: 127.6458 },
+      { iata: 'ICN', icao: 'RKSI', name: '首爾仁川國際機場', city: '首爾', country: 'KR', lat: 37.4602, lon: 126.4407 },
+      { iata: 'GMP', icao: 'RKSS', name: '首爾金浦國際機場', city: '首爾', country: 'KR', lat: 37.5583, lon: 126.7906 },
+      { iata: 'PUS', icao: 'RKPK', name: '釜山金海國際機場', city: '釜山', country: 'KR', lat: 35.1795, lon: 128.9382 },
+      { iata: 'CJU', icao: 'RKPC', name: '濟州國際機場', city: '濟州', country: 'KR', lat: 33.5113, lon: 126.4930 },
+      { iata: 'SYD', icao: 'YSSY', name: '雪梨金斯福德史密斯機場', city: '雪梨', country: 'AU', lat: -33.9399, lon: 151.1753 },
+      { iata: 'AKL', icao: 'NZAA', name: '奧克蘭國際機場', city: '奧克蘭', country: 'NZ', lat: -37.0082, lon: 174.7850 },
+      { iata: 'SIN', icao: 'WSSS', name: '新加坡樟宜國際機場', city: '新加坡', country: 'SG', lat: 1.3644, lon: 103.9915 },
+      { iata: 'BKK', icao: 'VTBS', name: '曼谷蘇凡納布國際機場', city: '曼谷', country: 'TH', lat: 13.6900, lon: 100.7501 },
+      { iata: 'USM', icao: 'VTSM', name: '蘇美島國際機場', city: '蘇美島', country: 'TH', lat: 9.5478, lon: 100.0623 },
+      { iata: 'DPS', icao: 'WADD', name: '峇里島伍拉賴國際機場', city: '峇里島', country: 'ID', lat: -8.7482, lon: 115.1672 },
+      { iata: 'HKG', icao: 'VHHH', name: '香港國際機場', city: '香港', country: 'HK', lat: 22.3080, lon: 113.9185 },
+      { iata: 'DXB', icao: 'OMDB', name: '杜拜國際機場', city: '杜拜', country: 'AE', lat: 25.2532, lon: 55.3657 },
+      { iata: 'LHR', icao: 'EGLL', name: '倫敦希斯洛國際機場', city: '倫敦', country: 'GB', lat: 51.4700, lon: -0.4543 },
+      { iata: 'CDG', icao: 'LFPG', name: '巴黎戴高樂國際機場', city: '巴黎', country: 'FR', lat: 49.0097, lon: 2.5479 },
+      { iata: 'ZRH', icao: 'LSZH', name: '蘇黎世國際機場', city: '蘇黎世', country: 'CH', lat: 47.4582, lon: 8.5555 },
+      { iata: 'VCE', icao: 'LIPZ', name: '威尼斯馬可波羅機場', city: '威尼斯', country: 'IT', lat: 45.5053, lon: 12.3519 },
+      { iata: 'AMS', icao: 'EHAM', name: '阿姆斯特丹史基浦機場', city: '阿姆斯特丹', country: 'NL', lat: 52.3105, lon: 4.7683 },
+      { iata: 'PMI', icao: 'LEPA', name: '馬約卡島帕爾馬國際機場', city: '馬約卡島', country: 'ES', lat: 39.5517, lon: 2.7388 },
+      { iata: 'FNC', icao: 'LPMA', name: '馬德拉豐沙爾國際機場', city: '馬德拉島', country: 'PT', lat: 32.6979, lon: -16.7745 },
+      { iata: 'MRY', icao: 'KMRY', name: '加州蒙特雷半島機場', city: '蒙特雷灣', country: 'US', lat: 36.5870, lon: -121.8430 },
+      { iata: 'RVN', icao: 'EFRO', name: '羅瓦涅米北極圈機場', city: '拉普蘭', country: 'FI', lat: 66.5648, lon: 25.8304 },
+      { iata: 'TOS', icao: 'ENTC', name: '特羅姆瑟極光機場', city: '特羅姆瑟', country: 'NO', lat: 69.6833, lon: 18.9189 },
+      { iata: 'KEF', icao: 'BIKF', name: '雷克雅維克凱夫拉維克機場', city: '冰島', country: 'IS', lat: 63.9850, lon: -22.6056 },
+      { iata: 'JFK', icao: 'KJFK', name: '紐約甘迺迪國際機場', city: '紐約', country: 'US', lat: 40.6413, lon: -73.7781 },
+      { iata: 'LAX', icao: 'KLAX', name: '洛杉磯國際機場', city: '洛杉磯', country: 'US', lat: 33.9416, lon: -118.4085 },
+      { iata: 'LAS', icao: 'KLAS', name: '拉斯維加斯哈里瑞德機場', city: '拉斯維加斯', country: 'US', lat: 36.0840, lon: -115.1537 },
+      { iata: 'SFO', icao: 'KSFO', name: '舊金山國際機場', city: '舊金山', country: 'US', lat: 37.6213, lon: -122.3790 },
+      { iata: 'MIA', icao: 'KMIA', name: '邁阿密國際機場', city: '邁阿密', country: 'US', lat: 25.7959, lon: -80.2870 },
+      { iata: 'HNL', icao: 'PHNL', name: '夏威夷檀香山國際機場', city: '檀香山', country: 'US', lat: 21.3187, lon: -157.9225 },
+      { iata: 'SJO', icao: 'MROC', name: '哥斯大黎加聖荷西國際機場', city: '聖荷西', country: 'CR', lat: 9.9939, lon: -84.2088 },
+      { iata: 'GIG', icao: 'SBGL', name: '里約熱內盧加利昂國際機場', city: '里約', country: 'BR', lat: -22.8099, lon: -43.2505 },
+      { iata: 'USH', icao: 'SAWH', name: '烏斯懷亞馬爾維納斯國際機場', city: '烏斯懷亞', country: 'AR', lat: -54.8433, lon: -68.2958 },
+      { iata: 'CUR', icao: 'TNCC', name: '庫拉索哈托國際機場', city: '庫拉索', country: 'CW', lat: 12.1889, lon: -68.9598 }
+    ];
+
+    this.airlineZhMap = {
+      CAL: '中華航空', CI: '中華航空', EVA: '長榮航空', BR: '長榮航空', SJX: '星宇航空', JX: '星宇航空',
+      TTW: '台灣虎航', IT: '台灣虎航', UIA: '立榮航空', B7: '立榮航空', MDA: '華信航空', AE: '華信航空',
+      JAL: '日本航空', JL: '日本航空', ANA: '全日空', NH: '全日空', APJ: '樂桃航空', MM: '樂桃航空',
+      SJO: 'Zipair 東京', ZG: 'Zipair 東京', SKY: '天馬航空', BC: '天馬航空', SFJ: '星悅航空',
+      ADO: '北海道國際航空', HD: '北海道國際航空', SNA: '空之子航空', JTA: '日本越洋航空', NU: '日本越洋航空',
+      KAL: '大韓航空', KE: '大韓航空', AAR: '韓亞航空', OZ: '韓亞航空', JJA: '濟州航空', '7C': '濟州航空',
+      JNA: '真航空', LJ: '真航空', TWB: '德威航空', TW: '德威航空', ABL: '釜山航空', BX: '釜山航空',
+      CPA: '國泰航空', CX: '國泰航空', HKE: '香港快運', UO: '香港快運', CRK: '香港航空', HX: '香港航空',
+      SIA: '新加坡航空', SQ: '新加坡航空', TGW: '酷航', TR: '酷航', THA: '泰國國際航空', TG: '泰國國際航空',
+      VJC: '越捷航空', VJ: '越捷航空', HVN: '越南航空', VN: '越南航空', MAS: '馬來西亞航空', MH: '馬來西亞航空',
+      AXM: '亞洲航空', AK: '亞洲航空', PAL: '菲律賓航空', PR: '菲律賓航空', CEB: '宿霧太平洋航空', '5J': '宿霧太平洋航空',
+      QFA: '澳洲航空', QF: '澳洲航空', JST: '捷星航空', JQ: '捷星航空', ANZ: '紐西蘭航空', NZ: '紐西蘭航空',
+      UAE: '阿聯酋航空', EK: '阿聯酋航空', QTR: '卡達航空', QR: '卡達航空', ETD: '阿提哈德航空', EY: '阿提哈德航空',
+      THY: '土耳其航空', TK: '土耳其航空', BAW: '英國航空', BA: '英國航空', AFR: '法國航空', AF: '法國航空',
+      KLM: '荷蘭皇家航空', KL: '荷蘭皇家航空', DLH: '德國漢莎航空', LH: '德國漢莎航空', SWR: '瑞士國際航空', LX: '瑞士國際航空',
+      AUA: '奧地利航空', OS: '奧地利航空', FIN: '芬蘭航空', AY: '芬蘭航空', NAX: '挪威穿梭航空', DY: '挪威穿梭航空',
+      SAS: '北歐航空', SK: '北歐航空', ICE: '冰島航空', FI: '冰島航空', RYR: '瑞安航空', FR: '瑞安航空',
+      EZY: '易捷航空', U2: '易捷航空', UAL: '聯合航空', UA: '聯合航空', AAL: '美國航空', AA: '美國航空',
+      DAL: '達美航空', DL: '達美航空', SWA: '西南航空', WN: '西南航空', JBU: '捷藍航空', B6: '捷藍航空',
+      ASA: '阿拉斯加航空', AS: '阿拉斯加航空', HAL: '夏威夷航空', HA: '夏威夷航空', ACA: '加拿大航空', AC: '加拿大航空',
+      FDX: '聯邦快遞航空', FX: '聯邦快遞航空', UPS: '優比速航空', '5X': '優比速航空'
+    };
+
+    this.iataZhMap = {
+      TPE: '臺北桃園', TSA: '臺北松山', RMQ: '臺中', TNN: '臺南', KHH: '高雄', HUN: '花蓮', TTT: '臺東',
+      MZG: '澎湖馬公', KNH: '金門', LZN: '馬祖南竿', MFK: '馬祖北竿',
+      HND: '東京羽田', NRT: '東京成田', KIX: '大阪關西', ITM: '大阪伊丹', NGO: '名古屋', CTS: '札幌新千歲',
+      FUK: '福岡', OKA: '沖繩那霸', SDJ: '仙臺', HIJ: '廣島',KMJ: '熊本', KOJ: '鹿兒島', HKD: '函館',
+      ICN: '首爾仁川', GMP: '首爾金浦', PUS: '釜山', CJU: '濟州',
+      HKG: '香港', MFM: '澳門', SIN: '新加坡', BKK: '曼谷', DMK: '曼谷廊曼', CNX: '清邁', HKT: '普吉島',
+      USM: '蘇美島', KUL: '吉隆坡', PEN: '檳城', SGN: '胡志明市', HAN: '河內', DAD: '峴港', MNL: '馬尼拉',
+      CEB: '宿霧', CGK: '雅加達', DPS: '峇里島', SYD: '雪梨', MEL: '墨爾本', BNE: '布里斯本', AKL: '奧克蘭',
+      CHC: '基督城', DXB: '杜拜', AUH: '阿布達比', DOH: '杜哈', IST: '伊斯坦堡',
+      LHR: '倫敦希斯洛', LGW: '倫敦蓋威克', CDG: '巴黎戴高樂', ORY: '巴黎奧利', AMS: '阿姆斯特丹',
+      FRA: '法蘭克福', MUC: '慕尼黑', BER: '柏林', ZRH: '蘇黎世', GVA: '日內瓦', VIE: '維也納',
+      FCO: '羅馬', MXP: '米蘭', VCE: '威尼斯', MAD: '馬德里', BCN: '巴塞隆納', LIS: '里斯本',
+      CPH: '哥本哈根', OSL: '奧斯陸',TOS: '特羅姆瑟', ARN: '斯德哥爾摩', HEL: '赫爾辛基', RVN: '羅瓦涅米',
+      KEF: '雷克雅維克', JFK: '紐約甘迺迪', EWR: '紐約紐華克', LGA: '紐約拉瓜地亞', LAX: '洛杉磯',
+      SFO: '舊金山', SEA: '西雅圖', LAS: '拉斯維加斯', ORD: '芝加哥', DFW: '達拉斯', IAH: '休士頓',
+      ATL: '亞特蘭大', MIA: '邁阿密', MCO: '奧蘭多', BOS: '波士頓', IAD: '華盛頓', DEN: '丹佛',
+      HNL: '夏威夷檀香山', ANC: '安克拉治', YVR: '溫哥華', YYZ: '多倫多', MEX: '墨西哥城', CUN: '坎昆',
+      SJO: '聖荷西', PTY: '巴拿馬城', GRU: '聖保羅', GIG: '里約熱內盧', EZE: '布宜諾斯艾利斯', USH: '烏斯懷亞', CUR: '庫拉索'
+    };
+
+    this._timer = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden && this.target) {
+        this.refreshNow(false);
+      }
+    }, 30000);
+  }
+
+  isLocalProxyAvailable() {
+    return typeof window !== 'undefined' && window.AndroidBridge == null && window.location &&
+      window.location.hostname !== 'appassets.androidplatform.net' &&
+      !window.location.hostname.endsWith('.github.io') &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  }
+
+  findNearestAirport(lat, lon) {
+    let best = this.airportCatalog[0];
+    let minKm = Infinity;
+    for (const ap of this.airportCatalog) {
+      const d = calculateDistanceKm(lat, lon, ap.lat, ap.lon);
+      if (d < minKm) {
+        minKm = d;
+        best = ap;
+      }
+    }
+    return { ...best, distKm: +minKm.toFixed(1) };
+  }
+
+  switchDualArea(area) {
+    if (area !== 'qp' && area !== 'bp') return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.dualArea = area;
+    this.syncForLocation('dual', {}, true);
+  }
+
+  setFilterCategory(cat) {
+    if (!['ALL', 'ARRIVAL', 'DEPARTURE', 'OVERFLIGHT'].includes(cat)) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.filterCat = cat;
+    this.renderWidget();
+  }
+
+  syncForLocation(centerId, opts = {}, force = false) {
+    this.centerId = centerId || (window.monitorApp ? window.monitorApp.currentCenterId : 'dual');
+    let lat = Number(opts.lat);
+    let lon = Number(opts.lon);
+    let label = opts.label || '';
+
+    if (this.centerId === 'dual' && (!Number.isFinite(lat) || !Number.isFinite(lon))) {
+      if (this.dualArea === 'bp') {
+        lat = 25.0232; lon = 121.4688; label = '板橋新埔 ‧ 松山飛航圈';
+      } else {
+        lat = 25.0153; lon = 121.2213; label = '桃園青埔 ‧ 桃園機場飛航圈';
+      }
+    } else if (this.centerId === 'banqiao' && (!Number.isFinite(lat) || !Number.isFinite(lon))) {
+      lat = 25.0232; lon = 121.4688; label = '板橋新埔生活圈';
+    } else if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      lat = 25.0153; lon = 121.2213; label = '青埔高鐵特區';
+    }
+
+    const fetchKey = `${this.centerId}:${this.dualArea}:${lat.toFixed(2)},${lon.toFixed(2)}`;
+    if (!force && fetchKey === this._lastFetchKey && (Date.now() - this._lastFetchMs < 12000) && this.airport) {
+      this.renderWidget();
+      return;
+    }
+    this._lastFetchKey = fetchKey;
+    this.target = { lat, lon, label };
+    if (!this.airport || calculateDistanceKm(lat, lon, this.airport.lat, this.airport.lon) > 80) {
+      this.airport = this.findNearestAirport(lat, lon);
+    }
+    this.renderWidget();
+    this.refreshNow(true);
+  }
+
+  async refreshNow(force = false) {
+    if (!this.target) return;
+    if (!force && this.isLoading) return;
+    const token = ++this._reqToken;
+    this.isLoading = true;
+    const { lat, lon } = this.target;
+    try {
+      const res = await this.fetchFlightsData(lat, lon);
+      if (token !== this._reqToken) return;
+      if (res && res.airport) {
+        this.airport = res.airport;
+        this.flights = Array.isArray(res.flights) ? res.flights : [];
+        this.summary = res.summary || {
+          total: this.flights.length,
+          arrivals: this.flights.filter(f => f.category === 'ARRIVAL').length,
+          departures: this.flights.filter(f => f.category === 'DEPARTURE').length,
+          overflights: this.flights.filter(f => f.category === 'OVERFLIGHT').length
+        };
+        this.updateTime = res.updateTimeDisplay || '';
+        this.source = res.source || 'live';
+        if (typeof window !== 'undefined' && window.monitorApp && window.monitorApp.radarMap && typeof window.monitorApp.radarMap.updateFlightMarkers === 'function') {
+          window.monitorApp.radarMap.updateFlightMarkers(this.flights, this.airport, this.summary);
+        }
+      }
+    } catch (_) {} finally {
+      if (token === this._reqToken) {
+        this.isLoading = false;
+        this.renderWidget();
+      }
+    }
+  }
+
+  async fetchFlightsData(lat, lon) {
+    this._lastFetchMs = Date.now();
+    // 1. 本機 Node 伺服器 Proxy
+    if (this.isLocalProxyAvailable()) {
+      try {
+        const r = await fetch(`/api/flights/nearby?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&_t=${Date.now()}`, {
+          cache: 'no-store',
+          signal: window.createTimeoutSignal ? window.createTimeoutSignal(7000) : undefined
+        });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.success && j.airport) return j;
+        }
+      } catch (_) {}
+    }
+
+    const nearestAirport = this.findNearestAirport(lat, lon);
+    const scanLat = nearestAirport.distKm <= 160 ? nearestAirport.lat : lat;
+    const scanLon = nearestAirport.distKm <= 160 ? nearestAirport.lon : lon;
+    const isNativeBridge = typeof window !== 'undefined' &&
+      (window.AndroidBridge != null || (window.location && (window.location.protocol === 'file:' || window.location.hostname === 'appassets.androidplatform.net')));
+
+    // 2. Android WebView 原生跨域攔截直連 FlightRadar24 即時區段雷達
+    if (isNativeBridge) {
+      try {
+        const dLat = 0.88;
+        const dLon = 1.05;
+        const bounds = `${(scanLat + dLat).toFixed(3)},${(scanLat - dLat).toFixed(3)},${(scanLon - dLon).toFixed(3)},${(scanLon + dLon).toFixed(3)}`;
+        const frUrl = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${encodeURIComponent(bounds)}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=0&estimated=1&maxage=14400&gliders=0&stats=0&limit=75`;
+        const frRes = await fetch(frUrl, {
+          cache: 'no-store',
+          signal: window.createTimeoutSignal ? window.createTimeoutSignal(6000) : undefined
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
+        if (frRes && typeof frRes === 'object') {
+          const flights = [];
+          for (const [k, v] of Object.entries(frRes)) {
+            if (!Array.isArray(v) || v.length < 15) continue;
+            const fLat = Number(v[1]);
+            const fLon = Number(v[2]);
+            if (!Number.isFinite(fLat) || !Number.isFinite(fLon)) continue;
+            const track = Number(v[3]) || 0;
+            const altFt = Math.max(0, Number(v[4]) || 0);
+            const gsKts = Math.max(0, Number(v[5]) || 0);
+            const acCode = String(v[8] || '').trim().toUpperCase();
+            const reg = String(v[9] || '').trim().toUpperCase();
+            const originIata = String(v[11] || '').trim().toUpperCase();
+            const destIata = String(v[12] || '').trim().toUpperCase();
+            const flightNo = String(v[13] || '').trim().toUpperCase();
+            const onGround = Number(v[14]) === 1;
+            const vRate = Number(v[15]) || 0;
+            const callsign = String(v[16] || flightNo || '').trim().toUpperCase();
+            const airlineIcao = String(v[18] || callsign.slice(0, 3)).trim().toUpperCase();
+            if (!flightNo && !callsign) continue;
+            const distKm = +calculateDistanceKm(lat, lon, fLat, fLon).toFixed(1);
+            const apDistKm = +calculateDistanceKm(nearestAirport.lat, nearestAirport.lon, fLat, fLon).toFixed(1);
+            let category = 'OVERFLIGHT';
+            let phaseZh = '高空巡航';
+            if (destIata && destIata === nearestAirport.iata) {
+              category = 'ARRIVAL';
+              phaseZh = onGround ? '已降落滑行' : (altFt < 4500 ? '最後進場降落' : '入境下降進場');
+            } else if (originIata && originIata === nearestAirport.iata) {
+              category = 'DEPARTURE';
+              phaseZh = onGround ? '跑道準備起飛' : (altFt < 6000 ? '出境起飛爬升' : '出境離場爬升');
+            } else if (apDistKm <= 42 && altFt < 12000) {
+              if (vRate < -250) { category = 'ARRIVAL'; phaseZh = '進場下降中'; }
+              else if (vRate > 250) { category = 'DEPARTURE'; phaseZh = '離場爬升中'; }
+            }
+            const prefix2 = flightNo.slice(0, 2);
+            const airlineZh = this.airlineZhMap[airlineIcao] || this.airlineZhMap[prefix2] || airlineIcao || prefix2 || '民航航班';
+            flights.push({
+              id: k,
+              flightNo: flightNo || callsign,
+              callsign: callsign || flightNo,
+              airlineZh,
+              aircraftCode: acCode,
+              aircraftZh: acCode || '民航客機',
+              reg,
+              originIata,
+              originZh: this.iataZhMap[originIata] || originIata || '',
+              destIata,
+              destZh: this.iataZhMap[destIata] || destIata || '',
+              lat: +fLat.toFixed(4),
+              lon: +fLon.toFixed(4),
+              altFt,
+              altM: Math.round(altFt * 0.3048),
+              speedKmh: Math.round(gsKts * 1.852),
+              track: Math.round(track),
+              vRate,
+              onGround,
+              distKm,
+              category,
+              phaseZh
+            });
+          }
+          if (flights.length > 0) {
+            flights.sort((a, b) => {
+              const pri = (c) => (c.category === 'ARRIVAL' ? 0 : (c.category === 'DEPARTURE' ? 1 : 2));
+              return (pri(a) - pri(b)) || (a.distKm - b.distKm);
+            });
+            const nowHm = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date());
+            return {
+              success: true,
+              source: 'fr24-direct',
+              airport: nearestAirport,
+              summary: {
+                total: flights.length,
+                arrivals: flights.filter(f => f.category === 'ARRIVAL').length,
+                departures: flights.filter(f => f.category === 'DEPARTURE').length,
+                overflights: flights.filter(f => f.category === 'OVERFLIGHT').length
+              },
+              flights: flights.slice(0, 32),
+              updateTimeDisplay: nowHm
+            };
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. 靜態網頁 / GitHub Pages 模式：讀取同源 ./data/parking.json 預同步之全球與台灣機場即時航班快照
+    try {
+      const snapRes = await fetch(`./data/parking.json?_t=${Math.floor(Date.now() / 30000)}`, {
+        cache: 'no-store',
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+      });
+      if (snapRes.ok) {
+        const snapJson = await snapRes.json();
+        const hubs = snapJson?.flightsLive;
+        if (hubs && typeof hubs === 'object') {
+          let bestHub = null;
+          let bestDist = Infinity;
+          for (const h of Object.values(hubs)) {
+            if (!h || !h.airport || !Array.isArray(h.flights)) continue;
+            const d = calculateDistanceKm(lat, lon, Number(h.airport.lat), Number(h.airport.lon));
+            if (d < bestDist) {
+              bestDist = d;
+              bestHub = h;
+            }
+          }
+          if (bestHub) {
+            return {
+              success: true,
+              source: 'static-snapshot',
+              airport: { ...bestHub.airport, distKm: +bestDist.toFixed(1) },
+              summary: bestHub.summary || {
+                total: bestHub.flights.length,
+                arrivals: bestHub.flights.filter(f => f.category === 'ARRIVAL').length,
+                departures: bestHub.flights.filter(f => f.category === 'DEPARTURE').length,
+                overflights: bestHub.flights.filter(f => f.category === 'OVERFLIGHT').length
+              },
+              flights: bestHub.flights,
+              updateTimeDisplay: bestHub.updateTimeDisplay || ''
+            };
+          }
+        }
+      }
+    } catch (_) {}
+
+    return {
+      success: true,
+      source: 'catalog',
+      airport: nearestAirport,
+      summary: { total: 0, arrivals: 0, departures: 0, overflights: 0 },
+      flights: [],
+      updateTimeDisplay: ''
+    };
+  }
+
+  renderWidget() {
+    if (typeof document === 'undefined') return;
+    const card = document.getElementById('flightRadarWidgetCard');
+    if (!card) return;
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    const eJs = (typeof window !== 'undefined' && window.escJsAttr) ? window.escJsAttr : (v => String(v ?? ''));
+
+    const ap = this.airport || this.findNearestAirport(this.target?.lat || 25.0153, this.target?.lon || 121.2213);
+    const sum = this.summary || { total: 0, arrivals: 0, departures: 0, overflights: 0 };
+
+    const dualSwitchHtml = this.centerId === 'dual' ? `
+      <div class="youbike-filter-pills" style="margin-bottom:6px;">
+        <button type="button" class="youbike-filter-btn ${this.dualArea === 'qp' ? 'active' : ''}" onclick="window.flightRadarService?.switchDualArea('qp')">青埔 ‧ 桃園機場 TPE</button>
+        <button type="button" class="youbike-filter-btn ${this.dualArea === 'bp' ? 'active' : ''}" onclick="window.flightRadarService?.switchDualArea('bp')">新埔 ‧ 松山機場 TSA</button>
+      </div>
+    ` : '';
+
+    const filtered = this.filterCat === 'ALL'
+      ? this.flights
+      : this.flights.filter(f => f.category === this.filterCat);
+
+    let listHtml = '';
+    if (this.isLoading && this.flights.length === 0) {
+      listHtml = `
+        <div style="padding:14px 8px;text-align:center;color:var(--text-dim);font-size:0.76rem;">
+          <i class="fa-solid fa-plane-up fa-spin" style="color:#00f0ff;margin-right:6px;"></i>正在掃描 ${eHtml(ap.name)} (${eHtml(ap.iata)}) 周邊空域即時入出境航班...
+        </div>
+      `;
+    } else if (filtered.length === 0) {
+      listHtml = `
+        <div style="padding:12px 10px;text-align:center;color:var(--text-muted);font-size:0.74rem;border:1px dashed var(--border-color);border-radius:8px;line-height:1.5;">
+          目前 ${eHtml(ap.name)} (${eHtml(ap.iata)}) 此篩選分類暫無在途應答機訊號，可切換「全部」或點擊右上角立即掃描
+        </div>
+      `;
+    } else {
+      listHtml = filtered.slice(0, 14).map(fl => {
+        const hasRoute = Boolean(fl.originIata || fl.destIata);
+        const origTxt = fl.originZh ? `${fl.originZh} ${fl.originIata}` : (fl.originIata || '起飛地');
+        const destTxt = fl.destZh ? `${fl.destZh} ${fl.destIata}` : (fl.destIata || '目的地');
+        const isOrigLocal = fl.originIata && fl.originIata === ap.iata;
+        const isDestLocal = fl.destIata && fl.destIata === ap.iata;
+        const routeHtml = hasRoute ? `
+          <div class="flight-route-row">
+            <span class="flight-route-airport ${isOrigLocal ? 'is-local' : ''}">${eHtml(origTxt)}</span>
+            <i class="fa-solid fa-plane" style="font-size:0.65rem;color:var(--color-primary);"></i>
+            <span class="flight-route-airport ${isDestLocal ? 'is-local' : ''}">${eHtml(destTxt)}</span>
+          </div>
+        ` : '';
+
+        return `
+          <div class="flight-item-card cat-${eHtml(fl.category)}"
+               onclick="window.monitorApp?.radarMap?.focusFlightMarker('${eJs(fl.id)}', ${Number(fl.lat) || 0}, ${Number(fl.lon) || 0})"
+               title="點擊在下方地理雷達地圖定位此航班 (${eHtml(fl.flightNo || fl.callsign)})">
+            <div class="flight-card-head">
+              <div class="flight-ident-group">
+                <span class="flight-no-pill">${eHtml(fl.flightNo || fl.callsign)}</span>
+                <span class="flight-airline-name">${eHtml(fl.airlineZh || '')}</span>
+                ${(fl.aircraftZh || fl.aircraftCode) ? `<span class="flight-ac-tag">${eHtml(fl.aircraftZh || fl.aircraftCode)}</span>` : ''}
+              </div>
+              <span class="flight-phase-badge cat-${eHtml(fl.category)}">${fl.category === 'ARRIVAL' ? '🛬 ' : (fl.category === 'DEPARTURE' ? '🛫 ' : '✈️ ')}${eHtml(fl.phaseZh)}</span>
+            </div>
+            ${routeHtml}
+            <div class="flight-telemetry-row">
+              <span>高度 <strong>${Number(fl.altM || 0).toLocaleString()}m</strong> ‧ 時速 <strong>${Number(fl.speedKmh || 0)}km/h</strong> ‧ 航向 ${Number(fl.track || 0)}°</span>
+              <span class="flight-map-locate-tag"><i class="fa-solid fa-location-crosshairs"></i> 距 ${Number(fl.distKm || 0).toFixed(1)}km</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    card.innerHTML = `
+      <div class="widget-title-row">
+        <div class="widget-title">
+          <i class="fa-solid fa-plane-arrival" style="color:#00f0ff;"></i>
+          <span>當地機場入出境航班雷達</span>
+        </div>
+        <div class="live-sync-badge" style="cursor:pointer;" onclick="window.flightRadarService?.refreshNow(true)" title="點擊立即重新掃描周邊空域與機場入出境航班">
+          <span class="pulse-live-dot"></span>
+          <span>${this.isLoading ? '掃描空域中...' : (this.updateTime ? `${eHtml(this.updateTime.slice(0, 5))} 雷達` : 'ADS-B 即時')}</span>
+        </div>
+      </div>
+      ${dualSwitchHtml}
+      <div class="flight-airport-banner">
+        <div class="flight-airport-top">
+          <div class="flight-airport-name">
+            <span class="flight-iata-tag">${eHtml(ap.iata)}</span>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${eHtml(ap.name)}</span>
+          </div>
+          <span class="flight-airport-dist">距鏡頭 ${Number(ap.distKm || 0).toFixed(1)} km</span>
+        </div>
+        <div class="flight-summary-chips">
+          <div class="flight-sum-chip is-arr">
+            <span>🛬 入境進場</span>
+            <strong>${sum.arrivals} 班</strong>
+          </div>
+          <div class="flight-sum-chip is-dep">
+            <span>🛫 出境起飛</span>
+            <strong>${sum.departures} 班</strong>
+          </div>
+          <div class="flight-sum-chip is-ovr">
+            <span>✈️ 上空巡航</span>
+            <strong>${sum.overflights} 班</strong>
+          </div>
+        </div>
+      </div>
+      <div class="flight-filter-bar">
+        <button type="button" class="flight-filter-btn ${this.filterCat === 'ALL' ? 'active' : ''}" onclick="window.flightRadarService?.setFilterCategory('ALL')">全部 (${sum.total})</button>
+        <button type="button" class="flight-filter-btn ${this.filterCat === 'ARRIVAL' ? 'active' : ''}" onclick="window.flightRadarService?.setFilterCategory('ARRIVAL')">🛬 入境 (${sum.arrivals})</button>
+        <button type="button" class="flight-filter-btn ${this.filterCat === 'DEPARTURE' ? 'active' : ''}" onclick="window.flightRadarService?.setFilterCategory('DEPARTURE')">🛫 出境 (${sum.departures})</button>
+        <button type="button" class="flight-filter-btn ${this.filterCat === 'OVERFLIGHT' ? 'active' : ''}" onclick="window.flightRadarService?.setFilterCategory('OVERFLIGHT')">✈️ 巡航 (${sum.overflights})</button>
+      </div>
+      <div class="flight-radar-list">${listHtml}</div>
+    `;
+  }
+}
+
+/* ==========================================================================
+   身歷其境 ‧ 當地即時生活脈動服務 (ImmersiveLocalPulseService)
+   - 1. 📻 當地國家／城市即時廣播電台環境音播放器 (Radio Browser API + 精選各國高穩定電台)
+   - 2. 🌅 當地太陽仰角攝影時刻（黃金時刻 Golden Hour／藍調時刻 Blue Hour）與月相照明度 + 國家節慶 (Nager.Date)
+   - 3. 🌊 海岸／港灣／海島即時浪高、湧浪週期與海表水溫 (Open-Meteo Marine API)
+   - 4. 🏛️ 鏡頭周邊真實世界地標導覽 (Wikipedia GeoSearch API + 360° 街景)
+   ========================================================================== */
+class ImmersiveLocalPulseService {
+  constructor() {
+    this.centerId = 'dual';
+    this.target = null;
+    this.countryCode = 'TW';
+    this.radios = [];
+    this.selectedRadioIdx = 0;
+    this.isPlayingRadio = false;
+    this.audioEl = null;
+    this.marine = null;
+    this.landmarks = [];
+    this.holidays = [];
+    this.astro = null;
+    this.updateTime = '';
+    this.isLoading = false;
+    this._reqToken = 0;
+    this._lastFetchKey = '';
+
+    this.curatedRadios = {
+      TW: [
+        { name: 'ICRT 台灣國際英語廣播 FM 100.7', city: '臺北', genre: '台灣在地新聞與流行音樂', streamUrl: 'https://icrt.leanstream.co/ICRTFM-MP3' },
+        { name: '台北愛樂電台 Philharmonia FM 99.7', city: '台灣', genre: '古典與城市環境音樂', streamUrl: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128' },
+        { name: '台灣輕爵士環境音 Lounge Radio', city: '臺北', genre: '都會爵士與放鬆環境音', streamUrl: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' }
+      ],
+      JP: [
+        { name: 'J-Pop Sakura 櫻花日本懷舊與流行電台', city: '東京', genre: '日本流行與城市街頭之聲', streamUrl: 'https://cast1.torontocast.com:2170/;' },
+        { name: 'J-Pop Powerplay 東京澀谷流行音樂', city: '東京', genre: '日本 J-Pop 熱門放送', streamUrl: 'https://kathy.torontocast.com:3560/;' },
+        { name: '日本爵士與都會海風 Jazz Sakura', city: '橫濱', genre: '日本都會爵士環境音', streamUrl: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' }
+      ],
+      KR: [
+        { name: 'BIG B Radio ‧ 首爾 K-Pop 韓流音樂台', city: '首爾', genre: '韓國 K-Pop 即時放送', streamUrl: 'https://antares.dribbcast.com/proxy/kpop?mp=/s' },
+        { name: '漢江夜色輕爵士與古典環境音', city: '首爾', genre: '漢江夜景環境音樂', streamUrl: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' }
+      ],
+      CH: [
+        { name: 'Radio Swiss Classic 瑞士國家古典電台', city: '蘇黎世', genre: '阿爾卑斯山岳古典樂', streamUrl: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128' },
+        { name: 'Radio Swiss Jazz 瑞士國家爵士電台', city: '伯恩', genre: '瑞士都會爵士樂', streamUrl: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' },
+        { name: 'Radio Swiss Pop 瑞士國家流行音樂台', city: '日內瓦', genre: '歐洲流行音樂', streamUrl: 'https://stream.srg-ssr.ch/m/rsp/mp3_128' }
+      ],
+      GB: [
+        { name: 'Classic FM UK 倫敦經典古典音樂台', city: '倫敦', genre: '英倫古典音樂放送', streamUrl: 'https://media-ice.musicradio.com/ClassicFMMP3' },
+        { name: 'BBC World Service 英國全球新聞之聲', city: '倫敦', genre: '全球英語即時新聞', streamUrl: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service' }
+      ],
+      FR: [
+        { name: 'FIP Radio Paris 巴黎國家音樂廣播', city: '巴黎', genre: '法式香頌、爵士與世界音樂', streamUrl: 'https://icecast.radiofrance.fr/fip-midfi.mp3' },
+        { name: 'France Musique 法國國家古典音樂台', city: '巴黎', genre: '法國古典與劇院音樂', streamUrl: 'https://icecast.radiofrance.fr/francemusique-midfi.mp3' }
+      ],
+      NO: [
+        { name: 'NRK Klassisk 挪威國家古典音樂台', city: '奧斯陸', genre: '北歐峽灣古典樂', streamUrl: 'https://lyd.nrk.no/nrk_radio_klassisk_mp3_h' },
+        { name: 'NRK Jazz 挪威北極圈爵士之聲', city: '特羅姆瑟', genre: '北歐極光爵士樂', streamUrl: 'https://lyd.nrk.no/nrk_radio_jazz_mp3_h' }
+      ],
+      FI: [
+        { name: 'Yle Klassinen 芬蘭國家古典廣播', city: '羅瓦涅米', genre: '拉普蘭極光古典音樂', streamUrl: 'https://icecast.live.yle.fi/radio/YleKlassinen/icecast.audio' }
+      ],
+      US: [
+        { name: 'SomaFM Groove Salad 舊金山環境弛放音樂', city: '舊金山', genre: 'Chillout ‧ 海岸環境音樂', streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+        { name: 'SomaFM Lush 美洲都會療癒人聲電台', city: '紐約', genre: '都會環境與輕柔女聲', streamUrl: 'https://ice1.somafm.com/lush-128-mp3' },
+        { name: 'SomaFM Drone Zone 太空與自然環境音', city: '美國', genre: '深空與大自然冥想環境音', streamUrl: 'https://ice1.somafm.com/dronezone-128-mp3' }
+      ],
+      DEFAULT: [
+        { name: 'SomaFM Groove Salad 全球環境弛放之聲', city: '全球', genre: 'Ambient Chillout 環境音', streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3' },
+        { name: 'Radio Swiss Classic 歐洲阿爾卑斯古典台', city: '瑞士', genre: '24H 純淨古典音樂', streamUrl: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128' },
+        { name: 'Radio Swiss Jazz 蘇黎世都會爵士台', city: '瑞士', genre: '24H 輕鬆爵士環境音', streamUrl: 'https://stream.srg-ssr.ch/m/rsj/mp3_128' }
+      ]
+    };
+
+    this.twHolidays = [
+      { date: '01-01', localName: '中華民國開國紀念日（元旦）' },
+      { date: '02-17', localName: '農曆春節連假' },
+      { date: '02-28', localName: '和平紀念日' },
+      { date: '04-04', localName: '兒童節與清明節民族掃墓節' },
+      { date: '05-01', localName: '五一勞動節' },
+      { date: '06-19', localName: '端午節' },
+      { date: '09-25', localName: '中秋節' },
+      { date: '10-10', localName: '中華民國國慶日（雙十節）' },
+      { date: '12-25', localName: '行憲紀念日／聖誕節' }
+    ];
+  }
+
+  isLocalProxyAvailable() {
+    return typeof window !== 'undefined' && window.AndroidBridge == null && window.location &&
+      window.location.hostname !== 'appassets.androidplatform.net' &&
+      !window.location.hostname.endsWith('.github.io') &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  }
+
+  inferCountryCode(lat, lon, hintCc = '', centerId = '') {
+    const clean = String(hintCc || '').trim().toUpperCase();
+    if (/^[A-Z]{2}$/.test(clean)) return clean;
+    if (typeof LocalGeoBusService !== 'undefined' && LocalGeoBusService.isTaiwanCoords(lat, lon)) return 'TW';
+    if (lat >= 24.0 && lat <= 46.5 && lon >= 122.8 && lon <= 149.0) return 'JP';
+    if (lat >= 33.0 && lat <= 39.0 && lon >= 124.0 && lon <= 131.5) return 'KR';
+    if (centerId === 'japan') return 'JP';
+    if (centerId === 'korea') return 'KR';
+    if (window.flightRadarService) {
+      const ap = window.flightRadarService.findNearestAirport(lat, lon);
+      if (ap && ap.country && ap.distKm <= 800) return ap.country;
+    }
+    return 'US';
+  }
+
+  // 即時計算當地太陽仰角（黃金時刻 Golden Hour／藍調時刻 Blue Hour）與月相照明度
+  computeSolarAndLunarPulse(lat, lon) {
+    const now = new Date();
+    const rad = Math.PI / 180;
+    // 1. 計算太陽仰角 (Solar Elevation Angle)
+    const dayOfYear = Math.floor((now - new Date(Date.UTC(now.getUTCFullYear(), 0, 0))) / 86400000);
+    const utcHours = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+    const gamma = ((2 * Math.PI) / 365) * (dayOfYear - 1 + (utcHours - 12) / 24);
+    const eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+    const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma);
+    const tst = (utcHours * 60 + eqTime + 4 * lon + 1440) % 1440;
+    const ha = (tst / 4 < 0 ? tst / 4 + 180 : tst / 4 - 180) * rad;
+    const sinElev = Math.sin(lat * rad) * Math.sin(decl) + Math.cos(lat * rad) * Math.cos(decl) * Math.cos(ha);
+    const elevDeg = +(Math.asin(Math.max(-1, Math.min(1, sinElev))) / rad).toFixed(1);
+
+    let lightTitle = '☀️ 日間明朗';
+    let lightSub = `太陽仰角 ${elevDeg}° ‧ 日間自然光`;
+    let lightColor = '#fbbf24';
+    if (elevDeg >= 0 && elevDeg <= 6.5) {
+      lightTitle = '🌇 黃金時刻 Golden Hour';
+      lightSub = `仰角 ${elevDeg}° ‧ 最佳柔和金光攝影時段`;
+      lightColor = '#f59e0b';
+    } else if (elevDeg >= -6.5 && elevDeg < 0) {
+      lightTitle = '🌌 藍調時刻 Blue Hour';
+      lightSub = `仰角 ${elevDeg}° ‧ 夢幻湛藍天幕與城市華燈`;
+      lightColor = '#818cf8';
+    } else if (elevDeg < -6.5) {
+      lightTitle = '🌃 璀璨夜色';
+      lightSub = `太陽仰角 ${elevDeg}° ‧ 夜間燈火與星空觀測`;
+      lightColor = '#a855f7';
+    }
+
+    // 2. 計算月相與照明度 (Lunar Phase & Illumination)
+    const synodicMonth = 29.530588853;
+    const knownNewMoonMs = Date.UTC(2000, 0, 6, 18, 14, 0);
+    const ageDays = (((now.getTime() - knownNewMoonMs) / 86400000) % synodicMonth + synodicMonth) % synodicMonth;
+    const phaseRatio = ageDays / synodicMonth;
+    const illumPct = Math.round(((1 - Math.cos(2 * Math.PI * phaseRatio)) / 2) * 100);
+    let moonName = '🌕 滿月';
+    if (phaseRatio < 0.03 || phaseRatio >= 0.97) moonName = '🌑 新月 (觀星極佳)';
+    else if (phaseRatio < 0.22) moonName = '🌒 眉月';
+    else if (phaseRatio < 0.28) moonName = '🌓 上弦月';
+    else if (phaseRatio < 0.47) moonName = '🌔 盈凸月';
+    else if (phaseRatio < 0.53) moonName = '🌕 滿月';
+    else if (phaseRatio < 0.72) moonName = '🌖 虧凸月';
+    else if (phaseRatio < 0.78) moonName = '🌗 下弦月';
+    else moonName = '🌘 殘月';
+
+    return {
+      elevDeg,
+      lightTitle,
+      lightSub,
+      lightColor,
+      moonName,
+      illumPct,
+      lunarAge: +ageDays.toFixed(1)
+    };
+  }
+
+  syncForLocation(centerId, opts = {}, force = false) {
+    this.centerId = centerId || (window.monitorApp ? window.monitorApp.currentCenterId : 'dual');
+    let lat = Number(opts.lat);
+    let lon = Number(opts.lon);
+    let label = opts.label || '';
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      if (this.centerId === 'banqiao') {
+        lat = 25.0232; lon = 121.4688; label = '板橋新埔商圈';
+      } else {
+        lat = 25.0153; lon = 121.2213; label = '桃園青埔特區';
+      }
+    }
+    const cc = this.inferCountryCode(lat, lon, opts.countryCode, this.centerId);
+    const prevCc = this.countryCode;
+    this.countryCode = cc;
+    this.astro = this.computeSolarAndLunarPulse(lat, lon);
+
+    if (this.radios.length === 0 || prevCc !== cc) {
+      this.radios = [...(this.curatedRadios[cc] || this.curatedRadios.DEFAULT)];
+      if (!this.isPlayingRadio) {
+        this.selectedRadioIdx = 0;
+      }
+      if (prevCc !== cc) {
+        this.holidays = [];
+      }
+    }
+
+    const fetchKey = `${lat.toFixed(2)},${lon.toFixed(2)}:${cc}`;
+    if (!force && fetchKey === this._lastFetchKey && this.landmarks.length > 0) {
+      this.renderWidget();
+      return;
+    }
+    if (this.target && calculateDistanceKm(lat, lon, this.target.lat, this.target.lon) > 35) {
+      this.marine = null;
+      this.landmarks = [];
+    }
+    this._lastFetchKey = fetchKey;
+    this.target = { lat, lon, label, cc };
+    this.renderWidget();
+    this.refreshNow(true);
+  }
+
+  async refreshNow(force = false) {
+    if (!this.target) return;
+    if (!force && this.isLoading) return;
+    const token = ++this._reqToken;
+    this.isLoading = true;
+    const { lat, lon, cc } = this.target;
+    this.astro = this.computeSolarAndLunarPulse(lat, lon);
+
+    try {
+      const data = await this.fetchImmersiveData(lat, lon, cc);
+      if (token !== this._reqToken) return;
+      if (data) {
+        this.marine = data.marine || null;
+        if (Array.isArray(data.radios) && data.radios.length > 0) {
+          this.radios = data.radios;
+          if (this.selectedRadioIdx >= this.radios.length) this.selectedRadioIdx = 0;
+        }
+        this.landmarks = Array.isArray(data.landmarks) ? data.landmarks : [];
+        this.holidays = Array.isArray(data.holidays) ? data.holidays : [];
+        this.updateTime = data.updateTimeDisplay || '';
+      }
+    } catch (_) {} finally {
+      if (token === this._reqToken) {
+        this.isLoading = false;
+        this.renderWidget();
+      }
+    }
+  }
+
+  async fetchImmersiveData(lat, lon, cc) {
+    if (this.isLocalProxyAvailable()) {
+      try {
+        const r = await fetch(`/api/immersive/local?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}&cc=${encodeURIComponent(cc)}&_t=${Date.now()}`, {
+          cache: 'no-store',
+          signal: window.createTimeoutSignal ? window.createTimeoutSignal(7000) : undefined
+        });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.success) return j;
+        }
+      } catch (_) {}
+    }
+
+    // 純前端 CORS 直連模式 (Open-Meteo Marine、Radio Browser、Wikipedia origin=*、Nager.Date 均原生支援 Access-Control-Allow-Origin: *)
+    const normTw = (s) => (typeof LocalGeoBusService !== 'undefined' && typeof LocalGeoBusService.normalizeIntlTwLabel === 'function')
+      ? LocalGeoBusService.normalizeIntlTwLabel(s)
+      : String(s || '');
+
+    const [marineRes, wikiRes, radioRes, holidayRes] = await Promise.allSettled([
+      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature`, {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+      }).then(r => r.ok ? r.json() : null),
+      fetch(`https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat.toFixed(4)}|${lon.toFixed(4)}&gsradius=10000&gslimit=5&format=json&origin=*`, {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+      }).then(r => r.ok ? r.json() : null),
+      fetch(`https://de1.api.radio-browser.info/json/stations/search?countrycode=${encodeURIComponent(cc)}&hidebroken=true&order=clickcount&reverse=true&limit=8&https=true`, {
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+      }).then(r => r.ok ? r.json() : null),
+      cc === 'TW'
+        ? Promise.resolve(null)
+        : fetch(`https://date.nager.at/api/v3/NextPublicHolidays/${encodeURIComponent(cc)}`, {
+            signal: window.createTimeoutSignal ? window.createTimeoutSignal(4500) : undefined
+          }).then(r => r.ok ? r.json() : null)
+    ]);
+
+    let marine = null;
+    if (marineRes.status === 'fulfilled' && marineRes.value?.current) {
+      const mc = marineRes.value.current;
+      if (mc.wave_height != null || mc.sea_surface_temperature != null) {
+        marine = {
+          waveHeightM: mc.wave_height != null ? +Number(mc.wave_height).toFixed(2) : null,
+          waveDirDeg: mc.wave_direction != null ? Math.round(Number(mc.wave_direction)) : null,
+          wavePeriodSec: mc.wave_period != null ? +Number(mc.wave_period).toFixed(1) : null,
+          swellHeightM: mc.swell_wave_height != null ? +Number(mc.swell_wave_height).toFixed(2) : null,
+          seaTempC: mc.sea_surface_temperature != null ? +Number(mc.sea_surface_temperature).toFixed(1) : null
+        };
+      }
+    }
+
+    const landmarks = [];
+    const geoList = wikiRes.status === 'fulfilled' ? (wikiRes.value?.query?.geosearch || []) : [];
+    for (const item of geoList.slice(0, 5)) {
+      const title = normTw(item.title || '');
+      if (!title) continue;
+      landmarks.push({
+        pageId: item.pageid,
+        title,
+        distMeters: Math.round(Number(item.dist) || 0),
+        lat: Number(item.lat),
+        lon: Number(item.lon),
+        summary: '',
+        url: `https://zh.wikipedia.org/wiki/${encodeURIComponent(item.title)}`
+      });
+    }
+
+    const curated = this.curatedRadios[cc] || this.curatedRadios.DEFAULT;
+    const radios = [...curated];
+    const seenUrls = new Set(radios.map(r => r.streamUrl));
+    if (radioRes.status === 'fulfilled' && Array.isArray(radioRes.value)) {
+      for (const st of radioRes.value) {
+        const u = String(st.url_resolved || st.url || '').trim();
+        const nm = String(st.name || '').trim();
+        if (!u.startsWith('https://') || !nm || seenUrls.has(u)) continue;
+        seenUrls.add(u);
+        radios.push({
+          name: normTw(nm).slice(0, 42),
+          city: normTw(st.state || st.country || cc).slice(0, 16),
+          genre: String(st.tags || '當地廣播').split(',')[0].slice(0, 18),
+          streamUrl: u
+        });
+        if (radios.length >= 6) break;
+      }
+    }
+
+    const holidays = [];
+    const yearNow = new Date().getFullYear();
+    const todayIso = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+    if (cc === 'TW') {
+      for (const h of this.twHolidays) {
+        const fullDate = `${yearNow}-${h.date}`;
+        if (fullDate >= todayIso) {
+          holidays.push({ date: fullDate, localName: h.localName, name: h.localName, isToday: fullDate === todayIso });
+        }
+      }
+      if (holidays.length === 0) {
+        holidays.push({ date: `${yearNow + 1}-01-01`, localName: '中華民國開國紀念日（元旦）', name: 'New Year', isToday: false });
+      }
+    } else if (holidayRes.status === 'fulfilled' && Array.isArray(holidayRes.value)) {
+      for (const h of holidayRes.value.slice(0, 3)) {
+        holidays.push({
+          date: h.date,
+          localName: normTw(h.localName || h.name || ''),
+          name: h.name || '',
+          isToday: h.date === todayIso
+        });
+      }
+    }
+
+    return {
+      success: true,
+      countryCode: cc,
+      marine,
+      radios,
+      landmarks,
+      holidays: holidays.slice(0, 3)
+    };
+  }
+
+  selectRadioStation(idx) {
+    const nextIdx = Number(idx);
+    if (!Number.isFinite(nextIdx) || nextIdx < 0 || nextIdx >= this.radios.length) return;
+    this.selectedRadioIdx = nextIdx;
+    if (this.isPlayingRadio) {
+      this.playCurrentRadio();
+    } else {
+      this.renderWidget();
+    }
+  }
+
+  toggleRadioPlay() {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    if (this.isPlayingRadio) {
+      this.stopRadio();
+    } else {
+      this.playCurrentRadio();
+    }
+  }
+
+  playCurrentRadio() {
+    const st = this.radios[this.selectedRadioIdx] || this.radios[0];
+    if (!st || !st.streamUrl) return;
+    try {
+      if (!this.audioEl) {
+        this.audioEl = new Audio();
+        this.audioEl.preload = 'none';
+      } else {
+        this.audioEl.pause();
+      }
+      this.audioEl.src = st.streamUrl;
+      this.isPlayingRadio = true;
+      this.renderWidget();
+      const playPromise = this.audioEl.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {
+          // 若社群電台串流瞬斷，自動切換至下一台高穩定電台
+          if (this.radios.length > 1 && this.selectedRadioIdx === 0) {
+            this.selectedRadioIdx = 1;
+            const fallbackSt = this.radios[1];
+            if (fallbackSt && this.audioEl) {
+              this.audioEl.src = fallbackSt.streamUrl;
+              this.audioEl.play().catch(() => {
+                this.isPlayingRadio = false;
+                this.renderWidget();
+              });
+              this.renderWidget();
+              return;
+            }
+          }
+          this.isPlayingRadio = false;
+          this.renderWidget();
+          if (window.showToast) window.showToast('此電台串流暫時忙碌，請從選單切換其他當地電台', 'warning');
+        });
+      }
+      if (window.showToast) {
+        window.showToast(`📻 正在播放當地廣播：${st.name}`, 'info');
+      }
+    } catch (_) {
+      this.isPlayingRadio = false;
+      this.renderWidget();
+    }
+  }
+
+  stopRadio() {
+    this.isPlayingRadio = false;
+    if (this.audioEl) {
+      try {
+        this.audioEl.pause();
+        this.audioEl.removeAttribute('src');
+        this.audioEl.load();
+      } catch (_) {}
+    }
+    this.renderWidget();
+  }
+
+  renderWidget() {
+    if (typeof document === 'undefined') return;
+    const card = document.getElementById('immersivePulseWidgetCard');
+    if (!card) return;
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+
+    const astro = this.astro || this.computeSolarAndLunarPulse(this.target?.lat || 25.0153, this.target?.lon || 121.2213);
+    const activeRadio = this.radios[this.selectedRadioIdx] || this.radios[0] || null;
+    const nextHoliday = this.holidays[0] || null;
+    const holidayTxt = nextHoliday
+      ? `${nextHoliday.isToday ? '🎉 今日節慶：' : '🗓️ 即將到來：'}${nextHoliday.date.slice(5)} ${nextHoliday.localName}`
+      : '🗓️ 平日生活作息';
+
+    const radioBoxHtml = activeRadio ? `
+      <div class="immersive-radio-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span style="font-size:0.70rem;font-weight:800;color:#d8b4fe;">
+            <i class="fa-solid fa-radio" style="margin-right:4px;"></i>當地即時廣播 ‧ 環境之聲 (${eHtml(this.countryCode)})
+          </span>
+          <span style="font-size:0.64rem;color:var(--text-dim);">${eHtml(activeRadio.genre || '即時放送')}</span>
+        </div>
+        <div class="immersive-radio-controls">
+          <button type="button" class="radio-play-btn ${this.isPlayingRadio ? 'is-playing' : ''}"
+                  onclick="window.immersivePulseService?.toggleRadioPlay()"
+                  title="${this.isPlayingRadio ? '停止播放當地廣播' : '點擊播放當地真實廣播電台環境音'}">
+            <i class="fa-solid ${this.isPlayingRadio ? 'fa-stop' : 'fa-play'}"></i>
+            <span>${this.isPlayingRadio ? '播放中' : '聆聽廣播'}</span>
+          </button>
+          <select class="radio-station-select" aria-label="選擇當地廣播電台"
+                  onchange="window.immersivePulseService?.selectRadioStation(this.value)">
+            ${this.radios.map((r, i) => `<option value="${i}" ${i === this.selectedRadioIdx ? 'selected' : ''}>${eHtml(r.name)}${r.city ? ` (${eHtml(r.city)})` : ''}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    ` : '';
+
+    const marineHtml = (this.marine && (this.marine.waveHeightM != null || this.marine.seaTempC != null)) ? `
+      <div class="immersive-marine-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.70rem;font-weight:800;color:#67e8f9;">
+            <i class="fa-solid fa-water" style="margin-right:4px;"></i>海岸／港灣即時浪況與海表水溫
+          </span>
+          <span style="font-size:0.63rem;color:var(--text-dim);">Open-Meteo Marine</span>
+        </div>
+        <div class="immersive-marine-grid">
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">即時浪高</div>
+            <div class="marine-metric-val">${this.marine.waveHeightM != null ? `${this.marine.waveHeightM}m` : '--'}</div>
+          </div>
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">浪湧週期</div>
+            <div class="marine-metric-val">${this.marine.wavePeriodSec != null ? `${this.marine.wavePeriodSec}s` : '--'}</div>
+          </div>
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">長浪湧高</div>
+            <div class="marine-metric-val">${this.marine.swellHeightM != null ? `${this.marine.swellHeightM}m` : '--'}</div>
+          </div>
+          <div class="marine-metric-item">
+            <div class="marine-metric-lbl">海表水溫</div>
+            <div class="marine-metric-val">${this.marine.seaTempC != null ? `${this.marine.seaTempC}°C` : '--'}</div>
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    const landmarksHtml = this.landmarks.length > 0 ? `
+      <div style="margin-top:4px;">
+        <div style="font-size:0.69rem;font-weight:800;color:var(--text-muted);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;">
+          <span><i class="fa-solid fa-landmark" style="color:#38bdf8;margin-right:4px;"></i>鏡頭周邊真實世界地標導覽</span>
+          <span style="font-size:0.62rem;color:var(--text-dim);">維基百科 GeoSearch</span>
+        </div>
+        <div class="immersive-landmark-list">
+          ${this.landmarks.slice(0, 4).map(lm => {
+            const distTxt = lm.distMeters >= 1000 ? `${(lm.distMeters / 1000).toFixed(1)}km` : `${lm.distMeters}m`;
+            const svUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${encodeURIComponent(lm.lat)},${encodeURIComponent(lm.lon)}`;
+            return `
+              <div class="immersive-landmark-item">
+                <div class="landmark-head-row">
+                  <a class="landmark-title-link" href="${eHtml(lm.url)}" target="_blank" rel="noopener noreferrer"
+                     onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, this.href);}"
+                     title="閱讀「${eHtml(lm.title)}」維基百科介紹">
+                    <i class="fa-brands fa-wikipedia-w" style="font-size:0.64rem;margin-right:3px;"></i>${eHtml(lm.title)}
+                  </a>
+                  <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                    <a href="${eHtml(svUrl)}" target="_blank" rel="noopener noreferrer"
+                       onclick="if(window.openYouBikeMap){window.openYouBikeMap(event, this.href);}"
+                       style="font-size:0.62rem;color:#f59e0b;text-decoration:none;font-weight:700;" title="開啟 360° 街景">
+                      <i class="fa-solid fa-street-view"></i> 街景
+                    </a>
+                    <span class="landmark-dist-pill">距 ${distTxt}</span>
+                  </div>
+                </div>
+                ${lm.summary ? `<div class="landmark-summary-txt">${eHtml(lm.summary)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    ` : '';
+
+    card.innerHTML = `
+      <div class="widget-title-row">
+        <div class="widget-title">
+          <i class="fa-solid fa-compass" style="color:#c084fc;"></i>
+          <span>身歷其境 ‧ 當地即時脈動</span>
+        </div>
+        <span class="widget-badge">${eHtml(this.countryCode)} ‧ 現場感知</span>
+      </div>
+      ${radioBoxHtml}
+      <div class="immersive-astro-grid">
+        <div class="immersive-mini-card">
+          <div class="immersive-mini-label"><i class="fa-solid fa-camera-retro" style="color:${astro.lightColor};"></i>當地光影與攝影時刻</div>
+          <div class="immersive-mini-val" style="color:${astro.lightColor};">${eHtml(astro.lightTitle)}</div>
+          <div class="immersive-mini-sub" title="${eHtml(astro.lightSub)}">${eHtml(astro.lightSub)}</div>
+        </div>
+        <div class="immersive-mini-card">
+          <div class="immersive-mini-label"><i class="fa-solid fa-moon" style="color:#fde047;"></i>天文月相 ＆ 當地節慶</div>
+          <div class="immersive-mini-val">${eHtml(astro.moonName)} <span style="font-size:0.68rem;color:#38bdf8;">${astro.illumPct}%</span></div>
+          <div class="immersive-mini-sub" title="${eHtml(holidayTxt)}">${eHtml(holidayTxt)}</div>
+        </div>
+      </div>
+      ${marineHtml}
+      ${landmarksHtml}
+    `;
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.QrCodeSvgGenerator = QrCodeSvgGenerator;
   window.arrivalAlarmManager = new ArrivalAlarmManager();
   window.traParkingService = new TraAndParkingService();
   window.freewaySpeedService = new FreewaySpeedService();
   window.travelToolkitService = new TravelToolkitService();
+  window.flightRadarService = new FlightRadarService();
+  window.immersivePulseService = new ImmersiveLocalPulseService();
 }
 
 /**
@@ -37797,6 +39511,18 @@ class MonitorApp {
           tz: inferredTz
         });
       }
+      if (window.flightRadarService) {
+        window.flightRadarService.syncForLocation(cid, { lat, lon, label: areaDisplay });
+      }
+      if (window.immersivePulseService) {
+        window.immersivePulseService.syncForLocation(cid, {
+          lat,
+          lon,
+          label: areaDisplay,
+          countryCode: admin?.countryCode || '',
+          tz: inferredTz
+        });
+      }
 
       if (this.weatherMonitor) {
         this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, inferredTz);
@@ -37897,6 +39623,8 @@ class MonitorApp {
       if (window.traParkingService && window.traParkingService.target) window.traParkingService.refreshNow(true);
       if (window.freewaySpeedService && window.freewaySpeedService.visibleOnBar) window.freewaySpeedService.refreshNow(true);
       if (!skipLocalBus && window.localBusService && window.localBusService.target) window.localBusService.refreshNow(true);
+      if (window.flightRadarService && window.flightRadarService.target) window.flightRadarService.refreshNow(true);
+      if (window.immersivePulseService && window.immersivePulseService.target) window.immersivePulseService.refreshNow(true);
     }
   }
 
