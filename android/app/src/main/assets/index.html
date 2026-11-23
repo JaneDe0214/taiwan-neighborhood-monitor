@@ -10915,6 +10915,264 @@ html[data-theme="light"] .immersive-news-link {
   color: #0f172a !important;
 }
 
+/* ==========================================================================
+   全球即時氣象雷達 × 60fps 動態飛機與真實風場戰術疊加層 & 地理雷達 LIVE 動態系統
+   ========================================================================== */
+.w-radar-tactical-bar,
+.geo-radar-tactical-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.w-radar-tac-btn,
+.geo-radar-tac-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 5px;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: rgba(15, 23, 42, 0.72);
+  color: #94a3b8;
+  font-size: 0.66rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  white-space: nowrap;
+  transition: all 0.16s ease;
+}
+.w-radar-tac-btn:hover,
+.geo-radar-tac-btn:hover {
+  border-color: #38bdf8;
+  color: #f8fafc;
+}
+.w-radar-tac-btn.active,
+.geo-radar-tac-btn.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(14, 165, 233, 0.25));
+  border-color: #00f0ff;
+  color: #e0f2fe;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.22);
+}
+.geo-radar-tac-btn.is-view {
+  border-color: rgba(168, 85, 247, 0.38);
+  color: #e9d5ff;
+  background: rgba(88, 28, 135, 0.26);
+}
+.geo-radar-tac-btn.is-view:hover {
+  border-color: #c084fc;
+  background: rgba(126, 34, 206, 0.38);
+}
+
+.weather-radar-live-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: auto;
+  cursor: crosshair;
+}
+.weather-radar-live-canvas.is-passthrough {
+  pointer-events: none;
+}
+
+.w-radar-floating-hud-top {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  right: 7px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  pointer-events: none;
+}
+.w-radar-hud-pill {
+  background: rgba(6, 11, 23, 0.84);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 240, 255, 0.32);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #e0f2fe;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.w-radar-hud-pill.is-wind {
+  border-color: rgba(52, 211, 153, 0.36);
+  color: #a7f3d0;
+}
+
+.w-radar-locked-bar,
+.geo-radar-cockpit-hud {
+  margin-top: 6px;
+  background: linear-gradient(135deg, rgba(8, 47, 73, 0.65), rgba(15, 23, 42, 0.92));
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 0.7rem;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.14);
+}
+.radar-hud-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.radar-hud-callsign {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 800;
+  color: #00f0ff;
+  font-size: 0.75rem;
+}
+.radar-hud-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.radar-hud-mini-btn {
+  background: rgba(14, 165, 233, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  color: #bae6fd;
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.radar-hud-mini-btn:hover,
+.radar-hud-mini-btn.active {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+}
+.radar-hud-telemetry-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: #cbd5e1;
+}
+
+.geo-radar-timeline-bar {
+  margin-top: 6px;
+  background: rgba(10, 15, 28, 0.78);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  padding: 5px 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.geo-radar-play-btn {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.16s ease;
+}
+.geo-radar-play-btn.is-playing {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: #6ee7b7;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.38);
+}
+.geo-radar-slider {
+  flex: 1;
+  min-width: 60px;
+  height: 4px;
+  accent-color: #00f0ff;
+  cursor: pointer;
+}
+.geo-radar-frame-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(2, 132, 199, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 5px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.geo-radar-frame-tag.is-forecast {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(251, 191, 36, 0.38);
+}
+
+/* Leaflet 飛機與太空站 1Hz 運動學 60fps 線性平滑推進動畫 (僅於地圖靜止未拖曳時啟用，零拖曳延遲) */
+#leafletMap.kinematic-smooth-active .leaflet-marker-icon.flight-radar-pin,
+#leafletMap.kinematic-smooth-active .leaflet-marker-icon.iss-orbital-pin {
+  transition: transform 1.02s linear;
+}
+.flight-radar-pin.is-locked-target .flight-pin-badge {
+  background: #065f46 !important;
+  border-color: #34d399 !important;
+  color: #ecfdf5 !important;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.85) !important;
+}
+@keyframes quake-ring-pulse {
+  0% { transform: scale(0.55); opacity: 0.92; }
+  100% { transform: scale(2.35); opacity: 0; }
+}
+
+html[data-theme="light"] .w-radar-tac-btn,
+html[data-theme="light"] .geo-radar-tac-btn {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  color: #475569 !important;
+}
+html[data-theme="light"] .w-radar-tac-btn.active,
+html[data-theme="light"] .geo-radar-tac-btn.active {
+  background: #e0f2fe !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .w-radar-locked-bar,
+html[data-theme="light"] .geo-radar-cockpit-hud,
+html[data-theme="light"] .geo-radar-timeline-bar {
+  background: #f8fafc !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+  color: #0f172a !important;
+}
+html[data-theme="light"] .radar-hud-callsign {
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .radar-hud-telemetry-grid {
+  color: #334155 !important;
+}
+
 </style>
 </head>
 <body>
@@ -11464,13 +11722,42 @@ html[data-theme="light"] .immersive-news-link {
           <button class="radar-layer-btn" data-intl-overlay="clouds" onclick="window.weatherMonitor?.switchIntlRadarOverlay('clouds', this)" title="全球衛星雲圖與降水">衛星雲圖</button>
         </div>
 
+        <!-- 戰術動態疊加控制列：動態飛機 / 真實風場流線 / 360° 都卜勒波束 / 空域尺度 -->
+        <div id="weatherRadarTacticalBar" class="w-radar-tactical-bar">
+          <button type="button" id="wRadarTogglePlanesBtn" class="w-radar-tac-btn active" onclick="window.weatherSkyTacticalOverlay?.toggleLayer('planes')" title="在氣象雷達上疊加真實 ADS-B 動態飛行航班、漸層尾跡與機場起降導引線">
+            <i class="fa-solid fa-plane-up"></i> <span id="wRadarPlanesBtnText">動態飛機</span>
+          </button>
+          <button type="button" id="wRadarToggleWindBtn" class="w-radar-tac-btn active" onclick="window.weatherSkyTacticalOverlay?.toggleLayer('wind')" title="在氣象雷達上疊加 Open-Meteo 實測風向與風速氣流粒子">
+            <i class="fa-solid fa-wind"></i> <span>風場流線</span>
+          </button>
+          <button type="button" id="wRadarToggleSweepBtn" class="w-radar-tac-btn active" onclick="window.weatherSkyTacticalOverlay?.toggleLayer('sweep')" title="切換 360° 都卜勒雷達旋轉掃描波束與距離同心圓">
+            <i class="fa-solid fa-compass"></i> <span>雷達波束</span>
+          </button>
+          <button type="button" id="wRadarScopeModeBtn" class="w-radar-tac-btn" onclick="window.weatherSkyTacticalOverlay?.cycleScopeMode()" title="切換空域特寫 (80km) ／ 廣域全覽 (380km) ／ 底圖互動模式">
+            <i class="fa-solid fa-crosshairs"></i> <span id="wRadarScopeBtnText">80km 空域</span>
+          </button>
+        </div>
+
         <div id="radarPreviewBox" class="radar-preview-box" onclick="if(!window.monitorApp?.isInternationalCenter()){window.monitorApp?.openFullscreen('RADAR_CWA');}">
           <img id="radarImg" class="radar-img" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png" referrerpolicy="no-referrer" alt="中央氣象署即時雷達回波" />
           <iframe id="radarWindyFrame" title="全球即時氣象雷達" loading="lazy" style="display:none; width:100%; height:100%; border:none;" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <canvas id="weatherRadarLiveCanvas" class="weather-radar-live-canvas" width="380" height="380" aria-label="全球即時氣象雷達動態飛機與風場戰術疊加層"></canvas>
+          <div id="wRadarFloatingHudTop" class="w-radar-floating-hud-top">
+            <span id="wRadarAirspaceBadge" class="w-radar-hud-pill is-live">
+              <span class="pulse-live-dot"></span>
+              <span id="wRadarAirspaceText">✈️ 空域掃描中</span>
+            </span>
+            <span id="wRadarWindBadge" class="w-radar-hud-pill is-wind">
+              <i class="fa-solid fa-location-arrow" id="wRadarWindArrowIcon"></i>
+              <span id="wRadarWindText">風場同步中</span>
+            </span>
+          </div>
           <div id="radarOverlayBadge" class="radar-overlay-badge">
-            <span class="pulse-dot"></span> 點擊檢視高解析大圖
+            <span class="pulse-dot"></span> 點擊飛機鎖定追蹤 ‧ 點擊此處放大
           </div>
         </div>
+
+        <div id="weatherRadarLockedBar" class="w-radar-locked-bar" style="display:none;"></div>
       </div>
 
       <!-- 區域 7：周遭地理雷達地圖 -->
@@ -11484,7 +11771,37 @@ html[data-theme="light"] .immersive-news-link {
             <span id="radarScopeBadge" class="widget-badge">500m/1km 安全圈</span>
           </div>
         </div>
+
+        <div id="geoRadarTacticalBar" class="geo-radar-tactical-bar">
+          <button type="button" id="geoToggleFlightsBtn" class="geo-radar-tac-btn active" onclick="window.monitorApp?.radarMap?.toggleTacticalLayer('flights')" title="顯示／隱藏每秒依真實航向與地速平滑飛行之飛機、尾跡與起降導引線">
+            <i class="fa-solid fa-plane"></i> <span id="geoFlightsCountText">動態飛機</span>
+          </button>
+          <button type="button" id="geoToggleRainBtn" class="geo-radar-tac-btn active" onclick="window.monitorApp?.radarMap?.toggleTacticalLayer('rain')" title="顯示／隱藏 RainViewer 全球都卜勒降雨雷達回波圖層">
+            <i class="fa-solid fa-cloud-showers-heavy"></i> <span>降雨雷達</span>
+          </button>
+          <button type="button" id="geoToggleSatBtn" class="geo-radar-tac-btn" onclick="window.monitorApp?.radarMap?.toggleTacticalLayer('satellite')" title="疊加全球紅外線氣象衛星雲系圖層">
+            <i class="fa-solid fa-satellite-dish"></i> <span>衛星雲圖</span>
+          </button>
+          <button type="button" id="geoToggleQuakeBtn" class="geo-radar-tac-btn active" onclick="window.monitorApp?.radarMap?.toggleTacticalLayer('quakes')" title="顯示／隱藏 USGS 全球與區域最新地震震央脈衝標記">
+            <i class="fa-solid fa-house-crack"></i> <span id="geoQuakeCountText">板塊震央</span>
+          </button>
+          <button type="button" id="geoViewPresetBtn" class="geo-radar-tac-btn is-view" onclick="window.monitorApp?.radarMap?.cycleViewPreset()" title="一鍵切換「✈️ 機場空域飛航圈」、「📍 鏡頭周邊特寫」、「🌏 區域全覽」視角">
+            <i class="fa-solid fa-expand"></i> <span id="geoViewPresetText">✈️ 飛航空域</span>
+          </button>
+        </div>
+
         <div id="leafletMap"></div>
+
+        <div id="geoRadarTimelineBar" class="geo-radar-timeline-bar">
+          <button type="button" id="geoRadarPlayBtn" class="geo-radar-play-btn" onclick="window.monitorApp?.radarMap?.toggleRadarTimelinePlay()" title="動態連續播放過去 2 小時至未來 30 分鐘 AI 預報之降雨雷達雲系移動">
+            <i class="fa-solid fa-play" id="geoRadarPlayIcon"></i>
+            <span id="geoRadarPlayText">動態雲圖</span>
+          </button>
+          <input type="range" id="geoRadarTimelineSlider" class="geo-radar-slider" min="0" max="12" value="12" oninput="window.monitorApp?.radarMap?.scrubRadarFrame(this.value)" aria-label="氣象雷達回波時間軸" />
+          <span id="geoRadarFrameTag" class="geo-radar-frame-tag">LIVE 即時</span>
+        </div>
+
+        <div id="geoRadarCockpitHud" class="geo-radar-cockpit-hud" style="display:none;"></div>
       </div>
 
     </aside>
@@ -14999,6 +15316,15 @@ class WeatherEnvironmentMonitor {
       return;
     }
 
+    if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.syncWeatherTelemetry === 'function') {
+      window.weatherSkyTacticalOverlay.syncWeatherTelemetry({
+        speedKmh: Math.round(((Number(qpCur.wind_speed_10m) || 0) + (Number(bpCur.wind_speed_10m) || 0)) / 2),
+        directionDeg: Math.round(Number(qpCur.wind_direction_10m ?? bpCur.wind_direction_10m ?? 45)),
+        gustKmh: Math.round(Math.max(Number(qpCur.wind_gusts_10m) || 0, Number(bpCur.wind_gusts_10m) || 0)),
+        precipMm: Math.max(Number(qpCur.precipitation) || 0, Number(bpCur.precipitation) || 0)
+      });
+    }
+
     const qpW = this.getWeatherCodeInfo(qpCur.weather_code);
     const bpW = this.getWeatherCodeInfo(bpCur.weather_code);
 
@@ -15425,6 +15751,14 @@ class WeatherEnvironmentMonitor {
     if (!cur) {
       this.renderUnavailableWidgetCard(card, `${locationName} 氣象`, 'fa-cloud-sun', `暫時無法取得「${locationName}」即時氣象資料`);
       return;
+    }
+    if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.syncWeatherTelemetry === 'function') {
+      window.weatherSkyTacticalOverlay.syncWeatherTelemetry({
+        speedKmh: Math.round(Number(cur.wind_speed_10m) || 0),
+        directionDeg: Math.round(Number(cur.wind_direction_10m ?? 45)),
+        gustKmh: Math.round(Number(cur.wind_gusts_10m) || 0),
+        precipMm: Number(cur.precipitation) || 0
+      });
     }
     const weatherInfo = this.getWeatherCodeInfo(cur.weather_code);
     const uvInfo = this.getUvIndexInfo(cur.uv_index);
@@ -17032,6 +17366,10 @@ class WeatherEnvironmentMonitor {
     const isTwCoords = typeof LocalGeoBusService === 'undefined' || LocalGeoBusService.isTaiwanCoords(targetLat, targetLon);
     const isIntl = (app && typeof app.isInternationalCenter === 'function' && app.isInternationalCenter()) ||
       (app && (app.currentCenterId === 'favorites' || app.currentCenterId === 'nearby') && !isTwCoords);
+
+    if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.setRadarCenter === 'function') {
+      window.weatherSkyTacticalOverlay.setRadarCenter(targetLat, targetLon, isIntl);
+    }
 
     const titleEl = document.getElementById('radarCardTitleText');
     const twBar = document.getElementById('radarTaiwanLayerBar');
@@ -18994,13 +19332,44 @@ class NeighborhoodRadarMap {
     this.containerId = containerId;
     this.map = null;
     this.centerMarker = null;
+    this.centerMarkers = [];
+    this.centerCircles = [];
     this.cameraMarkers = [];
     this.flightMarkers = [];
     this.flightMarkerMap = new Map();
+    this.flightTrailMap = new Map();
+    this.flightGuideMap = new Map();
     this.airportMarker = null;
+    this.issMarker = null;
+    this.issOrbitLine = null;
+    this.quakeMarkers = [];
     this._lastFlightPayload = null;
-    this.radarLayer = null;        // RainViewer 即時雷達疊加圖層
-    this.radarRefreshTimer = null; // 10 分鐘自動更新計時器
+    this._lastIssData = null;
+    this._lastCenterInfo = null;
+    this._lastCameras = [];
+
+    // RainViewer 多幀動態氣象雷達與紅外線衛星雲圖狀態
+    this.radarLayer = null;
+    this.satelliteLayer = null;
+    this.radarFrames = [];
+    this.satelliteFrames = [];
+    this.radarFrameLayers = new Map();
+    this.currentFrameIdx = 0;
+    this.isTimelinePlaying = false;
+    this.timelineTimer = null;
+    this.radarRefreshTimer = null;
+
+    // 戰術圖層開關與視角模式
+    this.layerState = {
+      flights: true,
+      rain: true,
+      satellite: false,
+      quakes: true
+    };
+    this.viewPreset = 'airspace'; // 'airspace' | 'camera' | 'region'
+    this.lockedFlightId = null;
+    this.followLockedFlight = false;
+    this._quakeCache = new Map();
   }
 
   // 初始化地圖 (行動端防滾動陷阱，雙指縮放)
@@ -19010,9 +19379,14 @@ class NeighborhoodRadarMap {
       return;
     }
     if (this.map) {
+      this.stopRadarTimelinePlay();
       this.map.remove();
       this.map = null;
       this.radarLayer = null;
+      this.satelliteLayer = null;
+      this.issMarker = null;
+      this.issOrbitLine = null;
+      this.radarFrameLayers.clear();
       this._baseTileLayer = null;
       this._isLightTile = null;
       this._osmFallbackApplied = false;
@@ -19030,18 +19404,32 @@ class NeighborhoodRadarMap {
       touchZoom: true
     }).setView([lat, lon], zoom);
 
+    // 僅於地圖靜止未拖曳時啟用 CSS transform 1s 線性平滑動畫，確保飛機 60fps 滑行且拖曳地圖零延遲
+    const containerEl = typeof document !== 'undefined' ? document.getElementById(this.containerId) : null;
+    if (containerEl) containerEl.classList.add('kinematic-smooth-active');
+    this.map.on('movestart zoomstart', () => {
+      if (containerEl) containerEl.classList.remove('kinematic-smooth-active');
+    });
+    this.map.on('moveend zoomend', () => {
+      if (containerEl) containerEl.classList.add('kinematic-smooth-active');
+    });
+
     // ─── 底圖：依當前深色／淺色主題自動選用 Esri World Dark / Light Gray（免費、無 API Key、Android WebView 相容）───
     const isLightNow = typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light';
     this.applyTheme(isLightNow);
 
-    // 疊加 RainViewer 即時雷達圖層（免費、無 API Key 需求、全球覆蓋）
+    // 疊加 RainViewer 即時雷達圖層（含過去 2 小時 12 幀 + 未來 30 分鐘 Nowcast 預報 + 紅外線衛星）
     this._addRainViewerRadarLayer();
+
+    // 載入 USGS 即時地震震央脈衝標記
+    this.refreshMapEarthquakes();
 
     // 每 10 分鐘自動更新雷達圖層（對應 RainViewer 更新頻率）
     if (this.radarRefreshTimer) clearInterval(this.radarRefreshTimer);
     this.radarRefreshTimer = setInterval(() => {
       if (typeof document !== 'undefined' && document.hidden) return;
       this._addRainViewerRadarLayer();
+      this.refreshMapEarthquakes();
     }, 600000);
   }
 
@@ -19084,7 +19472,7 @@ class NeighborhoodRadarMap {
     this._baseTileLayer = tile;
   }
 
-  // 非同步取得 RainViewer 最新雷達路徑並疊加圖層
+  // 非同步取得 RainViewer 過去 2 小時 + 未來 30 分鐘預報雷達幀與紅外線衛星雲圖
   async _addRainViewerRadarLayer() {
     if (!this.map) return;
     const reqId = (this._radarReqId = (this._radarReqId || 0) + 1);
@@ -19092,51 +19480,57 @@ class NeighborhoodRadarMap {
     try {
       const resp = await fetch('https://api.rainviewer.com/public/weather-maps.json', {
         cache: 'no-store',
-        signal: window.createTimeoutSignal(5000)
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(5000) : undefined
       });
       if (!resp.ok) throw new Error('RainViewer API 回應失敗');
       const data = await resp.json();
       if (reqId !== this._radarReqId || this.map !== mapRef || !this.map) return;
-      const pastFrames = data.radar && data.radar.past;
-      if (!Array.isArray(pastFrames) || pastFrames.length === 0) throw new Error('無雷達資料');
+      const pastFrames = Array.isArray(data?.radar?.past) ? data.radar.past : [];
+      const nowcastFrames = Array.isArray(data?.radar?.nowcast) ? data.radar.nowcast : [];
+      if (pastFrames.length === 0) throw new Error('無雷達資料');
 
-      // 取最新一筆（陣列最後一個元素）
-      const latestFrame = pastFrames[pastFrames.length - 1];
-      const latestPath = latestFrame.path;
-      this._lastRadarFrameUnix = latestFrame.time;
+      this.radarFrames = [
+        ...pastFrames.map((f, idx) => ({
+          time: f.time,
+          path: f.path,
+          isForecast: false,
+          isLive: idx === pastFrames.length - 1
+        })),
+        ...nowcastFrames.slice(0, 3).map(f => ({
+          time: f.time,
+          path: f.path,
+          isForecast: true,
+          isLive: false
+        }))
+      ];
+      this.satelliteFrames = Array.isArray(data?.satellite?.infrared) ? data.satellite.infrared : [];
 
-      // 移除舊圖層
-      if (this.radarLayer && this.map.hasLayer(this.radarLayer)) {
-        this.map.removeLayer(this.radarLayer);
-        this.radarLayer = null;
+      // 清理已過期不在本次時間軸內的圖層快取
+      const validPaths = new Set(this.radarFrames.map(f => f.path));
+      for (const [p, lyr] of this.radarFrameLayers.entries()) {
+        if (!validPaths.has(p)) {
+          try { if (this.map.hasLayer(lyr)) this.map.removeLayer(lyr); } catch (_) {}
+          this.radarFrameLayers.delete(p);
+        }
       }
 
-      // RainViewer 公開免費氣象雷達圖磚原生最高支援 zoom 7（zoom >= 8 會回傳 ZOOM LEVEL NOT SUPPORTED 灰字圖磚）
-      // 設定 maxNativeZoom: 7 讓 Leaflet 在 z=8..19 自動安全拉伸 z=7 雷達圖磚，徹底消除失效請求
-      const tileUrl = `https://tilecache.rainviewer.com${latestPath}/256/{z}/{x}/{y}/4/1_1.png`;
-      let radarTileErrors = 0;
-      const layer = L.tileLayer(tileUrl, {
-        tileSize: 256,
-        opacity: 0.62,
-        maxNativeZoom: 7,
-        maxZoom: 19,
-        crossOrigin: true,
-        errorTileUrl: '',
-        zIndex: 10
-      });
-      this.radarLayer = layer;
-      layer.on('tileerror', () => {
-        radarTileErrors++;
-        if (radarTileErrors > 6 && this.radarLayer === layer && this.map && this.map.hasLayer(layer)) {
-          this.map.removeLayer(layer);
-          this.radarLayer = null;
-          const badgeEl = typeof document !== 'undefined' ? document.getElementById('radarMapTimeBadge') : null;
-          if (badgeEl) badgeEl.textContent = '⛈️ 雷達圖磚維護中';
-        }
-      });
-      layer.addTo(this.map);
+      const liveIdx = pastFrames.length - 1;
+      this.currentFrameIdx = liveIdx;
+      this._lastRadarFrameUnix = pastFrames[liveIdx].time;
 
-      this.updateRadarTimeBadge();
+      if (typeof document !== 'undefined') {
+        const slider = document.getElementById('geoRadarTimelineSlider');
+        if (slider) {
+          slider.min = '0';
+          slider.max = String(Math.max(0, this.radarFrames.length - 1));
+          slider.value = String(liveIdx);
+        }
+      }
+
+      this.showRadarFrameAtIndex(liveIdx);
+      if (this.layerState.satellite) {
+        this._syncSatelliteLayer();
+      }
     } catch (err) {
       if (reqId === this._radarReqId && !this.radarLayer && typeof document !== 'undefined') {
         const badgeEl = document.getElementById('radarMapTimeBadge');
@@ -19146,9 +19540,330 @@ class NeighborhoodRadarMap {
     }
   }
 
-  updateRadarTimeBadge() {
+  // 零閃爍切換指定索引之氣象雷達回波幀
+  showRadarFrameAtIndex(idx) {
+    if (!this.map || typeof L === 'undefined' || !Array.isArray(this.radarFrames) || this.radarFrames.length === 0) return;
+    const safeIdx = Math.max(0, Math.min(this.radarFrames.length - 1, Number(idx) || 0));
+    this.currentFrameIdx = safeIdx;
+    const frame = this.radarFrames[safeIdx];
+    if (!frame || !frame.path) return;
+    this._lastRadarFrameUnix = frame.time;
+
+    if (!this.layerState.rain) {
+      for (const lyr of this.radarFrameLayers.values()) {
+        try { lyr.setOpacity(0); } catch (_) {}
+      }
+      this.updateRadarTimeBadge(frame);
+      return;
+    }
+
+    let targetLayer = this.radarFrameLayers.get(frame.path);
+    if (!targetLayer) {
+      const tileUrl = `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/4/1_1.png`;
+      let radarTileErrors = 0;
+      targetLayer = L.tileLayer(tileUrl, {
+        tileSize: 256,
+        opacity: 0,
+        maxNativeZoom: 7,
+        maxZoom: 19,
+        crossOrigin: true,
+        errorTileUrl: '',
+        zIndex: 10
+      });
+      targetLayer.on('tileerror', () => {
+        radarTileErrors++;
+        if (radarTileErrors > 8 && this.map && this.map.hasLayer(targetLayer)) {
+          try { targetLayer.setOpacity(0); } catch (_) {}
+        }
+      });
+      targetLayer.addTo(this.map);
+      this.radarFrameLayers.set(frame.path, targetLayer);
+    }
+
+    for (const [p, lyr] of this.radarFrameLayers.entries()) {
+      try {
+        lyr.setOpacity(p === frame.path ? 0.65 : 0);
+      } catch (_) {}
+    }
+    this.radarLayer = targetLayer;
+
+    if (typeof document !== 'undefined') {
+      const slider = document.getElementById('geoRadarTimelineSlider');
+      if (slider && Number(slider.value) !== safeIdx) slider.value = String(safeIdx);
+    }
+    this.updateRadarTimeBadge(frame);
+  }
+
+  // 啟停過去 2 小時 + 未來 30 分鐘預報之動態降雨雷達連續播放
+  toggleRadarTimelinePlay() {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    if (this.isTimelinePlaying) {
+      this.stopRadarTimelinePlay();
+      return;
+    }
+    if (!Array.isArray(this.radarFrames) || this.radarFrames.length <= 1) return;
+    if (!this.layerState.rain) {
+      this.toggleTacticalLayer('rain');
+    }
+    this.isTimelinePlaying = true;
+    this._syncTimelinePlayUi();
+    if (this.timelineTimer) clearInterval(this.timelineTimer);
+    this.timelineTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (!this.map || !this.isTimelinePlaying || this.radarFrames.length === 0) return;
+      const nextIdx = (this.currentFrameIdx + 1) % this.radarFrames.length;
+      this.showRadarFrameAtIndex(nextIdx);
+    }, 850);
+  }
+
+  stopRadarTimelinePlay() {
+    this.isTimelinePlaying = false;
+    if (this.timelineTimer) {
+      clearInterval(this.timelineTimer);
+      this.timelineTimer = null;
+    }
+    this._syncTimelinePlayUi();
+  }
+
+  scrubRadarFrame(rawIndex) {
+    this.stopRadarTimelinePlay();
+    this.showRadarFrameAtIndex(Number(rawIndex));
+  }
+
+  _syncTimelinePlayUi() {
+    if (typeof document === 'undefined') return;
+    const btn = document.getElementById('geoRadarPlayBtn');
+    const icon = document.getElementById('geoRadarPlayIcon');
+    const txt = document.getElementById('geoRadarPlayText');
+    if (btn) btn.classList.toggle('is-playing', this.isTimelinePlaying);
+    if (icon) icon.className = this.isTimelinePlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    if (txt) txt.textContent = this.isTimelinePlaying ? '播放中' : '動態雲圖';
+  }
+
+  _syncSatelliteLayer() {
+    if (!this.map || typeof L === 'undefined') return;
+    if (!this.layerState.satellite || !Array.isArray(this.satelliteFrames) || this.satelliteFrames.length === 0) {
+      if (this.satelliteLayer && this.map.hasLayer(this.satelliteLayer)) {
+        try { this.map.removeLayer(this.satelliteLayer); } catch (_) {}
+      }
+      this.satelliteLayer = null;
+      return;
+    }
+    const latestSat = this.satelliteFrames[this.satelliteFrames.length - 1];
+    if (!latestSat || !latestSat.path) return;
+    if (this.satelliteLayer && this._lastSatPath === latestSat.path && this.map.hasLayer(this.satelliteLayer)) return;
+    if (this.satelliteLayer && this.map.hasLayer(this.satelliteLayer)) {
+      try { this.map.removeLayer(this.satelliteLayer); } catch (_) {}
+    }
+    this._lastSatPath = latestSat.path;
+    const satUrl = `https://tilecache.rainviewer.com${latestSat.path}/256/{z}/{x}/{y}/0/0_0.png`;
+    this.satelliteLayer = L.tileLayer(satUrl, {
+      tileSize: 256,
+      opacity: 0.48,
+      maxNativeZoom: 5,
+      maxZoom: 19,
+      crossOrigin: true,
+      errorTileUrl: '',
+      zIndex: 8
+    }).addTo(this.map);
+  }
+
+  // 切換地理雷達 4 大 LIVE 戰術圖層 (flights / rain / satellite / quakes)
+  toggleTacticalLayer(layerKey) {
+    if (!layerKey || !(layerKey in this.layerState)) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.layerState[layerKey] = !this.layerState[layerKey];
+    const active = this.layerState[layerKey];
+
+    if (typeof document !== 'undefined') {
+      const btnMap = {
+        flights: 'geoToggleFlightsBtn',
+        rain: 'geoToggleRainBtn',
+        satellite: 'geoToggleSatBtn',
+        quakes: 'geoToggleQuakeBtn'
+      };
+      const btn = document.getElementById(btnMap[layerKey]);
+      if (btn) btn.classList.toggle('active', active);
+    }
+
+    if (layerKey === 'flights') {
+      if (this._lastFlightPayload) {
+        this.updateFlightMarkers(
+          this._lastFlightPayload.flights,
+          this._lastFlightPayload.airport,
+          this._lastFlightPayload.summary
+        );
+      }
+    } else if (layerKey === 'rain') {
+      if (!active) this.stopRadarTimelinePlay();
+      this.showRadarFrameAtIndex(this.currentFrameIdx);
+    } else if (layerKey === 'satellite') {
+      this._syncSatelliteLayer();
+    } else if (layerKey === 'quakes') {
+      if (active) {
+        this.refreshMapEarthquakes();
+      } else {
+        this.quakeMarkers.forEach(m => { try { this.map?.removeLayer(m); } catch (_) {} });
+        this.quakeMarkers = [];
+      }
+    }
+  }
+
+  // 一鍵切換地理雷達視角：✈️ 飛航空域 ⇄ 📍 鏡頭特寫 ⇄ 🌏 區域全覽
+  cycleViewPreset(targetPreset = null) {
+    if (!this.map || typeof L === 'undefined') return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    const order = ['airspace', 'camera', 'region'];
+    if (targetPreset && order.includes(targetPreset)) {
+      this.viewPreset = targetPreset;
+    } else {
+      const nextIdx = (order.indexOf(this.viewPreset) + 1) % order.length;
+      this.viewPreset = order[nextIdx];
+    }
+    this._userSelectedPreset = true;
+    this._applyActiveViewPreset(true);
+  }
+
+  _applyActiveViewPreset(animate = true) {
+    if (!this.map || typeof L === 'undefined') return;
+    const labelMap = {
+      airspace: '✈️ 飛航空域',
+      camera: '📍 鏡頭特寫',
+      region: '🌏 區域全覽'
+    };
+    if (typeof document !== 'undefined') {
+      const txtEl = document.getElementById('geoViewPresetText');
+      if (txtEl) txtEl.textContent = labelMap[this.viewPreset] || '✈️ 飛航空域';
+    }
+
+    const cam0 = this._lastCameras && this._lastCameras[0];
+    const cLat = Number.isFinite(Number(this._lastCenterInfo?.lat))
+      ? Number(this._lastCenterInfo.lat)
+      : (cam0 ? Number(cam0.lat) : 25.0153);
+    const cLon = Number.isFinite(Number(this._lastCenterInfo?.lon))
+      ? Number(this._lastCenterInfo.lon)
+      : (cam0 ? Number(cam0.lon) : 121.2213);
+
+    if (this.viewPreset === 'camera') {
+      this.map.setView([cLat, cLon], 13, { animate });
+      return;
+    }
+
+    if (this.viewPreset === 'airspace') {
+      const ap = this._lastFlightPayload?.airport;
+      const flights = Array.isArray(this._lastFlightPayload?.flights) ? this._lastFlightPayload.flights : [];
+      const pts = [[cLat, cLon]];
+      if (ap && Number.isFinite(Number(ap.lat)) && Number.isFinite(Number(ap.lon)) && Number(ap.distKm || 0) <= 180) {
+        pts.push([Number(ap.lat), Number(ap.lon)]);
+      }
+      flights.slice(0, 14).forEach(f => {
+        if (Number.isFinite(Number(f.lat)) && Number.isFinite(Number(f.lon))) {
+          pts.push([Number(f.lat), Number(f.lon)]);
+        }
+      });
+      if (pts.length >= 2) {
+        try {
+          const bounds = L.latLngBounds(pts);
+          this.map.fitBounds(bounds.pad(0.18), { maxZoom: 11, animate });
+          return;
+        } catch (_) {}
+      }
+      this.map.setView([cLat, cLon], 9, { animate });
+      return;
+    }
+
+    // 'region' 區域全覽模式
+    if (this.cameraMarkers.length > 1) {
+      try {
+        const group = L.featureGroup([...this.centerMarkers, ...this.cameraMarkers]);
+        this.map.fitBounds(group.getBounds().pad(0.16), { maxZoom: 12, animate });
+        return;
+      } catch (_) {}
+    }
+    this.map.setView([cLat, cLon], 6, { animate });
+  }
+
+  // 非同步抓取 USGS 即時地震震央並於地理雷達繪製動態脈衝圓環
+  async refreshMapEarthquakes() {
+    if (!this.map || typeof L === 'undefined' || !this.layerState.quakes) return;
+    const regionId = (typeof window !== 'undefined' && window.monitorApp?.currentCenterId) || 'dual';
+    const isTw = ['dual', 'qingpu', 'banqiao', 'tourist', 'nearby'].includes(regionId);
+    const cacheKey = isTw ? 'tw' : 'global';
+    const now = Date.now();
+    const cached = this._quakeCache.get(cacheKey);
+    let features = cached && (now - cached.ts < 90000) ? cached.features : null;
+
+    if (!features) {
+      const url = isTw
+        ? 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=20.5&maxlatitude=26.8&minlongitude=118.5&maxlongitude=123.8&minmagnitude=3.0&limit=12'
+        : 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=4.6&limit=16';
+      try {
+        const res = await fetch(url, {
+          cache: 'no-store',
+          signal: window.createTimeoutSignal ? window.createTimeoutSignal(5000) : undefined
+        });
+        if (res.ok) {
+          const j = await res.json();
+          if (Array.isArray(j?.features)) {
+            features = j.features;
+            this._quakeCache.set(cacheKey, { features, ts: now });
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (!this.map || !this.layerState.quakes || !Array.isArray(features)) return;
+    this.quakeMarkers.forEach(m => { try { this.map.removeLayer(m); } catch (_) {} });
+    this.quakeMarkers = [];
+
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    features.slice(0, 14).forEach(feat => {
+      const coords = feat?.geometry?.coordinates;
+      const props = feat?.properties;
+      if (!Array.isArray(coords) || coords.length < 2 || !props) return;
+      const qLon = Number(coords[0]);
+      const qLat = Number(coords[1]);
+      const depthKm = Math.max(0, Math.round(Number(coords[2]) || 10));
+      const mag = Number(props.mag || 0).toFixed(1);
+      if (!Number.isFinite(qLat) || !Number.isFinite(qLon)) return;
+
+      const color = Number(mag) >= 5.5 ? '#ef4444' : (Number(mag) >= 4.5 ? '#f97316' : '#eab308');
+      const qIcon = L.divIcon({
+        className: 'quake-epicenter-pin',
+        html: `
+          <div style="position:relative;width:24px;height:24px;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;width:22px;height:22px;border:1.5px solid ${color};border-radius:50%;animation:quake-ring-pulse 1.9s infinite;"></div>
+            <div style="background:rgba(15,23,42,0.92);color:${color};border:1.5px solid ${color};border-radius:999px;padding:0 4px;font-size:8.5px;font-weight:900;font-family:monospace;box-shadow:0 0 8px ${color};">M${eHtml(mag)}</div>
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const dtStr = props.time ? new Date(props.time).toLocaleString('zh-TW', { hour12: false }) : '';
+      const qm = L.marker([qLat, qLon], { icon: qIcon, zIndexOffset: 280 })
+        .addTo(this.map)
+        .bindPopup(`
+          <div style="color:#0f172a;font-family:sans-serif;font-size:0.8rem;line-height:1.45;min-width:175px;">
+            <b style="color:${color};"><i class="fa-solid fa-house-crack"></i> 地震震央通報 M${eHtml(mag)}</b><br/>
+            <span style="color:#1e293b;font-weight:700;">${eHtml(props.place || '板塊觀測點')}</span><br/>
+            <span style="color:#475569;font-size:0.73rem;">震源深度：<b>${depthKm} km</b></span><br/>
+            <span style="color:#64748b;font-size:0.71rem;">時間：${eHtml(dtStr)}</span>
+          </div>
+        `);
+      this.quakeMarkers.push(qm);
+    });
+
+    if (typeof document !== 'undefined') {
+      const qTxt = document.getElementById('geoQuakeCountText');
+      if (qTxt) qTxt.textContent = this.quakeMarkers.length > 0 ? `震央 (${this.quakeMarkers.length})` : '板塊震央';
+    }
+  }
+
+  updateRadarTimeBadge(frameOverride = null) {
     if (!this._lastRadarFrameUnix || typeof document === 'undefined') return;
-    const dt = new Date(this._lastRadarFrameUnix * 1000);
+    const frame = frameOverride || (Array.isArray(this.radarFrames) ? this.radarFrames[this.currentFrameIdx] : null);
+    const dt = new Date((frame?.time || this._lastRadarFrameUnix) * 1000);
     const rawTz = (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.getActiveTimezone === 'function')
       ? window.monitorApp.getActiveTimezone()
       : ((typeof window !== 'undefined' && window.monitorApp?.currentCenterId === 'japan') ? 'Asia/Tokyo' : 'Asia/Taipei');
@@ -19164,7 +19879,21 @@ class NeighborhoodRadarMap {
       }).format(dt);
     } catch (_) {}
     const badge = document.getElementById('radarMapTimeBadge');
-    if (badge) badge.textContent = `⛈️ 降雨雷達 ${timeStr}`;
+    if (badge) {
+      const suffix = frame?.isForecast ? ' 預報' : (frame?.isLive ? ' LIVE' : '');
+      badge.textContent = `⛈️ 降雨雷達 ${timeStr}${suffix}`;
+    }
+    const frameTag = document.getElementById('geoRadarFrameTag');
+    if (frameTag) {
+      frameTag.classList.toggle('is-forecast', Boolean(frame?.isForecast));
+      if (frame?.isForecast) {
+        frameTag.textContent = `⚡ ${timeStr} 預報`;
+      } else if (frame?.isLive || !frame) {
+        frameTag.textContent = `🟢 ${timeStr} LIVE`;
+      } else {
+        frameTag.textContent = `⏪ ${timeStr} 回波`;
+      }
+    }
   }
 
   // 設置中心點與周邊攝影機標記
@@ -19177,6 +19906,9 @@ class NeighborhoodRadarMap {
     const validCamList = Array.isArray(cameras)
       ? cameras.filter(c => Number.isFinite(Number(c?.lat)) && Number.isFinite(Number(c?.lon)))
       : [];
+    this._lastCenterInfo = safeCenter;
+    this._lastCameras = validCamList;
+
     const centerLat = Number.isFinite(Number(safeCenter.lat))
       ? Number(safeCenter.lat)
       : (validCamList.length > 0 ? Number(validCamList[0].lat) : 25.0193);
@@ -19188,20 +19920,20 @@ class NeighborhoodRadarMap {
     const isIntl = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(safeCenter.id);
     const isFavorites = safeCenter.id === 'favorites';
     const regionMapPresets = {
-      world: { pos: [22.0, 18.0], zoom: 2 },
-      japan: { pos: [36.2, 137.8], zoom: 5 },
-      korea: { pos: [36.0, 127.9], zoom: 6 },
-      apac: { pos: [-8.0, 122.0], zoom: 3 },
-      europe: { pos: [50.5, 11.0], zoom: 3 },
-      americas: { pos: [28.0, -96.0], zoom: 3 },
-      polar: { pos: [65.5, -18.0], zoom: 2 },
-      rainforest: { pos: [-2.0, -25.0], zoom: 2 },
-      ocean: { pos: [22.0, -68.0], zoom: 2 },
-      scenic: { pos: [46.5, 11.5], zoom: 3 },
-      daynight: { pos: [25.0, 0.0], zoom: 2 }
+      world: { pos: [centerLat, centerLon], zoom: 9 },
+      japan: { pos: [centerLat, centerLon], zoom: 9 },
+      korea: { pos: [centerLat, centerLon], zoom: 9 },
+      apac: { pos: [centerLat, centerLon], zoom: 9 },
+      europe: { pos: [centerLat, centerLon], zoom: 9 },
+      americas: { pos: [centerLat, centerLon], zoom: 9 },
+      polar: { pos: [centerLat, centerLon], zoom: 8 },
+      rainforest: { pos: [centerLat, centerLon], zoom: 8 },
+      ocean: { pos: [centerLat, centerLon], zoom: 9 },
+      scenic: { pos: [centerLat, centerLon], zoom: 9 },
+      daynight: { pos: [centerLat, centerLon], zoom: 8 }
     };
     const preset = regionMapPresets[safeCenter.id];
-    const initialZoom = preset ? preset.zoom : (isTourist ? 10 : (isFavorites ? 12 : 14));
+    const initialZoom = preset ? preset.zoom : (isTourist ? 10 : (isFavorites ? 11 : 12));
     const centerPos = preset ? preset.pos : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
 
     if (!this.map) {
@@ -19209,6 +19941,7 @@ class NeighborhoodRadarMap {
     } else {
       this.map.setView(centerPos, initialZoom);
       this.updateRadarTimeBadge();
+      this.refreshMapEarthquakes();
     }
 
     // 清除舊標記與防護圈
@@ -19243,7 +19976,6 @@ class NeighborhoodRadarMap {
     });
 
     if (isDual) {
-      // 雙埔模式：青埔 + 新埔 (去識別化生活圈中心)
       const homeQp = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213, color: '#00f0ff' };
       const homeBp = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688, color: '#a855f7' };
       
@@ -19270,7 +20002,6 @@ class NeighborhoodRadarMap {
       });
     } else if (!isIntl) {
       const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
-      // 單一中心模式 (台灣本地才顯示預設位置標記與 500m / 1km 防護圈)
       this.centerMarker = L.marker([centerLat, centerLon], { icon: makeCenterIcon('#ef4444') })
         .addTo(this.map)
         .bindPopup(`
@@ -19300,7 +20031,7 @@ class NeighborhoodRadarMap {
       this.centerCircles.push(c500, c1000);
     }
 
-    // 繪製周邊攝影機標記 (附近生活圈上限 48 支最近標記，確保 60fps 流暢互動)
+    // 繪製周邊攝影機標記
     const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
     const eJs = (typeof window !== 'undefined' && window.escJsAttr) ? window.escJsAttr : (v => String(v ?? ''));
     const markerCamList = (safeCenter.id === 'nearby' && validCamList.length > 48)
@@ -19331,7 +20062,6 @@ class NeighborhoodRadarMap {
         .bindPopup(`
           <div style="color: #0f172a; font-family: sans-serif; font-size: 0.85rem; line-height: 1.5; min-width: 180px;">
             <b style="color: #0284c7;">#${idx + 1} ${eHtml(cam.name || '')}</b><br/>
-            
             <span style="color: #64748b; font-size: 0.75rem;">管轄: ${eHtml(cam.authority || '')}</span><br/>
             <div style="display: flex; gap: 4px; margin-top: 6px;">
               <button onclick="window.monitorApp.scrollToCamera('${eJs(cam.id)}')" style="flex: 1; background: #0284c7; color: #fff; border: none; padding: 4px 6px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;">
@@ -19347,7 +20077,6 @@ class NeighborhoodRadarMap {
       this.cameraMarkers.push(marker);
     });
 
-    // 若為雙埔或跨區收藏模式，自動調整地圖視野囊括中心與全部攝影機
     if ((isDual || (isFavorites && this.cameraMarkers.length > 1)) && this.cameraMarkers.length > 0) {
       const allMarkers = isDual ? [...this.centerMarkers, ...this.cameraMarkers] : [...this.cameraMarkers];
       const group = L.featureGroup(allMarkers);
@@ -19366,15 +20095,54 @@ class NeighborhoodRadarMap {
     }
   }
 
-  // 即時繪製國際太空站 (ISS) 軌道標記於地理雷達地圖
-  updateIssMarker(issData) {
-    this._lastIssData = issData;
-    if (!this.map || typeof L === 'undefined') return;
-    if (this.issMarker) {
-      try { this.map.removeLayer(this.issMarker); } catch (_) {}
-      this.issMarker = null;
+  // 當切換國際或觀光鏡頭焦點時，將地理雷達同步平滑錨定至當前鏡頭與最近機場空域
+  anchorToActiveSpot(lat, lon, label = '') {
+    if (!this.map || !Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) return;
+    this._lastCenterInfo = { ...(this._lastCenterInfo || {}), lat: Number(lat), lon: Number(lon), name: label || this._lastCenterInfo?.name };
+    if (this.viewPreset !== 'region') {
+      this.map.setView([Number(lat), Number(lon)], this.viewPreset === 'camera' ? 13 : 9, { animate: true });
     }
+  }
+
+  // 即時繪製國際太空站 (ISS) 軌道標記與預測地面軌跡線於地理雷達地圖
+  updateIssMarker(issData) {
     if (!issData || !Number.isFinite(Number(issData.lat)) || !Number.isFinite(Number(issData.lon))) return;
+    this._lastIssData = {
+      ...issData,
+      lat: Number(issData.lat),
+      lon: Number(issData.lon),
+      _ts: Date.now()
+    };
+    if (!this.map || typeof L === 'undefined') return;
+
+    const lat = this._lastIssData.lat;
+    const lon = this._lastIssData.lon;
+
+    // 計算並繪製 ISS 51.6° 傾角正弦軌道預測地面軌跡線
+    const orbitPts = [];
+    const phase0 = Math.asin(Math.max(-1, Math.min(1, lat / 51.6)));
+    for (let dLon = -45; dLon <= 55; dLon += 5) {
+      const pLon = lon + dLon;
+      if (pLon < -179.5 || pLon > 179.5) continue;
+      const pLat = 51.6 * Math.sin(phase0 + (dLon * Math.PI) / 115);
+      orbitPts.push([+pLat.toFixed(3), +pLon.toFixed(3)]);
+    }
+    if (this.issOrbitLine) {
+      try { this.issOrbitLine.setLatLngs(orbitPts); } catch (_) {}
+    } else if (orbitPts.length > 2) {
+      this.issOrbitLine = L.polyline(orbitPts, {
+        color: '#818cf8',
+        weight: 1.5,
+        opacity: 0.55,
+        dashArray: '4, 6'
+      }).addTo(this.map);
+    }
+
+    if (this.issMarker && this.map.hasLayer(this.issMarker)) {
+      this.issMarker.setLatLng([lat, lon]);
+      return;
+    }
+
     const issIcon = L.divIcon({
       className: 'iss-orbital-pin',
       html: `
@@ -19386,7 +20154,7 @@ class NeighborhoodRadarMap {
       iconAnchor: [38, 10]
     });
     const visLabel = issData.visibility === 'eclipsed' ? '🌑 地球本影區' : '☀️ 軌道日照區';
-    this.issMarker = L.marker([Number(issData.lat), Number(issData.lon)], { icon: issIcon, zIndexOffset: 500 })
+    this.issMarker = L.marker([lat, lon], { icon: issIcon, zIndexOffset: 500 })
       .addTo(this.map)
       .bindPopup(`
         <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:185px;">
@@ -19400,24 +20168,60 @@ class NeighborhoodRadarMap {
       `);
   }
 
-  // 即時飛航雷達圖層：於地理雷達地圖繪製最近國際機場塔台與空中入出境航班動態航向圖標
-  updateFlightMarkers(flights = [], airport = null, summary = null) {
-    this._lastFlightPayload = { flights, airport, summary };
-    if (!this.map || typeof L === 'undefined') return;
+  // 每秒推進 ISS 軌道位置 (~7.66 km/s)
+  stepIssKinematics(dtSec = 1) {
+    if (!this._lastIssData || !this.map || !this.issMarker) return;
+    const dLon = 0.062 * dtSec;
+    let nextLon = Number(this._lastIssData.lon) + dLon;
+    if (nextLon > 180) nextLon -= 360;
+    const phase0 = Math.asin(Math.max(-1, Math.min(1, Number(this._lastIssData.lat) / 51.6)));
+    const nextLat = 51.6 * Math.sin(phase0 + (dLon * Math.PI) / 115);
+    this._lastIssData.lat = +nextLat.toFixed(4);
+    this._lastIssData.lon = +nextLon.toFixed(4);
+    try {
+      this.issMarker.setLatLng([this._lastIssData.lat, this._lastIssData.lon]);
+    } catch (_) {}
+  }
 
+  _clearAllFlightLayers() {
+    if (!this.map) return;
     if (Array.isArray(this.flightMarkers)) {
-      this.flightMarkers.forEach(m => {
-        try { this.map.removeLayer(m); } catch (_) {}
-      });
+      this.flightMarkers.forEach(m => { try { this.map.removeLayer(m); } catch (_) {} });
     }
     this.flightMarkers = [];
-    this.flightMarkerMap = new Map();
+    this.flightMarkerMap.clear();
+    for (const l of this.flightTrailMap.values()) {
+      try { this.map.removeLayer(l); } catch (_) {}
+    }
+    this.flightTrailMap.clear();
+    for (const g of this.flightGuideMap.values()) {
+      try { this.map.removeLayer(g); } catch (_) {}
+    }
+    this.flightGuideMap.clear();
     if (this.airportMarker) {
       try { this.map.removeLayer(this.airportMarker); } catch (_) {}
       this.airportMarker = null;
     }
+  }
+
+  // 即時飛航雷達圖層：於地理雷達地圖繪製最近國際機場塔台、空中入出境航班動態航向圖標、尾跡與起降導引虛線
+  updateFlightMarkers(flights = [], airport = null, summary = null) {
+    this._lastFlightPayload = { flights, airport, summary };
+    if (typeof document !== 'undefined') {
+      const cntEl = document.getElementById('geoFlightsCountText');
+      const totalCnt = Array.isArray(flights) ? flights.length : 0;
+      if (cntEl) cntEl.textContent = totalCnt > 0 ? `飛機 (${totalCnt})` : '動態飛機';
+    }
+    if (!this.map || typeof L === 'undefined') return;
+
+    this._clearAllFlightLayers();
+    if (!this.layerState.flights) {
+      this.renderCockpitHud();
+      return;
+    }
 
     const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    const eJs = (typeof window !== 'undefined' && window.escJsAttr) ? window.escJsAttr : (v => String(v ?? ''));
 
     if (airport && Number.isFinite(Number(airport.lat)) && Number.isFinite(Number(airport.lon))) {
       const towerIcon = L.divIcon({
@@ -19447,58 +20251,245 @@ class NeighborhoodRadarMap {
       ? flights.filter(f => Number.isFinite(Number(f?.lat)) && Number.isFinite(Number(f?.lon))).slice(0, 24)
       : [];
 
+    if (validFlights.length > 0 && (!this.lockedFlightId || !validFlights.some(f => String(f.id) === String(this.lockedFlightId)))) {
+      this.lockedFlightId = String(validFlights[0].id);
+    }
+
     for (const fl of validFlights) {
-      const color = fl.category === 'ARRIVAL'
-        ? '#00f0ff'
-        : (fl.category === 'DEPARTURE' ? '#f59e0b' : '#38bdf8');
+      const fId = String(fl.id || fl.flightNo);
+      const cat = fl.category || fl.phase || 'OVERFLIGHT';
+      const isLocked = String(this.lockedFlightId) === fId;
+      const color = isLocked
+        ? '#34d399'
+        : (cat === 'ARRIVAL' ? '#00f0ff' : (cat === 'DEPARTURE' ? '#f59e0b' : '#38bdf8'));
       const trackDeg = Number.isFinite(Number(fl.track)) ? Math.round(Number(fl.track)) : 0;
       const labelTxt = eHtml(fl.flightNo || fl.callsign || 'FLIGHT');
+
+      // 1. 繪製飛機動態航跡尾焰 (Trail Polyline)
+      const trailPts = Array.isArray(fl.trailHistory) && fl.trailHistory.length >= 2
+        ? fl.trailHistory
+        : [[Number(fl.lat), Number(fl.lon)]];
+      const trailLine = L.polyline(trailPts, {
+        color,
+        weight: isLocked ? 2.8 : 2.0,
+        opacity: isLocked ? 0.88 : 0.58
+      }).addTo(this.map);
+      this.flightTrailMap.set(fId, trailLine);
+
+      // 2. 若為進場或離場航班，繪製連接機場跑道之雷達導引虛線
+      if ((cat === 'ARRIVAL' || cat === 'DEPARTURE') && airport && Number.isFinite(Number(airport.lat)) && Number.isFinite(Number(airport.lon))) {
+        const guideLine = L.polyline([[Number(fl.lat), Number(fl.lon)], [Number(airport.lat), Number(airport.lon)]], {
+          color,
+          weight: isLocked ? 1.6 : 1.0,
+          opacity: isLocked ? 0.65 : 0.28,
+          dashArray: '3, 6'
+        }).addTo(this.map);
+        this.flightGuideMap.set(fId, guideLine);
+      }
+
       const planeIcon = L.divIcon({
-        className: 'flight-radar-pin',
+        className: `flight-radar-pin ${isLocked ? 'is-locked-target' : ''}`,
         html: `
           <div style="display:flex;align-items:center;gap:2px;pointer-events:auto;">
-            <div style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 5px ${color});transform:rotate(${trackDeg}deg);">
+            <div class="flight-pin-jet-rot" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 6px ${color});transform:rotate(${trackDeg}deg);">
               <svg viewBox="0 0 24 24" width="17" height="17" fill="${color}" stroke="#0f172a" stroke-width="1.2">
                 <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
               </svg>
             </div>
-            <span style="background:rgba(15,23,42,0.88);color:${color};border:1px solid ${color};border-radius:3px;padding:0 3px;font-size:9px;font-weight:800;font-family:monospace;white-space:nowrap;">${labelTxt}</span>
+            <span class="flight-pin-badge" style="background:rgba(15,23,42,0.9);color:${color};border:1px solid ${color};border-radius:3px;padding:0 3px;font-size:9px;font-weight:800;font-family:monospace;white-space:nowrap;">${labelTxt}</span>
           </div>
         `,
-        iconSize: [64, 20],
+        iconSize: [68, 20],
         iconAnchor: [10, 10]
       });
 
+      const origZh = fl.originZh || fl.originName || fl.originIata || '---';
+      const destZh = fl.destZh || fl.destName || fl.destIata || '---';
       const routeHtml = (fl.originIata || fl.destIata)
-        ? `<div style="margin:3px 0;font-weight:700;color:#0f172a;">${eHtml(fl.originZh || fl.originIata || '---')} (${eHtml(fl.originIata || '--')}) ➔ ${eHtml(fl.destZh || fl.destIata || '---')} (${eHtml(fl.destIata || '--')})</div>`
+        ? `<div style="margin:3px 0;font-weight:700;color:#0f172a;">${eHtml(origZh)} (${eHtml(fl.originIata || '--')}) ➔ ${eHtml(destZh)} (${eHtml(fl.destIata || '--')})</div>`
         : '';
 
-      const m = L.marker([Number(fl.lat), Number(fl.lon)], { icon: planeIcon, zIndexOffset: 420 })
+      const m = L.marker([Number(fl.lat), Number(fl.lon)], { icon: planeIcon, zIndexOffset: isLocked ? 560 : 420 })
         .addTo(this.map)
         .bindPopup(`
-          <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:190px;">
+          <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:195px;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
               <b style="color:#0284c7;font-size:0.88rem;">✈️ ${eHtml(fl.flightNo || fl.callsign)}</b>
-              <span style="background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:999px;font-size:0.7rem;font-weight:800;">${eHtml(fl.phaseZh || '')}</span>
+              <span style="background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:999px;font-size:0.7rem;font-weight:800;">${eHtml(fl.phaseZh || fl.statusText || '')}</span>
             </div>
-            <div style="color:#334155;font-weight:700;font-size:0.76rem;margin-top:2px;">${eHtml(fl.airlineZh || '')} ‧ ${eHtml(fl.aircraftZh || fl.aircraftCode || '')}${fl.reg ? ` (${eHtml(fl.reg)})` : ''}</div>
+            <div style="color:#334155;font-weight:700;font-size:0.76rem;margin-top:2px;">${eHtml(fl.airlineZh || fl.airlineName || '')} ‧ ${eHtml(fl.aircraftZh || fl.aircraftModel || fl.aircraftCode || '')}${fl.reg ? ` (${eHtml(fl.reg)})` : ''}</div>
             ${routeHtml}
             <div style="color:#475569;font-size:0.73rem;margin-top:2px;">
-              高度：<b>${Number(fl.altM || 0).toLocaleString()} m</b> (${Number(fl.altFt || 0).toLocaleString()} ft)<br/>
+              高度：<b>${Number(fl.altM || fl.altMeters || 0).toLocaleString()} m</b> (${Number(fl.altFt || 0).toLocaleString()} ft)<br/>
               時速：<b>${Number(fl.speedKmh || 0)} km/h</b> ‧ 航向：<b>${trackDeg}°</b> ‧ 距鏡頭 <b>${Number(fl.distKm || 0).toFixed(1)} km</b>
             </div>
+            <button onclick="window.monitorApp?.radarMap?.lockFlightTarget('${eJs(fId)}', true)" style="margin-top:5px;width:100%;background:#0284c7;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.74rem;font-weight:700;">
+              🎯 鎖定座艙視角即時跟隨
+            </button>
           </div>
         `);
+      m.on('click', () => {
+        this.lockFlightTarget(fId, false);
+      });
       this.flightMarkers.push(m);
-      if (fl.id) this.flightMarkerMap.set(String(fl.id), m);
+      this.flightMarkerMap.set(fId, m);
+    }
+
+    this.renderCockpitHud();
+  }
+
+  // 每秒零閃爍運動學推進：平滑移動 Leaflet 地圖上所有飛機標記、航跡尾焰、起降導引線與座艙 HUD
+  stepLiveFlightKinematics(flights = [], airport = null) {
+    if (!this.map || !this.layerState.flights || !Array.isArray(flights)) return;
+    if (this._lastFlightPayload) {
+      this._lastFlightPayload.flights = flights;
+      if (airport) this._lastFlightPayload.airport = airport;
+    }
+
+    for (const fl of flights) {
+      const fId = String(fl.id || fl.flightNo);
+      const marker = this.flightMarkerMap.get(fId);
+      if (!marker) continue;
+      const lat = Number(fl.lat);
+      const lon = Number(fl.lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+
+      try {
+        marker.setLatLng([lat, lon]);
+        const el = typeof marker.getElement === 'function' ? marker.getElement() : null;
+        if (el) {
+          const rotEl = el.querySelector('.flight-pin-jet-rot');
+          if (rotEl) rotEl.style.transform = `rotate(${Math.round(Number(fl.track) || 0)}deg)`;
+        }
+      } catch (_) {}
+
+      const trailLine = this.flightTrailMap.get(fId);
+      if (trailLine && Array.isArray(fl.trailHistory) && fl.trailHistory.length >= 2) {
+        try { trailLine.setLatLngs(fl.trailHistory); } catch (_) {}
+      }
+
+      const guideLine = this.flightGuideMap.get(fId);
+      const ap = airport || this._lastFlightPayload?.airport;
+      if (guideLine && ap && Number.isFinite(Number(ap.lat)) && Number.isFinite(Number(ap.lon))) {
+        try { guideLine.setLatLngs([[lat, lon], [Number(ap.lat), Number(ap.lon)]]); } catch (_) {}
+      }
+
+      if (this.followLockedFlight && String(this.lockedFlightId) === fId) {
+        try {
+          this.map.panTo([lat, lon], { animate: true, duration: 0.85 });
+        } catch (_) {}
+      }
+    }
+
+    this.stepIssKinematics(1);
+    this.renderCockpitHud();
+  }
+
+  // 鎖定指定航班並同步更新地理雷達與氣象雷達座艙追蹤面板
+  lockFlightTarget(flightId, enableFollow = false) {
+    if (!flightId) return;
+    this.lockedFlightId = String(flightId);
+    if (enableFollow) {
+      this.followLockedFlight = true;
+    }
+    const flights = this._lastFlightPayload?.flights || [];
+    const target = flights.find(f => String(f.id || f.flightNo) === this.lockedFlightId);
+    if (target && this.map && enableFollow) {
+      const targetZoom = Math.max(this.map.getZoom() || 10, 10);
+      this.map.setView([Number(target.lat), Number(target.lon)], targetZoom, { animate: true });
+    }
+    this.renderCockpitHud();
+    if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.setLockedFlightId === 'function') {
+      window.weatherSkyTacticalOverlay.setLockedFlightId(this.lockedFlightId);
     }
   }
 
-  // 點擊側邊欄航班卡片時，自動平移雷達地圖至該架飛機座標並開啟資訊視窗
+  toggleFollowLockedFlight() {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.followLockedFlight = !this.followLockedFlight;
+    if (this.followLockedFlight && this.lockedFlightId) {
+      const flights = this._lastFlightPayload?.flights || [];
+      const target = flights.find(f => String(f.id || f.flightNo) === String(this.lockedFlightId));
+      if (target && this.map) {
+        this.map.panTo([Number(target.lat), Number(target.lon)], { animate: true });
+      }
+    }
+    this.renderCockpitHud();
+  }
+
+  cycleLockedFlight(step = 1) {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    const flights = this._lastFlightPayload?.flights || [];
+    if (flights.length === 0) return;
+    const curIdx = flights.findIndex(f => String(f.id || f.flightNo) === String(this.lockedFlightId));
+    const nextIdx = (curIdx + step + flights.length) % flights.length;
+    const nextFlight = flights[nextIdx];
+    if (nextFlight) {
+      this.lockFlightTarget(String(nextFlight.id || nextFlight.flightNo), this.followLockedFlight);
+      if (this.map && !this.followLockedFlight) {
+        this.map.panTo([Number(nextFlight.lat), Number(nextFlight.lon)], { animate: true });
+      }
+    }
+  }
+
+  renderCockpitHud() {
+    if (typeof document === 'undefined') return;
+    const hudEl = document.getElementById('geoRadarCockpitHud');
+    if (!hudEl) return;
+    const flights = this._lastFlightPayload?.flights || [];
+    if (!this.layerState.flights || flights.length === 0) {
+      hudEl.style.display = 'none';
+      return;
+    }
+    const fl = flights.find(f => String(f.id || f.flightNo) === String(this.lockedFlightId)) || flights[0];
+    if (!fl) {
+      hudEl.style.display = 'none';
+      return;
+    }
+    this.lockedFlightId = String(fl.id || fl.flightNo);
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    const cat = fl.category || fl.phase || 'OVERFLIGHT';
+    const catBadge = cat === 'ARRIVAL' ? '🛬 進場' : (cat === 'DEPARTURE' ? '🛫 離場' : '✈️ 巡航');
+    const orig = fl.originZh || fl.originName || fl.originIata || '起飛地';
+    const dest = fl.destZh || fl.destName || fl.destIata || '目的地';
+    const routeTxt = (fl.originIata || fl.destIata) ? `${orig} ➔ ${dest}` : (fl.phaseZh || fl.statusText || '即時航管追蹤');
+    const altM = Number(fl.altM || fl.altMeters || 0).toLocaleString();
+    const spd = Number(fl.speedKmh || 0);
+    const trk = Math.round(Number(fl.track) || 0);
+
+    hudEl.style.display = 'flex';
+    hudEl.innerHTML = `
+      <div class="radar-hud-head">
+        <div class="radar-hud-callsign">
+          <span>🎯 ${eHtml(fl.flightNo || fl.callsign)}</span>
+          <span style="font-size:0.65rem;color:#94a3b8;font-weight:700;">${eHtml(fl.airlineZh || fl.airlineName || '')} ‧ ${eHtml(catBadge)}</span>
+        </div>
+        <div class="radar-hud-actions">
+          <button type="button" class="radar-hud-mini-btn" onclick="window.monitorApp?.radarMap?.cycleLockedFlight(-1)" title="切換上一架飛機">◀</button>
+          <button type="button" class="radar-hud-mini-btn" onclick="window.monitorApp?.radarMap?.cycleLockedFlight(1)" title="切換下一架飛機">▶</button>
+          <button type="button" class="radar-hud-mini-btn ${this.followLockedFlight ? 'active' : ''}" onclick="window.monitorApp?.radarMap?.toggleFollowLockedFlight()" title="開啟後地圖鏡頭將每秒自動跟隨此架飛機移動">
+            <i class="fa-solid fa-crosshairs"></i> ${this.followLockedFlight ? '護航跟隨中' : '跟隨移動'}
+          </button>
+        </div>
+      </div>
+      <div class="radar-hud-telemetry-grid">
+        <span>${eHtml(routeTxt)}</span>
+        <span>高度 <b>${altM}m</b> ‧ 時速 <b>${spd}km/h</b> ‧ 航向 <b>${trk}°</b></span>
+      </div>
+    `;
+  }
+
+  // 點擊側邊欄航班卡片或氣象雷達飛機時，自動平移地理雷達地圖至該架飛機座標並開啟資訊視窗
   focusFlightMarker(flightId, lat, lon) {
     if (!this.map) return;
-    const fLat = Number(lat);
-    const fLon = Number(lon);
+    if (!this.layerState.flights) {
+      this.toggleTacticalLayer('flights');
+    }
+    this.lockFlightTarget(String(flightId), false);
+    const flights = this._lastFlightPayload?.flights || [];
+    const liveTarget = flights.find(f => String(f.id || f.flightNo) === String(flightId));
+    const fLat = liveTarget ? Number(liveTarget.lat) : Number(lat);
+    const fLon = liveTarget ? Number(liveTarget.lon) : Number(lon);
     if (Number.isFinite(fLat) && Number.isFinite(fLon)) {
       const targetZoom = Math.max(this.map.getZoom() || 10, 10);
       this.map.setView([fLat, fLon], targetZoom, { animate: true });
@@ -35273,6 +36264,192 @@ class FlightRadarService {
         this.refreshNow(false);
       }
     }, 30000);
+
+    // 每秒真實物理運動學推進引擎 (1Hz Dead-Reckoning Kinematics)：依真實航向角與地速平滑推進每架在途飛機與尾跡
+    this._kinematicTickCount = 0;
+    this._kinematicTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      if (Array.isArray(this.flights) && this.flights.length > 0) {
+        this.tickLiveKinematics(1);
+      }
+    }, 1000);
+  }
+
+  // 統一正規化後端 Proxy、Android 直連與靜態快照之航班欄位，並初始化運動學尾跡歷史
+  normalizeFlight(raw, refLat, refLon, nearestAirport, prevTrailMap = null) {
+    if (!raw) return null;
+    const fLat = Number(raw.lat);
+    const fLon = Number(raw.lon);
+    if (!Number.isFinite(fLat) || !Number.isFinite(fLon)) return null;
+
+    const flightNo = String(raw.flightNo || raw.callsign || raw.reg || '').trim().toUpperCase();
+    const callsign = String(raw.callsign || flightNo).trim().toUpperCase();
+    const id = String(raw.id || flightNo);
+    const category = String(raw.category || raw.phase || 'OVERFLIGHT').toUpperCase();
+    const phaseZh = String(raw.phaseZh || raw.statusText || (category === 'ARRIVAL' ? '下降進場中' : (category === 'DEPARTURE' ? '出境爬升中' : '高空巡航')));
+    const prefix2 = flightNo.slice(0, 2);
+    const prefix3 = callsign.slice(0, 3);
+    const airlineZh = raw.airlineZh || raw.airlineName || this.airlineZhMap[prefix3] || this.airlineZhMap[prefix2] || prefix3 || '民航航班';
+    const aircraftCode = String(raw.aircraftCode || '').trim().toUpperCase();
+    const aircraftZh = raw.aircraftZh || raw.aircraftModel || aircraftCode || '民航客機';
+    const originIata = String(raw.originIata || '').trim().toUpperCase();
+    const destIata = String(raw.destIata || '').trim().toUpperCase();
+    const originZh = raw.originZh || raw.originName || this.iataZhMap[originIata] || originIata || '';
+    const destZh = raw.destZh || raw.destName || this.iataZhMap[destIata] || destIata || '';
+    const altFt = Math.max(0, Math.round(Number(raw.altFt) || 0));
+    const altM = Math.max(0, Math.round(Number(raw.altM ?? raw.altMeters) || (altFt * 0.3048)));
+    const speedKmh = Math.max(0, Math.round(Number(raw.speedKmh) || (Number(raw.speedKts || 0) * 1.852)));
+    const speedKts = Math.max(0, Math.round(Number(raw.speedKts) || (speedKmh / 1.852)));
+    const track = ((Math.round(Number(raw.track) || 0) % 360) + 360) % 360;
+    const vRate = Math.round(Number(raw.vRate) || 0);
+    const onGround = Boolean(raw.onGround);
+    const distKm = +calculateDistanceKm(refLat, refLon, fLat, fLon).toFixed(1);
+    const apLat = Number(nearestAirport?.lat) || refLat;
+    const apLon = Number(nearestAirport?.lon) || refLon;
+    const distAirportKm = +calculateDistanceKm(apLat, apLon, fLat, fLon).toFixed(1);
+
+    let trailHistory = prevTrailMap && prevTrailMap.get(id);
+    if (!Array.isArray(trailHistory) || trailHistory.length === 0) {
+      // 根據飛機航向反向推算初始 4 點漸層航跡尾跡，讓雷達一開啟即展現完整飛行軌跡感
+      const rad = (track * Math.PI) / 180;
+      const cosLat = Math.max(0.2, Math.cos((fLat * Math.PI) / 180));
+      const stepKm = Math.max(0.45, Math.min(2.2, (speedKmh || 450) / 420));
+      trailHistory = [];
+      for (let s = 3; s >= 1; s--) {
+        const dLat = -((stepKm * s) * Math.cos(rad)) / 111.32;
+        const dLon = -((stepKm * s) * Math.sin(rad)) / (111.32 * cosLat);
+        trailHistory.push([+(fLat + dLat).toFixed(4), +(fLon + dLon).toFixed(4)]);
+      }
+      trailHistory.push([+fLat.toFixed(4), +fLon.toFixed(4)]);
+    } else {
+      const lastPt = trailHistory[trailHistory.length - 1];
+      if (!lastPt || Math.abs(lastPt[0] - fLat) > 0.0002 || Math.abs(lastPt[1] - fLon) > 0.0002) {
+        trailHistory = [...trailHistory.slice(-13), [+fLat.toFixed(4), +fLon.toFixed(4)]];
+      }
+    }
+
+    return {
+      id,
+      flightNo,
+      callsign,
+      category,
+      phase: category,
+      phaseZh,
+      statusText: phaseZh,
+      airlineZh,
+      airlineName: airlineZh,
+      aircraftCode,
+      aircraftZh,
+      aircraftModel: aircraftZh,
+      reg: String(raw.reg || '').trim().toUpperCase(),
+      originIata,
+      originZh,
+      originName: originZh,
+      destIata,
+      destZh,
+      destName: destZh,
+      lat: +fLat.toFixed(4),
+      lon: +fLon.toFixed(4),
+      baseLat: Number.isFinite(Number(raw.baseLat)) ? Number(raw.baseLat) : +fLat.toFixed(4),
+      baseLon: Number.isFinite(Number(raw.baseLon)) ? Number(raw.baseLon) : +fLon.toFixed(4),
+      baseAltFt: Number.isFinite(Number(raw.baseAltFt)) ? Number(raw.baseAltFt) : altFt,
+      altFt,
+      altM,
+      altMeters: altM,
+      speedKmh,
+      speedKts,
+      track,
+      vRate,
+      onGround,
+      distKm,
+      distAirportKm,
+      trailHistory
+    };
+  }
+
+  // 每秒真實運動學座標推進：依據每架飛機之地速 (km/h)、航向角 (track°) 與升降率 (vRate) 即時平滑更新位置
+  tickLiveKinematics(dtSec = 1) {
+    if (!Array.isArray(this.flights) || this.flights.length === 0) return;
+    this._kinematicTickCount = (this._kinematicTickCount || 0) + 1;
+    const refLat = Number(this.target?.lat) || 25.0153;
+    const refLon = Number(this.target?.lon) || 121.2213;
+    const ap = this.airport || this.findNearestAirport(refLat, refLon);
+    const apLat = Number(ap?.lat) || refLat;
+    const apLon = Number(ap?.lon) || refLon;
+
+    for (const fl of this.flights) {
+      const effSpeedKmh = fl.onGround
+        ? Math.max(25, Math.min(180, Number(fl.speedKmh) || 45))
+        : Math.max(260, Math.min(1050, Number(fl.speedKmh) || 520));
+      // 真實物理位移 × 1.45 視覺觀測流暢增益，使區域雷達與地理地圖每秒皆可清楚觀察飛機前進
+      const moveKm = (effSpeedKmh / 3600) * dtSec * 1.45;
+      let trackDeg = Number(fl.track) || 0;
+
+      // 若為入境進場航班且距機場 38km 內，平滑修正航向對準機場進場走廊
+      if (fl.category === 'ARRIVAL' && Number.isFinite(apLat) && Number.isFinite(apLon)) {
+        const dAp = calculateDistanceKm(fl.lat, fl.lon, apLat, apLon);
+        if (dAp <= 1.1) {
+          // 已抵達跑道降落點：循環重置回外圍進場起始點，維持進場走廊持續有航班滑行
+          fl.lat = fl.baseLat;
+          fl.lon = fl.baseLon;
+          fl.altFt = Math.max(2500, fl.baseAltFt || 6500);
+          fl.altM = Math.round(fl.altFt * 0.3048);
+          fl.altMeters = fl.altM;
+          fl.trailHistory = [[fl.lat, fl.lon]];
+        } else if (dAp <= 38) {
+          const dLonRad = ((apLon - fl.lon) * Math.PI) / 180;
+          const lat1Rad = (fl.lat * Math.PI) / 180;
+          const lat2Rad = (apLat * Math.PI) / 180;
+          const y = Math.sin(dLonRad) * Math.cos(lat2Rad);
+          const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLonRad);
+          const bearingToAp = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+          let diff = ((bearingToAp - trackDeg + 540) % 360) - 180;
+          trackDeg = (trackDeg + diff * 0.16 + 360) % 360;
+          fl.track = Math.round(trackDeg);
+        }
+      }
+
+      const rad = (trackDeg * Math.PI) / 180;
+      const cosLat = Math.max(0.2, Math.cos((fl.lat * Math.PI) / 180));
+      const dLat = (moveKm * Math.cos(rad)) / 111.32;
+      const dLon = (moveKm * Math.sin(rad)) / (111.32 * cosLat);
+      fl.lat = +(fl.lat + dLat).toFixed(4);
+      fl.lon = +(fl.lon + dLon).toFixed(4);
+
+      // 若離場或巡航飛機飛出觀測空域 (>125km)，平滑重置回空域進入點
+      const distApNow = calculateDistanceKm(apLat, apLon, fl.lat, fl.lon);
+      if (distApNow > 125 && Number.isFinite(fl.baseLat) && Number.isFinite(fl.baseLon)) {
+        fl.lat = fl.baseLat;
+        fl.lon = fl.baseLon;
+        fl.trailHistory = [[fl.lat, fl.lon]];
+      }
+
+      // 依垂直升降率微幅推進高度
+      if (!fl.onGround && fl.vRate) {
+        const dFt = (fl.vRate / 60) * dtSec;
+        fl.altFt = Math.max(300, Math.min(43000, Math.round(fl.altFt + dFt)));
+        fl.altM = Math.round(fl.altFt * 0.3048);
+        fl.altMeters = fl.altM;
+      }
+
+      fl.distKm = +calculateDistanceKm(refLat, refLon, fl.lat, fl.lon).toFixed(1);
+      fl.distAirportKm = +distApNow.toFixed(1);
+
+      if (this._kinematicTickCount % 2 === 0) {
+        if (!Array.isArray(fl.trailHistory)) fl.trailHistory = [];
+        fl.trailHistory.push([fl.lat, fl.lon]);
+        if (fl.trailHistory.length > 14) fl.trailHistory.shift();
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      if (window.monitorApp?.radarMap && typeof window.monitorApp.radarMap.stepLiveFlightKinematics === 'function') {
+        window.monitorApp.radarMap.stepLiveFlightKinematics(this.flights, this.airport);
+      }
+      if (window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.syncFlights === 'function') {
+        window.weatherSkyTacticalOverlay.syncFlights(this.flights, this.airport, this.target, this.summary);
+      }
+    }
   }
 
   isLocalProxyAvailable() {
@@ -35336,9 +36513,59 @@ class FlightRadarService {
     this.target = { lat, lon, label };
     if (!this.airport || calculateDistanceKm(lat, lon, this.airport.lat, this.airport.lon) > 80) {
       this.airport = this.findNearestAirport(lat, lon);
+      this.flights = [];
     }
     this.renderWidget();
+    // 立即自本機預同步快照極速預載周邊航班，確保氣象雷達與地理雷達 50ms 內即展現動態飛機，再由即時 API 無縫覆蓋
+    if (this.flights.length === 0) {
+      this._prehydrateFromSnapshot(lat, lon);
+    }
     this.refreshNow(true);
+  }
+
+  async _prehydrateFromSnapshot(lat, lon) {
+    try {
+      if (!this._snapHubsCache) {
+        const snapRes = await fetch('./data/parking.json', {
+          cache: 'default',
+          signal: window.createTimeoutSignal ? window.createTimeoutSignal(2500) : undefined
+        });
+        if (snapRes.ok) {
+          const snapJson = await snapRes.json();
+          if (snapJson?.flightsLive) this._snapHubsCache = snapJson.flightsLive;
+        }
+      }
+      if (!this._snapHubsCache || this.flights.length > 0) return;
+      let bestHub = null;
+      let bestDist = Infinity;
+      for (const h of Object.values(this._snapHubsCache)) {
+        if (!h || !h.airport || !Array.isArray(h.flights) || h.flights.length === 0) continue;
+        const d = calculateDistanceKm(lat, lon, Number(h.airport.lat), Number(h.airport.lon));
+        if (d < bestDist) {
+          bestDist = d;
+          bestHub = h;
+        }
+      }
+      if (bestHub && this.flights.length === 0) {
+        this.airport = { ...bestHub.airport, distKm: +bestDist.toFixed(1) };
+        this.flights = bestHub.flights
+          .map(f => this.normalizeFlight(f, lat, lon, this.airport, null))
+          .filter(Boolean);
+        this.summary = {
+          total: this.flights.length,
+          arrivals: this.flights.filter(f => f.category === 'ARRIVAL').length,
+          departures: this.flights.filter(f => f.category === 'DEPARTURE').length,
+          overflights: this.flights.filter(f => f.category === 'OVERFLIGHT').length
+        };
+        this.renderWidget();
+        if (typeof window !== 'undefined' && window.monitorApp?.radarMap && typeof window.monitorApp.radarMap.updateFlightMarkers === 'function') {
+          window.monitorApp.radarMap.updateFlightMarkers(this.flights, this.airport, this.summary);
+        }
+        if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.syncFlights === 'function') {
+          window.weatherSkyTacticalOverlay.syncFlights(this.flights, this.airport, this.target, this.summary);
+        }
+      }
+    } catch (_) {}
   }
 
   async refreshNow(force = false) {
@@ -35352,8 +36579,19 @@ class FlightRadarService {
       if (token !== this._reqToken) return;
       if (res && res.airport) {
         this.airport = res.airport;
-        this.flights = Array.isArray(res.flights) ? res.flights : [];
-        this.summary = res.summary || {
+        const prevTrailMap = new Map();
+        if (Array.isArray(this.flights)) {
+          this.flights.forEach(f => {
+            if (f && f.id && Array.isArray(f.trailHistory)) {
+              prevTrailMap.set(String(f.id), f.trailHistory);
+            }
+          });
+        }
+        const rawList = Array.isArray(res.flights) ? res.flights : [];
+        this.flights = rawList
+          .map(f => this.normalizeFlight(f, lat, lon, this.airport, prevTrailMap))
+          .filter(Boolean);
+        this.summary = {
           total: this.flights.length,
           arrivals: this.flights.filter(f => f.category === 'ARRIVAL').length,
           departures: this.flights.filter(f => f.category === 'DEPARTURE').length,
@@ -35363,6 +36601,9 @@ class FlightRadarService {
         this.source = res.source || 'live';
         if (typeof window !== 'undefined' && window.monitorApp && window.monitorApp.radarMap && typeof window.monitorApp.radarMap.updateFlightMarkers === 'function') {
           window.monitorApp.radarMap.updateFlightMarkers(this.flights, this.airport, this.summary);
+        }
+        if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.syncFlights === 'function') {
+          window.weatherSkyTacticalOverlay.syncFlights(this.flights, this.airport, this.target, this.summary);
         }
       }
     } catch (_) {} finally {
@@ -35655,6 +36896,589 @@ class FlightRadarService {
       </div>
       <div class="flight-radar-list">${listHtml}</div>
     `;
+  }
+}
+
+/* ==========================================================================
+   全球即時氣象雷達 × 60fps 動態飛機與真實風場戰術疊加引擎 (WeatherSkyTacticalOverlay)
+   - 直接疊加於「氣象署雷達回波 / 全球即時氣象雷達」(#cwaRadarWidgetCard) 取景窗上方
+   - 1. ✈️ 真實 ADS-B 動態飛機投影：依真實航向角旋轉機身、漸層尾焰、起降導引虛線與都卜勒聲納脈衝
+   - 2. 🌬️ 真實風場氣流粒子：串接 Open-Meteo 實測風向角與風速，繪製 42 道動態氣流流線粒子
+   - 3. 📡 360° 都卜勒氣象雷達旋轉掃描波束、同心距離圈與方位角刻度
+   - 4. 🎯 雙向互動鎖定：點擊氣象雷達上的任一飛機即可鎖定座艙遙測並同步定位下方地理雷達地圖
+   ========================================================================== */
+class WeatherSkyTacticalOverlay {
+  constructor() {
+    this.layers = {
+      planes: true,
+      wind: true,
+      sweep: true
+    };
+    this.scopeMode = 'airspace80'; // 'airspace80' | 'wide380' | 'passthrough'
+    this.centerLat = 25.0153;
+    this.centerLon = 121.2213;
+    this.isIntl = false;
+    this.flights = [];
+    this.airport = null;
+    this.summary = { total: 0, arrivals: 0, departures: 0, overflights: 0 };
+    this.wind = { speedKmh: 16, directionDeg: 48, gustKmh: 24, precipMm: 0 };
+    this.lockedFlightId = null;
+    this.hoveredFlightId = null;
+    this.sweepAngle = 0;
+    this.screenAircraftPts = [];
+    this._rafId = null;
+    this._lastFrameMs = 0;
+    this._boundCanvas = null;
+
+    // 初始化 42 道風場流線粒子
+    this.windParticles = Array.from({ length: 42 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      len: 10 + Math.random() * 14,
+      speedFactor: 0.75 + Math.random() * 0.65,
+      alpha: 0.25 + Math.random() * 0.45
+    }));
+
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.init());
+      } else {
+        setTimeout(() => this.init(), 60);
+      }
+    }
+  }
+
+  init() {
+    this._ensureCanvasBinding();
+    this.startLoop();
+  }
+
+  _ensureCanvasBinding() {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.getElementById('weatherRadarLiveCanvas');
+    if (!canvas) return null;
+    if (this._boundCanvas !== canvas) {
+      this._boundCanvas = canvas;
+      canvas.addEventListener('mousemove', (e) => this._onCanvasMouseMove(e));
+      canvas.addEventListener('mouseleave', () => {
+        this.hoveredFlightId = null;
+      });
+      canvas.addEventListener('click', (e) => this._onCanvasClick(e));
+    }
+    return canvas;
+  }
+
+  setRadarCenter(lat, lon, isIntl = false) {
+    if (Number.isFinite(Number(lat)) && Number.isFinite(Number(lon))) {
+      this.centerLat = Number(lat);
+      this.centerLon = Number(lon);
+    }
+    this.isIntl = Boolean(isIntl);
+    this._updateTopHudBadges();
+  }
+
+  syncWeatherTelemetry(telemetry = {}) {
+    if (!telemetry) return;
+    if (Number.isFinite(Number(telemetry.speedKmh))) this.wind.speedKmh = Math.max(0, Number(telemetry.speedKmh));
+    if (Number.isFinite(Number(telemetry.directionDeg))) this.wind.directionDeg = ((Number(telemetry.directionDeg) % 360) + 360) % 360;
+    if (Number.isFinite(Number(telemetry.gustKmh))) this.wind.gustKmh = Math.max(0, Number(telemetry.gustKmh));
+    if (Number.isFinite(Number(telemetry.precipMm))) this.wind.precipMm = Math.max(0, Number(telemetry.precipMm));
+    this._updateTopHudBadges();
+  }
+
+  syncFlights(flights = [], airport = null, target = null, summary = null) {
+    this.flights = Array.isArray(flights) ? flights : [];
+    if (airport) this.airport = airport;
+    if (target && Number.isFinite(Number(target.lat)) && Number.isFinite(Number(target.lon))) {
+      this.centerLat = Number(target.lat);
+      this.centerLon = Number(target.lon);
+    }
+    if (summary) {
+      this.summary = summary;
+    } else {
+      this.summary = {
+        total: this.flights.length,
+        arrivals: this.flights.filter(f => (f.category || f.phase) === 'ARRIVAL').length,
+        departures: this.flights.filter(f => (f.category || f.phase) === 'DEPARTURE').length,
+        overflights: this.flights.filter(f => (f.category || f.phase) === 'OVERFLIGHT').length
+      };
+    }
+    if (this.flights.length > 0 && (!this.lockedFlightId || !this.flights.some(f => String(f.id || f.flightNo) === String(this.lockedFlightId)))) {
+      this.lockedFlightId = String(this.flights[0].id || this.flights[0].flightNo);
+    }
+    this._updateTopHudBadges();
+    this.renderLockedBar();
+  }
+
+  setLockedFlightId(flightId) {
+    if (!flightId) return;
+    this.lockedFlightId = String(flightId);
+    this.renderLockedBar();
+  }
+
+  toggleLayer(key) {
+    if (!key || !(key in this.layers)) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.layers[key] = !this.layers[key];
+    if (typeof document !== 'undefined') {
+      const btnMap = {
+        planes: 'wRadarTogglePlanesBtn',
+        wind: 'wRadarToggleWindBtn',
+        sweep: 'wRadarToggleSweepBtn'
+      };
+      const btn = document.getElementById(btnMap[key]);
+      if (btn) btn.classList.toggle('active', this.layers[key]);
+    }
+    this.renderLockedBar();
+  }
+
+  cycleScopeMode() {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    const order = ['airspace80', 'wide380', 'passthrough'];
+    const nextIdx = (order.indexOf(this.scopeMode) + 1) % order.length;
+    this.scopeMode = order[nextIdx];
+    const canvas = this._ensureCanvasBinding();
+    if (canvas) {
+      canvas.classList.toggle('is-passthrough', this.scopeMode === 'passthrough');
+    }
+    if (typeof document !== 'undefined') {
+      const txtEl = document.getElementById('wRadarScopeBtnText');
+      const btnEl = document.getElementById('wRadarScopeModeBtn');
+      const labelMap = {
+        airspace80: '80km 空域',
+        wide380: this.isIntl ? '240km 廣域' : '全台海峽',
+        passthrough: '底圖拖曳'
+      };
+      if (txtEl) txtEl.textContent = labelMap[this.scopeMode] || '80km 空域';
+      if (btnEl) btnEl.classList.toggle('active', this.scopeMode !== 'airspace80');
+    }
+  }
+
+  _windDirToCompassZh(deg) {
+    const dirs = ['北風', '東北風', '東風', '東南風', '南風', '西南風', '西風', '西北風'];
+    const idx = Math.round((((Number(deg) || 0) % 360) + 360) % 360 / 45) % 8;
+    return dirs[idx];
+  }
+
+  _updateTopHudBadges() {
+    if (typeof document === 'undefined') return;
+    const airEl = document.getElementById('wRadarAirspaceText');
+    const planeBtnTxt = document.getElementById('wRadarPlanesBtnText');
+    const total = this.flights.length;
+    const arr = this.summary?.arrivals ?? 0;
+    const dep = this.summary?.departures ?? 0;
+    const apIata = this.airport?.iata ? `${this.airport.iata} ` : '';
+    if (airEl) {
+      airEl.textContent = total > 0
+        ? `✈️ ${apIata}空域 ${total} 架動態 (🛬${arr} 🛫${dep})`
+        : `✈️ ${apIata}空域動態掃描中`;
+    }
+    if (planeBtnTxt) {
+      planeBtnTxt.textContent = total > 0 ? `飛機 (${total})` : '動態飛機';
+    }
+
+    const windEl = document.getElementById('wRadarWindText');
+    const windIcon = document.getElementById('wRadarWindArrowIcon');
+    const dirZh = this._windDirToCompassZh(this.wind.directionDeg);
+    const spd = Math.round(this.wind.speedKmh || 0);
+    if (windEl) {
+      windEl.textContent = `🌬️ ${dirZh} ${spd} km/h`;
+    }
+    if (windIcon) {
+      const blowToDeg = (Number(this.wind.directionDeg || 0) + 135) % 360;
+      windIcon.style.transform = `rotate(${blowToDeg}deg)`;
+    }
+  }
+
+  renderLockedBar() {
+    if (typeof document === 'undefined') return;
+    const bar = document.getElementById('weatherRadarLockedBar');
+    if (!bar) return;
+    if (!this.layers.planes || !Array.isArray(this.flights) || this.flights.length === 0) {
+      bar.style.display = 'none';
+      return;
+    }
+    const fl = this.flights.find(f => String(f.id || f.flightNo) === String(this.lockedFlightId)) || this.flights[0];
+    if (!fl) {
+      bar.style.display = 'none';
+      return;
+    }
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    const eJs = (typeof window !== 'undefined' && window.escJsAttr) ? window.escJsAttr : (v => String(v ?? ''));
+    const cat = fl.category || fl.phase || 'OVERFLIGHT';
+    const catTag = cat === 'ARRIVAL' ? '🛬 進場' : (cat === 'DEPARTURE' ? '🛫 離場' : '✈️ 巡航');
+    const orig = fl.originZh || fl.originName || fl.originIata || '起飛地';
+    const dest = fl.destZh || fl.destName || fl.destIata || '目的地';
+    const routeStr = (fl.originIata || fl.destIata) ? `${orig} ➔ ${dest}` : (fl.phaseZh || fl.statusText || '即時航道');
+
+    bar.style.display = 'flex';
+    bar.innerHTML = `
+      <div class="radar-hud-head">
+        <div class="radar-hud-callsign">
+          <span>✈️ ${eHtml(fl.flightNo || fl.callsign)}</span>
+          <span style="font-size:0.64rem;color:#94a3b8;font-weight:700;">${eHtml(fl.airlineZh || '')} ‧ ${eHtml(fl.aircraftZh || fl.aircraftCode || '')} (${eHtml(catTag)})</span>
+        </div>
+        <div class="radar-hud-actions">
+          <button type="button" class="radar-hud-mini-btn" onclick="window.weatherSkyTacticalOverlay?.cycleFlight(-1)" title="切換上一架氣象雷達飛機">◀</button>
+          <button type="button" class="radar-hud-mini-btn" onclick="window.weatherSkyTacticalOverlay?.cycleFlight(1)" title="切換下一架氣象雷達飛機">▶</button>
+          <button type="button" class="radar-hud-mini-btn active" onclick="window.monitorApp?.radarMap?.focusFlightMarker('${eJs(fl.id)}', ${Number(fl.lat) || 0}, ${Number(fl.lon) || 0})" title="在下方地理雷達地圖定位並追蹤此架飛機">
+            <i class="fa-solid fa-location-crosshairs"></i> 地圖定位
+          </button>
+        </div>
+      </div>
+      <div class="radar-hud-telemetry-grid">
+        <span>${eHtml(routeStr)}</span>
+        <span>高度 <b>${Number(fl.altM || 0).toLocaleString()}m</b> ‧ 時速 <b>${Number(fl.speedKmh || 0)}km/h</b> ‧ 航向 <b>${Math.round(Number(fl.track) || 0)}°</b></span>
+      </div>
+    `;
+  }
+
+  cycleFlight(step = 1) {
+    if (!Array.isArray(this.flights) || this.flights.length === 0) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    const curIdx = this.flights.findIndex(f => String(f.id || f.flightNo) === String(this.lockedFlightId));
+    const nextIdx = (curIdx + step + this.flights.length) % this.flights.length;
+    const target = this.flights[nextIdx];
+    if (target) {
+      this.lockedFlightId = String(target.id || target.flightNo);
+      this.renderLockedBar();
+      if (window.monitorApp?.radarMap && typeof window.monitorApp.radarMap.lockFlightTarget === 'function') {
+        window.monitorApp.radarMap.lockFlightTarget(this.lockedFlightId, false);
+      }
+    }
+  }
+
+  _findAircraftAtCanvasPos(clientX, clientY) {
+    const canvas = this._boundCanvas;
+    if (!canvas || !this.layers.planes || this.screenAircraftPts.length === 0) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const x = ((clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((clientY - rect.top) / rect.height) * canvas.height;
+    let best = null;
+    let minD = 24;
+    for (const pt of this.screenAircraftPts) {
+      const d = Math.hypot(pt.x - x, pt.y - y);
+      if (d < minD) {
+        minD = d;
+        best = pt.flight;
+      }
+    }
+    return best;
+  }
+
+  _onCanvasMouseMove(e) {
+    const hit = this._findAircraftAtCanvasPos(e.clientX, e.clientY);
+    this.hoveredFlightId = hit ? String(hit.id || hit.flightNo) : null;
+    if (this._boundCanvas) {
+      this._boundCanvas.style.cursor = hit ? 'pointer' : 'crosshair';
+    }
+  }
+
+  _onCanvasClick(e) {
+    const hit = this._findAircraftAtCanvasPos(e.clientX, e.clientY);
+    if (hit) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+      this.lockedFlightId = String(hit.id || hit.flightNo);
+      this.renderLockedBar();
+      if (window.monitorApp?.radarMap && typeof window.monitorApp.radarMap.focusFlightMarker === 'function') {
+        window.monitorApp.radarMap.focusFlightMarker(this.lockedFlightId, hit.lat, hit.lon);
+      }
+    }
+  }
+
+  // 將經緯度座標投影至 380x380 氣象雷達畫布座標 (支援 80km 空域特寫與全台/廣域尺度)
+  _projectLatLon(lat, lon, w, h, refLat, refLon, radiusKm) {
+    if (!this.isIntl && this.scopeMode === 'wide380') {
+      // 台灣中央氣象署回波圖地理對位模式 (21.55°N..25.75°N, 119.15°E..122.65°E)
+      const xRatio = (lon - 119.15) / (122.65 - 119.15);
+      const yRatio = (25.75 - lat) / (25.75 - 21.55);
+      return {
+        x: Math.max(12, Math.min(w - 12, xRatio * w)),
+        y: Math.max(18, Math.min(h - 18, yRatio * h))
+      };
+    }
+    const cosLat = Math.max(0.2, Math.cos((refLat * Math.PI) / 180));
+    const dxKm = (lon - refLon) * 111.32 * cosLat;
+    const dyKm = (lat - refLat) * 111.32;
+    const half = Math.min(w, h) * 0.45;
+    const scale = half / Math.max(25, radiusKm);
+    return {
+      x: (w / 2) + dxKm * scale,
+      y: (h / 2) - dyKm * scale
+    };
+  }
+
+  startLoop() {
+    if (this._rafId) cancelAnimationFrame(this._rafId);
+    const loop = (ts) => {
+      this._rafId = requestAnimationFrame(loop);
+      if (typeof document !== 'undefined' && document.hidden) return;
+      // 30fps 節流渲染，兼具極致流暢度與超低 CPU 耗電
+      if (ts - this._lastFrameMs < 32) return;
+      const dt = Math.min(0.1, (ts - (this._lastFrameMs || ts)) / 1000) || 0.033;
+      this._lastFrameMs = ts;
+      this.drawFrame(dt);
+    };
+    this._rafId = requestAnimationFrame(loop);
+  }
+
+  drawFrame(dt = 0.033) {
+    const canvas = this._ensureCanvasBinding();
+    if (!canvas || typeof canvas.getContext !== 'function') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = canvas.width || 380;
+    const h = canvas.height || 380;
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxR = Math.min(w, h) * 0.44;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // 決定投影基準點與空域半徑
+    const ap = this.airport;
+    const refLat = (ap && Number.isFinite(Number(ap.lat)) && Number(ap.distKm || 0) <= 140)
+      ? (this.centerLat * 0.35 + Number(ap.lat) * 0.65)
+      : this.centerLat;
+    const refLon = (ap && Number.isFinite(Number(ap.lon)) && Number(ap.distKm || 0) <= 140)
+      ? (this.centerLon * 0.35 + Number(ap.lon) * 0.65)
+      : this.centerLon;
+
+    let maxFlightKm = 55;
+    for (const f of this.flights) {
+      const d = calculateDistanceKm(refLat, refLon, Number(f.lat), Number(f.lon));
+      if (Number.isFinite(d) && d < 180 && d > maxFlightKm) maxFlightKm = d;
+    }
+    const radiusKm = this.scopeMode === 'wide380'
+      ? 220
+      : Math.max(55, Math.min(105, maxFlightKm * 1.12));
+
+    // 1. 繪製 360° 都卜勒氣象雷達同心距離環與旋轉掃描波束
+    if (this.layers.sweep) {
+      this.sweepAngle = (this.sweepAngle + dt * 1.35) % (Math.PI * 2);
+
+      ctx.save();
+      [0.33, 0.66, 1.0].forEach((rRatio, idx) => {
+        const r = maxR * rRatio;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = idx === 2 ? 'rgba(0, 240, 255, 0.28)' : 'rgba(56, 189, 248, 0.17)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash(idx === 1 ? [3, 4] : []);
+        ctx.stroke();
+
+        const kmLabel = Math.round(radiusKm * rRatio);
+        ctx.fillStyle = 'rgba(186, 230, 253, 0.62)';
+        ctx.font = '700 9px monospace';
+        ctx.fillText(`${kmLabel}km`, cx + 4, cy - r + 10);
+      });
+      ctx.setLineDash([]);
+
+      // 十字方位軸線
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.13)';
+      ctx.beginPath();
+      ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy);
+      ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR);
+      ctx.stroke();
+
+      // 360° 旋轉扇形波束
+      const fanSpan = 0.42;
+      for (let s = 0; s < 14; s++) {
+        const a0 = this.sweepAngle - (s / 14) * fanSpan;
+        const a1 = this.sweepAngle - ((s + 1) / 14) * fanSpan;
+        const alpha = (1 - s / 14) * 0.17;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, maxR, a1, a0);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(0, 240, 255, ${alpha.toFixed(3)})`;
+        ctx.fill();
+      }
+
+      // 掃描前緣亮線
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(this.sweepAngle) * maxR, cy + Math.sin(this.sweepAngle) * maxR);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.72)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 2. 繪製 Open-Meteo 真實風場氣流流線粒子
+    if (this.layers.wind) {
+      const blowToRad = (((Number(this.wind.directionDeg || 45) + 180) % 360) * Math.PI) / 180;
+      const vx = Math.sin(blowToRad);
+      const vy = -Math.cos(blowToRad);
+      const spdPx = (0.7 + Math.min(3.5, (Number(this.wind.speedKmh) || 14) / 10)) * (dt * 30);
+
+      ctx.save();
+      ctx.lineCap = 'round';
+      for (const p of this.windParticles) {
+        p.x = (p.x + (vx * spdPx * p.speedFactor) / w + 1) % 1;
+        p.y = (p.y + (vy * spdPx * p.speedFactor) / h + 1) % 1;
+        const px = p.x * w;
+        const py = p.y * h;
+        const tx = px - vx * p.len;
+        const ty = py - vy * p.len;
+
+        const grad = ctx.createLinearGradient(tx, ty, px, py);
+        grad.addColorStop(0, 'rgba(52, 211, 153, 0)');
+        grad.addColorStop(1, `rgba(110, 231, 183, ${p.alpha.toFixed(2)})`);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(px, py);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 3. 繪製觀測鏡頭中心、機場塔台與即時動態飛行航班
+    this.screenAircraftPts = [];
+    if (this.layers.planes) {
+      ctx.save();
+      // 觀測鏡頭準星
+      const camPt = this._projectLatLon(this.centerLat, this.centerLon, w, h, refLat, refLon, radiusKm);
+      ctx.beginPath();
+      ctx.arc(camPt.x, camPt.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#a855f7';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      // 最近國際機場塔台標記与跑道進場軸線
+      let apPt = null;
+      if (ap && Number.isFinite(Number(ap.lat)) && Number.isFinite(Number(ap.lon))) {
+        apPt = this._projectLatLon(Number(ap.lat), Number(ap.lon), w, h, refLat, refLon, radiusKm);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(apPt.x - 16, apPt.y - 8, 32, 16, 4) : ctx.rect(apPt.x - 16, apPt.y - 8, 32, 16);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#00f0ff';
+        ctx.font = '800 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(ap.iata || 'APT'), apPt.x, apPt.y);
+      }
+
+      // 繪製每架真實動態飛機
+      const visibleFlights = this.flights.slice(0, 22);
+      for (const fl of visibleFlights) {
+        const fId = String(fl.id || fl.flightNo);
+        const isLocked = fId === String(this.lockedFlightId) || fId === String(this.hoveredFlightId);
+        const cat = fl.category || fl.phase || 'OVERFLIGHT';
+        const color = isLocked
+          ? '#34d399'
+          : (cat === 'ARRIVAL' ? '#00f0ff' : (cat === 'DEPARTURE' ? '#fbbf24' : '#38bdf8'));
+
+        const pt = this._projectLatLon(Number(fl.lat), Number(fl.lon), w, h, refLat, refLon, radiusKm);
+        if (pt.x < 10 || pt.x > w - 10 || pt.y < 22 || pt.y > h - 22) {
+          pt.x = Math.max(16, Math.min(w - 16, pt.x));
+          pt.y = Math.max(26, Math.min(h - 24, pt.y));
+        }
+        this.screenAircraftPts.push({ x: pt.x, y: pt.y, flight: fl });
+
+        // 進場／離場航班與機場塔台之導引虛線
+        if (apPt && (cat === 'ARRIVAL' || cat === 'DEPARTURE')) {
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.lineTo(apPt.x, apPt.y);
+          ctx.strokeStyle = isLocked ? 'rgba(52, 211, 153, 0.55)' : 'rgba(0, 240, 255, 0.22)';
+          ctx.lineWidth = isLocked ? 1.3 : 0.9;
+          ctx.setLineDash([2, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // 繪製飛機漸層航跡尾焰
+        if (Array.isArray(fl.trailHistory) && fl.trailHistory.length >= 2) {
+          ctx.beginPath();
+          fl.trailHistory.forEach((tp, idx) => {
+            const tScreen = this._projectLatLon(tp[0], tp[1], w, h, refLat, refLon, radiusKm);
+            if (idx === 0) ctx.moveTo(tScreen.x, tScreen.y);
+            else ctx.lineTo(tScreen.x, tScreen.y);
+          });
+          ctx.lineTo(pt.x, pt.y);
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = isLocked ? 0.85 : 0.52;
+          ctx.lineWidth = isLocked ? 2.2 : 1.5;
+          ctx.stroke();
+          ctx.globalAlpha = 1.0;
+        }
+
+        // 當都卜勒雷達波束掃過飛機或該飛機被鎖定時，繪製戰術聲納鎖定光圈
+        const planeAngle = (Math.atan2(pt.y - cy, pt.x - cx) + Math.PI * 2) % (Math.PI * 2);
+        const angleDiff = Math.abs(this.sweepAngle - planeAngle);
+        if (isLocked || (this.layers.sweep && angleDiff < 0.24)) {
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, isLocked ? 11 : 8, 0, Math.PI * 2);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = isLocked ? 1.6 : 1.0;
+          ctx.stroke();
+        }
+
+        // 依真實航向角 (track°) 旋轉繪製向量噴射客機圖標
+        const trackRad = ((Number(fl.track) || 0) * Math.PI) / 180;
+        ctx.save();
+        ctx.translate(pt.x, pt.y);
+        ctx.rotate(trackRad);
+        ctx.fillStyle = color;
+        ctx.strokeStyle = '#070b14';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, -7.5);
+        ctx.lineTo(2.0, -2.0);
+        ctx.lineTo(7.2, 1.5);
+        ctx.lineTo(7.2, 3.0);
+        ctx.lineTo(1.8, 1.5);
+        ctx.lineTo(1.5, 5.5);
+        ctx.lineTo(3.8, 7.0);
+        ctx.lineTo(3.8, 8.0);
+        ctx.lineTo(0, 6.8);
+        ctx.lineTo(-3.8, 8.0);
+        ctx.lineTo(-3.8, 7.0);
+        ctx.lineTo(-1.5, 5.5);
+        ctx.lineTo(-1.8, 1.5);
+        ctx.lineTo(-7.2, 3.0);
+        ctx.lineTo(-7.2, 1.5);
+        ctx.lineTo(-2.0, -2.0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        // 航班呼號與高度標籤
+        const label = String(fl.flightNo || fl.callsign || '').slice(0, 7);
+        if (label) {
+          ctx.font = isLocked ? '800 9.5px monospace' : '700 8.5px monospace';
+          const tw = ctx.measureText(label).width;
+          const bx = pt.x + 8;
+          const by = pt.y - 6;
+          ctx.fillStyle = isLocked ? 'rgba(6, 78, 59, 0.92)' : 'rgba(9, 14, 26, 0.84)';
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 0.9;
+          ctx.beginPath();
+          ctx.rect(bx, by, tw + 6, 12);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = isLocked ? '#ecfdf5' : color;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, bx + 3, by + 6);
+        }
+      }
+      ctx.restore();
+    }
   }
 }
 
@@ -36427,10 +38251,21 @@ class ImmersiveLocalPulseService {
     const getCachedIss = async () => {
       if (this._issRawCache && (Date.now() - (this._issRawCacheTs || 0) < 20000)) return this._issRawCache;
       const j = await fetch('https://api.wheretheiss.at/v1/satellites/25544', {
-        signal: window.createTimeoutSignal ? window.createTimeoutSignal(2800) : undefined
+        signal: window.createTimeoutSignal ? window.createTimeoutSignal(2200) : undefined
       }).then(r => r.ok ? r.json() : null).catch(() => null);
-      if (j && Number.isFinite(Number(j.latitude))) { this._issRawCache = j; this._issRawCacheTs = Date.now(); }
-      return j || this._issRawCache || null;
+      if (j && Number.isFinite(Number(j.latitude))) { this._issRawCache = j; this._issRawCacheTs = Date.now(); return j; }
+      if (this._issRawCache) return this._issRawCache;
+      const tSec = Date.now() / 1000;
+      const meanMotion = (2 * Math.PI) / 5560.8;
+      const earthRot = (2 * Math.PI) / 86164;
+      return {
+        latitude: +(51.64 * Math.sin(meanMotion * tSec)).toFixed(4),
+        longitude: +((((tSec * (meanMotion - earthRot) * 180) / Math.PI) % 360 + 540) % 360 - 180).toFixed(4),
+        altitude: 421.8,
+        velocity: 27576,
+        visibility: 'daylight',
+        footprint: 4510
+      };
     };
 
     const [marineRes, alpineRes, issRes, wikiRes, radioRes, holidayRes, snapRes] = await Promise.allSettled([
@@ -36943,6 +38778,7 @@ if (typeof window !== 'undefined') {
   window.traParkingService = new TraAndParkingService();
   window.freewaySpeedService = new FreewaySpeedService();
   window.travelToolkitService = new TravelToolkitService();
+  window.weatherSkyTacticalOverlay = new WeatherSkyTacticalOverlay();
   window.flightRadarService = new FlightRadarService();
   window.immersivePulseService = new ImmersiveLocalPulseService();
 }
@@ -40485,7 +42321,10 @@ class MonitorApp {
         if (typeof this.updateClockDisplay === 'function') this.updateClockDisplay();
       }
 
-      // 立即並行啟動航班雷達與身歷其境在地脈動，無須等待行政區反向地理編碼完成
+      // 立即並行啟動航班雷達、地理雷達空域錨定與身歷其境在地脈動，無須等待行政區反向地理編碼完成
+      if (this.radarMap && typeof this.radarMap.anchorToActiveSpot === 'function') {
+        this.radarMap.anchorToActiveSpot(lat, lon, spotLabel);
+      }
       if (window.flightRadarService) {
         window.flightRadarService.syncForLocation(cid, { lat, lon, label: spotLabel });
       }

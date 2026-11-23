@@ -4093,7 +4093,7 @@ async function fetchNearbyFlightsData(lat, lon) {
   // 主引擎：FlightRadar24 即時區域雷達 (含完整起降機場 IATA、航班號、機型、高度、地速、升降率)
   try {
     const frUrl = `https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds=${bounds}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=1&air=1&vehicles=0&estimated=1&maxage=14400&gliders=0&stats=1`;
-    const frJson = await fetchJsonWithRetry(frUrl, 0, 5000);
+    const frJson = await fetchJsonWithRetry(frUrl, 0, 2400);
     if (frJson && typeof frJson === 'object') {
       for (const [k, v] of Object.entries(frJson)) {
         if (!Array.isArray(v) || v.length < 16) continue;
@@ -4139,22 +4139,35 @@ async function fetchNearbyFlightsData(lat, lon) {
           else statusText = '出境爬升中';
         }
 
+        const airlineZh = resolveAirlineNameZh(iataNo, callsign, airlineIcao);
+        const aircraftZh = AIRCRAFT_MODEL_ZH_MAP[acCode] || acCode || '民航客機';
+        const originZh = formatAirportCodeZh(origIata) || (phase === 'DEPARTURE' ? formatAirportCodeZh(airport.iata) : '');
+        const destZh = formatAirportCodeZh(destIata) || (phase === 'ARRIVAL' ? formatAirportCodeZh(airport.iata) : '');
+        const altM = Math.round(altFt * 0.3048);
+
         flightsMap.set(flightNo, {
           id: k,
           flightNo,
           callsign: callsign || flightNo,
-          airlineName: resolveAirlineNameZh(iataNo, callsign, airlineIcao),
+          airlineName: airlineZh,
+          airlineZh,
           aircraftCode: acCode,
-          aircraftModel: AIRCRAFT_MODEL_ZH_MAP[acCode] || acCode || '民航機',
+          aircraftModel: aircraftZh,
+          aircraftZh,
           reg,
           originIata: origIata,
-          originName: formatAirportCodeZh(origIata) || (phase === 'DEPARTURE' ? formatAirportCodeZh(airport.iata) : ''),
+          originName: originZh,
+          originZh,
           destIata,
-          destName: formatAirportCodeZh(destIata) || (phase === 'ARRIVAL' ? formatAirportCodeZh(airport.iata) : ''),
+          destName: destZh,
+          destZh,
           phase,
+          category: phase,
           statusText,
+          phaseZh: statusText,
           altFt,
-          altMeters: Math.round(altFt * 0.3048),
+          altMeters: altM,
+          altM,
           speedKts: gsKts,
           speedKmh: Math.round(gsKts * 1.852),
           vRate,
@@ -4177,7 +4190,7 @@ async function fetchNearbyFlightsData(lat, lon) {
     ];
     for (const u of adsbUrls) {
       try {
-        const j = await fetchJsonWithRetry(u, 0, 5000);
+        const j = await fetchJsonWithRetry(u, 0, 2200);
         const list = Array.isArray(j?.aircraft) ? j.aircraft : (Array.isArray(j?.ac) ? j.ac : []);
         if (list.length === 0) continue;
         for (const a of list) {
@@ -4205,22 +4218,35 @@ async function fetchNearbyFlightsData(lat, lon) {
             ? (altFt <= 2500 ? '最後進場降落' : '下降進場中')
             : (phase === 'DEPARTURE' ? (onGround ? '跑道滑行待飛' : '出境爬升中') : '高空巡航');
 
+          const airlineZh = resolveAirlineNameZh('', callsign, '');
+          const aircraftZh = AIRCRAFT_MODEL_ZH_MAP[acCode] || a.desc || acCode || '民航客機';
+          const originZh = phase === 'DEPARTURE' ? formatAirportCodeZh(airport.iata) : '';
+          const destZh = phase === 'ARRIVAL' ? formatAirportCodeZh(airport.iata) : '';
+          const altM = Math.round(altFt * 0.3048);
+
           flightsMap.set(flightNo, {
             id: String(a.hex || flightNo),
             flightNo,
             callsign,
-            airlineName: resolveAirlineNameZh('', callsign, ''),
+            airlineName: airlineZh,
+            airlineZh,
             aircraftCode: acCode,
-            aircraftModel: AIRCRAFT_MODEL_ZH_MAP[acCode] || a.desc || acCode || '民航機',
+            aircraftModel: aircraftZh,
+            aircraftZh,
             reg,
             originIata: phase === 'DEPARTURE' ? airport.iata : '',
-            originName: phase === 'DEPARTURE' ? formatAirportCodeZh(airport.iata) : '',
+            originName: originZh,
+            originZh,
             destIata: phase === 'ARRIVAL' ? airport.iata : '',
-            destName: phase === 'ARRIVAL' ? formatAirportCodeZh(airport.iata) : '',
+            destName: destZh,
+            destZh,
             phase,
+            category: phase,
             statusText,
+            phaseZh: statusText,
             altFt,
-            altMeters: Math.round(altFt * 0.3048),
+            altMeters: altM,
+            altM,
             speedKts: gsKts,
             speedKmh: Math.round(gsKts * 1.852),
             vRate,
@@ -4392,7 +4418,7 @@ async function fetchLocalNewsHeadlines(cc = 'TW', cityHint = '') {
   const baseQuery = COUNTRY_NEWS_QUERY_MAP[cleanCc] || `${cityHint || cleanCc} 國際新聞`;
   const url = `https://news.google.com/rss/search?q=${encodeURIComponent(baseQuery)}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant`;
   try {
-    const xml = await fetchRemoteHtml(url, 4500);
+    const xml = await fetchRemoteHtml(url, 2400);
     const items = [];
     const seenTitles = new Set();
     const itemMatches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
@@ -4433,7 +4459,7 @@ async function fetchIssTelemetry() {
     return issTelemetryCache.data;
   }
   try {
-    const j = await fetchJsonWithRetry('https://api.wheretheiss.at/v1/satellites/25544', 0, 3800);
+    const j = await fetchJsonWithRetry('https://api.wheretheiss.at/v1/satellites/25544', 0, 2200);
     if (j && Number.isFinite(Number(j.latitude)) && Number.isFinite(Number(j.longitude))) {
       const data = {
         lat: +Number(j.latitude).toFixed(4),
@@ -4448,7 +4474,22 @@ async function fetchIssTelemetry() {
       return data;
     }
   } catch (_) {}
-  return issTelemetryCache.data || null;
+  if (issTelemetryCache.data) return issTelemetryCache.data;
+  // 克卜勒軌道參數即時推算備援 (週期 92.68 分鐘，傾角 51.64°)
+  const tSec = now / 1000;
+  const meanMotion = (2 * Math.PI) / 5560.8;
+  const earthRot = (2 * Math.PI) / 86164;
+  const lat = +(51.64 * Math.sin(meanMotion * tSec)).toFixed(4);
+  const lon = +((((tSec * (meanMotion - earthRot) * 180) / Math.PI) % 360 + 540) % 360 - 180).toFixed(4);
+  return {
+    lat,
+    lon,
+    altKm: 421.8,
+    velocityKmh: 27576,
+    visibility: 'daylight',
+    footprintKm: 4510,
+    timestamp: Math.floor(tSec)
+  };
 }
 
 function analyzeHourlyTideSeries(times = [], levels = []) {
@@ -4520,7 +4561,7 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
   try {
     const fetchMarine = async () => {
       const u = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl&hourly=sea_level_height_msl&forecast_days=2`;
-      const j = await fetchJsonWithRetry(u, 0, 4200);
+      const j = await fetchJsonWithRetry(u, 0, 2400);
       const cur = j?.current;
       if (!cur || (cur.wave_height == null && cur.sea_surface_temperature == null && cur.sea_level_height_msl == null)) return null;
       const tideInfo = analyzeHourlyTideSeries(j?.hourly?.time, j?.hourly?.sea_level_height_msl);
@@ -4542,7 +4583,7 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
 
     const fetchAlpine = async () => {
       const u = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,snowfall,snow_depth&hourly=freezing_level_height&forecast_days=1`;
-      const j = await fetchJsonWithRetry(u, 0, 4000);
+      const j = await fetchJsonWithRetry(u, 0, 2400);
       if (!j) return null;
       const elevM = Number.isFinite(Number(j.elevation)) ? Math.round(Number(j.elevation)) : null;
       const cur = j.current || {};
@@ -4566,7 +4607,7 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
       const curated = [...(CURATED_LOCAL_RADIOS[cc] || CURATED_LOCAL_RADIOS.US || [])];
       try {
         const u = `https://de1.api.radio-browser.info/json/stations/search?countrycode=${encodeURIComponent(cc)}&limit=6&hidebroken=true&order=clickcount&reverse=true&is_https=true`;
-        const arr = await fetchJsonWithRetry(u, 0, 4000);
+        const arr = await fetchJsonWithRetry(u, 0, 1300);
         if (Array.isArray(arr)) {
           for (const s of arr) {
             const streamUrl = String(s?.url_resolved || s?.url || '').trim();
@@ -4586,11 +4627,11 @@ async function handleImmersiveLocalProxy(req, res, parsedUrl) {
 
     const fetchLandmarks = async () => {
       const zhUrl = `https://zh.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat.toFixed(5)}%7C${lon.toFixed(5)}&gsradius=10000&gslimit=6&format=json&origin=*`;
-      const zhJson = await fetchJsonWithRetry(zhUrl, 0, 4200).catch(() => null);
+      const zhJson = await fetchJsonWithRetry(zhUrl, 0, 2200).catch(() => null);
       let rawList = Array.isArray(zhJson?.query?.geosearch) ? zhJson.query.geosearch.map(x => ({ ...x, lang: 'zh' })) : [];
       if (rawList.length < 2) {
         const enUrl = `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gscoord=${lat.toFixed(5)}%7C${lon.toFixed(5)}&gsradius=10000&gslimit=5&format=json&origin=*`;
-        const enJson = await fetchJsonWithRetry(enUrl, 0, 4200).catch(() => null);
+        const enJson = await fetchJsonWithRetry(enUrl, 0, 2000).catch(() => null);
         const enList = Array.isArray(enJson?.query?.geosearch) ? enJson.query.geosearch.map(x => ({ ...x, lang: 'en' })) : [];
         rawList = [...rawList, ...enList];
       }
