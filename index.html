@@ -64,11 +64,16 @@
   <link rel="preconnect" href="https://cctv1.freeway.gov.tw" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
   
-  <!-- Leaflet 地圖樣式庫 -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet 地圖樣式庫 (非阻塞載入，絕不拖慢首屏即時視訊起播) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </noscript>
 
   <!-- 雙埔生活 ‧ Obsidian Telemetry 主設計系統 -->
   <style>
@@ -12646,10 +12651,25 @@ html[data-theme="light"] .immersive-subtab-btn.active {
     </div>
   </div>
 
-  <!-- Leaflet JS 地圖庫 -->
-  
-  
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet JS 地圖庫：改為非同步按需載入，徹底移除 1.2s~2.3s 解析阻塞讓首屏即時視訊 0ms 優先秒開 -->
+  <script>
+    window.ensureLeafletLoaded = function ensureLeafletLoaded() {
+      if (typeof window.L !== 'undefined') return Promise.resolve(window.L);
+      if (window._leafletLoadPromise) return window._leafletLoadPromise;
+      window._leafletLoadPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        s.async = true;
+        s.onload = () => resolve(window.L);
+        s.onerror = (err) => {
+          window._leafletLoadPromise = null;
+          reject(err);
+        };
+        document.head.appendChild(s);
+      });
+      return window._leafletLoadPromise;
+    };
+  </script>
   
   <!-- 監控系統各核心模組 -->
   
@@ -13714,7 +13734,8 @@ class CameraPlayerEngine {
   }
 
   // 初始化所有可見的播放器 (HLS, FLV, MJPEG, YouTube)
-  // 極速秒開模式：前 12 格畫面 0ms 並行立即起播 (4格/6格/9格/12格零排隊等待)；第 13 格起由視口觀察器提前 380px 預熱接力
+  // 極速秒開 ＋ 視口硬體解碼保護：HLS/FLV 首波 6 路 0ms 並行秒開（完美契合 HTTP/1.1 6 連線與 GPU 硬解上限，杜絕 16 路並開 98% 掉幀凍結）；
+  // 當畫面超過 6 路 HLS 時，自動暫停捲出視口之鏡頭並於捲回時秒復播，確保可見畫面張張滿幀流暢
   initPlayersForVisibleCards(cameras) {
     this.clearStaggerTimers();
     if (!Array.isArray(cameras) || cameras.length === 0) return;
@@ -13724,13 +13745,17 @@ class CameraPlayerEngine {
       this.restartLoop();
     }
 
-    const immediateCount = Math.min(12, cameras.length);
+    const hlsFlvCams = cameras.filter(c => c && (c.type === 'hls' || c.type === 'flv'));
+    const isNarrowMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const hasHeavyVideoWall = hlsFlvCams.length > 6 || (isNarrowMobile && hlsFlvCams.length > 3);
+    const immediateCount = Math.min(isNarrowMobile && hlsFlvCams.length > 3 ? 3 : (hasHeavyVideoWall ? 6 : 12), cameras.length);
     for (let i = 0; i < immediateCount; i++) {
       this.startCardPlayer(cameras[i]);
     }
 
-    if (cameras.length <= immediateCount) return;
+    if (cameras.length <= immediateCount && !hasHeavyVideoWall) return;
 
+    const camById = new Map(cameras.filter(c => c && c.id).map(c => [String(c.id), c]));
     const restCams = cameras.slice(immediateCount);
     if (typeof IntersectionObserver !== 'undefined') {
       let burstQueueIndex = 0;
@@ -13739,27 +13764,65 @@ class CameraPlayerEngine {
       const observerRoot = isInnerScroll ? gridEl : null;
       this.visibilityObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-          if (!entry.isIntersecting) return;
           const cardEl = entry.target;
           const camId = cardEl && cardEl.dataset ? cardEl.dataset.camId : null;
-          if (!camId || !this.pendingLazyCams.has(camId)) return;
-          const cam = this.pendingLazyCams.get(camId);
-          this.pendingLazyCams.delete(camId);
-          if (this.visibilityObserver) this.visibilityObserver.unobserve(cardEl);
+          if (!camId) return;
 
-          const delay = Math.min(burstQueueIndex * 20, 160);
-          burstQueueIndex++;
-          if (this._burstResetTimer) clearTimeout(this._burstResetTimer);
-          this._burstResetTimer = setTimeout(() => { burstQueueIndex = 0; }, 220);
+          if (entry.isIntersecting) {
+            if (this.pendingLazyCams.has(camId)) {
+              const cam = this.pendingLazyCams.get(camId);
+              this.pendingLazyCams.delete(camId);
+              if (!hasHeavyVideoWall && this.visibilityObserver) {
+                this.visibilityObserver.unobserve(cardEl);
+              }
+              const delay = Math.min(burstQueueIndex * 25, 180);
+              burstQueueIndex++;
+              if (this._burstResetTimer) clearTimeout(this._burstResetTimer);
+              this._burstResetTimer = setTimeout(() => { burstQueueIndex = 0; }, 220);
 
-          if (delay === 0) {
-            this.startCardPlayer(cam);
-          } else {
-            const t = setTimeout(() => this.startCardPlayer(cam), delay);
-            this.staggerTimers.push(t);
+              if (delay === 0) {
+                this.startCardPlayer(cam);
+              } else {
+                const t = setTimeout(() => this.startCardPlayer(cam), delay);
+                this.staggerTimers.push(t);
+              }
+            } else if (hasHeavyVideoWall) {
+              // 捲回視口：若先前為省硬解資源而暫停，立即恢復直播並對齊即時前沿
+              const videoEl = document.getElementById(`video-${camId}`);
+              const hls = this.hlsPlayers.get(camId);
+              if (videoEl && videoEl.dataset.offscreenPaused === '1') {
+                delete videoEl.dataset.offscreenPaused;
+                if (hls) {
+                  try {
+                    hls.startLoad(-1);
+                    if (hls.liveSyncPosition && Math.abs(hls.liveSyncPosition - videoEl.currentTime) > 12) {
+                      videoEl.currentTime = Math.max(0, hls.liveSyncPosition - 1.5);
+                    }
+                  } catch (_) {}
+                }
+                videoEl.muted = true;
+                videoEl.play().catch(() => {});
+              } else if (!hls && !this.flvPlayers.has(camId)) {
+                const cam = camById.get(camId);
+                if (cam && (cam.type === 'hls' || cam.type === 'flv')) {
+                  this.startCardPlayer(cam);
+                }
+              }
+            }
+          } else if (hasHeavyVideoWall) {
+            // 超過 6 路 HLS 視訊牆時，暫停已完全離開可視範圍的鏡頭，將硬體 H.264 解碼器 100% 留給螢幕可見畫面
+            const videoEl = document.getElementById(`video-${camId}`);
+            const hls = this.hlsPlayers.get(camId);
+            if (videoEl && hls && videoEl.dataset.offscreenPaused !== '1') {
+              videoEl.dataset.offscreenPaused = '1';
+              try {
+                videoEl.pause();
+                hls.stopLoad();
+              } catch (_) {}
+            }
           }
         });
-      }, { root: observerRoot, rootMargin: '380px 0px', threshold: 0.01 });
+      }, { root: observerRoot, rootMargin: hasHeavyVideoWall ? '140px 0px' : '380px 0px', threshold: 0.01 });
 
       restCams.forEach(cam => {
         const cardEl = document.getElementById(`cam-card-${cam.id}`);
@@ -13770,6 +13833,15 @@ class CameraPlayerEngine {
           this.startCardPlayer(cam);
         }
       });
+
+      // 大型 HLS 牆亦觀察前 6 張卡片，使用者往下捲動瀏覽第 7~16 路時自動釋放最上方離屏解碼器
+      if (hasHeavyVideoWall) {
+        cameras.slice(0, immediateCount).forEach(cam => {
+          if (!cam || cam.type !== 'hls') return;
+          const cardEl = document.getElementById(`cam-card-${cam.id}`);
+          if (cardEl) this.visibilityObserver.observe(cardEl);
+        });
+      }
     } else {
       restCams.forEach((cam, idx) => {
         const timer = setTimeout(() => this.startCardPlayer(cam), 80 + idx * 70);
@@ -13811,28 +13883,30 @@ class CameraPlayerEngine {
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       try {
         const isTaipeiBote = (streamUrl && (streamUrl.includes('bote.gov.taipei') || streamUrl.includes('/api/bote/'))) || (cam.id && String(cam.id).startsWith('tpe-'));
+        const isTaoyuanCctv = Boolean(streamUrl && streamUrl.includes('cctvtraffic.tycg.gov.tw'));
+        const isNewTaipeiCctv = Boolean(streamUrl && streamUrl.includes('cctvatis'));
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,          // 關閉 LL 模式以獲得最佳硬體解碼平穩度
           startFragPrefetch: true,        // 全面開啟首片切片預抓，解析播放清單同時預載首個視訊區段以縮短轉圈等待
-          liveSyncDurationCount: isTaipeiBote ? 1.0 : 2.0, // 臺北市交工處 1 片、桃園與其他 HLS 2 片極速秒開起播
-          liveMaxLatencyDurationCount: isTaipeiBote ? 3.5 : 6.0,// 容許合理延遲窗口
+          liveSyncDurationCount: isTaipeiBote ? 1.0 : (isTaoyuanCctv ? 1.0 : (isNewTaipeiCctv ? 1.5 : 2.0)), // 桃園 12 秒大切片 1 片秒開；新北 4 秒短切片 1.5 片兼顧秒開與零停頓滿幀 30fps
+          liveMaxLatencyDurationCount: isTaipeiBote ? 3.5 : (isTaoyuanCctv ? 4.0 : (isNewTaipeiCctv ? 4.5 : 6.0)),
           liveDurationInfinity: true,
           maxLiveSyncPlaybackRate: 1.05,  // 內建極微幅平滑追幀，平緩無感，絕不爆衝耗盡緩衝
           capLevelToPlayerSize: false,    // 解鎖最高畫質：絕不因容器小而降級
           autoLevelCapping: -1,
           startLevel: -1,
-          maxBufferLength: isTaipeiBote ? 6 : 20,            // 多宮格前方緩衝深度，台北短切片設為 6 秒極速起播
-          maxMaxBufferLength: isTaipeiBote ? 12 : 40,        // 最大容許緩衝深度
-          maxBufferSize: 20 * 1024 * 1024,// 多宮格並行控制在 20MB 緩衝記憶體空間，杜絕 6 路並播吃光 WebView 記憶體造成崩潰閃退
-          backBufferLength: isTaipeiBote ? 4 : 15,           // 歷史緩衝保留
+          maxBufferLength: isTaipeiBote ? 6 : (isNewTaipeiCctv ? 8 : (isTaoyuanCctv ? 12 : 18)), // 輕量化緩衝，縮短首幀下載並降低 1080P 多路記憶體與 GPU 負載
+          maxMaxBufferLength: isTaipeiBote ? 12 : (isNewTaipeiCctv ? 16 : (isTaoyuanCctv ? 24 : 36)),
+          maxBufferSize: (isNewTaipeiCctv || isTaoyuanCctv || isTaipeiBote) ? (12 * 1024 * 1024) : (20 * 1024 * 1024),
+          backBufferLength: isTaipeiBote ? 4 : (isNewTaipeiCctv ? 4 : 6),
           fragLoadingTimeOut: isTaipeiBote ? 8000 : 12000,   // 單一切片逾時快速重試
           manifestLoadingTimeOut: isTaipeiBote ? 8000 : 10000,
           levelLoadingTimeOut: isTaipeiBote ? 8000 : 10000,
           fragLoadingMaxRetry: 8,         // 提升切片重試容錯次數至 8 次
-          fragLoadingRetryDelay: isTaipeiBote ? 350 : 600,   // 快速重試，無需乾等
+          fragLoadingRetryDelay: isTaipeiBote ? 350 : 500,   // 快速重試，無需乾等
           manifestLoadingMaxRetry: 8,
-          manifestLoadingRetryDelay: isTaipeiBote ? 350 : 600,
+          manifestLoadingRetryDelay: isTaipeiBote ? 350 : 500,
           nudgeOffset: 0.1,               // 遇時間戳微小空隙自動推進 0.1 秒除卡
           nudgeMaxRetry: 5                // 最多微推進 5 次除卡自癒
         });
@@ -13840,11 +13914,11 @@ class CameraPlayerEngine {
         hls.loadSource(streamUrl);
         hls.attachMedia(videoEl);
 
-        // 強制鎖定最高解析度與位元率軌道 (掃描真實像素與位元率最大值，絕不假設陣列尾端必為最高畫質)
+        // 僅在多碼率 (ABR levels > 1) 時鎖定最高畫質；單軌直播清單 (桃園/新北交控) 絕不重設 currentLevel 以杜絕重複抓取兩次 m3u8 拖慢起播
         const enforceHighestLevel = () => {
-          if (hls.levels && hls.levels.length > 0) {
+          if (hls.levels && hls.levels.length > 1) {
             const maxIdx = CameraPlayerEngine.pickHighestHlsLevel(hls.levels);
-            if (maxIdx >= 0) {
+            if (maxIdx >= 0 && hls.loadLevel !== maxIdx) {
               hls.autoLevelCapping = -1;
               hls.startLevel = maxIdx;
               hls.currentLevel = maxIdx;
@@ -13944,11 +14018,51 @@ class CameraPlayerEngine {
           if (stallRecoveryTimer) handleRecovered();
         });
 
-        // HLS 智慧緩衝感知追幀看門狗 (以緩衝充足為第一優先，絕不因追幀吃光緩衝)
+        // HLS 智慧緩衝感知追幀 ＋ 靜止畫面防凍結自癒看門狗 (偵測影格凍結或進度停擺並自動喚醒重連)
+        let lastSyncCt = -1;
+        let lastRenderedFrames = -1;
+        let frozenStreak = 0;
+        const hlsStartTs = Date.now();
         const hlsSync = setInterval(() => {
-          if (!videoEl || videoEl.paused) return;
+          if (!videoEl || !videoEl.isConnected || (typeof document !== 'undefined' && document.hidden)) return;
+          if (videoEl.dataset.offscreenPaused === '1') return;
           try {
-            // 計算當前播放位置之前方已快取安全緩衝秒數 (forwardBuffer)
+            // 1. 靜止畫面 / 凍結偵測：僅針對畫面可見之鏡頭檢查時間軸與實際渲染影格是否前進
+            const isVisibleOnScreen = videoEl.offsetParent !== null;
+            if (isVisibleOnScreen) {
+              const curCt = Number(videoEl.currentTime) || 0;
+              const q = videoEl.getVideoPlaybackQuality ? videoEl.getVideoPlaybackQuality() : null;
+              const renderedNow = q ? Math.max(0, (q.totalVideoFrames || 0) - (q.droppedVideoFrames || 0)) : -1;
+              const ageMs = Date.now() - hlsStartTs;
+              const ctStuck = !videoEl.paused && lastSyncCt >= 0 && Math.abs(curCt - lastSyncCt) < 0.05;
+              const framesStuck = !videoEl.paused && videoEl.readyState >= 2 && lastRenderedFrames >= 0 && renderedNow >= 0 && (renderedNow - lastRenderedFrames) <= 1 && ageMs > 5000;
+              const neverStarted = ageMs > 8500 && videoEl.readyState < 2;
+
+              if (ctStuck || framesStuck || neverStarted) {
+                frozenStreak++;
+                if (frozenStreak === 2) {
+                  // 溫和喚醒：對齊即時前沿並重新啟動切片抓取，避免畫面卡成靜止照片
+                  if (hls.liveSyncPosition && Number.isFinite(hls.liveSyncPosition)) {
+                    videoEl.currentTime = Math.max(0, hls.liveSyncPosition - 1.5);
+                  }
+                  hls.startLoad(-1);
+                  videoEl.muted = true;
+                  videoEl.play().catch(() => {});
+                } else if (frozenStreak >= 4) {
+                  frozenStreak = 0;
+                  this.initHlsPlayer(cam);
+                  return;
+                }
+              } else {
+                frozenStreak = 0;
+              }
+              lastSyncCt = curCt;
+              if (renderedNow >= 0) lastRenderedFrames = renderedNow;
+            }
+
+            if (videoEl.paused) return;
+
+            // 2. 計算當前播放位置之前方已快取安全緩衝秒數 (forwardBuffer)
             let forwardBuffer = 0;
             if (videoEl.buffered && videoEl.buffered.length > 0) {
               const cur = videoEl.currentTime;
@@ -13963,22 +14077,21 @@ class CameraPlayerEngine {
             if (hls.liveSyncPosition) {
               const latency = hls.liveSyncPosition - videoEl.currentTime;
 
-              if (latency > 65) {
-                // 休眠喚醒或嚴重落後超過 1 分鐘：平滑重啟載入點，並留出 18 秒安全起播緩衝，絕不強跳未快取前緣
-                const safeTarget = Math.max(0, hls.liveSyncPosition - 18);
+              if (latency > 55) {
+                // 休眠喚醒或嚴重落後：平滑對齊至即時前沿並保留安全起播緩衝
+                const safeTarget = Math.max(0, hls.liveSyncPosition - (isNewTaipeiCctv ? 4 : 12));
                 videoEl.currentTime = safeTarget;
                 videoEl.playbackRate = 1.0;
                 hls.startLoad();
-              } else if (latency > 32 && forwardBuffer > 15) {
-                // 僅在「前方緩衝極為充足 (> 15 秒)」且「落後大於 32 秒」時，才以極輕微 1.05x 平滑追趕
+              } else if (latency > 28 && forwardBuffer > 10) {
+                // 僅在前方緩衝充足時以 1.05x 溫和微追幀
                 videoEl.playbackRate = 1.05;
               } else {
-                // 緩衝低於安全水位或延遲正常，強制維持 1.0x 正常速度，徹底守護緩衝不見底
                 videoEl.playbackRate = 1.0;
               }
             }
           } catch(e) {}
-        }, 2000);
+        }, 2500);
         this.watchdogs.set(`sync-hls-${cam.id}`, hlsSync);
 
         hls.on(Hls.Events.ERROR, (event, data) => {
@@ -14073,13 +14186,60 @@ class CameraPlayerEngine {
         console.error(`啟動 HLS 播放器 ${cam.id} 失敗:`, err);
       }
     } else if (videoEl.canPlayType && videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+      // iOS / macOS Safari 原生 HLS 極速起播與防第一幀靜止保護
+      videoEl.muted = true;
+      videoEl.playsInline = true;
+      videoEl.autoplay = true;
       videoEl.src = streamUrl;
+      videoEl.load();
+      const markNativeReady = () => {
+        const wrapper = videoEl.parentElement;
+        if (wrapper) wrapper.classList.add('is-ready');
+        if (wm) {
+          wm.style.background = '#10b981';
+          wm.title = '正常串流中';
+        }
+        this.detectVideoResolution(cam, videoEl);
+        this.startLiveClock(cam.id);
+      };
+      const tryNativePlay = () => {
+        if (!videoEl.isConnected) return;
+        videoEl.muted = true;
+        videoEl.play().catch(() => {});
+      };
       videoEl.addEventListener('loadedmetadata', () => {
-        videoEl.play().catch(() => {
-          videoEl.muted = true;
-          videoEl.play();
-        });
-      });
+        this.detectVideoResolution(cam, videoEl);
+        tryNativePlay();
+      }, { once: true });
+      videoEl.addEventListener('canplay', () => {
+        markNativeReady();
+        if (videoEl.paused) tryNativePlay();
+      }, { once: true });
+      videoEl.addEventListener('playing', markNativeReady);
+      // 原生 HLS 靜止保護看門狗：若在 Safari 卡在首幀或斷流自動重新喚醒
+      let nativeLastCt = -1;
+      let nativeStuck = 0;
+      const nativeSync = setInterval(() => {
+        if (!videoEl || !videoEl.isConnected || (typeof document !== 'undefined' && document.hidden)) return;
+        const ct = Number(videoEl.currentTime) || 0;
+        if (videoEl.paused) {
+          tryNativePlay();
+          return;
+        }
+        if (nativeLastCt >= 0 && Math.abs(ct - nativeLastCt) < 0.05) {
+          nativeStuck++;
+          if (nativeStuck >= 3) {
+            nativeStuck = 0;
+            videoEl.src = streamUrl;
+            videoEl.load();
+            tryNativePlay();
+          }
+        } else {
+          nativeStuck = 0;
+        }
+        nativeLastCt = ct;
+      }, 3000);
+      this.watchdogs.set(`sync-hls-${cam.id}`, nativeSync);
     }
   }
 
@@ -16075,11 +16235,31 @@ class WeatherEnvironmentMonitor {
     this.activeTzOffsetHours = 8;
     this.activeDualParams = { qpInfo, bpInfo };
     if (!isAuto && typeof window !== 'undefined') {
-      if (window.flightRadarService) {
-        window.flightRadarService.syncForLocation('dual');
-      }
-      if (window.immersivePulseService) {
-        window.immersivePulseService.syncForLocation('dual', { lat: qpInfo.lat, lon: qpInfo.lon, label: '雙埔生活圈', countryCode: 'TW' });
+      const deferHiddenBoot = Boolean(window.monitorApp && window.monitorApp._isInitialBoot && window.monitorApp.activeSidebarTab === 'weather');
+      const runRadarAndPulse = () => {
+        if (window.monitorApp && window.monitorApp.currentCenterId !== 'dual') return;
+        if (window.flightRadarService) {
+          window.flightRadarService.syncForLocation('dual');
+        }
+        if (window.immersivePulseService) {
+          window.immersivePulseService.syncForLocation('dual', { lat: qpInfo.lat, lon: qpInfo.lon, label: '雙埔生活圈', countryCode: 'TW' });
+        }
+      };
+      if (deferHiddenBoot) {
+        if (window._dualBgSyncTimer) clearTimeout(window._dualBgSyncTimer);
+        window._dualBgSyncFlush = () => {
+          if (window._dualBgSyncTimer) {
+            clearTimeout(window._dualBgSyncTimer);
+            window._dualBgSyncTimer = null;
+          }
+          window._dualBgSyncFlush = null;
+          runRadarAndPulse();
+        };
+        window._dualBgSyncTimer = setTimeout(() => {
+          if (window._dualBgSyncFlush) window._dualBgSyncFlush();
+        }, 1700);
+      } else {
+        runRadarAndPulse();
       }
     }
 
@@ -20717,18 +20897,40 @@ class NeighborhoodRadarMap {
     }
   }
 
-  // 設置中心點與周邊攝影機標記
+  // 設置中心點與周邊攝影機標記 (若雷達分頁尚在隱藏中或 Leaflet 非同步載入中，自動排程就緒後無縫渲染，絕不拖慢首屏視訊)
   setCenterAndCameras(centerInfo, cameras) {
-    if (typeof L === 'undefined') {
-      console.warn('Leaflet 地圖庫尚未載入');
-      return;
-    }
     const safeCenter = centerInfo || {};
     const validCamList = Array.isArray(cameras)
       ? cameras.filter(c => Number.isFinite(Number(c?.lat)) && Number.isFinite(Number(c?.lon)))
       : [];
     this._lastCenterInfo = safeCenter;
     this._lastCameras = validCamList;
+
+    if (typeof L === 'undefined') {
+      const aside = typeof document !== 'undefined' ? (document.getElementById('sidebarSection') || document.querySelector('.sidebar-section')) : null;
+      const activeTab = aside ? aside.getAttribute('data-active-tab') : 'weather';
+      const isRadarVisible = activeTab === 'radar' || activeTab === 'all';
+      const loadNow = () => {
+        if (typeof window !== 'undefined' && typeof window.ensureLeafletLoaded === 'function') {
+          window.ensureLeafletLoaded()
+            .then(() => {
+              if (typeof L !== 'undefined' && this._lastCenterInfo) {
+                this.setCenterAndCameras(this._lastCenterInfo, this._lastCameras || []);
+              }
+            })
+            .catch(() => {});
+        }
+      };
+      if (isRadarVisible) {
+        loadNow();
+      } else if (!this._deferredLeafletTimer) {
+        this._deferredLeafletTimer = setTimeout(() => {
+          this._deferredLeafletTimer = null;
+          loadNow();
+        }, 2600);
+      }
+      return;
+    }
 
     const centerLat = Number.isFinite(Number(safeCenter.lat))
       ? Number(safeCenter.lat)
@@ -21301,9 +21503,29 @@ class NeighborhoodRadarMap {
     `;
   }
 
-  // 當「雷達飛航」或「全覽」分頁從隱藏切換為顯示時，重算 Leaflet 畫布尺寸並還原精準視野
+  // 當「雷達飛航」或「全覽」分頁從隱藏切換為顯示時，按需立即載入 Leaflet 並重算畫布尺寸與精準視野
   onContainerShown() {
-    if (!this.map) return;
+    if (typeof L === 'undefined' && typeof window !== 'undefined' && typeof window.ensureLeafletLoaded === 'function') {
+      if (this._deferredLeafletTimer) {
+        clearTimeout(this._deferredLeafletTimer);
+        this._deferredLeafletTimer = null;
+      }
+      window.ensureLeafletLoaded()
+        .then(() => {
+          if (typeof L !== 'undefined' && this._lastCenterInfo) {
+            this.setCenterAndCameras(this._lastCenterInfo, this._lastCameras || []);
+          }
+          this.onContainerShown();
+        })
+        .catch(() => {});
+      return;
+    }
+    if (!this.map) {
+      if (typeof L !== 'undefined' && this._lastCenterInfo) {
+        this.setCenterAndCameras(this._lastCenterInfo, this._lastCameras || []);
+      }
+      if (!this.map) return;
+    }
     setTimeout(() => {
       if (!this.map) return;
       try {
@@ -40253,6 +40475,8 @@ class WeatherSkyTacticalOverlay {
   drawFrame(dt = 0.033) {
     const canvas = this._ensureCanvasBinding();
     if (!canvas || typeof canvas.getContext !== 'function') return;
+    // 雷達分頁隱藏時完全跳過畫布重繪，釋放 100% GPU 與主執行緒給 1080P 即時視訊解碼
+    if (canvas.offsetParent === null) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -42561,6 +42785,16 @@ class MonitorApp {
       btn.classList.toggle('active', isAct);
       btn.setAttribute('aria-selected', String(isAct));
     });
+    if (nextTab === 'radar' || nextTab === 'immersive' || nextTab === 'all') {
+      if (typeof window !== 'undefined' && typeof window._dualBgSyncFlush === 'function') {
+        window._dualBgSyncFlush();
+      }
+    }
+    if (nextTab === 'transit' || nextTab === 'all') {
+      if (typeof window !== 'undefined' && typeof window._dualBusSyncFlush === 'function') {
+        window._dualBusSyncFlush();
+      }
+    }
     if (nextTab === 'radar' || nextTab === 'all') {
       if (this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
         this.radarMap.onContainerShown();
@@ -42575,6 +42809,8 @@ class MonitorApp {
   async init() {
     if (this._initDone) return;
     this._initDone = true;
+    this._isInitialBoot = true;
+    setTimeout(() => { this._isInitialBoot = false; }, 2400);
     this.playerEngine = new CameraPlayerEngine();
     this.weatherMonitor = new WeatherEnvironmentMonitor();
     this.radarMap = new NeighborhoodRadarMap();
@@ -45118,15 +45354,17 @@ class MonitorApp {
           btn.classList.toggle('active', btn.dataset.grid === defaultMode);
         });
       } else if (centerId === 'qingpu' || centerId === 'banqiao') {
-        this.currentGridMode = 'grid-all';
-        this.previousGridMode = 'grid-all';
+        // 青埔/新埔預設黃金 6 宮格 (契合 HTTP/1.1 6 連線與硬體 H.264 1080P@30fps 解碼上限，杜絕 16 路並開掉幀凍結；仍可隨時點「全部」展開 16 路)
+        const defaultMode = 'grid-6';
+        this.currentGridMode = defaultMode;
+        this.previousGridMode = defaultMode;
         this.focusedCamId = null;
         const gridContainer = document.getElementById('cameraGrid');
         if (gridContainer) {
-          gridContainer.className = 'camera-grid grid-all';
+          gridContainer.className = `camera-grid ${defaultMode}`;
         }
         document.querySelectorAll('.grid-btn').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.grid === 'grid-all');
+          btn.classList.toggle('active', btn.dataset.grid === defaultMode);
         });
       } else if (centerId === 'dual') {
         const defaultMode = 'grid-6';
@@ -45145,20 +45383,48 @@ class MonitorApp {
       // 渲染視訊牆
       this.renderVideoMatrix();
 
-      // 載入即時環境氣象、空氣品質、大眾運輸方向與最近公車站牌
+      // 載入即時環境氣象、空氣品質、大眾運輸方向與最近公車站牌 (首屏啟動讓 6 路 HLS 視訊優先搶佔第一波連線，非可見分頁延後錯峰載入)
       if (centerId === 'dual') {
         const qpInfo = { name: '青埔', addr: '青埔生活圈', lat: 25.0153, lon: 121.2213 };
         const bpInfo = { name: '新埔', addr: '新埔生活圈', lat: 25.0232, lon: 121.4688 };
-        this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
-        this.weatherMonitor.startAutoRefreshDual(qpInfo, bpInfo);
-        if (typeof window !== 'undefined' && window.localBusService) {
-          window.localBusService.syncForCenter('dual');
-        }
+        const runWeatherDual = () => {
+          if (this.currentCenterId !== 'dual') return;
+          this.weatherMonitor.fetchDualEnvironment(qpInfo, bpInfo);
+          this.weatherMonitor.startAutoRefreshDual(qpInfo, bpInfo);
+          if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
+            this.weatherMonitor.renderYouBikeStatus('dual');
+          }
+        };
+        const runBusDual = () => {
+          if (this.currentCenterId !== 'dual') return;
+          if (typeof window !== 'undefined' && window.localBusService) {
+            window.localBusService.syncForCenter('dual');
+          }
+        };
         if (this.transitMonitor) {
           this.transitMonitor.render();
         }
-        if (this.weatherMonitor && typeof this.weatherMonitor.renderYouBikeStatus === 'function') {
-          this.weatherMonitor.renderYouBikeStatus('dual');
+        if (this._isInitialBoot) {
+          setTimeout(runWeatherDual, 140);
+          if (this.activeSidebarTab === 'transit' || this.activeSidebarTab === 'all') {
+            setTimeout(runBusDual, 220);
+          } else {
+            if (window._dualBusSyncTimer) clearTimeout(window._dualBusSyncTimer);
+            window._dualBusSyncFlush = () => {
+              if (window._dualBusSyncTimer) {
+                clearTimeout(window._dualBusSyncTimer);
+                window._dualBusSyncTimer = null;
+              }
+              window._dualBusSyncFlush = null;
+              runBusDual();
+            };
+            window._dualBusSyncTimer = setTimeout(() => {
+              if (window._dualBusSyncFlush) window._dualBusSyncFlush();
+            }, 950);
+          }
+        } else {
+          runWeatherDual();
+          runBusDual();
         }
       } else if (this.isInternationalCenter(centerId)) {
         // 跨國模式：若 renderVideoMatrix 已將當地氣象／交通／單車／雷達錨定至首格鏡頭，免重複發送預設城市請求
@@ -46458,8 +46724,11 @@ window.addEventListener('DOMContentLoaded', () => {
   window.monitorApp = new MonitorApp();
   window.monitorApp.init();
 
+  // 錯峰啟動地震通報監測 (避免首頁開頁瞬間與 6 路即時視訊爭搶網路連線與主執行緒)
   if (window.earthquakeMonitor) {
-    window.earthquakeMonitor.init();
+    setTimeout(() => {
+      if (window.earthquakeMonitor) window.earthquakeMonitor.init();
+    }, 2000);
   }
 
   // 啟動後台預熱前 6 路臺北市交工處觀光鏡頭，切換至「台北市」或「全台精選」時秒開起播
