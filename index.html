@@ -140,7 +140,18 @@ body[data-theme-center="dual"]     { --ambient-accent: 34, 211, 238;  --ambient-
 body[data-theme-center="qingpu"]   { --ambient-accent: 6, 182, 212;   --ambient-secondary: 56, 189, 248; }
 body[data-theme-center="banqiao"]  { --ambient-accent: 167, 139, 250; --ambient-secondary: 99, 102, 241; }
 body[data-theme-center="nearby"]   { --ambient-accent: 16, 185, 129;  --ambient-secondary: 34, 211, 238; }
-body[data-theme-center="tourist"]  { --ambient-accent: 245, 158, 11;  --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="tourist"]      { --ambient-accent: 245, 158, 11;  --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="tw_taipei"]    { --ambient-accent: 245, 158, 11;  --ambient-secondary: 244, 63, 94; }
+body[data-theme-center="tw_newtaipei"] { --ambient-accent: 14, 165, 233;  --ambient-secondary: 245, 158, 11; }
+body[data-theme-center="tw_taoyuan"]   { --ambient-accent: 6, 182, 212;   --ambient-secondary: 16, 185, 129; }
+body[data-theme-center="tw_yilan"]     { --ambient-accent: 16, 185, 129;  --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="tw_taichung"]  { --ambient-accent: 249, 115, 22;  --ambient-secondary: 251, 191, 36; }
+body[data-theme-center="tw_central"]   { --ambient-accent: 34, 197, 94;   --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="tw_tainan"]    { --ambient-accent: 234, 88, 12;   --ambient-secondary: 245, 158, 11; }
+body[data-theme-center="tw_kaohsiung"] { --ambient-accent: 56, 189, 248;  --ambient-secondary: 249, 115, 22; }
+body[data-theme-center="tw_pingtung"]  { --ambient-accent: 6, 182, 212;   --ambient-secondary: 250, 204, 21; }
+body[data-theme-center="tw_hualien"]   { --ambient-accent: 20, 184, 166;  --ambient-secondary: 56, 189, 248; }
+body[data-theme-center="tw_taitung"]   { --ambient-accent: 14, 165, 233;  --ambient-secondary: 250, 204, 21; }
 body[data-theme-center="world"]    { --ambient-accent: 14, 165, 233;  --ambient-secondary: 236, 72, 153; }
 body[data-theme-center="japan"]    { --ambient-accent: 244, 63, 94;   --ambient-secondary: 245, 158, 11; }
 body[data-theme-center="korea"]    { --ambient-accent: 56, 189, 248;  --ambient-secondary: 244, 63, 94; }
@@ -11186,6 +11197,9 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   align-items: stretch !important;
   gap: 0 !important;
   padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
   background: rgba(6, 10, 19, 0.9) !important;
 }
 
@@ -11195,6 +11209,9 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   justify-content: space-between;
   gap: 10px;
   padding: 7px 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   min-width: 0;
 }
 
@@ -11204,6 +11221,9 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   justify-content: space-between;
   gap: 10px;
   padding: 5px 14px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: rgba(9, 14, 27, 0.78);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   min-width: 0;
@@ -11294,6 +11314,8 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .active-domain-tag {
@@ -11316,6 +11338,8 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   order: unset !important;
   flex: 1 1 auto !important;
   min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 .top-nav-secondary .center-switch-group {
@@ -11324,6 +11348,7 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   box-shadow: none;
   padding: 0;
   gap: 4px;
+  max-width: 100% !important;
 }
 
 .top-nav-secondary .center-btn {
@@ -11340,8 +11365,9 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   color: #ffffff;
 }
 
-/* 依所屬大域純 CSS 篩選顯示子頻道，保留全部 17 個 DOM 節點零破壞 */
+/* 依所屬大域純 CSS 篩選顯示子頻道，保留完整 DOM 節點零破壞 */
 .center-switch-group[data-active-domain="taiwan"] .center-btn:not([data-domain="taiwan"]),
+.center-switch-group[data-active-domain="tw_tour"] .center-btn:not([data-domain="tw_tour"]),
 .center-switch-group[data-active-domain="world"] .center-btn:not([data-domain="world"]),
 .center-switch-group[data-active-domain="nature"] .center-btn:not([data-domain="nature"]),
 .center-switch-group[data-active-domain="favorites"] .center-btn:not([data-domain="favorites"]) {
@@ -11734,12 +11760,15 @@ html[data-theme="light"] .immersive-subtab-btn.active {
   .domain-switch-bar {
     order: 3;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .domain-tab-btn {
     justify-content: center;
-    padding: 5px 6px;
+    padding: 5px 4px;
+    font-size: 0.74rem;
   }
   .top-nav-secondary {
     flex-wrap: wrap;
@@ -11775,6 +11804,28 @@ html[data-theme="light"] .immersive-subtab-btn.active {
   }
   .active-domain-tag {
     display: none !important;
+  }
+  .domain-switch-bar {
+    gap: 2px;
+    padding: 2px;
+  }
+  .domain-tab-btn {
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px 2px;
+    font-size: 0.67rem;
+    line-height: 1.1;
+  }
+  .domain-tab-btn i {
+    font-size: 0.8rem;
+  }
+  .domain-fav-count {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+  }
+  .domain-tab-btn[data-domain-tab="favorites"] {
+    position: relative;
   }
   .top-nav-secondary {
     padding: 5px 10px 7px !important;
@@ -11883,9 +11934,13 @@ html[data-theme="light"] .immersive-subtab-btn.active {
 
       <!-- 4 大核心領域切換膠囊 (徹底解決 17 頻道擠成一排之視覺雜亂) -->
       <nav id="domainSwitchBar" class="domain-switch-bar" aria-label="主領域切換">
-        <button type="button" class="domain-tab-btn active" data-domain-tab="taiwan" onclick="window.monitorApp?.switchDomain('taiwan')" title="台灣生活與通勤監控：附近、雙埔、青埔、新埔、台灣觀光">
+        <button type="button" class="domain-tab-btn active" data-domain-tab="taiwan" onclick="window.monitorApp?.switchDomain('taiwan')" title="台灣生活與通勤監控：附近、雙埔、青埔、新埔">
           <i class="fa-solid fa-house-signal"></i>
           <span>台灣生活</span>
+        </button>
+        <button type="button" class="domain-tab-btn" data-domain-tab="tw_tour" onclick="window.monitorApp?.switchDomain('tw_tour')" title="台灣觀光 12 大縣市專區：全台精選、台北市、新北市、桃園、宜蘭、台中、南投嘉義、台南、高雄、屏東墾丁、花蓮、台東（依 4K 畫質 × 熱門景點自動排序）">
+          <i class="fa-solid fa-compass"></i>
+          <span>台灣觀光</span>
         </button>
         <button type="button" class="domain-tab-btn" data-domain-tab="world" onclick="window.monitorApp?.switchDomain('world')" title="世界各大洲城市 4K 實況：全球4K、日本、韓國、亞太、歐洲、美洲">
           <i class="fa-solid fa-earth-asia"></i>
@@ -11974,9 +12029,53 @@ html[data-theme="light"] .immersive-subtab-btn.active {
               <i class="fa-solid fa-house-signal"></i>
               <span>新埔</span>
             </button>
-            <button class="center-btn" data-center="tourist" data-domain="taiwan" title="九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水">
-              <i class="fa-solid fa-plane-arrival"></i>
-              <span>觀光</span>
+            <button class="center-btn" data-center="tourist" data-domain="tw_tour" title="全台精選 4K 熱門景點總覽：依最高畫質 × 熱門人氣排序全台 11 大縣市官方實況">
+              <i class="fa-solid fa-crown" style="color:#fbbf24;"></i>
+              <span>全台精選</span>
+            </button>
+            <button class="center-btn" data-center="tw_taipei" data-domain="tw_tour" title="台北市：大稻埕碼頭 4K ‧ 象山 101 4K ‧ 碧山巖 4K ‧ 劍潭山 4K ‧ 陽明山擎天崗 4K ‧ 西門町與夜市">
+              <i class="fa-solid fa-city"></i>
+              <span>台北市</span>
+            </button>
+            <button class="center-btn" data-center="tw_newtaipei" data-domain="tw_tour" title="新北市：淡水漁人碼頭 4K ‧ 九份山城 4K ‧ 八里左岸 4K ‧ 野柳 4K ‧ 白沙灣 4K ‧ 平溪十分天燈">
+              <i class="fa-solid fa-bridge-water"></i>
+              <span>新北市</span>
+            </button>
+            <button class="center-btn" data-center="tw_taoyuan" data-domain="tw_tour" title="桃園：桃園國際機場 4K 起降 ‧ 拉拉山上巴陵 4K ‧ 永安漁港 4K ‧ 大溪石門水庫 ‧ 小烏來">
+              <i class="fa-solid fa-plane-departure"></i>
+              <span>桃園</span>
+            </button>
+            <button class="center-btn" data-center="tw_yilan" data-domain="tw_tour" title="宜蘭：太平山雲海日出 ‧ 蹦蹦車站 ‧ 頭城外澳龜山島海灘 ‧ 蘇澳港灣 ‧ 頭城濱海森林">
+              <i class="fa-solid fa-cloud-sun"></i>
+              <span>宜蘭</span>
+            </button>
+            <button class="center-btn" data-center="tw_taichung" data-domain="tw_tour" title="台中：清水高美濕地夕照 4K ‧ 望高寮百萬夜景 4K ‧ 大安港 4K ‧ 梨山 4K ‧ 武陵農場">
+              <i class="fa-solid fa-sun"></i>
+              <span>台中</span>
+            </button>
+            <button class="center-btn" data-center="tw_central" data-domain="tw_tour" title="南投嘉義：阿里山二延平雲海 4K ‧ 奮起湖 4K ‧ 日月潭伊達邵與文武廟 4K ‧ 合歡山武嶺 3,275m">
+              <i class="fa-solid fa-mountain"></i>
+              <span>南投嘉義</span>
+            </button>
+            <button class="center-btn" data-center="tw_tainan" data-domain="tw_tour" title="台南：黃金海岸夕照 4K UHD ‧ 安平港海濱 ‧ 府城中西區古都 ‧ 台南火車站 ‧ 亞太棒球場">
+              <i class="fa-solid fa-torii-gate"></i>
+              <span>台南</span>
+            </button>
+            <button class="center-btn" data-center="tw_kaohsiung" data-domain="tw_tour" title="高雄：壽山情人觀景台 85 大樓夜景 4K ‧ 蓮池潭龍虎塔 4K ‧ 棧貳庫大港橋 4K ‧ 高流愛河灣 4K ‧ 旗津">
+              <i class="fa-solid fa-anchor"></i>
+              <span>高雄</span>
+            </button>
+            <button class="center-btn" data-center="tw_pingtung" data-domain="tw_tour" title="屏東墾丁：墾丁大街 4K ‧ 船帆石沙灘 4K ‧ 南灣沙灘 ‧ 墾丁森林觀海樓 ‧ 南灣海底珊瑚礁直播">
+              <i class="fa-solid fa-umbrella-beach"></i>
+              <span>屏東墾丁</span>
+            </button>
+            <button class="center-btn" data-center="tw_hualien" data-domain="tw_tour" title="花蓮：富里六十石山 4K ‧ 豐濱大石鼻山 4K ‧ 鯉魚潭 4K ‧ 石梯坪 4K ‧ 長虹橋 4K ‧ 七星潭清水斷崖">
+              <i class="fa-solid fa-water"></i>
+              <span>花蓮</span>
+            </button>
+            <button class="center-btn" data-center="tw_taitung" data-domain="tw_tour" title="台東全 4K：多良車站 AI 追火車 4K ‧ 池上天堂路 4K ‧ 南橫埡口 4K ‧ 三仙台 4K ‧ 金樽衝浪 4K ‧ 鹿野高台 ‧ 綠島">
+              <i class="fa-solid fa-train"></i>
+              <span>台東</span>
             </button>
             <button class="center-btn" data-center="world" data-domain="world" title="全球 4K 旗艦總覽 80 處：集結八大洲際與極地、雨林、海洋最高畫質 2160P 與最高即時人氣直播">
               <i class="fa-solid fa-globe"></i>
@@ -12035,6 +12134,7 @@ html[data-theme="light"] .immersive-subtab-btn.active {
         <div id="favDomainQuickBar" class="fav-domain-quick-bar">
           <span>跨區自選牆</span>
           <button type="button" class="fav-quick-jump-btn" onclick="window.monitorApp?.switchDomain('taiwan')">＋ 台灣路口</button>
+          <button type="button" class="fav-quick-jump-btn" onclick="window.monitorApp?.switchDomain('tw_tour')">＋ 台灣觀光</button>
           <button type="button" class="fav-quick-jump-btn" onclick="window.monitorApp?.switchDomain('world')">＋ 全球4K</button>
         </div>
       </div>
@@ -12603,6 +12703,17 @@ window.escJsAttr = function escJsAttr(str) {
     .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+};
+
+// 全域台灣觀光 12 縣市中心清單與判斷工具（單一真相來源）
+window.TAIWAN_TOUR_CENTER_IDS = [
+  'tourist', 'tw_taipei', 'tw_newtaipei', 'tw_taoyuan', 'tw_yilan',
+  'tw_taichung', 'tw_central', 'tw_tainan', 'tw_kaohsiung', 'tw_pingtung',
+  'tw_hualien', 'tw_taitung'
+];
+window.TAIWAN_TOUR_CITY_IDS = window.TAIWAN_TOUR_CENTER_IDS.filter(id => id !== 'tourist');
+window.isTaiwanTourCenter = function isTaiwanTourCenter(cid) {
+  return window.TAIWAN_TOUR_CENTER_IDS.includes(cid);
 };
 
 /**
@@ -17860,7 +17971,8 @@ class WeatherEnvironmentMonitor {
     const nearbyStations = Array.isArray(this.nearbyYouBikeStations) ? this.nearbyYouBikeStations : [];
     const titleEl = document.getElementById('youbikeTitleText');
     const filterBarEl = document.getElementById('youbikeFilterBar');
-    const isSpatialNearbyMode = isIntlCenter || ((centerId === 'nearby' || centerId === 'tourist' || centerId === 'favorites') &&
+    const isTwTour = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(centerId);
+    const isSpatialNearbyMode = isIntlCenter || ((centerId === 'nearby' || isTwTour || centerId === 'favorites') &&
       (this.nearbyYouBikeLoading || nearbyStations.length > 0 || Boolean(this.nearbyYouBikeEmptyReason)));
 
     if (titleEl) {
@@ -19139,7 +19251,8 @@ class LocalGeoBusService {
   }
 
   isTransitBarCenter(cid = this.centerId) {
-    return ['nearby', 'tourist', 'favorites', 'world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(cid);
+    const isTwTour = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(cid);
+    return isTwTour || ['nearby', 'tourist', 'favorites', 'world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(cid);
   }
 
   syncForCenter(centerId, opts = {}) {
@@ -20494,7 +20607,8 @@ class NeighborhoodRadarMap {
   async refreshMapEarthquakes() {
     if (!this.map || typeof L === 'undefined' || !this.layerState.quakes) return;
     const regionId = (typeof window !== 'undefined' && window.monitorApp?.currentCenterId) || 'dual';
-    const isTw = ['dual', 'qingpu', 'banqiao', 'tourist', 'nearby'].includes(regionId);
+    const isTwTour = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(regionId);
+    const isTw = isTwTour || ['dual', 'qingpu', 'banqiao', 'tourist', 'nearby'].includes(regionId);
     const cacheKey = isTw ? 'tw' : 'global';
     const now = Date.now();
     const cached = this._quakeCache.get(cacheKey);
@@ -20623,7 +20737,8 @@ class NeighborhoodRadarMap {
       ? Number(safeCenter.lon)
       : (validCamList.length > 0 ? Number(validCamList[0].lon) : 121.3450);
 
-    const isTourist = safeCenter.id === 'tourist';
+    const isTwTourAll = safeCenter.id === 'tourist';
+    const isTwTourCity = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(safeCenter.id) && !isTwTourAll;
     const isIntl = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(safeCenter.id);
     const isFavorites = safeCenter.id === 'favorites';
     const regionMapPresets = {
@@ -20640,8 +20755,8 @@ class NeighborhoodRadarMap {
       daynight: { pos: [centerLat, centerLon], zoom: 8 }
     };
     const preset = regionMapPresets[safeCenter.id];
-    const initialZoom = preset ? preset.zoom : (isTourist ? 10 : (isFavorites ? 11 : 12));
-    const centerPos = preset ? preset.pos : (isTourist ? [25.045, 121.55] : [centerLat, centerLon]);
+    const initialZoom = preset ? preset.zoom : (isTwTourAll ? 7 : (isTwTourCity ? 10 : (isFavorites ? 11 : 12)));
+    const centerPos = preset ? preset.pos : (isTwTourAll ? [23.9739, 120.9820] : [centerLat, centerLon]);
 
     if (!this.map) {
       this.init(centerPos[0], centerPos[1], initialZoom);
@@ -24641,7 +24756,8 @@ class TwinCityTransitMonitor {
         return;
       }
       const isIntlMode = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(curCenterId);
-      const isNearbyBusMode = isIntlMode || curCenterId === 'nearby' || curCenterId === 'tourist' || (curCenterId === 'favorites' && Boolean(window.localBusService && window.localBusService.target));
+      const isTwTourMode = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(curCenterId);
+      const isNearbyBusMode = isIntlMode || curCenterId === 'nearby' || isTwTourMode || (curCenterId === 'favorites' && Boolean(window.localBusService && window.localBusService.target));
       if (isNearbyBusMode) {
         const container = document.getElementById(this.containerId);
         if (container) {
@@ -26114,11 +26230,99 @@ window.CAMERAS_DATA = {
     },
     {
       "id": "tourist",
-      "name": "觀光",
-      "address": "",
-      "lat": 25.0425,
-      "lon": 121.5053,
-      "description": "九份 ‧ 西門町 ‧ 台北101 ‧ 台北車站 ‧ 大稻埕 ‧ 松山商圈"
+      "name": "全台精選",
+      "address": "全台 11 大縣市 4K 熱門觀光地標與衛星總覽",
+      "lat": 23.9739,
+      "lon": 120.982,
+      "description": "全台最高畫質 4K 與最熱門觀光景點旗艦總覽：涵蓋台北、新北、桃園、宜蘭、台中、南投嘉義、台南、高雄、屏東墾丁、花蓮、台東"
+    },
+    {
+      "id": "tw_taipei",
+      "name": "台北市",
+      "address": "大稻埕 ‧ 象山 101 ‧ 碧山巖 ‧ 陽明山 ‧ 西門町",
+      "lat": 25.0478,
+      "lon": 121.517,
+      "description": "台北市熱門景點與商圈實況：大稻埕碼頭 4K、象山台北 101 4K、碧山巖 4K、劍潭山 4K、陽明山擎天崗 4K、西門町、饒河士林夜市"
+    },
+    {
+      "id": "tw_newtaipei",
+      "name": "新北市",
+      "address": "淡水漁人碼頭 ‧ 九份山城 ‧ 野柳 ‧ 八里 ‧ 平溪",
+      "lat": 25.1099,
+      "lon": 121.8452,
+      "description": "新北市山海名勝與老街實況：淡水漁人碼頭 4K、九份山城 4K、八里左岸 4K、野柳 4K、石門白沙灣 4K、金山中角灣 4K、平溪十分天燈"
+    },
+    {
+      "id": "tw_taoyuan",
+      "name": "桃園",
+      "address": "桃園機場 TPE ‧ 拉拉山 ‧ 永安漁港 ‧ 大溪石門",
+      "lat": 25.0797,
+      "lon": 121.2342,
+      "description": "桃園熱門觀光實況：桃園國際機場 4K 起降、拉拉山上巴陵 4K 雲海、永安漁港海螺館 4K、阿姆坪石門水庫、大溪老街、小烏來天空步道"
+    },
+    {
+      "id": "tw_yilan",
+      "name": "宜蘭",
+      "address": "太平山雲海 ‧ 蹦蹦車 ‧ 外澳龜山島 ‧ 蘇澳港灣",
+      "lat": 24.757,
+      "lon": 121.753,
+      "description": "宜蘭山海觀光實況：太平山國家森林遊樂區、太平山蹦蹦車站、頭城外澳龜山島海灘、蘇澳港灣、頭城濱海森林與宜蘭市區"
+    },
+    {
+      "id": "tw_taichung",
+      "name": "台中",
+      "address": "高美濕地 4K ‧ 望高寮夜景 4K ‧ 梨山 4K ‧ 武陵農場",
+      "lat": 24.1477,
+      "lon": 120.6736,
+      "description": "台中熱門觀光實況：清水高美濕地夕照 4K、大肚山望高寮百萬夜景 4K、大安港媽祖園區 4K、和平梨山德基水庫 4K、雪霸武陵農場"
+    },
+    {
+      "id": "tw_central",
+      "name": "南投嘉義",
+      "address": "阿里山雲海 4K ‧ 日月潭 4K ‧ 合歡山武嶺 ‧ 日落大道",
+      "lat": 23.8488,
+      "lon": 120.9301,
+      "description": "南投嘉義與苗栗高山湖景實況：阿里山二延平雲海 4K、奮起湖 4K、日月潭伊達邵與文武廟 4K、合歡山武嶺 3,275m、梅山太平雲梯、通霄日落大道"
+    },
+    {
+      "id": "tw_tainan",
+      "name": "台南",
+      "address": "黃金海岸 4K ‧ 安平港 ‧ 府城古都 ‧ 台南車站",
+      "lat": 22.9908,
+      "lon": 120.2133,
+      "description": "台南府城觀光實況：黃金海岸夕照 4K UHD、安平港海濱、中西區古都門戶、台南火車站圓環、康橋鐵道與亞太國際棒球中心"
+    },
+    {
+      "id": "tw_kaohsiung",
+      "name": "高雄",
+      "address": "壽山百萬夜景 4K ‧ 蓮池潭 4K ‧ 駁二棧貳庫 4K ‧ 旗津",
+      "lat": 22.6256,
+      "lon": 120.2738,
+      "description": "高雄港都觀光實況：壽山情人觀景台 85 大樓夜景 4K、左營蓮池潭龍虎塔 4K、棧貳庫大港橋 4K、高流愛河灣 4K、旗津沙灘 4K、壽山動物園 4K"
+    },
+    {
+      "id": "tw_pingtung",
+      "name": "屏東墾丁",
+      "address": "墾丁大街 4K ‧ 船帆石 4K ‧ 南灣沙灘 ‧ 海底珊瑚礁",
+      "lat": 21.9449,
+      "lon": 120.7995,
+      "description": "屏東墾丁熱帶海濱實況：墾丁大街夜市 4K、船帆石沙灘 4K、南灣沙灘浪花、墾丁國家公園牌樓、森林觀海樓與南灣海底珊瑚礁生態直播"
+    },
+    {
+      "id": "tw_hualien",
+      "name": "花蓮",
+      "address": "六十石山 4K ‧ 大石鼻山 4K ‧ 鯉魚潭 4K ‧ 七星潭",
+      "lat": 23.9769,
+      "lon": 121.6044,
+      "description": "花蓮山海縱谷實況：富里六十石山 4K、豐濱大石鼻山 4K、壽豐鯉魚潭 4K、石梯坪 4K、長虹橋 4K、七星潭月牙灣與清水斷崖遠景、玉里赤科山"
+    },
+    {
+      "id": "tw_taitung",
+      "name": "台東",
+      "address": "多良車站 4K ‧ 池上伯朗大道 4K ‧ 三仙台 4K ‧ 綠島",
+      "lat": 22.7583,
+      "lon": 121.1444,
+      "description": "台東全 4K 旗艦絕景實況：多良車站 AI 追火車 4K、池上天堂路 4K、南橫埡口雲海 4K、金樽衝浪 4K、三仙台八拱橋 4K、鹿野高台熱氣球 4K、綠島柴口 4K"
     },
     {
       "id": "world",
@@ -27088,24 +27292,234 @@ window.CAMERAS_DATA = {
     ],
     "tourist": [
       {
-        "id": "C000232",
-        "cctvCode": "168",
-        "realId": "C000232",
-        "name": "九份老街 (瑞芳區汽車路九份老街口-輕便路)",
-        "authority": "新北市政府交通局",
-        "type": "hls",
-        "lat": 25.1098,
-        "lon": 121.8447,
-        "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000232/live.m3u8",
-        "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000232",
+        "id": "tw-sat-cwa-himawari-4k",
+        "cctvCode": "CWA-SAT-TW-4K",
+        "name": "中央氣象署向日葵9號衛星 ‧ 台灣與周邊海域高解析真實色彩太空雲圖",
+        "authority": "交通部中央氣象署 (CWA) 太空遙測直連",
+        "type": "snapshot",
+        "lat": 23.9739,
+        "lon": 120.982,
+        "streamUrl": "https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0028-003.jpg",
+        "sourceUrl": "https://www.cwa.gov.tw/V8/C/W/OBS_Sat.html",
         "status": "ONLINE",
-        "fps": 30,
-        "tag": "九份老街",
+        "fps": 1,
+        "tag": "太空 衛星 台灣 風景 多元直連 4K",
         "distanceMeters": 0,
         "distanceKm": 0,
         "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1950,
+        "areaTag": "全台衛星",
+        "tz": "Asia/Taipei"
+      }
+    ],
+    "tw_taipei": [
+      {
+        "id": "tw-4k-dadaocheng-wharf",
+        "cctvCode": "TPE-DADAOCHENG-4K",
+        "name": "台北大稻埕碼頭 ‧ 淡水河夕照與碼頭夜景 4K",
+        "authority": "Taipei Travel Live Cam 4K 官方",
+        "type": "youtube",
+        "videoId": "Ndo_8RuefH4",
+        "lat": 25.0568,
+        "lon": 121.5082,
+        "streamUrl": "https://www.youtube.com/watch?v=Ndo_8RuefH4",
+        "sourceUrl": "https://www.youtube.com/watch?v=Ndo_8RuefH4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 大稻埕 河岸 夕陽 風景 4K",
+        "areaTag": "台北市",
+        "district": "大同區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1920
+      },
+      {
+        "id": "tw-4k-xiangshan-101",
+        "cctvCode": "TPE-XIANGSHAN-4K",
+        "name": "台北象山看台北 ‧ 台北 101 璀璨天際線 4K",
+        "authority": "Taipei Travel Live Cam 4K 官方",
+        "type": "youtube",
+        "videoId": "z_fY1pj1VBw",
+        "lat": 25.0273,
+        "lon": 121.5761,
+        "streamUrl": "https://www.youtube.com/watch?v=z_fY1pj1VBw",
+        "sourceUrl": "https://www.youtube.com/watch?v=z_fY1pj1VBw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 象山 台北101 夜景 風景 4K",
+        "areaTag": "台北市",
+        "district": "信義區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1890
+      },
+      {
+        "id": "tw-4k-bishanyan-panorama",
+        "cctvCode": "TPE-BISHANYAN-4K",
+        "name": "台北內湖碧山巖 ‧ 俯瞰大台北盆地與 101 全景 4K",
+        "authority": "Taipei Travel Live Cam 4K 官方",
+        "type": "youtube",
+        "videoId": "uvwfYzwY8tg",
+        "lat": 25.097,
+        "lon": 121.5877,
+        "streamUrl": "https://www.youtube.com/watch?v=uvwfYzwY8tg",
+        "sourceUrl": "https://www.youtube.com/watch?v=uvwfYzwY8tg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 碧山巖 台北101 夜景 風景 4K",
+        "areaTag": "台北市",
+        "district": "內湖區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1760
+      },
+      {
+        "id": "tw-4k-jiantan-breeze",
+        "cctvCode": "TPE-JIANTAN-4K",
+        "name": "台北劍潭山微風平台 ‧ 圓山飯店與松山機場起降 4K",
+        "authority": "Taipei Travel Live Cam 4K 官方",
+        "type": "youtube",
+        "videoId": "34h_Cy_n0Ok",
+        "lat": 25.0793,
+        "lon": 121.529,
+        "streamUrl": "https://www.youtube.com/watch?v=34h_Cy_n0Ok",
+        "sourceUrl": "https://www.youtube.com/watch?v=34h_Cy_n0Ok",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 劍潭山 圓山 松山機場 風景 4K",
+        "areaTag": "台北市",
+        "district": "士林區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1710
+      },
+      {
+        "id": "tw-4k-qingtiangang-yms",
+        "cctvCode": "TPE-YMS-QTG-4K",
+        "name": "陽明山國家公園 ‧ 擎天崗草原 360° 全景 4K",
+        "authority": "陽明山國家公園管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "UX4FTHVXcz4",
+        "lat": 25.1667,
+        "lon": 121.5742,
+        "streamUrl": "https://www.youtube.com/watch?v=UX4FTHVXcz4",
+        "sourceUrl": "https://www.youtube.com/watch?v=UX4FTHVXcz4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 陽明山 擎天崗 國家公園 風景 4K",
+        "areaTag": "台北市",
+        "district": "士林區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 2160,
+        "popScore": 1680
+      },
+      {
+        "id": "tw-4k-dajia-riverside",
+        "cctvCode": "TPE-DAJIA-4K",
+        "name": "台北大佳河濱公園 ‧ 基隆河水岸與大直橋 4K",
+        "authority": "Taipei Travel Live Cam 4K 官方",
+        "type": "youtube",
+        "videoId": "fP4ecxfsJos",
+        "lat": 25.0736,
+        "lon": 121.5356,
+        "streamUrl": "https://www.youtube.com/watch?v=fP4ecxfsJos",
+        "sourceUrl": "https://www.youtube.com/watch?v=fP4ecxfsJos",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 大佳河濱 基隆河 風景 4K",
+        "areaTag": "台北市",
+        "district": "中山區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 2160,
+        "popScore": 1580
+      },
+      {
+        "id": "tw-4k-maokong-zhinan",
+        "cctvCode": "TPE-MAOKONG-4K",
+        "name": "台北貓空指南宮 ‧ 山城茶鄉與台北盆地雲霧 4K",
+        "authority": "Taipei Travel Live Cam 4K 官方",
+        "type": "youtube",
+        "videoId": "215ahZ_0rTg",
+        "lat": 24.9794,
+        "lon": 121.5882,
+        "streamUrl": "https://www.youtube.com/watch?v=215ahZ_0rTg",
+        "sourceUrl": "https://www.youtube.com/watch?v=215ahZ_0rTg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 貓空 指南宮 山景 風景 4K",
+        "areaTag": "台北市",
+        "district": "文山區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 2160,
+        "popScore": 1550
+      },
+      {
+        "id": "tw-hd-lengshuikeng-yms",
+        "cctvCode": "TPE-YMS-LSK",
+        "name": "陽明山國家公園 ‧ 冷水坑溫泉生態區即時實況",
+        "authority": "陽明山國家公園管理處官方",
+        "type": "youtube",
+        "videoId": "GB64WeZZQPQ",
+        "lat": 25.1665,
+        "lon": 121.5637,
+        "streamUrl": "https://www.youtube.com/watch?v=GB64WeZZQPQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=GB64WeZZQPQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 陽明山 冷水坑 溫泉 國家公園 風景",
+        "areaTag": "台北市",
+        "district": "士林區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
         "maxRes": 1080,
-        "popScore": 300
+        "popScore": 980
+      },
+      {
+        "id": "tw-hd-pccu-yangmingshan",
+        "cctvCode": "TPE-PCCU-SKY",
+        "name": "陽明山文化大學 ‧ 臺北盆地環景與彩虹氣象監測",
+        "authority": "中國文化大學大氣科學系官方",
+        "type": "youtube",
+        "videoId": "J2vDFfe9CRE",
+        "lat": 25.1369,
+        "lon": 121.5403,
+        "streamUrl": "https://www.youtube.com/watch?v=J2vDFfe9CRE",
+        "sourceUrl": "https://www.youtube.com/watch?v=J2vDFfe9CRE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北 陽明山 盆地 彩虹 風景",
+        "areaTag": "台北市",
+        "district": "士林區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "maxRes": 1080,
+        "popScore": 950
       },
       {
         "id": "tpe-301",
@@ -27122,9 +27536,11 @@ window.CAMERAS_DATA = {
         "tag": "台北車站",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 2,
+        "defaultOrder": 10,
         "maxRes": 1080,
-        "popScore": 298
+        "popScore": 298,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-304",
@@ -27141,9 +27557,11 @@ window.CAMERAS_DATA = {
         "tag": "北門廣場",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 4,
+        "defaultOrder": 11,
         "maxRes": 1080,
-        "popScore": 294
+        "popScore": 294,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-346",
@@ -27160,9 +27578,11 @@ window.CAMERAS_DATA = {
         "tag": "台北車站",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 5,
+        "defaultOrder": 12,
         "maxRes": 1080,
-        "popScore": 292
+        "popScore": 292,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-166",
@@ -27179,9 +27599,11 @@ window.CAMERAS_DATA = {
         "tag": "台北車站",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 6,
+        "defaultOrder": 13,
         "maxRes": 1080,
-        "popScore": 290
+        "popScore": 290,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-028",
@@ -27198,9 +27620,11 @@ window.CAMERAS_DATA = {
         "tag": "台北車站",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 7,
+        "defaultOrder": 14,
         "maxRes": 1080,
-        "popScore": 288
+        "popScore": 288,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-292",
@@ -27217,9 +27641,11 @@ window.CAMERAS_DATA = {
         "tag": "西門町",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 8,
+        "defaultOrder": 15,
         "maxRes": 1080,
-        "popScore": 286
+        "popScore": 286,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-291",
@@ -27236,9 +27662,11 @@ window.CAMERAS_DATA = {
         "tag": "西門町",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 9,
+        "defaultOrder": 16,
         "maxRes": 1080,
-        "popScore": 284
+        "popScore": 284,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-338",
@@ -27255,9 +27683,11 @@ window.CAMERAS_DATA = {
         "tag": "西門町",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 10,
+        "defaultOrder": 17,
         "maxRes": 1080,
-        "popScore": 282
+        "popScore": 282,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-263",
@@ -27274,9 +27704,11 @@ window.CAMERAS_DATA = {
         "tag": "小南門",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 11,
+        "defaultOrder": 18,
         "maxRes": 1080,
-        "popScore": 280
+        "popScore": 280,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-277",
@@ -27295,7 +27727,9 @@ window.CAMERAS_DATA = {
         "distanceKm": 0,
         "defaultOrder": 19,
         "maxRes": 1080,
-        "popScore": 264
+        "popScore": 264,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-138",
@@ -27312,9 +27746,11 @@ window.CAMERAS_DATA = {
         "tag": "台北101",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 25,
+        "defaultOrder": 20,
         "maxRes": 1080,
-        "popScore": 252
+        "popScore": 252,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-286",
@@ -27331,9 +27767,11 @@ window.CAMERAS_DATA = {
         "tag": "大稻埕老街",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 28,
+        "defaultOrder": 21,
         "maxRes": 1080,
-        "popScore": 246
+        "popScore": 246,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-278",
@@ -27350,9 +27788,11 @@ window.CAMERAS_DATA = {
         "tag": "大稻埕圓環",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 29,
+        "defaultOrder": 22,
         "maxRes": 1080,
-        "popScore": 244
+        "popScore": 244,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "tpe-259",
@@ -27369,9 +27809,954 @@ window.CAMERAS_DATA = {
         "tag": "大稻埕大橋頭",
         "distanceMeters": 0,
         "distanceKm": 0,
+        "defaultOrder": 23,
+        "maxRes": 1080,
+        "popScore": 242,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-303",
+        "ccdId": "303",
+        "name": "北門承恩門 ‧ 台北城門意象 (忠孝西路與中華路一段北門廣場)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0485,
+        "lon": 121.5115,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=303",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=303",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "北門廣場",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 24,
+        "maxRes": 1080,
+        "popScore": 116,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-370",
+        "ccdId": "370",
+        "name": "艋舺龍山寺門戶 ‧ 和平西路商圈 (和平西路三段與南寧路口 / 龍山寺站旁)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0358,
+        "lon": 121.5012,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=370",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=370",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "艋舺龍山寺",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 25,
+        "maxRes": 1080,
+        "popScore": 98,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-356",
+        "ccdId": "356",
+        "name": "艋舺大道 ‧ 萬華車站文化聚落 (艋舺大道與萬大路口 / 萬華車站交會)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0325,
+        "lon": 121.4988,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=356",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=356",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "萬華車站",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 26,
+        "maxRes": 1080,
+        "popScore": 96,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-419",
+        "ccdId": "419",
+        "name": "萬華西園路商圈 ‧ 龍山寺綠町 (西園路二段與西藏路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0298,
+        "lon": 121.4965,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=419",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=419",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "萬華生活圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 27,
+        "maxRes": 1080,
+        "popScore": 94,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-295",
+        "ccdId": "295",
+        "name": "萬華加蚋仔文青街區 ‧ 東園商圈 (萬大路與東園街口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0265,
+        "lon": 121.4982,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=295",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=295",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "萬華加蚋仔",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 28,
+        "maxRes": 1080,
+        "popScore": 92,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-353",
+        "ccdId": "353",
+        "name": "華山1914文創園區 ‧ 光華三創數位特區 (八德路與新生北路口 / 捷運忠孝新生站)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0455,
+        "lon": 121.5312,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=353",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=353",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "華山忠孝新生",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 29,
+        "maxRes": 1080,
+        "popScore": 90,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-347",
+        "ccdId": "347",
+        "name": "中正紀念堂自由廣場大門 ‧ 國家兩廳院 (羅斯福路與中山南路愛國路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0365,
+        "lon": 121.5182,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=347",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=347",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "中正紀念堂",
+        "distanceMeters": 0,
+        "distanceKm": 0,
         "defaultOrder": 30,
         "maxRes": 1080,
-        "popScore": 242
+        "popScore": 88,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-387",
+        "ccdId": "387",
+        "name": "新生南路林蔭大道 ‧ 大安森林公園 (新生南路二段與和平東路一段口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0268,
+        "lon": 121.5342,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=387",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=387",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "大安森林公園",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 31,
+        "maxRes": 1080,
+        "popScore": 86,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-134",
+        "ccdId": "134",
+        "name": "信義威秀 ‧ 微風南山購物大道 (松仁路與松壽路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0354,
+        "lon": 121.5678,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=134",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=134",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 32,
+        "maxRes": 1080,
+        "popScore": 82,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-133",
+        "ccdId": "133",
+        "name": "信義微風松高 ‧ 新光三越 (松高路與松智路口 / 寒舍艾美)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0385,
+        "lon": 121.5652,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=133",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=133",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 33,
+        "maxRes": 1080,
+        "popScore": 80,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-135",
+        "ccdId": "135",
+        "name": "微風信義 ‧ 市府轉運站 (基隆路與信義路五段口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0345,
+        "lon": 121.5621,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=135",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=135",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 34,
+        "maxRes": 1080,
+        "popScore": 78,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-139",
+        "ccdId": "139",
+        "name": "信義新光三越 A8/A11 (松高路與松智路東北角)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0378,
+        "lon": 121.5661,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=139",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=139",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 35,
+        "maxRes": 1080,
+        "popScore": 76,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-137",
+        "ccdId": "137",
+        "name": "信義新光三越 A9/A11 (松壽路與市府路西南角)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0362,
+        "lon": 121.5638,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=137",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=137",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 36,
+        "maxRes": 1080,
+        "popScore": 74,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-074",
+        "ccdId": "074",
+        "name": "信義商圈象山步道起點 (信義路與松德路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0335,
+        "lon": 121.5725,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=074",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=074",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義象山",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 37,
+        "maxRes": 1080,
+        "popScore": 70,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-075",
+        "ccdId": "075",
+        "name": "信義國際金融大樓 (信義路與松仁路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0338,
+        "lon": 121.5682,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=075",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=075",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "信義商圈",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 38,
+        "maxRes": 1080,
+        "popScore": 68,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-336",
+        "ccdId": "336",
+        "name": "寧夏夜市圓環商圈 ‧ 老街前哨 (民生西路與重慶北路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0562,
+        "lon": 121.5136,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=336",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=336",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "寧夏夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 39,
+        "maxRes": 1080,
+        "popScore": 60,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-236",
+        "ccdId": "236",
+        "name": "國立故宮博物院迎賓大道 (故宮路與至善路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0998,
+        "lon": 121.5492,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=236",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=236",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "故宮博物院",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 40,
+        "maxRes": 1080,
+        "popScore": 58,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-234",
+        "ccdId": "234",
+        "name": "士林官邸正門花園大道 (至善路與福林路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0945,
+        "lon": 121.5348,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=234",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=234",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "士林官邸",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 41,
+        "maxRes": 1080,
+        "popScore": 56,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-411",
+        "ccdId": "411",
+        "name": "士林官邸林蔭大道 (中山北路五段與中正路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0932,
+        "lon": 121.5285,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=411",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=411",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "士林官邸",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 42,
+        "maxRes": 1080,
+        "popScore": 54,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-157",
+        "ccdId": "157",
+        "name": "捷運劍潭站 ‧ 士林夜市門戶 (中山北路五段與劍潭路口東側)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0848,
+        "lon": 121.5252,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=157",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=157",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "士林夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 43,
+        "maxRes": 1080,
+        "popScore": 52,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-326",
+        "ccdId": "326",
+        "name": "士林夜市觀光徒步商圈 (中山北路五段與文林路口 / 捷運士林站)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0885,
+        "lon": 121.5268,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=326",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=326",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "士林夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 44,
+        "maxRes": 1080,
+        "popScore": 50,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-386",
+        "ccdId": "386",
+        "name": "士林夜市北側入口 ‧ 台北兒童新樂園 (中正路與基河路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0925,
+        "lon": 121.5225,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=386",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=386",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "士林夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 45,
+        "maxRes": 1080,
+        "popScore": 48,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-348",
+        "ccdId": "348",
+        "name": "松山慈祐宮 ‧ 饒河街觀光夜市正牌樓 (八德路四段與塔悠路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0502,
+        "lon": 121.5775,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=348",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=348",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "饒河街夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 46,
+        "maxRes": 1080,
+        "popScore": 46,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-349",
+        "ccdId": "349",
+        "name": "饒河夜市彩虹橋水岸 ‧ 民生社區商圈 (南京東路五段與三民路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0518,
+        "lon": 121.5645,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=349",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=349",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "饒河彩虹橋",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 47,
+        "maxRes": 1080,
+        "popScore": 44,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-305",
+        "ccdId": "305",
+        "name": "台北小巨蛋正門 ‧ 微風南京商圈 (敦化北路與南京東路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0519,
+        "lon": 121.5492,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=305",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=305",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北小巨蛋",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 48,
+        "maxRes": 1080,
+        "popScore": 42,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-306",
+        "ccdId": "306",
+        "name": "台北小巨蛋體育園區 ‧ 八德商圈 (敦化北路與八德路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0482,
+        "lon": 121.5495,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=306",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=306",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北小巨蛋",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 49,
+        "maxRes": 1080,
+        "popScore": 40,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-372",
+        "ccdId": "372",
+        "name": "松山國際機場迎賓大道 (民權東路與敦化北路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0618,
+        "lon": 121.5498,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=372",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=372",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "松山機場",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 50,
+        "maxRes": 1080,
+        "popScore": 38,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-382",
+        "ccdId": "382",
+        "name": "台北大巨蛋巨蛋體育館 ‧ 松菸文創園區 (忠孝東路與光復南路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0415,
+        "lon": 121.5572,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=382",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=382",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北大巨蛋",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 51,
+        "maxRes": 1080,
+        "popScore": 36,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-345",
+        "ccdId": "345",
+        "name": "台北東區商圈 ‧ SOGO 敦化商圈 (忠孝東路四段與敦化南路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0418,
+        "lon": 121.5488,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=345",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=345",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台北東區",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 52,
+        "maxRes": 1080,
+        "popScore": 34,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-262",
+        "ccdId": "262",
+        "name": "東區 SOGO 復興館門戶 ‧ 捷運忠孝復興站 (忠孝東路與復興南路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0416,
+        "lon": 121.5435,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=262",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=262",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "忠孝復興",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 53,
+        "maxRes": 1080,
+        "popScore": 32,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-330",
+        "ccdId": "330",
+        "name": "通化街臨江觀光夜市入口 (信義路四段與安和路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0332,
+        "lon": 121.5528,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=330",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=330",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "通化臨江夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 54,
+        "maxRes": 1080,
+        "popScore": 30,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-417",
+        "ccdId": "417",
+        "name": "師大龍泉國際觀光夜市 (和平東路一段與師大路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0265,
+        "lon": 121.5282,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=417",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=417",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "師大夜市",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 55,
+        "maxRes": 1080,
+        "popScore": 28,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-008",
+        "ccdId": "008",
+        "name": "師大客家文化水岸園區 (水源快速道路與師大路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0215,
+        "lon": 121.5228,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=008",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=008",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "客家文化園區",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 56,
+        "maxRes": 1080,
+        "popScore": 26,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-415",
+        "ccdId": "415",
+        "name": "捷運中山站 ‧ 南西新光三越商圈 (承德路一段與南京西路口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0528,
+        "lon": 121.5188,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=415",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=415",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "捷運中山站",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 57,
+        "maxRes": 1080,
+        "popScore": 24,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      },
+      {
+        "id": "tpe-328",
+        "ccdId": "328",
+        "name": "捷運雙連站 ‧ 馬偕文青赤峰街區 (民生東路一段與中山北路二段口)",
+        "authority": "臺北市政府交通管制工程處",
+        "type": "iframe",
+        "lat": 25.0578,
+        "lon": 121.5225,
+        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=328",
+        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=328",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "捷運雙連站",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 58,
+        "maxRes": 1080,
+        "popScore": 22,
+        "areaTag": "台北市",
+        "tz": "Asia/Taipei"
+      }
+    ],
+    "tw_newtaipei": [
+      {
+        "id": "tw-4k-tamsui-fishermans",
+        "cctvCode": "NTPC-TAMSUI-4K",
+        "name": "新北淡水漁人碼頭 ‧ 情人橋夕陽與淡江海口 4K",
+        "authority": "新北旅客 New Taipei Tour 4K 官方",
+        "type": "youtube",
+        "videoId": "xwAWSh35uuw",
+        "lat": 25.183,
+        "lon": 121.4105,
+        "streamUrl": "https://www.youtube.com/watch?v=xwAWSh35uuw",
+        "sourceUrl": "https://www.youtube.com/watch?v=xwAWSh35uuw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 淡水 漁人碼頭 夕陽 海灣 風景 4K",
+        "areaTag": "新北市",
+        "district": "淡水區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1860
+      },
+      {
+        "id": "tw-4k-jiufen-mountain",
+        "cctvCode": "NTPC-JIUFEN-4K",
+        "name": "新北瑞芳九份山城 ‧ 基隆山與山海雲霧夜景 4K",
+        "authority": "新北旅客 New Taipei Tour 4K 官方",
+        "type": "youtube",
+        "videoId": "XSD5ptYisw8",
+        "lat": 25.1099,
+        "lon": 121.8452,
+        "streamUrl": "https://www.youtube.com/watch?v=XSD5ptYisw8",
+        "sourceUrl": "https://www.youtube.com/watch?v=XSD5ptYisw8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 九份 瑞芳 山城 夜景 風景 4K",
+        "areaTag": "新北市",
+        "district": "瑞芳區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1840
+      },
+      {
+        "id": "tw-4k-bali-leftbank",
+        "cctvCode": "NTPC-BALI-4K",
+        "name": "新北八里左岸 ‧ 淡水河畔與觀音山夕照 4K",
+        "authority": "新北旅客 New Taipei Tour 4K 官方",
+        "type": "youtube",
+        "videoId": "di-4DCblWq4",
+        "lat": 25.161,
+        "lon": 121.4342,
+        "streamUrl": "https://www.youtube.com/watch?v=di-4DCblWq4",
+        "sourceUrl": "https://www.youtube.com/watch?v=di-4DCblWq4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 八里 淡水河 夕陽 風景 4K",
+        "areaTag": "新北市",
+        "district": "八里區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1730
+      },
+      {
+        "id": "tw-4k-yehliu-geopark",
+        "cctvCode": "NTPC-YEHLIU-4K",
+        "name": "新北萬里野柳地質公園 ‧ 女王頭岬角海景 4K",
+        "authority": "北觀國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "ZjuY4qKaj40",
+        "lat": 25.2063,
+        "lon": 121.6903,
+        "streamUrl": "https://www.youtube.com/watch?v=ZjuY4qKaj40",
+        "sourceUrl": "https://www.youtube.com/watch?v=ZjuY4qKaj40",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 野柳 萬里 北海岸 海灘 風景 4K",
+        "areaTag": "新北市",
+        "district": "萬里區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1690
+      },
+      {
+        "id": "tw-4k-baishawan-northcoast",
+        "cctvCode": "NTPC-BAISHAWAN-4K",
+        "name": "新北石門白沙灣 ‧ 北海岸蔚藍沙灘浪花 4K",
+        "authority": "北觀國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "FbB8WDUXXqU",
+        "lat": 25.2836,
+        "lon": 121.5194,
+        "streamUrl": "https://www.youtube.com/watch?v=FbB8WDUXXqU",
+        "sourceUrl": "https://www.youtube.com/watch?v=FbB8WDUXXqU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 白沙灣 石門 北海岸 海灘 風景 4K",
+        "areaTag": "新北市",
+        "district": "石門區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 2160,
+        "popScore": 1640
+      },
+      {
+        "id": "tw-4k-zhongjiaowan-surf",
+        "cctvCode": "NTPC-ZJW-4K",
+        "name": "新北金山中角灣 ‧ 北海岸國際衝浪基地 4K",
+        "authority": "北觀國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "CJ8FA10bg3E",
+        "lat": 25.2392,
+        "lon": 121.6331,
+        "streamUrl": "https://www.youtube.com/watch?v=CJ8FA10bg3E",
+        "sourceUrl": "https://www.youtube.com/watch?v=CJ8FA10bg3E",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 金山 中角灣 衝浪 海灘 風景 4K",
+        "areaTag": "新北市",
+        "district": "金山區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 2160,
+        "popScore": 1590
+      },
+      {
+        "id": "tw-4k-heping-island",
+        "cctvCode": "KLU-HEPING-4K",
+        "name": "基隆和平島地質公園 ‧ 阿拉寶灣海蝕奇岩 4K",
+        "authority": "北觀國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "2SiZ6VUKbZI",
+        "lat": 25.1604,
+        "lon": 121.7638,
+        "streamUrl": "https://www.youtube.com/watch?v=2SiZ6VUKbZI",
+        "sourceUrl": "https://www.youtube.com/watch?v=2SiZ6VUKbZI",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "基隆 和平島 北海岸 海灣 風景 4K",
+        "areaTag": "新北市",
+        "district": "基隆中正區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 2160,
+        "popScore": 1560
+      },
+      {
+        "id": "tw-hd-fulong-beach",
+        "cctvCode": "NTPC-FULONG",
+        "name": "新北貢寮福隆海水浴場 ‧ 黃金沙灘與彩虹橋實況",
+        "authority": "東北角及宜蘭海岸國家風景區管理處",
+        "type": "youtube",
+        "videoId": "nLiYOxh6bGE",
+        "lat": 25.0221,
+        "lon": 121.9451,
+        "streamUrl": "https://www.youtube.com/watch?v=nLiYOxh6bGE",
+        "sourceUrl": "https://www.youtube.com/watch?v=nLiYOxh6bGE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "新北 福隆 貢寮 東北角 海灘 風景",
+        "areaTag": "新北市",
+        "district": "貢寮區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "maxRes": 1080,
+        "popScore": 1120
+      },
+      {
+        "id": "C000232",
+        "cctvCode": "168",
+        "realId": "C000232",
+        "name": "九份老街 (瑞芳區汽車路九份老街口-輕便路)",
+        "authority": "新北市政府交通局",
+        "type": "hls",
+        "lat": 25.1098,
+        "lon": 121.8447,
+        "streamUrl": "https://cctvatis4.ntpc.gov.tw/hls/C000232/live.m3u8",
+        "sourceUrl": "https://e.ntpc.gov.tw/layer-info/cctv_ntp/C000232",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "九份老街",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "maxRes": 1080,
+        "popScore": 300,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000376",
@@ -27389,9 +28774,11 @@ window.CAMERAS_DATA = {
         "tag": "淡水漁人碼頭",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 51,
+        "defaultOrder": 10,
         "maxRes": 1080,
-        "popScore": 200
+        "popScore": 200,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000300",
@@ -27409,674 +28796,11 @@ window.CAMERAS_DATA = {
         "tag": "平溪天燈十分瀑布",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 58,
+        "defaultOrder": 11,
         "maxRes": 1080,
-        "popScore": 186
-      },
-      {
-        "id": "tpe-303",
-        "ccdId": "303",
-        "name": "北門承恩門 ‧ 台北城門意象 (忠孝西路與中華路一段北門廣場)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0485,
-        "lon": 121.5115,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=303",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=303",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "北門廣場",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 3,
-        "maxRes": 1080,
-        "popScore": 116
-      },
-      {
-        "id": "tpe-370",
-        "ccdId": "370",
-        "name": "艋舺龍山寺門戶 ‧ 和平西路商圈 (和平西路三段與南寧路口 / 龍山寺站旁)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0358,
-        "lon": 121.5012,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=370",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=370",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "艋舺龍山寺",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 12,
-        "maxRes": 1080,
-        "popScore": 98
-      },
-      {
-        "id": "tpe-356",
-        "ccdId": "356",
-        "name": "艋舺大道 ‧ 萬華車站文化聚落 (艋舺大道與萬大路口 / 萬華車站交會)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0325,
-        "lon": 121.4988,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=356",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=356",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "萬華車站",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 13,
-        "maxRes": 1080,
-        "popScore": 96
-      },
-      {
-        "id": "tpe-419",
-        "ccdId": "419",
-        "name": "萬華西園路商圈 ‧ 龍山寺綠町 (西園路二段與西藏路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0298,
-        "lon": 121.4965,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=419",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=419",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "萬華生活圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 14,
-        "maxRes": 1080,
-        "popScore": 94
-      },
-      {
-        "id": "tpe-295",
-        "ccdId": "295",
-        "name": "萬華加蚋仔文青街區 ‧ 東園商圈 (萬大路與東園街口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0265,
-        "lon": 121.4982,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=295",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=295",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "萬華加蚋仔",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 15,
-        "maxRes": 1080,
-        "popScore": 92
-      },
-      {
-        "id": "tpe-353",
-        "ccdId": "353",
-        "name": "華山1914文創園區 ‧ 光華三創數位特區 (八德路與新生北路口 / 捷運忠孝新生站)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0455,
-        "lon": 121.5312,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=353",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=353",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "華山忠孝新生",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 16,
-        "maxRes": 1080,
-        "popScore": 90
-      },
-      {
-        "id": "tpe-347",
-        "ccdId": "347",
-        "name": "中正紀念堂自由廣場大門 ‧ 國家兩廳院 (羅斯福路與中山南路愛國路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0365,
-        "lon": 121.5182,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=347",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=347",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "中正紀念堂",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 17,
-        "maxRes": 1080,
-        "popScore": 88
-      },
-      {
-        "id": "tpe-387",
-        "ccdId": "387",
-        "name": "新生南路林蔭大道 ‧ 大安森林公園 (新生南路二段與和平東路一段口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0268,
-        "lon": 121.5342,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=387",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=387",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "大安森林公園",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 18,
-        "maxRes": 1080,
-        "popScore": 86
-      },
-      {
-        "id": "tpe-134",
-        "ccdId": "134",
-        "name": "信義威秀 ‧ 微風南山購物大道 (松仁路與松壽路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0354,
-        "lon": 121.5678,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=134",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=134",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義商圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 20,
-        "maxRes": 1080,
-        "popScore": 82
-      },
-      {
-        "id": "tpe-133",
-        "ccdId": "133",
-        "name": "信義微風松高 ‧ 新光三越 (松高路與松智路口 / 寒舍艾美)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0385,
-        "lon": 121.5652,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=133",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=133",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義商圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 21,
-        "maxRes": 1080,
-        "popScore": 80
-      },
-      {
-        "id": "tpe-135",
-        "ccdId": "135",
-        "name": "微風信義 ‧ 市府轉運站 (基隆路與信義路五段口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0345,
-        "lon": 121.5621,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=135",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=135",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義商圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 22,
-        "maxRes": 1080,
-        "popScore": 78
-      },
-      {
-        "id": "tpe-139",
-        "ccdId": "139",
-        "name": "信義新光三越 A8/A11 (松高路與松智路東北角)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0378,
-        "lon": 121.5661,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=139",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=139",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義商圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 23,
-        "maxRes": 1080,
-        "popScore": 76
-      },
-      {
-        "id": "tpe-137",
-        "ccdId": "137",
-        "name": "信義新光三越 A9/A11 (松壽路與市府路西南角)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0362,
-        "lon": 121.5638,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=137",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=137",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義商圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 24,
-        "maxRes": 1080,
-        "popScore": 74
-      },
-      {
-        "id": "tpe-074",
-        "ccdId": "074",
-        "name": "信義商圈象山步道起點 (信義路與松德路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0335,
-        "lon": 121.5725,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=074",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=074",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義象山",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 26,
-        "maxRes": 1080,
-        "popScore": 70
-      },
-      {
-        "id": "tpe-075",
-        "ccdId": "075",
-        "name": "信義國際金融大樓 (信義路與松仁路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0338,
-        "lon": 121.5682,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=075",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=075",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "信義商圈",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 27,
-        "maxRes": 1080,
-        "popScore": 68
-      },
-      {
-        "id": "tpe-336",
-        "ccdId": "336",
-        "name": "寧夏夜市圓環商圈 ‧ 老街前哨 (民生西路與重慶北路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0562,
-        "lon": 121.5136,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=336",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=336",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "寧夏夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 31,
-        "maxRes": 1080,
-        "popScore": 60
-      },
-      {
-        "id": "tpe-236",
-        "ccdId": "236",
-        "name": "國立故宮博物院迎賓大道 (故宮路與至善路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0998,
-        "lon": 121.5492,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=236",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=236",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "故宮博物院",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 32,
-        "maxRes": 1080,
-        "popScore": 58
-      },
-      {
-        "id": "tpe-234",
-        "ccdId": "234",
-        "name": "士林官邸正門花園大道 (至善路與福林路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0945,
-        "lon": 121.5348,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=234",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=234",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "士林官邸",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 33,
-        "maxRes": 1080,
-        "popScore": 56
-      },
-      {
-        "id": "tpe-411",
-        "ccdId": "411",
-        "name": "士林官邸林蔭大道 (中山北路五段與中正路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0932,
-        "lon": 121.5285,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=411",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=411",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "士林官邸",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 34,
-        "maxRes": 1080,
-        "popScore": 54
-      },
-      {
-        "id": "tpe-157",
-        "ccdId": "157",
-        "name": "捷運劍潭站 ‧ 士林夜市門戶 (中山北路五段與劍潭路口東側)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0848,
-        "lon": 121.5252,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=157",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=157",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "士林夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 35,
-        "maxRes": 1080,
-        "popScore": 52
-      },
-      {
-        "id": "tpe-326",
-        "ccdId": "326",
-        "name": "士林夜市觀光徒步商圈 (中山北路五段與文林路口 / 捷運士林站)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0885,
-        "lon": 121.5268,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=326",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=326",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "士林夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 36,
-        "maxRes": 1080,
-        "popScore": 50
-      },
-      {
-        "id": "tpe-386",
-        "ccdId": "386",
-        "name": "士林夜市北側入口 ‧ 台北兒童新樂園 (中正路與基河路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0925,
-        "lon": 121.5225,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=386",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=386",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "士林夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 37,
-        "maxRes": 1080,
-        "popScore": 48
-      },
-      {
-        "id": "tpe-348",
-        "ccdId": "348",
-        "name": "松山慈祐宮 ‧ 饒河街觀光夜市正牌樓 (八德路四段與塔悠路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0502,
-        "lon": 121.5775,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=348",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=348",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "饒河街夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 38,
-        "maxRes": 1080,
-        "popScore": 46
-      },
-      {
-        "id": "tpe-349",
-        "ccdId": "349",
-        "name": "饒河夜市彩虹橋水岸 ‧ 民生社區商圈 (南京東路五段與三民路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0518,
-        "lon": 121.5645,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=349",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=349",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "饒河彩虹橋",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 39,
-        "maxRes": 1080,
-        "popScore": 44
-      },
-      {
-        "id": "tpe-305",
-        "ccdId": "305",
-        "name": "台北小巨蛋正門 ‧ 微風南京商圈 (敦化北路與南京東路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0519,
-        "lon": 121.5492,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=305",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=305",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "台北小巨蛋",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 40,
-        "maxRes": 1080,
-        "popScore": 42
-      },
-      {
-        "id": "tpe-306",
-        "ccdId": "306",
-        "name": "台北小巨蛋體育園區 ‧ 八德商圈 (敦化北路與八德路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0482,
-        "lon": 121.5495,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=306",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=306",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "台北小巨蛋",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 41,
-        "maxRes": 1080,
-        "popScore": 40
-      },
-      {
-        "id": "tpe-372",
-        "ccdId": "372",
-        "name": "松山國際機場迎賓大道 (民權東路與敦化北路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0618,
-        "lon": 121.5498,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=372",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=372",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "松山機場",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 42,
-        "maxRes": 1080,
-        "popScore": 38
-      },
-      {
-        "id": "tpe-382",
-        "ccdId": "382",
-        "name": "台北大巨蛋巨蛋體育館 ‧ 松菸文創園區 (忠孝東路與光復南路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0415,
-        "lon": 121.5572,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=382",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=382",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "台北大巨蛋",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 43,
-        "maxRes": 1080,
-        "popScore": 36
-      },
-      {
-        "id": "tpe-345",
-        "ccdId": "345",
-        "name": "台北東區商圈 ‧ SOGO 敦化商圈 (忠孝東路四段與敦化南路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0418,
-        "lon": 121.5488,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=345",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=345",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "台北東區",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 44,
-        "maxRes": 1080,
-        "popScore": 34
-      },
-      {
-        "id": "tpe-262",
-        "ccdId": "262",
-        "name": "東區 SOGO 復興館門戶 ‧ 捷運忠孝復興站 (忠孝東路與復興南路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0416,
-        "lon": 121.5435,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=262",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=262",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "忠孝復興",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 45,
-        "maxRes": 1080,
-        "popScore": 32
-      },
-      {
-        "id": "tpe-330",
-        "ccdId": "330",
-        "name": "通化街臨江觀光夜市入口 (信義路四段與安和路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0332,
-        "lon": 121.5528,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=330",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=330",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "通化臨江夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 46,
-        "maxRes": 1080,
-        "popScore": 30
-      },
-      {
-        "id": "tpe-417",
-        "ccdId": "417",
-        "name": "師大龍泉國際觀光夜市 (和平東路一段與師大路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0265,
-        "lon": 121.5282,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=417",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=417",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "師大夜市",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 47,
-        "maxRes": 1080,
-        "popScore": 28
-      },
-      {
-        "id": "tpe-008",
-        "ccdId": "008",
-        "name": "師大客家文化水岸園區 (水源快速道路與師大路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0215,
-        "lon": 121.5228,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=008",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=008",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "客家文化園區",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 48,
-        "maxRes": 1080,
-        "popScore": 26
-      },
-      {
-        "id": "tpe-415",
-        "ccdId": "415",
-        "name": "捷運中山站 ‧ 南西新光三越商圈 (承德路一段與南京西路口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0528,
-        "lon": 121.5188,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=415",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=415",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "捷運中山站",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 49,
-        "maxRes": 1080,
-        "popScore": 24
-      },
-      {
-        "id": "tpe-328",
-        "ccdId": "328",
-        "name": "捷運雙連站 ‧ 馬偕文青赤峰街區 (民生東路一段與中山北路二段口)",
-        "authority": "臺北市政府交通管制工程處",
-        "type": "iframe",
-        "lat": 25.0578,
-        "lon": 121.5225,
-        "streamUrl": "https://hls.bote.gov.taipei/live/index.html?id=328",
-        "sourceUrl": "https://hls.bote.gov.taipei/live/index.html?id=328",
-        "status": "ONLINE",
-        "fps": 30,
-        "tag": "捷運雙連站",
-        "distanceMeters": 0,
-        "distanceKm": 0,
-        "defaultOrder": 50,
-        "maxRes": 1080,
-        "popScore": 22
+        "popScore": 186,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000109",
@@ -28094,9 +28818,11 @@ window.CAMERAS_DATA = {
         "tag": "淡水金色水岸",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 52,
+        "defaultOrder": 12,
         "maxRes": 1080,
-        "popScore": 18
+        "popScore": 18,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000288",
@@ -28114,9 +28840,11 @@ window.CAMERAS_DATA = {
         "tag": "烏來風景區",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 53,
+        "defaultOrder": 13,
         "maxRes": 1080,
-        "popScore": 16
+        "popScore": 16,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000138",
@@ -28134,9 +28862,11 @@ window.CAMERAS_DATA = {
         "tag": "三峽老街",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 54,
+        "defaultOrder": 14,
         "maxRes": 1080,
-        "popScore": 14
+        "popScore": 14,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000139",
@@ -28154,9 +28884,11 @@ window.CAMERAS_DATA = {
         "tag": "鶯歌陶瓷老街",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 55,
+        "defaultOrder": 15,
         "maxRes": 1080,
-        "popScore": 12
+        "popScore": 12,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000299",
@@ -28174,9 +28906,11 @@ window.CAMERAS_DATA = {
         "tag": "坪林茶鄉",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 56,
+        "defaultOrder": 16,
         "maxRes": 1080,
-        "popScore": 10
+        "popScore": 10,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
       },
       {
         "id": "C000298",
@@ -28194,15 +28928,391 @@ window.CAMERAS_DATA = {
         "tag": "深坑老街",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 57,
+        "defaultOrder": 17,
         "maxRes": 1080,
-        "popScore": 8
+        "popScore": 8,
+        "areaTag": "新北市",
+        "tz": "Asia/Taipei"
+      }
+    ],
+    "tw_taoyuan": [
+      {
+        "id": "tw-4k-tpe-airport-live",
+        "cctvCode": "TYN-TPE-4K",
+        "name": "桃園國際機場 TPE ‧ 國際航班起降 4K 實況",
+        "authority": "遊桃園 Taoyuan Travel 4K 官方",
+        "type": "youtube",
+        "videoId": "91PfFoqvuUk",
+        "lat": 25.0797,
+        "lon": 121.2342,
+        "streamUrl": "https://www.youtube.com/watch?v=91PfFoqvuUk",
+        "sourceUrl": "https://www.youtube.com/watch?v=91PfFoqvuUk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 機場 TPE 航空 交通 風景 4K",
+        "areaTag": "桃園",
+        "district": "大園區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1960
       },
+      {
+        "id": "tw-4k-tpe-south-runway",
+        "cctvCode": "TYN-TPE-RWY-4K",
+        "name": "桃園國際機場南跑道觀景台 ‧ 客機近距起降 4K",
+        "authority": "桃園國際機場官方 4K 實況",
+        "type": "youtube",
+        "videoId": "y3_x8el5ZJY",
+        "lat": 25.0715,
+        "lon": 121.2248,
+        "streamUrl": "https://www.youtube.com/watch?v=y3_x8el5ZJY",
+        "sourceUrl": "https://www.youtube.com/watch?v=y3_x8el5ZJY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 機場 跑道 航空 交通 4K",
+        "areaTag": "桃園",
+        "district": "大園區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1850
+      },
+      {
+        "id": "tw-4k-lalashan-baling",
+        "cctvCode": "TYN-LALASHAN-4K",
+        "name": "桃園復興拉拉山上巴陵 ‧ 雲海山嵐與北橫秘境 4K",
+        "authority": "遊桃園 Taoyuan Travel 4K 官方",
+        "type": "youtube",
+        "videoId": "nV-DKquUjFs",
+        "lat": 24.682,
+        "lon": 121.3919,
+        "streamUrl": "https://www.youtube.com/watch?v=nV-DKquUjFs",
+        "sourceUrl": "https://www.youtube.com/watch?v=nV-DKquUjFs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 拉拉山 復興 雲海 風景 4K",
+        "areaTag": "桃園",
+        "district": "復興區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1700
+      },
+      {
+        "id": "tw-4k-yongan-fishingport",
+        "cctvCode": "TYN-YONGAN-4K",
+        "name": "桃園新屋永安漁港 ‧ 海螺館與台灣海峽夕照 4K",
+        "authority": "遊桃園 Taoyuan Travel 4K 官方",
+        "type": "youtube",
+        "videoId": "tD_a03trUvE",
+        "lat": 24.9838,
+        "lon": 121.0155,
+        "streamUrl": "https://www.youtube.com/watch?v=tD_a03trUvE",
+        "sourceUrl": "https://www.youtube.com/watch?v=tD_a03trUvE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 永安漁港 海螺館 夕陽 海灘 風景 4K",
+        "areaTag": "桃園",
+        "district": "新屋區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1660
+      },
+      {
+        "id": "tw-4k-amuping-shimen",
+        "cctvCode": "TYN-AMUPING-4K",
+        "name": "桃園大溪阿姆坪薑母島 ‧ 石門湖光山色 4K",
+        "authority": "遊桃園 Taoyuan Travel 4K 官方",
+        "type": "youtube",
+        "videoId": "EUOp2LchPQM",
+        "lat": 24.8124,
+        "lon": 121.2981,
+        "streamUrl": "https://www.youtube.com/watch?v=EUOp2LchPQM",
+        "sourceUrl": "https://www.youtube.com/watch?v=EUOp2LchPQM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 大溪 石門水庫 湖景 風景 4K",
+        "areaTag": "桃園",
+        "district": "大溪區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 2160,
+        "popScore": 1610
+      },
+      {
+        "id": "tw-4k-sangui-luofu",
+        "cctvCode": "TYN-SANGUI-4K",
+        "name": "桃園復興三龜戲水觀景台 ‧ 羅浮雙橋溪谷 4K",
+        "authority": "遊桃園 Taoyuan Travel 4K 官方",
+        "type": "youtube",
+        "videoId": "5YDXZ1aiR5Y",
+        "lat": 24.7988,
+        "lon": 121.3688,
+        "streamUrl": "https://www.youtube.com/watch?v=5YDXZ1aiR5Y",
+        "sourceUrl": "https://www.youtube.com/watch?v=5YDXZ1aiR5Y",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 復興 羅浮 峽谷 風景 4K",
+        "areaTag": "桃園",
+        "district": "復興區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 2160,
+        "popScore": 1570
+      },
+      {
+        "id": "tw-hd-daxi-oldstreet",
+        "cctvCode": "TYN-DAXI-ST",
+        "name": "桃園大溪歷史老街 ‧ 巴洛克牌樓街區實況",
+        "authority": "遊桃園 Taoyuan Travel 官方",
+        "type": "youtube",
+        "videoId": "XUWjAsajKXg",
+        "lat": 24.8851,
+        "lon": 121.2877,
+        "streamUrl": "https://www.youtube.com/watch?v=XUWjAsajKXg",
+        "sourceUrl": "https://www.youtube.com/watch?v=XUWjAsajKXg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 大溪 老街 商圈 風景",
+        "areaTag": "桃園",
+        "district": "大溪區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 1080,
+        "popScore": 1240
+      },
+      {
+        "id": "tw-hd-shimen-dam",
+        "cctvCode": "TYN-SHIMEN-DAM",
+        "name": "桃園石門水庫大壩 ‧ 湖景洩洪道與楓林大道",
+        "authority": "遊桃園 Taoyuan Travel 官方",
+        "type": "youtube",
+        "videoId": "GUCaVR88ZFU",
+        "lat": 24.8123,
+        "lon": 121.2464,
+        "streamUrl": "https://www.youtube.com/watch?v=GUCaVR88ZFU",
+        "sourceUrl": "https://www.youtube.com/watch?v=GUCaVR88ZFU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 石門水庫 大壩 湖景 風景",
+        "areaTag": "桃園",
+        "district": "大溪區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "maxRes": 1080,
+        "popScore": 1180
+      },
+      {
+        "id": "tw-hd-xiaowulai-skywalk",
+        "cctvCode": "TYN-XIAOWULAI",
+        "name": "桃園復興小烏來天空步道 ‧ 飛瀑溪谷風景區",
+        "authority": "遊桃園 Taoyuan Travel 官方",
+        "type": "youtube",
+        "videoId": "neaiCec1kec",
+        "lat": 24.7916,
+        "lon": 121.3758,
+        "streamUrl": "https://www.youtube.com/watch?v=neaiCec1kec",
+        "sourceUrl": "https://www.youtube.com/watch?v=neaiCec1kec",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 小烏來 瀑布 峽谷 風景",
+        "areaTag": "桃園",
+        "district": "復興區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "maxRes": 1080,
+        "popScore": 1090
+      },
+      {
+        "id": "tw-hd-hutoushan-owl",
+        "cctvCode": "TYN-HUTOUSHAN",
+        "name": "桃園虎頭山奧爾森林學堂 ‧ 都會森林步道實況",
+        "authority": "遊桃園 Taoyuan Travel 官方",
+        "type": "youtube",
+        "videoId": "yQSmajHyMhU",
+        "lat": 25.0029,
+        "lon": 121.3292,
+        "streamUrl": "https://www.youtube.com/watch?v=yQSmajHyMhU",
+        "sourceUrl": "https://www.youtube.com/watch?v=yQSmajHyMhU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "桃園 虎頭山 森林 公園 風景",
+        "areaTag": "桃園",
+        "district": "桃園區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 10,
+        "maxRes": 1080,
+        "popScore": 1020
+      }
+    ],
+    "tw_yilan": [
+      {
+        "id": "tw-hd-taipingshan-view",
+        "cctvCode": "ILN-TAIPINGSHAN",
+        "name": "宜蘭太平山國家森林遊樂區 ‧ 景觀平台雲海日出",
+        "authority": "林業保育署國家森林遊樂區官方",
+        "type": "youtube",
+        "videoId": "YcazXhwRf4g",
+        "lat": 24.4963,
+        "lon": 121.5335,
+        "streamUrl": "https://www.youtube.com/watch?v=YcazXhwRf4g",
+        "sourceUrl": "https://www.youtube.com/watch?v=YcazXhwRf4g",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宜蘭 太平山 雲海 森林 風景",
+        "areaTag": "宜蘭",
+        "district": "大同鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 1080,
+        "popScore": 1480
+      },
+      {
+        "id": "tw-hd-taipingshan-bongbong",
+        "cctvCode": "ILN-BONGBONG",
+        "name": "宜蘭太平山蹦蹦車站 ‧ 森林小火車與霧林秘境",
+        "authority": "林業保育署國家森林遊樂區官方",
+        "type": "youtube",
+        "videoId": "enD2lFVDNiU",
+        "lat": 24.4957,
+        "lon": 121.5326,
+        "streamUrl": "https://www.youtube.com/watch?v=enD2lFVDNiU",
+        "sourceUrl": "https://www.youtube.com/watch?v=enD2lFVDNiU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宜蘭 太平山 蹦蹦車 森林 風景",
+        "areaTag": "宜蘭",
+        "district": "大同鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 1080,
+        "popScore": 1420
+      },
+      {
+        "id": "tw-hd-waiao-guishan",
+        "cctvCode": "ILN-WAIAO",
+        "name": "宜蘭頭城外澳海灘 ‧ 遠眺龜山島與太平洋衝浪浪花",
+        "authority": "交通部中央氣象署即時觀測",
+        "type": "youtube",
+        "videoId": "bsp9kqrSFW8",
+        "lat": 24.8772,
+        "lon": 121.8407,
+        "streamUrl": "https://www.youtube.com/watch?v=bsp9kqrSFW8",
+        "sourceUrl": "https://www.youtube.com/watch?v=bsp9kqrSFW8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宜蘭 頭城 外澳 龜山島 衝浪 海灘 風景",
+        "areaTag": "宜蘭",
+        "district": "頭城鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 1080,
+        "popScore": 1380
+      },
+      {
+        "id": "tw-hd-suao-bay",
+        "cctvCode": "ILN-SUAO",
+        "name": "宜蘭蘇澳港灣 ‧ 蘇澳灣太平洋海景氣象觀測",
+        "authority": "交通部中央氣象署即時觀測",
+        "type": "youtube",
+        "videoId": "3qj3-vr9Rjk",
+        "lat": 24.5948,
+        "lon": 121.8635,
+        "streamUrl": "https://www.youtube.com/watch?v=3qj3-vr9Rjk",
+        "sourceUrl": "https://www.youtube.com/watch?v=3qj3-vr9Rjk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宜蘭 蘇澳 海灣 漁港 風景",
+        "areaTag": "宜蘭",
+        "district": "蘇澳鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 1080,
+        "popScore": 1310
+      },
+      {
+        "id": "tw-hd-toucheng-coastal",
+        "cctvCode": "ILN-TOUCHENG",
+        "name": "宜蘭頭城濱海森林公園 ‧ 東北角蔚藍海岸實況",
+        "authority": "國家海洋研究院 GoOcean 官方",
+        "type": "youtube",
+        "videoId": "6DuufFTyR-Y",
+        "lat": 24.8473,
+        "lon": 121.8256,
+        "streamUrl": "https://www.youtube.com/watch?v=6DuufFTyR-Y",
+        "sourceUrl": "https://www.youtube.com/watch?v=6DuufFTyR-Y",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宜蘭 頭城 東北角 海灘 風景",
+        "areaTag": "宜蘭",
+        "district": "頭城鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 1080,
+        "popScore": 1260
+      },
+      {
+        "id": "tw-hd-yilan-city",
+        "cctvCode": "ILN-CITY",
+        "name": "宜蘭市區 ‧ 蘭陽平原即時街景與天氣實況",
+        "authority": "宜蘭在地即時影像實況",
+        "type": "youtube",
+        "videoId": "eo2CMMxMYHg",
+        "lat": 24.757,
+        "lon": 121.753,
+        "streamUrl": "https://www.youtube.com/watch?v=eo2CMMxMYHg",
+        "sourceUrl": "https://www.youtube.com/watch?v=eo2CMMxMYHg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "宜蘭 市區 蘭陽平原 商圈",
+        "areaTag": "宜蘭",
+        "district": "宜蘭市",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 1080,
+        "popScore": 1120
+      }
+    ],
+    "tw_taichung": [
       {
         "id": "tw-4k-gaomei-wetland",
         "cctvCode": "TW-GAOMEI-4K",
         "name": "台中清水高美濕地 ‧ 風車大道與台灣海峽夕照海景 4K",
-        "authority": "高美濕地旅遊網 4K 官方實況",
+        "authority": "臺中市政府觀光旅遊局 4K 官方",
         "type": "youtube",
         "videoId": "fjhg3gAnMFg",
         "lat": 24.3119,
@@ -28211,18 +29321,21 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=fjhg3gAnMFg",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "高美濕地 海灘 風景 4K",
+        "tag": "台中 高美濕地 清水 夕陽 海灘 風景 4K",
+        "areaTag": "台中",
+        "district": "清水區",
+        "tz": "Asia/Taipei",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 58,
+        "defaultOrder": 1,
         "maxRes": 2160,
-        "popScore": 1680
+        "popScore": 1820
       },
       {
         "id": "tw-4k-wanggaoliao-night",
         "cctvCode": "TW-WANGGAOLIAO-4K",
         "name": "台中大肚山望高寮 ‧ 璀璨百萬都會夜景與港灣天際線 4K",
-        "authority": "臺中市政府觀光旅遊局 4K 實況",
+        "authority": "臺中市政府觀光旅遊局 4K 官方",
         "type": "youtube",
         "videoId": "lhXXhDyjFtI",
         "lat": 24.1428,
@@ -28231,18 +29344,721 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=lhXXhDyjFtI",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "望高寮 夜景 風景 4K",
+        "tag": "台中 望高寮 大肚山 夜景 風景 4K",
+        "areaTag": "台中",
+        "district": "南屯區",
+        "tz": "Asia/Taipei",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 59,
+        "defaultOrder": 2,
         "maxRes": 2160,
-        "popScore": 1590
+        "popScore": 1790
       },
+      {
+        "id": "tw-4k-daan-mazu",
+        "cctvCode": "TXG-DAAN-4K",
+        "name": "台中大安港媽祖文化園區 ‧ 西部濱海夕陽海景 4K",
+        "authority": "臺中市政府觀光旅遊局 4K 官方",
+        "type": "youtube",
+        "videoId": "jIN45IVws3E",
+        "lat": 24.3746,
+        "lon": 120.5825,
+        "streamUrl": "https://www.youtube.com/watch?v=jIN45IVws3E",
+        "sourceUrl": "https://www.youtube.com/watch?v=jIN45IVws3E",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台中 大安港 濱海 夕陽 海灘 風景 4K",
+        "areaTag": "台中",
+        "district": "大安區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1650
+      },
+      {
+        "id": "tw-4k-lishan-deji",
+        "cctvCode": "TXG-LISHAN-4K",
+        "name": "台中和平梨山 ‧ 德基水庫與佳陽沖積扇高山雲海 4K",
+        "authority": "交通部觀光署參山國家風景區管理處",
+        "type": "youtube",
+        "videoId": "ZayKvJKDPWc",
+        "lat": 24.2546,
+        "lon": 121.1743,
+        "streamUrl": "https://www.youtube.com/watch?v=ZayKvJKDPWc",
+        "sourceUrl": "https://www.youtube.com/watch?v=ZayKvJKDPWc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台中 梨山 德基水庫 高山 風景 4K",
+        "areaTag": "台中",
+        "district": "和平區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1620
+      },
+      {
+        "id": "tw-hd-wuling-farm",
+        "cctvCode": "TXG-WULING",
+        "name": "台中和平武陵農場 ‧ 雪霸國家公園四季櫻花楓林",
+        "authority": "雪霸國家公園管理處官方",
+        "type": "youtube",
+        "videoId": "aGOFDlySzoQ",
+        "lat": 24.3536,
+        "lon": 121.3095,
+        "streamUrl": "https://www.youtube.com/watch?v=aGOFDlySzoQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=aGOFDlySzoQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台中 武陵農場 雪霸 國家公園 風景",
+        "areaTag": "台中",
+        "district": "和平區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 1080,
+        "popScore": 1350
+      },
+      {
+        "id": "tw-hd-taichung-xitun",
+        "cctvCode": "TXG-XITUN",
+        "name": "台中西屯市政商圈 ‧ 臺灣大道與文心路口都會街景",
+        "authority": "台中都會即時影像實況",
+        "type": "youtube",
+        "videoId": "53tHc92PDfE",
+        "lat": 24.162,
+        "lon": 120.6499,
+        "streamUrl": "https://www.youtube.com/watch?v=53tHc92PDfE",
+        "sourceUrl": "https://www.youtube.com/watch?v=53tHc92PDfE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台中 西屯 市政 商圈 交通",
+        "areaTag": "台中",
+        "district": "西屯區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 1080,
+        "popScore": 1120
+      }
+    ],
+    "tw_central": [
+      {
+        "id": "tw-4k-alishan-eryanping",
+        "cctvCode": "CYQ-ERYANPING-4K",
+        "name": "嘉義阿里山二延平步道 ‧ 隙頂雲海茶園與夕陽琉璃光 4K",
+        "authority": "阿里山國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "j2L_559nCjc",
+        "lat": 23.4222,
+        "lon": 120.6596,
+        "streamUrl": "https://www.youtube.com/watch?v=j2L_559nCjc",
+        "sourceUrl": "https://www.youtube.com/watch?v=j2L_559nCjc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "嘉義 阿里山 二延平 雲海 風景 4K",
+        "areaTag": "南投嘉義",
+        "district": "嘉義番路鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1880
+      },
+      {
+        "id": "tw-4k-alishan-fenqihu",
+        "cctvCode": "CYQ-FENQIHU-4K",
+        "name": "嘉義阿里山奮起湖 ‧ 百年老街山城與林鐵雲霧 4K",
+        "authority": "阿里山國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "B6eki-0-w0g",
+        "lat": 23.505,
+        "lon": 120.6952,
+        "streamUrl": "https://www.youtube.com/watch?v=B6eki-0-w0g",
+        "sourceUrl": "https://www.youtube.com/watch?v=B6eki-0-w0g",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "嘉義 阿里山 奮起湖 老街 山城 風景 4K",
+        "areaTag": "南投嘉義",
+        "district": "嘉義竹崎鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1810
+      },
+      {
+        "id": "tw-4k-sunmoonlake-itathao",
+        "cctvCode": "NAN-SML-IDA-4K",
+        "name": "南投日月潭伊達邵碼頭 ‧ 湖光山色遊艇碼頭 4K",
+        "authority": "日月潭國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "5plRdP_APCk",
+        "lat": 23.8488,
+        "lon": 120.9301,
+        "streamUrl": "https://www.youtube.com/watch?v=5plRdP_APCk",
+        "sourceUrl": "https://www.youtube.com/watch?v=5plRdP_APCk",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "南投 日月潭 伊達邵 湖景 風景 4K",
+        "areaTag": "南投嘉義",
+        "district": "南投魚池鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1780
+      },
+      {
+        "id": "tw-4k-sunmoonlake-wenwu",
+        "cctvCode": "NAN-SML-WW-4K",
+        "name": "南投日月潭文武廟 ‧ 俯瞰潭面晨曦與湖面雲霧 4K",
+        "authority": "日月潭文武廟官方 4K 實況",
+        "type": "youtube",
+        "videoId": "IS9KKN8i_Pg",
+        "lat": 23.8712,
+        "lon": 120.9271,
+        "streamUrl": "https://www.youtube.com/watch?v=IS9KKN8i_Pg",
+        "sourceUrl": "https://www.youtube.com/watch?v=IS9KKN8i_Pg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "南投 日月潭 文武廟 湖景 風景 4K",
+        "areaTag": "南投嘉義",
+        "district": "南投魚池鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1740
+      },
+      {
+        "id": "tw-hd-hehuan-wuling",
+        "cctvCode": "NAN-WULING",
+        "name": "南投仁愛合歡山武嶺亭 ‧ 台灣公路最高點 3,275m 追雪星空",
+        "authority": "合歡山武嶺即時影像監測",
+        "type": "youtube",
+        "videoId": "2lVMTs_Fj0M",
+        "lat": 24.1371,
+        "lon": 121.2757,
+        "streamUrl": "https://www.youtube.com/watch?v=2lVMTs_Fj0M",
+        "sourceUrl": "https://www.youtube.com/watch?v=2lVMTs_Fj0M",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "南投 合歡山 武嶺 星空 雪景 高山 風景",
+        "areaTag": "南投嘉義",
+        "district": "南投仁愛鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 1080,
+        "popScore": 1490
+      },
+      {
+        "id": "tw-hd-taiping-bridge",
+        "cctvCode": "CYQ-TAIPING",
+        "name": "嘉義梅山太平雲梯 ‧ 雲端吊橋俯瞰嘉南平原",
+        "authority": "阿里山國家風景區管理處官方",
+        "type": "youtube",
+        "videoId": "dY2cRNr5Buw",
+        "lat": 23.5597,
+        "lon": 120.5973,
+        "streamUrl": "https://www.youtube.com/watch?v=dY2cRNr5Buw",
+        "sourceUrl": "https://www.youtube.com/watch?v=dY2cRNr5Buw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "嘉義 梅山 太平雲梯 雲海 風景",
+        "areaTag": "南投嘉義",
+        "district": "嘉義梅山鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 1080,
+        "popScore": 1320
+      },
+      {
+        "id": "tw-hd-miaoli-sunset",
+        "cctvCode": "MIA-SUNSET",
+        "name": "苗栗通霄新埔日落大道 ‧ 台灣最美落日海濱公路",
+        "authority": "苗栗縣政府文化觀光局官方",
+        "type": "youtube",
+        "videoId": "vtzG8rysMIc",
+        "lat": 24.5398,
+        "lon": 120.6929,
+        "streamUrl": "https://www.youtube.com/watch?v=vtzG8rysMIc",
+        "sourceUrl": "https://www.youtube.com/watch?v=vtzG8rysMIc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "苗栗 通霄 日落大道 夕陽 海灘 風景",
+        "areaTag": "南投嘉義",
+        "district": "苗栗通霄鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 1080,
+        "popScore": 1290
+      }
+    ],
+    "tw_tainan": [
+      {
+        "id": "tw-4k-tainan-goldencoast",
+        "cctvCode": "TNN-GOLDEN-4K",
+        "name": "台南南區黃金海岸 ‧ 台灣海峽絕美金黃夕照沙灘 4K UHD",
+        "authority": "經濟部水利署 4K 高畫質觀測",
+        "type": "youtube",
+        "videoId": "uCXgNUJO9e8",
+        "lat": 22.9317,
+        "lon": 120.1753,
+        "streamUrl": "https://www.youtube.com/watch?v=uCXgNUJO9e8",
+        "sourceUrl": "https://www.youtube.com/watch?v=uCXgNUJO9e8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台南 黃金海岸 夕陽 海灘 風景 4K",
+        "areaTag": "台南",
+        "district": "南區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1770
+      },
+      {
+        "id": "tw-hd-tainan-anping",
+        "cctvCode": "TNN-ANPING",
+        "name": "台南安平港海濱 ‧ 安平漁港出海口與海峽天際",
+        "authority": "交通部中央氣象署即時觀測",
+        "type": "youtube",
+        "videoId": "IPNWtdR6QkE",
+        "lat": 22.9906,
+        "lon": 120.1465,
+        "streamUrl": "https://www.youtube.com/watch?v=IPNWtdR6QkE",
+        "sourceUrl": "https://www.youtube.com/watch?v=IPNWtdR6QkE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台南 安平 漁港 海灣 風景",
+        "areaTag": "台南",
+        "district": "安平區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 1080,
+        "popScore": 1360
+      },
+      {
+        "id": "tw-hd-tainan-westcentral",
+        "cctvCode": "TNN-OLDTOWN",
+        "name": "台南中西區古都門戶 ‧ 府城核心街區即時天氣人潮",
+        "authority": "台南府城在地即時實況",
+        "type": "youtube",
+        "videoId": "P0CYZnOGxHU",
+        "lat": 22.9971,
+        "lon": 120.2044,
+        "streamUrl": "https://www.youtube.com/watch?v=P0CYZnOGxHU",
+        "sourceUrl": "https://www.youtube.com/watch?v=P0CYZnOGxHU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台南 中西區 古都 商圈",
+        "areaTag": "台南",
+        "district": "中西區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 1080,
+        "popScore": 1280
+      },
+      {
+        "id": "tw-hd-tainan-station",
+        "cctvCode": "TNN-STATION",
+        "name": "台南火車站前站圓環 ‧ 府城交通樞紐街景實況",
+        "authority": "台南站前即時影像實況",
+        "type": "youtube",
+        "videoId": "S4AD-y60NMM",
+        "lat": 22.9972,
+        "lon": 120.2126,
+        "streamUrl": "https://www.youtube.com/watch?v=S4AD-y60NMM",
+        "sourceUrl": "https://www.youtube.com/watch?v=S4AD-y60NMM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台南 火車站 商圈 交通",
+        "areaTag": "台南",
+        "district": "東區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 1080,
+        "popScore": 1220
+      },
+      {
+        "id": "tw-hd-tainan-kangqiao-rail",
+        "cctvCode": "TNN-RAIL",
+        "name": "台南永康康橋大道 ‧ 台灣鐵道火車即時景觀",
+        "authority": "台南鐵道即時影像實況",
+        "type": "youtube",
+        "videoId": "Oeb_kQmdlcg",
+        "lat": 23.0218,
+        "lon": 120.2335,
+        "streamUrl": "https://www.youtube.com/watch?v=Oeb_kQmdlcg",
+        "sourceUrl": "https://www.youtube.com/watch?v=Oeb_kQmdlcg",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台南 永康 鐵道 火車 交通",
+        "areaTag": "台南",
+        "district": "永康區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 1080,
+        "popScore": 1140
+      },
+      {
+        "id": "tw-hd-tainan-baseball",
+        "cctvCode": "TNN-ASPAC",
+        "name": "台南亞太國際棒球訓練中心 ‧ 主場園區周邊實況",
+        "authority": "台南亞太棒球場即時實況",
+        "type": "youtube",
+        "videoId": "BT35cbYD1bs",
+        "lat": 23.0631,
+        "lon": 120.2314,
+        "streamUrl": "https://www.youtube.com/watch?v=BT35cbYD1bs",
+        "sourceUrl": "https://www.youtube.com/watch?v=BT35cbYD1bs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台南 安南 亞太棒球場 風景",
+        "areaTag": "台南",
+        "district": "安南區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 1080,
+        "popScore": 1090
+      }
+    ],
+    "tw_kaohsiung": [
+      {
+        "id": "tw-4k-khh-shoushan-lover",
+        "cctvCode": "KHH-SHOUSHHAN-4K",
+        "name": "高雄壽山情人觀景台 ‧ 85 大樓高雄港灣百萬夜景 4K",
+        "authority": "高雄旅遊網 4K 官方實況",
+        "type": "youtube",
+        "videoId": "C03Itx8iSC0",
+        "lat": 22.6256,
+        "lon": 120.2738,
+        "streamUrl": "https://www.youtube.com/watch?v=C03Itx8iSC0",
+        "sourceUrl": "https://www.youtube.com/watch?v=C03Itx8iSC0",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 壽山 85大樓 港灣 夜景 風景 4K",
+        "areaTag": "高雄",
+        "district": "鼓山區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1910
+      },
+      {
+        "id": "tw-4k-khh-lotus-pond",
+        "cctvCode": "KHH-LOTUS-4K",
+        "name": "高雄左營蓮池潭 ‧ 龍虎塔水岸風光與夕陽倒影 4K",
+        "authority": "高雄旅遊網 4K 官方實況",
+        "type": "youtube",
+        "videoId": "BnPoNatG-HE",
+        "lat": 22.6815,
+        "lon": 120.2966,
+        "streamUrl": "https://www.youtube.com/watch?v=BnPoNatG-HE",
+        "sourceUrl": "https://www.youtube.com/watch?v=BnPoNatG-HE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 左營 蓮池潭 龍虎塔 湖景 風景 4K",
+        "areaTag": "高雄",
+        "district": "左營區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1830
+      },
+      {
+        "id": "tw-4k-khh-kw2-pier2",
+        "cctvCode": "KHH-KW2-4K",
+        "name": "高雄港棧貳庫大港橋 ‧ 駁二港灣 360° 全景 4K",
+        "authority": "棧貳庫 KW2 4K 官方實況",
+        "type": "youtube",
+        "videoId": "nDxJ7sWfG_E",
+        "lat": 22.6194,
+        "lon": 120.2797,
+        "streamUrl": "https://www.youtube.com/watch?v=nDxJ7sWfG_E",
+        "sourceUrl": "https://www.youtube.com/watch?v=nDxJ7sWfG_E",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 棧貳庫 駁二 大港橋 港灣 風景 4K",
+        "areaTag": "高雄",
+        "district": "鼓山區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1790
+      },
+      {
+        "id": "tw-4k-khh-music-center",
+        "cctvCode": "KHH-KMC-4K",
+        "name": "高雄流行音樂中心 ‧ 亞灣愛河灣 360° 海港夜景 4K",
+        "authority": "高雄亞灣愛河灣 4K 實況",
+        "type": "youtube",
+        "videoId": "c7XCdixGhSU",
+        "lat": 22.6177,
+        "lon": 120.2876,
+        "streamUrl": "https://www.youtube.com/watch?v=c7XCdixGhSU",
+        "sourceUrl": "https://www.youtube.com/watch?v=c7XCdixGhSU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 流行音樂中心 愛河灣 亞灣 夜景 風景 4K",
+        "areaTag": "高雄",
+        "district": "鹽埕區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1760
+      },
+      {
+        "id": "tw-4k-khh-cijin-beach",
+        "cctvCode": "KHH-CIJIN-4K",
+        "name": "高雄旗津海水浴場 ‧ 旗津彩虹沙灘與海峽夕陽 4K",
+        "authority": "高雄旅遊網 4K 官方實況",
+        "type": "youtube",
+        "videoId": "ka7FV0sCvxQ",
+        "lat": 22.6105,
+        "lon": 120.2662,
+        "streamUrl": "https://www.youtube.com/watch?v=ka7FV0sCvxQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=ka7FV0sCvxQ",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 旗津 海水浴場 夕陽 海灘 風景 4K",
+        "areaTag": "高雄",
+        "district": "旗津區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 2160,
+        "popScore": 1720
+      },
+      {
+        "id": "tw-4k-khh-shoushan-zoo",
+        "cctvCode": "KHH-ZOO-4K",
+        "name": "高雄壽山動物園 ‧ 萌寵狐獴展區療癒實況 4K",
+        "authority": "高雄旅遊網 4K 官方實況",
+        "type": "youtube",
+        "videoId": "vh2JdQx0PYU",
+        "lat": 22.6345,
+        "lon": 120.2747,
+        "streamUrl": "https://www.youtube.com/watch?v=vh2JdQx0PYU",
+        "sourceUrl": "https://www.youtube.com/watch?v=vh2JdQx0PYU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 壽山動物園 動物 療癒 風景 4K",
+        "areaTag": "高雄",
+        "district": "鼓山區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 2160,
+        "popScore": 1670
+      },
+      {
+        "id": "tw-hd-khh-downtown",
+        "cctvCode": "KHH-CITY",
+        "name": "高雄市中心商圈 ‧ 都會街區即時天氣與車流",
+        "authority": "高雄都會即時影像實況",
+        "type": "youtube",
+        "videoId": "KpB5CMofRI8",
+        "lat": 22.6273,
+        "lon": 120.3014,
+        "streamUrl": "https://www.youtube.com/watch?v=KpB5CMofRI8",
+        "sourceUrl": "https://www.youtube.com/watch?v=KpB5CMofRI8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "高雄 市區 商圈 交通",
+        "areaTag": "高雄",
+        "district": "新興區",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 1080,
+        "popScore": 1150
+      }
+    ],
+    "tw_pingtung": [
+      {
+        "id": "tw-4k-kenting-street",
+        "cctvCode": "PTG-KT-ST-4K",
+        "name": "屏東墾丁大街 ‧ 南國熱帶觀光夜市人潮 4K",
+        "authority": "墾丁國家公園管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "hrpwltQqtq0",
+        "lat": 21.9449,
+        "lon": 120.7995,
+        "streamUrl": "https://www.youtube.com/watch?v=hrpwltQqtq0",
+        "sourceUrl": "https://www.youtube.com/watch?v=hrpwltQqtq0",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "屏東 墾丁大街 夜市 商圈 國家公園 4K",
+        "areaTag": "屏東墾丁",
+        "district": "恆春鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1840
+      },
+      {
+        "id": "tw-4k-kenting-chuanfanshi",
+        "cctvCode": "PTG-CFS-4K",
+        "name": "屏東墾丁船帆石沙灘 ‧ 蔚藍巴士海峽海岸 4K",
+        "authority": "墾丁國家公園管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "7WOJMh_eSfY",
+        "lat": 21.9325,
+        "lon": 120.8234,
+        "streamUrl": "https://www.youtube.com/watch?v=7WOJMh_eSfY",
+        "sourceUrl": "https://www.youtube.com/watch?v=7WOJMh_eSfY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "屏東 墾丁 船帆石 海灘 國家公園 風景 4K",
+        "areaTag": "屏東墾丁",
+        "district": "恆春鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1800
+      },
+      {
+        "id": "tw-hd-kenting-nanwan",
+        "cctvCode": "PTG-NANWAN",
+        "name": "屏東墾丁南灣沙灘 ‧ 陽光海浪與水上活動實況",
+        "authority": "墾丁南灣即時影像實況",
+        "type": "youtube",
+        "videoId": "jUnFuJSj0OU",
+        "lat": 21.9642,
+        "lon": 120.764,
+        "streamUrl": "https://www.youtube.com/watch?v=jUnFuJSj0OU",
+        "sourceUrl": "https://www.youtube.com/watch?v=jUnFuJSj0OU",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "屏東 墾丁 南灣 衝浪 海灘 風景",
+        "areaTag": "屏東墾丁",
+        "district": "恆春鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 1080,
+        "popScore": 1380
+      },
+      {
+        "id": "tw-hd-kenting-arch",
+        "cctvCode": "PTG-ARCH",
+        "name": "屏東墾丁牌樓大門 ‧ 國家公園入口大道實況",
+        "authority": "墾丁國家公園管理處官方",
+        "type": "youtube",
+        "videoId": "l0MykkrTvo4",
+        "lat": 21.9472,
+        "lon": 120.795,
+        "streamUrl": "https://www.youtube.com/watch?v=l0MykkrTvo4",
+        "sourceUrl": "https://www.youtube.com/watch?v=l0MykkrTvo4",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "屏東 墾丁 牌樓 國家公園 交通",
+        "areaTag": "屏東墾丁",
+        "district": "恆春鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 1080,
+        "popScore": 1310
+      },
+      {
+        "id": "tw-hd-kenting-forest-tower",
+        "cctvCode": "PTG-FOREST",
+        "name": "屏東墾丁森林遊樂區觀海樓 ‧ 俯瞰三海交會壯闊視角",
+        "authority": "林業保育署國家森林遊樂區官方",
+        "type": "youtube",
+        "videoId": "KfBv0kT3ezE",
+        "lat": 21.963,
+        "lon": 120.813,
+        "streamUrl": "https://www.youtube.com/watch?v=KfBv0kT3ezE",
+        "sourceUrl": "https://www.youtube.com/watch?v=KfBv0kT3ezE",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "屏東 墾丁 觀海樓 森林 海灣 風景",
+        "areaTag": "屏東墾丁",
+        "district": "恆春鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 1080,
+        "popScore": 1270
+      },
+      {
+        "id": "tw-hd-kenting-coral-reef",
+        "cctvCode": "PTG-CORAL",
+        "name": "屏東墾丁南灣海底珊瑚礁 ‧ 熱帶魚群水下生態直播",
+        "authority": "台電南灣珊瑚礁水下觀測站",
+        "type": "youtube",
+        "videoId": "oMlSukuxtHw",
+        "lat": 21.954,
+        "lon": 120.753,
+        "streamUrl": "https://www.youtube.com/watch?v=oMlSukuxtHw",
+        "sourceUrl": "https://www.youtube.com/watch?v=oMlSukuxtHw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "屏東 墾丁 珊瑚 海底 水下 風景",
+        "areaTag": "屏東墾丁",
+        "district": "恆春鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 1080,
+        "popScore": 1240
+      }
+    ],
+    "tw_hualien": [
       {
         "id": "tw-4k-liushishi-mountain",
         "cctvCode": "TW-LIUSHISHI-4K",
         "name": "花蓮富里六十石山 ‧ 花東縱谷雲海與金針山嶺 4K",
-        "authority": "花東縱谷國家風景區管理處 4K 實況",
+        "authority": "花東縱谷國家風景區管理處 4K 官方",
         "type": "youtube",
         "videoId": "DliL9uMtPrI",
         "lat": 23.2225,
@@ -28251,18 +30067,21 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=DliL9uMtPrI",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "花蓮 六十石山 風景 4K",
+        "tag": "花蓮 六十石山 花東縱谷 雲海 風景 4K",
+        "areaTag": "花蓮",
+        "district": "富里鄉",
+        "tz": "Asia/Taipei",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 60,
+        "defaultOrder": 1,
         "maxRes": 2160,
-        "popScore": 1520
+        "popScore": 1850
       },
       {
         "id": "tw-4k-dashibi-eastcoast",
         "cctvCode": "TW-DASHIBI-4K",
         "name": "花蓮豐濱大石鼻山 ‧ 太平洋蔚藍東海岸浪花海灣 4K",
-        "authority": "東部海岸國家風景區管理處 4K 實況",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
         "type": "youtube",
         "videoId": "JkoXcXI04Qk",
         "lat": 23.6819,
@@ -28271,18 +30090,253 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=JkoXcXI04Qk",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "花蓮 東海岸 海灘 風景 4K",
+        "tag": "花蓮 大石鼻山 東海岸 海灘 風景 4K",
+        "areaTag": "花蓮",
+        "district": "豐濱鄉",
+        "tz": "Asia/Taipei",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 61,
+        "defaultOrder": 2,
         "maxRes": 2160,
+        "popScore": 1810
+      },
+      {
+        "id": "tw-4k-liyutan-lake",
+        "cctvCode": "HUN-LIYUTAN-4K",
+        "name": "花蓮壽豐鯉魚潭 ‧ 花東縱谷湖光山色全景 4K",
+        "authority": "花東縱谷國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "aaKOV4qkDHw",
+        "lat": 23.9261,
+        "lon": 121.5122,
+        "streamUrl": "https://www.youtube.com/watch?v=aaKOV4qkDHw",
+        "sourceUrl": "https://www.youtube.com/watch?v=aaKOV4qkDHw",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 鯉魚潭 花東縱谷 湖景 風景 4K",
+        "areaTag": "花蓮",
+        "district": "壽豐鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1760
+      },
+      {
+        "id": "tw-4k-shitiping-coast",
+        "cctvCode": "HUN-SHITIPING-4K",
+        "name": "花蓮豐濱石梯坪 ‧ 壺穴海蝕平台與太平洋浪濤 4K",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "mXnigLvIL0Q",
+        "lat": 23.4836,
+        "lon": 121.5125,
+        "streamUrl": "https://www.youtube.com/watch?v=mXnigLvIL0Q",
+        "sourceUrl": "https://www.youtube.com/watch?v=mXnigLvIL0Q",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 石梯坪 東海岸 海灣 風景 4K",
+        "areaTag": "花蓮",
+        "district": "豐濱鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 4,
+        "maxRes": 2160,
+        "popScore": 1730
+      },
+      {
+        "id": "tw-4k-changhong-bridge",
+        "cctvCode": "HUN-CHANGHONG-4K",
+        "name": "花蓮豐濱長虹橋 ‧ 秀姑巒溪出海口泛舟峽谷 4K",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "JnD8Rk3o0BM",
+        "lat": 23.4682,
+        "lon": 121.4945,
+        "streamUrl": "https://www.youtube.com/watch?v=JnD8Rk3o0BM",
+        "sourceUrl": "https://www.youtube.com/watch?v=JnD8Rk3o0BM",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 長虹橋 秀姑巒溪 峽谷 風景 4K",
+        "areaTag": "花蓮",
+        "district": "豐濱鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 5,
+        "maxRes": 2160,
+        "popScore": 1690
+      },
+      {
+        "id": "tw-hd-qixingtan-bay",
+        "cctvCode": "HUN-QIXINGTAN",
+        "name": "花蓮新城七星潭月牙灣 ‧ 太平洋鵝卵石海灘實況",
+        "authority": "經濟部水利署即時觀測",
+        "type": "youtube",
+        "videoId": "qg-aHp2mvS8",
+        "lat": 24.0315,
+        "lon": 121.6285,
+        "streamUrl": "https://www.youtube.com/watch?v=qg-aHp2mvS8",
+        "sourceUrl": "https://www.youtube.com/watch?v=qg-aHp2mvS8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 七星潭 太平洋 海灘 風景",
+        "areaTag": "花蓮",
+        "district": "新城鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 1080,
         "popScore": 1460
+      },
+      {
+        "id": "tw-hd-qixingtan-qingshui",
+        "cctvCode": "HUN-QINGSHUI",
+        "name": "花蓮七星潭安檢所海濱 ‧ 清水斷崖壯麗遠景",
+        "authority": "經濟部水利署即時觀測",
+        "type": "youtube",
+        "videoId": "j3l32VFi5M8",
+        "lat": 24.0279,
+        "lon": 121.628,
+        "streamUrl": "https://www.youtube.com/watch?v=j3l32VFi5M8",
+        "sourceUrl": "https://www.youtube.com/watch?v=j3l32VFi5M8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 七星潭 清水斷崖 海灘 風景",
+        "areaTag": "花蓮",
+        "district": "新城鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 1080,
+        "popScore": 1380
+      },
+      {
+        "id": "tw-hd-chikeshan-yuli",
+        "cctvCode": "HUN-CHIKESHAN",
+        "name": "花蓮玉里赤科山 ‧ 縱谷高山茶園雲海實況",
+        "authority": "花東縱谷國家風景區管理處官方",
+        "type": "youtube",
+        "videoId": "5GTFLN9gZrc",
+        "lat": 23.3853,
+        "lon": 121.3911,
+        "streamUrl": "https://www.youtube.com/watch?v=5GTFLN9gZrc",
+        "sourceUrl": "https://www.youtube.com/watch?v=5GTFLN9gZrc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 赤科山 花東縱谷 雲海 風景",
+        "areaTag": "花蓮",
+        "district": "玉里鎮",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "maxRes": 1080,
+        "popScore": 1320
+      },
+      {
+        "id": "tw-hd-hualien-wangyou",
+        "cctvCode": "HUN-WANGYOU",
+        "name": "花蓮海岸忘憂亭 ‧ 太平洋日出與濱海步道實況",
+        "authority": "經濟部水利署即時觀測",
+        "type": "youtube",
+        "videoId": "aWIeVanMFD0",
+        "lat": 23.969,
+        "lon": 121.613,
+        "streamUrl": "https://www.youtube.com/watch?v=aWIeVanMFD0",
+        "sourceUrl": "https://www.youtube.com/watch?v=aWIeVanMFD0",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "花蓮 太平洋 日出 海灣 風景",
+        "areaTag": "花蓮",
+        "district": "花蓮市",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "maxRes": 1080,
+        "popScore": 1260
+      }
+    ],
+    "tw_taitung": [
+      {
+        "id": "tw-4k-duoliang-station",
+        "cctvCode": "TTT-DUOLIANG-4K",
+        "name": "台東太麻里多良車站 ‧ 全台最美海景車站 AI 追火車 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "UCG1aXVO8H8",
+        "lat": 22.5067,
+        "lon": 120.9614,
+        "streamUrl": "https://www.youtube.com/watch?v=UCG1aXVO8H8",
+        "sourceUrl": "https://www.youtube.com/watch?v=UCG1aXVO8H8",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 多良車站 太麻里 火車 鐵道 海灣 風景 4K",
+        "areaTag": "台東",
+        "district": "太麻里鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 1,
+        "maxRes": 2160,
+        "popScore": 1980
+      },
+      {
+        "id": "tw-4k-chishang-paradise",
+        "cctvCode": "TTT-CHISHANG-4K",
+        "name": "台東池上天堂路 ‧ 伯朗大道黃金稻浪與海岸山脈 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "6kUEK3LVrro",
+        "lat": 23.0975,
+        "lon": 121.2137,
+        "streamUrl": "https://www.youtube.com/watch?v=6kUEK3LVrro",
+        "sourceUrl": "https://www.youtube.com/watch?v=6kUEK3LVrro",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 池上 伯朗大道 天堂路 花東縱谷 風景 4K",
+        "areaTag": "台東",
+        "district": "池上鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 2,
+        "maxRes": 2160,
+        "popScore": 1940
+      },
+      {
+        "id": "tw-4k-nanheng-yakou",
+        "cctvCode": "TTT-YAKOU-4K",
+        "name": "台東海南南橫埡口 ‧ 2,722m 大關山雲海日出 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "LSkq-wHMxQY",
+        "lat": 23.2662,
+        "lon": 120.9602,
+        "streamUrl": "https://www.youtube.com/watch?v=LSkq-wHMxQY",
+        "sourceUrl": "https://www.youtube.com/watch?v=LSkq-wHMxQY",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 南橫 埡口 高山 雲海 風景 4K",
+        "areaTag": "台東",
+        "district": "海端鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 3,
+        "maxRes": 2160,
+        "popScore": 1890
       },
       {
         "id": "tw-4k-jinzun-taitung",
         "cctvCode": "TW-JINZUN-4K",
         "name": "台東東河金樽遊憩區 ‧ 陸連島沙洲與國際衝浪海灣 4K",
-        "authority": "東部海岸國家風景區管理處 4K 實況",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
         "type": "youtube",
         "videoId": "ZdqHgQwvZOw",
         "lat": 22.9467,
@@ -28291,31 +30345,245 @@ window.CAMERAS_DATA = {
         "sourceUrl": "https://www.youtube.com/watch?v=ZdqHgQwvZOw",
         "status": "ONLINE",
         "fps": 30,
-        "tag": "台東 金樽 海灘 風景 4K",
+        "tag": "台東 金樽 東河 衝浪 海灘 風景 4K",
+        "areaTag": "台東",
+        "district": "東河鄉",
+        "tz": "Asia/Taipei",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 62,
+        "defaultOrder": 4,
         "maxRes": 2160,
-        "popScore": 1420
+        "popScore": 1830
       },
       {
-        "id": "tw-sat-cwa-himawari-4k",
-        "cctvCode": "CWA-SAT-TW-4K",
-        "name": "中央氣象署向日葵9號衛星 ‧ 台灣與周邊海域高解析真實色彩太空雲圖",
-        "authority": "交通部中央氣象署 (CWA) 太空遙測直連",
-        "type": "snapshot",
-        "lat": 23.9739,
-        "lon": 120.9820,
-        "streamUrl": "https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0028-003.jpg",
-        "sourceUrl": "https://www.cwa.gov.tw/V8/C/W/OBS_Sat.html",
+        "id": "tw-4k-sanxiantai-bridge",
+        "cctvCode": "TTT-SXT-4K",
+        "name": "台東成功三仙台 ‧ 八拱跨海步橋與東海岸曙光 4K",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "X_fchztvqI0",
+        "lat": 23.1247,
+        "lon": 121.4148,
+        "streamUrl": "https://www.youtube.com/watch?v=X_fchztvqI0",
+        "sourceUrl": "https://www.youtube.com/watch?v=X_fchztvqI0",
         "status": "ONLINE",
-        "fps": 1,
-        "tag": "太空 衛星 台灣 風景 多元直連 4K",
+        "fps": 30,
+        "tag": "台東 三仙台 成功 日出 海灣 風景 4K",
+        "areaTag": "台東",
+        "district": "成功鎮",
+        "tz": "Asia/Taipei",
         "distanceMeters": 0,
         "distanceKm": 0,
-        "defaultOrder": 63,
+        "defaultOrder": 5,
         "maxRes": 2160,
-        "popScore": 1950
+        "popScore": 1810
+      },
+      {
+        "id": "tw-4k-taitung-liyushan",
+        "cctvCode": "TTT-LIYUSHAN-4K",
+        "name": "台東市鯉魚山 ‧ 俯瞰台東市區與太平洋天際線 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "BUJJaW0vkJs",
+        "lat": 22.7547,
+        "lon": 121.1422,
+        "streamUrl": "https://www.youtube.com/watch?v=BUJJaW0vkJs",
+        "sourceUrl": "https://www.youtube.com/watch?v=BUJJaW0vkJs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 鯉魚山 市景 太平洋 風景 4K",
+        "areaTag": "台東",
+        "district": "台東市",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 6,
+        "maxRes": 2160,
+        "popScore": 1750
+      },
+      {
+        "id": "tw-4k-jinlun-bridge",
+        "cctvCode": "TTT-JINLUN-4K",
+        "name": "台東太麻里金崙大橋 ‧ 全台最美高架海景公路 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "9QqBz3kNHis",
+        "lat": 22.5335,
+        "lon": 120.9691,
+        "streamUrl": "https://www.youtube.com/watch?v=9QqBz3kNHis",
+        "sourceUrl": "https://www.youtube.com/watch?v=9QqBz3kNHis",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 金崙大橋 太麻里 公路 海灘 風景 4K",
+        "areaTag": "台東",
+        "district": "太麻里鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 7,
+        "maxRes": 2160,
+        "popScore": 1740
+      },
+      {
+        "id": "tw-4k-shanyuan-bay",
+        "cctvCode": "TTT-SHANYUAN-4K",
+        "name": "台東卑南杉原灣 ‧ 東海岸最美月牙沙灘海灣 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "VqS_Y8ZCj6M",
+        "lat": 22.8336,
+        "lon": 121.1869,
+        "streamUrl": "https://www.youtube.com/watch?v=VqS_Y8ZCj6M",
+        "sourceUrl": "https://www.youtube.com/watch?v=VqS_Y8ZCj6M",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 杉原灣 卑南 東海岸 海灘 風景 4K",
+        "areaTag": "台東",
+        "district": "卑南鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 8,
+        "maxRes": 2160,
+        "popScore": 1700
+      },
+      {
+        "id": "tw-4k-luye-highland",
+        "cctvCode": "TTT-LUYE-4K",
+        "name": "台東鹿野高台 ‧ 國際熱氣球嘉年華縱谷草坡 4K",
+        "authority": "花東縱谷國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "rvc1klNIgQc",
+        "lat": 22.9125,
+        "lon": 121.1211,
+        "streamUrl": "https://www.youtube.com/watch?v=rvc1klNIgQc",
+        "sourceUrl": "https://www.youtube.com/watch?v=rvc1klNIgQc",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 鹿野高台 熱氣球 花東縱谷 風景 4K",
+        "areaTag": "台東",
+        "district": "鹿野鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 9,
+        "maxRes": 2160,
+        "popScore": 1690
+      },
+      {
+        "id": "tw-4k-greenisland-chaikou",
+        "cctvCode": "TTT-GI-CHAIKOU-4K",
+        "name": "台東綠島柴口浮潛區 ‧ 太平洋湛藍珊瑚海灣 4K",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "a8nJQr5rBGs",
+        "lat": 22.6776,
+        "lon": 121.482,
+        "streamUrl": "https://www.youtube.com/watch?v=a8nJQr5rBGs",
+        "sourceUrl": "https://www.youtube.com/watch?v=a8nJQr5rBGs",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 綠島 柴口 珊瑚 海灘 風景 4K",
+        "areaTag": "台東",
+        "district": "綠島鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 10,
+        "maxRes": 2160,
+        "popScore": 1680
+      },
+      {
+        "id": "tw-4k-huayuan-sunrise",
+        "cctvCode": "TTT-HUAYUAN-4K",
+        "name": "台東太麻里華源曙光觀景台 ‧ 太平洋日出秘境 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "TY4qQElcUrA",
+        "lat": 22.6414,
+        "lon": 121.0294,
+        "streamUrl": "https://www.youtube.com/watch?v=TY4qQElcUrA",
+        "sourceUrl": "https://www.youtube.com/watch?v=TY4qQElcUrA",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 華源 太麻里 日出 海灣 風景 4K",
+        "areaTag": "台東",
+        "district": "太麻里鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 11,
+        "maxRes": 2160,
+        "popScore": 1660
+      },
+      {
+        "id": "tw-4k-jialulan-coast",
+        "cctvCode": "TTT-JIALULAN-4K",
+        "name": "台東加路蘭遊憩區 ‧ 東海岸漂流木裝置藝術海景 4K",
+        "authority": "東部海岸國家風景區管理處 4K 官方",
+        "type": "youtube",
+        "videoId": "AKl3F6cAY2Q",
+        "lat": 22.8053,
+        "lon": 121.1966,
+        "streamUrl": "https://www.youtube.com/watch?v=AKl3F6cAY2Q",
+        "sourceUrl": "https://www.youtube.com/watch?v=AKl3F6cAY2Q",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 加路蘭 東海岸 星空 海灣 風景 4K",
+        "areaTag": "台東",
+        "district": "台東市",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 12,
+        "maxRes": 2160,
+        "popScore": 1640
+      },
+      {
+        "id": "tw-4k-fugang-harbor",
+        "cctvCode": "TTT-FUGANG-4K",
+        "name": "台東富岡漁港 ‧ 往返綠島蘭嶼海港燈塔實況 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "D945F_dauls",
+        "lat": 22.7916,
+        "lon": 121.1924,
+        "streamUrl": "https://www.youtube.com/watch?v=D945F_dauls",
+        "sourceUrl": "https://www.youtube.com/watch?v=D945F_dauls",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 富岡漁港 燈塔 海灣 交通 風景 4K",
+        "areaTag": "台東",
+        "district": "台東市",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 13,
+        "maxRes": 2160,
+        "popScore": 1610
+      },
+      {
+        "id": "tw-4k-jinzun-harbor",
+        "cctvCode": "TTT-JZPORT-4K",
+        "name": "台東金樽漁港海岸 ‧ 東海岸浪況與港灣全景 4K",
+        "authority": "台東就醬玩 Amazing Taitung 4K 官方",
+        "type": "youtube",
+        "videoId": "q3KJt-SZc2s",
+        "lat": 22.9619,
+        "lon": 121.2981,
+        "streamUrl": "https://www.youtube.com/watch?v=q3KJt-SZc2s",
+        "sourceUrl": "https://www.youtube.com/watch?v=q3KJt-SZc2s",
+        "status": "ONLINE",
+        "fps": 30,
+        "tag": "台東 金樽漁港 東河 海灣 風景 4K",
+        "areaTag": "台東",
+        "district": "東河鄉",
+        "tz": "Asia/Taipei",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "defaultOrder": 14,
+        "maxRes": 2160,
+        "popScore": 1590
       }
     ],
     "japan": [
@@ -31228,7 +33496,7 @@ window.CAMERAS_DATA = {
         "authority": "Red Bull Media House 原生 HLS 直連",
         "type": "hls",
         "lat": 47.8095,
-        "lon": 13.0550,
+        "lon": 13.055,
         "tz": "Europe/Vienna",
         "streamUrl": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
         "sourceUrl": "https://www.redbull.com/int-en/live-events",
@@ -31248,8 +33516,8 @@ window.CAMERAS_DATA = {
         "name": "德國柏林與波昂 DW 德國之聲 ‧ 歐洲城市與全球視野直連 (Native HLS)",
         "authority": "Deutsche Welle (DW) 原生 HLS 直連",
         "type": "hls",
-        "lat": 52.5200,
-        "lon": 13.4050,
+        "lat": 52.52,
+        "lon": 13.405,
         "tz": "Europe/Berlin",
         "streamUrl": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8",
         "sourceUrl": "https://www.dw.com/en/live-tv/channel-english",
@@ -31944,7 +34212,7 @@ window.CAMERAS_DATA = {
         "authority": "美國國家海洋暨大氣總署 (NOAA STAR) 太空衛星直連",
         "type": "snapshot",
         "lat": 25.7617,
-        "lon": -75.2000,
+        "lon": -75.2,
         "tz": "America/New_York",
         "streamUrl": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/GEOCOLOR/1808x1808.jpg",
         "sourceUrl": "https://www.star.nesdis.noaa.gov/GOES/fulldisk.php?sat=G19",
@@ -31965,7 +34233,7 @@ window.CAMERAS_DATA = {
         "authority": "美國國家海洋暨大氣總署 (NOAA STAR) 太空衛星直連",
         "type": "snapshot",
         "lat": 21.3069,
-        "lon": -137.0000,
+        "lon": -137,
         "tz": "Pacific/Honolulu",
         "streamUrl": "https://cdn.star.nesdis.noaa.gov/GOES18/ABI/FD/GEOCOLOR/1808x1808.jpg",
         "sourceUrl": "https://www.star.nesdis.noaa.gov/GOES/fulldisk.php?sat=G18",
@@ -32006,8 +34274,8 @@ window.CAMERAS_DATA = {
         "name": "NOAA GOES-19 北美大陸高空雲圖 ‧ 晨昏日夜交界線與氣旋即時直連 2.5K (North America GeoColor)",
         "authority": "美國國家海洋暨大氣總署 (NOAA STAR) 太空衛星直連",
         "type": "snapshot",
-        "lat": 38.5000,
-        "lon": -96.0000,
+        "lat": 38.5,
+        "lon": -96,
         "tz": "America/Chicago",
         "streamUrl": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/2500x1500.jpg",
         "sourceUrl": "https://www.star.nesdis.noaa.gov/GOES/conus.php?sat=G19",
@@ -32027,8 +34295,8 @@ window.CAMERAS_DATA = {
         "name": "美國華盛頓州雷尼爾山國家公園 ‧ 喀斯喀特 4392m 冰川火山口官方直連 (Mt. Rainier NPS)",
         "authority": "美國國家公園管理局 (US National Park Service) 官方直連",
         "type": "snapshot",
-        "lat": 46.7860,
-        "lon": -121.7350,
+        "lat": 46.786,
+        "lon": -121.735,
         "tz": "America/Los_Angeles",
         "streamUrl": "https://www.nps.gov/webcams-mora/mountain.jpg",
         "sourceUrl": "https://www.nps.gov/mora/learn/photosmultimedia/webcams.htm",
@@ -32555,7 +34823,7 @@ window.CAMERAS_DATA = {
         "authority": "交通部中央氣象署 (CWA) 太空衛星直連",
         "type": "snapshot",
         "lat": -12.4634,
-        "lon": 140.7000,
+        "lon": 140.7,
         "tz": "Australia/Sydney",
         "streamUrl": "https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-B0028-001.jpg",
         "sourceUrl": "https://www.cwa.gov.tw/V8/C/W/OBS_Sat.html",
@@ -33166,7 +35434,7 @@ window.CAMERAS_DATA = {
         "authority": "美國太空天氣預報中心 (NOAA SWPC) 官方直連",
         "type": "snapshot",
         "lat": -54.8019,
-        "lon": -68.3030,
+        "lon": -68.303,
         "tz": "America/Argentina/Ushuaia",
         "streamUrl": "https://services.swpc.noaa.gov/images/animations/ovation/south/latest.jpg",
         "sourceUrl": "https://www.swpc.noaa.gov/products/aurora-30-minute-forecast",
@@ -34240,8 +36508,8 @@ window.CAMERAS_DATA = {
         "name": "NOAA GOES-19 加勒比海與古拉索珊瑚海盆 ‧ 太空俯瞰碧海群島雲圖直連 2K (Caribbean GeoColor)",
         "authority": "美國國家海洋暨大氣總署 (NOAA STAR) 太空衛星直連",
         "type": "snapshot",
-        "lat": 15.5000,
-        "lon": -68.9000,
+        "lat": 15.5,
+        "lon": -68.9,
         "tz": "America/Curacao",
         "streamUrl": "https://cdn.star.nesdis.noaa.gov/GOES19/ABI/SECTOR/car/GEOCOLOR/2000x2000.jpg",
         "sourceUrl": "https://www.star.nesdis.noaa.gov/GOES/sector.php?sat=G19&sector=car",
@@ -34285,7 +36553,7 @@ window.CAMERAS_DATA = {
         "authority": "afarTV 官方 4K 實況",
         "type": "youtube",
         "videoId": "l7dshNvAvpw",
-        "lat": 37.7510,
+        "lat": 37.751,
         "lon": 14.9934,
         "streamUrl": "https://www.youtube.com/watch?v=l7dshNvAvpw",
         "sourceUrl": "https://www.youtube.com/watch?v=l7dshNvAvpw",
@@ -34327,7 +36595,7 @@ window.CAMERAS_DATA = {
         "authority": "Live Norway 官方 4K 實況",
         "type": "youtube",
         "videoId": "0V59F4M3o88",
-        "lat": 61.9070,
+        "lat": 61.907,
         "lon": 5.9917,
         "streamUrl": "https://www.youtube.com/watch?v=0V59F4M3o88",
         "sourceUrl": "https://www.youtube.com/watch?v=0V59F4M3o88",
@@ -34390,8 +36658,8 @@ window.CAMERAS_DATA = {
         "authority": "WS Cam 官方實況",
         "type": "youtube",
         "videoId": "pO2zFFeqiMo",
-        "lat": 37.7340,
-        "lon": 15.1660,
+        "lat": 37.734,
+        "lon": 15.166,
         "streamUrl": "https://www.youtube.com/watch?v=pO2zFFeqiMo",
         "sourceUrl": "https://www.youtube.com/watch?v=pO2zFFeqiMo",
         "status": "ONLINE",
@@ -34432,7 +36700,7 @@ window.CAMERAS_DATA = {
         "authority": "Earth Now 官方實況",
         "type": "youtube",
         "videoId": "xYqhMHETOgI",
-        "lat": 60.4720,
+        "lat": 60.472,
         "lon": 8.4689,
         "streamUrl": "https://www.youtube.com/watch?v=xYqhMHETOgI",
         "sourceUrl": "https://www.youtube.com/watch?v=xYqhMHETOgI",
@@ -34622,7 +36890,7 @@ window.CAMERAS_DATA = {
         "type": "youtube",
         "videoId": "3SIwRaLZrZk",
         "lat": 47.2797,
-        "lon": 8.8520,
+        "lon": 8.852,
         "streamUrl": "https://www.youtube.com/watch?v=3SIwRaLZrZk",
         "sourceUrl": "https://www.youtube.com/watch?v=3SIwRaLZrZk",
         "status": "ONLINE",
@@ -34683,8 +36951,8 @@ window.CAMERAS_DATA = {
         "name": "美國華盛頓州雷尼爾山國家公園 ‧ 喀斯喀特 4392m 冰川火山口官方直連 (Mt. Rainier NPS)",
         "authority": "美國國家公園管理局 (US National Park Service) 官方直連",
         "type": "snapshot",
-        "lat": 46.7860,
-        "lon": -121.7350,
+        "lat": 46.786,
+        "lon": -121.735,
         "tz": "America/Los_Angeles",
         "streamUrl": "https://www.nps.gov/webcams-mora/mountain.jpg",
         "sourceUrl": "https://www.nps.gov/mora/learn/photosmultimedia/webcams.htm",
@@ -34709,7 +36977,7 @@ window.CAMERAS_DATA = {
   const inferCameraTz = (cam, centerKey) => {
     if (cam.tz && cam.tz !== 'auto') return cam.tz;
     const lat = Number(cam.lat), lon = Number(cam.lon);
-    if (centerKey === 'dual' || centerKey === 'qingpu' || centerKey === 'banqiao' || centerKey === 'tourist') return 'Asia/Taipei';
+    if (centerKey === 'dual' || centerKey === 'qingpu' || centerKey === 'banqiao' || (typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(centerKey))) return 'Asia/Taipei';
     if (centerKey === 'japan') return 'Asia/Tokyo';
     if (centerKey === 'korea') return 'Asia/Seoul';
     if (Number.isFinite(lat) && Number.isFinite(lon)) {
@@ -34840,7 +37108,7 @@ window.prewarmTaipeiBote = function prewarmTaipeiBote(cams) {
   if (window._lastBotePrewarmAt && now - window._lastBotePrewarmAt < 20000) return;
   window._lastBotePrewarmAt = now;
 
-  const sourceList = Array.isArray(cams) ? cams : (window.CAMERAS_DATA && window.CAMERAS_DATA.cameras && window.CAMERAS_DATA.cameras.tourist) || [];
+  const sourceList = Array.isArray(cams) ? cams : (window.CAMERAS_DATA && window.CAMERAS_DATA.cameras && (window.CAMERAS_DATA.cameras.tw_taipei || window.CAMERAS_DATA.cameras.tourist)) || [];
   const ids = sourceList
     .filter(c => c && c.ccdId)
     .slice(0, 6)
@@ -36328,7 +38596,8 @@ class FreewaySpeedService {
     this.visibleOnBar = showStrip;
     const bar = typeof document !== 'undefined' ? document.getElementById('freewaySpeedBar') : null;
     if (!showStrip && bar) bar.style.display = 'none';
-    if (showStrip || centerId === 'favorites' || centerId === 'tourist') {
+    const isTwTour = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(centerId);
+    if (showStrip || centerId === 'favorites' || isTwTour) {
       if (Date.now() - this._lastFetchMs > 35000 || this.corridors.length === 0) {
         this.refreshNow(false);
       } else {
@@ -39648,6 +41917,66 @@ class MonitorApp {
     return ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(centerId);
   }
 
+  // 判斷是否為台灣觀光 12 縣市專區 (全台精選 / 台北 / 新北 / 桃園 / 宜蘭 / 台中 / 南投嘉義 / 台南 / 高雄 / 屏東墾丁 / 花蓮 / 台東)
+  isTaiwanTourCenter(centerId = this.currentCenterId) {
+    return typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function'
+      ? window.isTaiwanTourCenter(centerId)
+      : centerId === 'tourist';
+  }
+
+  // 動態彙整「全台精選」台灣觀光旗艦總覽：跨 11 大縣市嚴選最高畫質 4K × 最熱門官方景點直播（含台灣衛星雲圖）
+  buildTaiwanTouristTopCameras() {
+    const dataMap = window.CAMERAS_DATA?.cameras || {};
+    const cityIds = (typeof window !== 'undefined' && Array.isArray(window.TAIWAN_TOUR_CITY_IDS))
+      ? window.TAIWAN_TOUR_CITY_IDS
+      : ['tw_taipei', 'tw_newtaipei', 'tw_taoyuan', 'tw_yilan', 'tw_taichung', 'tw_central', 'tw_tainan', 'tw_kaohsiung', 'tw_pingtung', 'tw_hualien', 'tw_taitung'];
+    const pools = cityIds.map(cid => (dataMap[cid] || []).slice());
+    const specialPool = (dataMap.tourist || []).slice();
+    const seen = new Set();
+    const merged = [];
+
+    const pushUnique = (cam) => {
+      if (!cam || !cam.id) return;
+      const key = cam.videoId || cam.streamUrl || cam.id;
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      merged.push({ ...cam });
+    };
+
+    specialPool.forEach(pushUnique);
+    for (const list of pools) {
+      for (const cam of list) {
+        // 全台精選優先收錄 4K UHD 與熱門官方景點直播（排除純都會一般交通路口，一般路口保留於各縣市分頁檢視）
+        const isOfficialScenic = cam.type === 'youtube' || Number(cam.maxRes) >= 2160 || Number(cam.popScore) >= 180;
+        if (isOfficialScenic) pushUnique(cam);
+      }
+    }
+
+    merged.sort((a, b) => {
+      const diff = this.computeCameraSortScore(b) - this.computeCameraSortScore(a);
+      if (diff !== 0) return diff;
+      return (Number(a.defaultOrder) || 9999) - (Number(b.defaultOrder) || 9999);
+    });
+
+    // 為「地標順序」建立 11 縣市輪替均衡呈現順序
+    const byCity = pools.map(list => list.filter(c => merged.some(m => m.id === c.id)));
+    const balancedIds = [];
+    let cursor = 0;
+    while (balancedIds.length < merged.length && cursor < 65) {
+      for (const cList of byCity) {
+        if (cursor < cList.length && !balancedIds.includes(cList[cursor].id)) {
+          balancedIds.push(cList[cursor].id);
+        }
+      }
+      cursor++;
+    }
+    merged.forEach((cam, idx) => {
+      const bIdx = balancedIds.indexOf(cam.id);
+      cam.defaultOrder = bIdx !== -1 ? (bIdx + 1) : (idx + 1);
+    });
+    return merged;
+  }
+
   // 計算單一攝影機之「最高畫質 × 即時熱門度」綜合優先權評分 (4K 2160P > 2K 1440P > 1080P > 720P，同級距依同時觀看人數與地標人氣排序)
   computeCameraSortScore(cam) {
     if (!cam) return 0;
@@ -39776,7 +42105,8 @@ class MonitorApp {
   buildScenicCameras() {
     const dataMap = window.CAMERAS_DATA?.cameras || {};
     const dedicated = (dataMap.scenic || []).slice();
-    const extraPools = ['europe', 'polar', 'rainforest', 'ocean', 'americas', 'apac', 'japan', 'korea', 'tourist'];
+    const twTourIds = (typeof window !== 'undefined' && Array.isArray(window.TAIWAN_TOUR_CENTER_IDS)) ? window.TAIWAN_TOUR_CENTER_IDS : ['tourist'];
+    const extraPools = ['europe', 'polar', 'rainforest', 'ocean', 'americas', 'apac', 'japan', 'korea', ...twTourIds];
     const scenicRe = /(山|湖|峽|瀑|火山|極光|海灣|海灘|海景|國家公園|濕地|森林|雨林|珊瑚|礁|島|阿爾卑斯|馬特洪|少女峰|策馬特|富士|上高地|大提頓|洛磯山|馬丘比丘|日出|夕陽|alpine|alps|fjord|volcano|waterfall|aurora|glacier|reef|nature|beach|bay)/i;
     const urbanTrafficExcludeRe = /(路口|交流道|高架|轉運站|機場迎賓|停機坪|商店街|夜市|十字路口|站前廣場|大道車流|車流與)/i;
     const seen = new Set();
@@ -39816,7 +42146,8 @@ class MonitorApp {
   // 動態彙整「日夜極景」分類：依台灣此刻太陽高度角，預設對映全球另一端白晝/夜色高畫質直播（最高畫質 4K > 2K > 1080P 優先，其次熱門度）
   buildDayNightCameras(mode = this.dayNightFilterMode || 'opposite', now = new Date()) {
     const dataMap = window.CAMERAS_DATA?.cameras || {};
-    const pools = ['scenic', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'tourist'];
+    const twTourIds = (typeof window !== 'undefined' && Array.isArray(window.TAIWAN_TOUR_CENTER_IDS)) ? window.TAIWAN_TOUR_CENTER_IDS : ['tourist'];
+    const pools = ['scenic', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', ...twTourIds];
     const seen = new Set();
     const allCams = [];
     for (const cid of pools) {
@@ -40025,9 +42356,9 @@ class MonitorApp {
     }
   }
 
-  // 🌍 世界任意門：一鍵隨機穿越全球 11 大主題之窗或隨機高畫質視角
+  // 🌍 世界任意門：一鍵隨機穿越全球與台灣高畫質即時之窗
   async teleportRandomWorldWindow() {
-    const worldCenters = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight', 'tourist'];
+    const worldCenters = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight', 'tourist', 'tw_taipei', 'tw_newtaipei', 'tw_taichung', 'tw_central', 'tw_kaohsiung', 'tw_hualien', 'tw_taitung'];
     const candidates = worldCenters.filter(c => c !== this.currentCenterId);
     const nextCenter = candidates[Math.floor(Math.random() * candidates.length)] || 'world';
     await this.switchCenter(nextCenter);
@@ -40150,11 +42481,12 @@ class MonitorApp {
   }
 
   // ==========================================================================
-  // 全站 4 大領域導航分群 & 右側 5 大主題分頁中樞控制引擎
+  // 全站 5 大領域導航分群 & 右側 5 大主題分頁中樞控制引擎
   // ==========================================================================
   getDomainForCenter(centerId) {
+    if (this.isTaiwanTourCenter(centerId)) return 'tw_tour';
     const map = {
-      nearby: 'taiwan', dual: 'taiwan', qingpu: 'taiwan', banqiao: 'taiwan', tourist: 'taiwan',
+      nearby: 'taiwan', dual: 'taiwan', qingpu: 'taiwan', banqiao: 'taiwan',
       world: 'world', japan: 'world', korea: 'world', apac: 'world', europe: 'world', americas: 'world',
       polar: 'nature', rainforest: 'nature', ocean: 'nature', scenic: 'nature', daynight: 'nature',
       favorites: 'favorites'
@@ -40166,7 +42498,7 @@ class MonitorApp {
     const domain = this.getDomainForCenter(centerId);
     this.activeDomain = domain;
     if (!this._lastCenterByDomain) {
-      this._lastCenterByDomain = { taiwan: 'dual', world: 'world', nature: 'polar', favorites: 'favorites' };
+      this._lastCenterByDomain = { taiwan: 'dual', tw_tour: 'tourist', world: 'world', nature: 'polar', favorites: 'favorites' };
     }
     if (centerId) this._lastCenterByDomain[domain] = centerId;
 
@@ -40182,6 +42514,7 @@ class MonitorApp {
     if (indicator) {
       const tagMap = {
         taiwan: '<i class="fa-solid fa-house-signal"></i> 台灣生活',
+        tw_tour: '<i class="fa-solid fa-compass"></i> 台灣觀光',
         world: '<i class="fa-solid fa-earth-asia"></i> 世界城市',
         nature: '<i class="fa-solid fa-mountain-sun"></i> 自然奇景',
         favorites: '<i class="fa-solid fa-star" style="color:#fbbf24;"></i> 收藏牆'
@@ -40198,12 +42531,13 @@ class MonitorApp {
   }
 
   switchDomain(domainId) {
-    if (!['taiwan', 'world', 'nature', 'favorites'].includes(domainId)) return;
+    if (!['taiwan', 'tw_tour', 'world', 'nature', 'favorites'].includes(domainId)) return;
     if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
     if (!this._lastCenterByDomain) {
-      this._lastCenterByDomain = { taiwan: 'dual', world: 'world', nature: 'polar', favorites: 'favorites' };
+      this._lastCenterByDomain = { taiwan: 'dual', tw_tour: 'tourist', world: 'world', nature: 'polar', favorites: 'favorites' };
     }
-    const targetCenter = this._lastCenterByDomain[domainId] || (domainId === 'world' ? 'world' : (domainId === 'nature' ? 'polar' : (domainId === 'favorites' ? 'favorites' : 'dual')));
+    const fallbackMap = { taiwan: 'dual', tw_tour: 'tourist', world: 'world', nature: 'polar', favorites: 'favorites' };
+    const targetCenter = this._lastCenterByDomain[domainId] || fallbackMap[domainId] || 'dual';
     this.syncDomainNavForCenter(targetCenter);
     if (targetCenter !== this.currentCenterId) {
       this.switchCenter(targetCenter);
@@ -41336,7 +43670,18 @@ class MonitorApp {
       { title: '切換至「雙埔」生活模式', sub: '青埔 × 新埔雙核心聯防與軌道走廊', badge: '區域中心', icon: 'fa-layer-group', run: () => this.switchCenter('dual') },
       { title: '切換至「青埔」高鐵特區', sub: '高鐵桃園站、A18/A19 與周邊路口', badge: '區域中心', icon: 'fa-building-user', run: () => this.switchCenter('qingpu') },
       { title: '切換至「新埔」板橋商圈', sub: '新埔站、文化路與台64沿線', badge: '區域中心', icon: 'fa-house-signal', run: () => this.switchCenter('banqiao') },
-      { title: '切換至「觀光」精選實況', sub: '九份、西門町、大稻埕、淡水', badge: '區域中心', icon: 'fa-plane-arrival', run: () => this.switchCenter('tourist') },
+      { title: '切換至台灣觀光「全台精選」4K 總覽', sub: '全台 11 大縣市最熱門 4K 官方景點與台灣衛星即時雲圖', badge: '台灣觀光', icon: 'fa-crown', run: () => this.switchCenter('tourist') },
+      { title: '切換至台灣觀光「台北市」專區', sub: '大稻埕碼頭 4K、象山 101 4K、碧山巖 4K、劍潭山 4K、陽明山擎天崗 4K、西門町與夜市', badge: '台灣觀光', icon: 'fa-city', run: () => this.switchCenter('tw_taipei') },
+      { title: '切換至台灣觀光「新北市」專區', sub: '淡水漁人碼頭 4K、九份山城 4K、八里左岸 4K、野柳 4K、白沙灣 4K、平溪十分天燈', badge: '台灣觀光', icon: 'fa-bridge-water', run: () => this.switchCenter('tw_newtaipei') },
+      { title: '切換至台灣觀光「桃園」專區', sub: '桃園機場 TPE 4K 起降、拉拉山上巴陵 4K、永安漁港 4K、大溪老街、石門水庫、小烏來', badge: '台灣觀光', icon: 'fa-plane-departure', run: () => this.switchCenter('tw_taoyuan') },
+      { title: '切換至台灣觀光「宜蘭」專區', sub: '太平山雲海、蹦蹦車站、頭城外澳龜山島海灘、蘇澳港灣、頭城濱海森林', badge: '台灣觀光', icon: 'fa-cloud-sun', run: () => this.switchCenter('tw_yilan') },
+      { title: '切換至台灣觀光「台中」專區', sub: '清水高美濕地夕照 4K、大肚山望高寮夜景 4K、大安港 4K、梨山 4K、武陵農場', badge: '台灣觀光', icon: 'fa-sun', run: () => this.switchCenter('tw_taichung') },
+      { title: '切換至台灣觀光「南投嘉義」專區', sub: '阿里山二延平雲海 4K、奮起湖 4K、日月潭伊達邵與文武廟 4K、合歡山武嶺 3,275m', badge: '台灣觀光', icon: 'fa-mountain', run: () => this.switchCenter('tw_central') },
+      { title: '切換至台灣觀光「台南」專區', sub: '黃金海岸夕照 4K UHD、安平港海濱、中西區古都街區、台南火車站、亞太棒球場', badge: '台灣觀光', icon: 'fa-torii-gate', run: () => this.switchCenter('tw_tainan') },
+      { title: '切換至台灣觀光「高雄」專區', sub: '壽山 85 大樓夜景 4K、蓮池潭龍虎塔 4K、棧貳庫大港橋 4K、高流愛河灣 4K、旗津沙灘 4K', badge: '台灣觀光', icon: 'fa-anchor', run: () => this.switchCenter('tw_kaohsiung') },
+      { title: '切換至台灣觀光「屏東墾丁」專區', sub: '墾丁大街 4K、船帆石沙灘 4K、南灣沙灘、墾丁森林觀海樓、南灣海底珊瑚礁直播', badge: '台灣觀光', icon: 'fa-umbrella-beach', run: () => this.switchCenter('tw_pingtung') },
+      { title: '切換至台灣觀光「花蓮」專區', sub: '富里六十石山 4K、豐濱大石鼻山 4K、鯉魚潭 4K、石梯坪 4K、長虹橋 4K、七星潭清水斷崖', badge: '台灣觀光', icon: 'fa-water', run: () => this.switchCenter('tw_hualien') },
+      { title: '切換至台灣觀光「台東」全 4K 專區', sub: '多良車站 AI 追火車 4K、池上天堂路 4K、南橫埡口 4K、三仙台 4K、金樽衝浪 4K、鹿野高台、綠島', badge: '台灣觀光', icon: 'fa-train', run: () => this.switchCenter('tw_taitung') },
       { title: '切換至「全球 4K」世界百大旗艦總覽', sub: '跨洲際與極地、雨林、海洋嚴選 80 處原生 4K 2160P 與高人氣直播', badge: '全球旗艦', icon: 'fa-globe', run: () => this.switchCenter('world') },
       { title: '切換至「日本」80 處跨國實況', sub: '東京台場 4K、澀谷 4K、富士山 4K、京都大阪、上高地、北海道、沖繩', badge: '國際實況', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
       { title: '切換至「韓國」24 處跨國實況', sub: '首爾漢江 4K、盤浦噴泉 4K、東大門 DDP 4K、弘大商圈、釜山廣安大橋、濟州島', badge: '國際實況', icon: 'fa-landmark', run: () => this.switchCenter('korea') },
@@ -42005,7 +44350,7 @@ class MonitorApp {
         } else if (!isTw && typeof this.weatherMonitor.fetchAndRenderGlobalBikes === 'function') {
           tasks.push(this.weatherMonitor.fetchAndRenderGlobalBikes(this.userLocation.lat, this.userLocation.lon, 'nearby', window.localBusService?.adminInfo?.shortLabel || '當地'));
         }
-      } else if ((this.currentCenterId === 'tourist' || this.currentCenterId === 'favorites') && window.localBusService?.target && this.weatherMonitor) {
+      } else if ((this.isTaiwanTourCenter(this.currentCenterId) || this.currentCenterId === 'favorites') && window.localBusService?.target && this.weatherMonitor) {
         const t = window.localBusService.target;
         if (t.isInternational && typeof this.weatherMonitor.fetchAndRenderGlobalBikes === 'function') {
           tasks.push(this.weatherMonitor.fetchAndRenderGlobalBikes(t.lat, t.lon, this.currentCenterId, t.label || '當地'));
@@ -42421,6 +44766,18 @@ class MonitorApp {
   syncCenterLocalization(centerId) {
     const isIntl = this.isInternationalCenter(centerId);
     const brandTitleMap = {
+      tourist: '台灣觀光精選',
+      tw_taipei: '台北觀光實況',
+      tw_newtaipei: '新北觀光實況',
+      tw_taoyuan: '桃園觀光實況',
+      tw_yilan: '宜蘭觀光實況',
+      tw_taichung: '台中觀光實況',
+      tw_central: '南投嘉義實況',
+      tw_tainan: '台南觀光實況',
+      tw_kaohsiung: '高雄觀光實況',
+      tw_pingtung: '屏東墾丁實況',
+      tw_hualien: '花蓮觀光實況',
+      tw_taitung: '台東 4K 實況',
       world: '全球 4K 實況',
       japan: '日本實況',
       korea: '韓國實況',
@@ -42468,6 +44825,18 @@ class MonitorApp {
     const searchInput = document.getElementById('cameraSearchInput');
     if (searchInput) {
       const placeholderMap = {
+        tourist: '快搜全台熱門 4K 景點：多良車站、阿里山、日月潭、大稻埕、象山 101、高美濕地、壽山、六十石山...',
+        tw_taipei: '快搜台北景點：大稻埕 4K、象山 101、碧山巖、劍潭山、陽明山擎天崗、西門町、饒河士林夜市...',
+        tw_newtaipei: '快搜新北景點：淡水漁人碼頭 4K、九份山城 4K、八里左岸、野柳、白沙灣、平溪十分天燈...',
+        tw_taoyuan: '快搜桃園景點：桃園機場 TPE 4K、拉拉山上巴陵、永安漁港海螺館、大溪老街、石門水庫、小烏來...',
+        tw_yilan: '快搜宜蘭景點：太平山雲海、蹦蹦車站、頭城外澳龜山島海灘、蘇澳港灣、頭城濱海森林...',
+        tw_taichung: '快搜台中景點：高美濕地 4K、大肚山望高寮夜景 4K、大安港、梨山德基水庫 4K、武陵農場...',
+        tw_central: '快搜南投嘉義景點：阿里山二延平雲海 4K、奮起湖 4K、日月潭伊達邵與文武廟 4K、合歡山武嶺...',
+        tw_tainan: '快搜台南景點：黃金海岸夕照 4K、安平港海濱、中西區古都、台南火車站、康橋鐵道、亞太棒球場...',
+        tw_kaohsiung: '快搜高雄景點：壽山 85 大樓夜景 4K、蓮池潭龍虎塔 4K、棧貳庫大港橋 4K、高流愛河灣 4K、旗津...',
+        tw_pingtung: '快搜屏東墾丁：墾丁大街 4K、船帆石沙灘 4K、南灣沙灘、墾丁牌樓、森林觀海樓、海底珊瑚礁...',
+        tw_hualien: '快搜花蓮景點：六十石山 4K、大石鼻山 4K、鯉魚潭 4K、石梯坪 4K、長虹橋 4K、七星潭清水斷崖...',
+        tw_taitung: '快搜台東 4K 景點：多良車站追火車、池上天堂路、南橫埡口、三仙台、金樽衝浪、鹿野高台、綠島...',
         world: '快搜全球 4K 地標：東京台場、澀谷、首爾漢江、雪梨港灣、威尼斯、洛杉磯、太空站...',
         japan: '快搜日本景點、富士山、溫泉、4K、東京大阪或機場...',
         korea: '快搜首爾漢江、盤浦噴泉、東大門 DDP、景福宮、弘大、釜山廣安大橋或 4K...',
@@ -42486,6 +44855,18 @@ class MonitorApp {
     const radarTitleEl = document.getElementById('radarMapTitle');
     if (radarTitleEl) {
       const radarTitleMap = {
+        tourist: '<i class="fa-solid fa-compass"></i> 台灣全島熱門景點地理雷達',
+        tw_taipei: '<i class="fa-solid fa-city"></i> 台北市觀光景點地理雷達',
+        tw_newtaipei: '<i class="fa-solid fa-bridge-water"></i> 新北市山海景點地理雷達',
+        tw_taoyuan: '<i class="fa-solid fa-plane-departure"></i> 桃園機場與風景區雷達',
+        tw_yilan: '<i class="fa-solid fa-cloud-sun"></i> 宜蘭山海景點地理雷達',
+        tw_taichung: '<i class="fa-solid fa-sun"></i> 台中觀光景點地理雷達',
+        tw_central: '<i class="fa-solid fa-mountain"></i> 南投嘉義高山湖景雷達',
+        tw_tainan: '<i class="fa-solid fa-torii-gate"></i> 台南府城景點地理雷達',
+        tw_kaohsiung: '<i class="fa-solid fa-anchor"></i> 高雄港灣景點地理雷達',
+        tw_pingtung: '<i class="fa-solid fa-umbrella-beach"></i> 屏東墾丁海濱地理雷達',
+        tw_hualien: '<i class="fa-solid fa-water"></i> 花蓮山海縱谷地理雷達',
+        tw_taitung: '<i class="fa-solid fa-train"></i> 台東 4K 海岸縱谷雷達',
         world: '<i class="fa-solid fa-earth-asia"></i> 全球 4K 實況地理雷達',
         japan: '<i class="fa-solid fa-map-location-dot"></i> 日本全境地理雷達',
         korea: '<i class="fa-solid fa-map-location-dot"></i> 韓國全境地理雷達',
@@ -42596,6 +44977,14 @@ class MonitorApp {
           lon: geoCam ? Number(geoCam.lon) : 121.2213,
           description: '自選專屬跨區即時視訊牆 (點擊各畫面右上角星號 ★ 即可加入/移除收藏)'
         };
+      } else if (centerId === 'tourist') {
+        centerData = (window.CAMERAS_DATA && window.CAMERAS_DATA.centers.find(c => c.id === 'tourist')) || {
+          id: 'tourist',
+          name: '全台精選',
+          lat: 23.9739,
+          lon: 120.9820
+        };
+        cameras = this.buildTaiwanTouristTopCameras();
       } else if (centerId === 'world') {
         centerData = (window.CAMERAS_DATA && window.CAMERAS_DATA.centers.find(c => c.id === 'world')) || {
           id: 'world',
@@ -42632,7 +45021,7 @@ class MonitorApp {
         cameras = data.cameras || [];
       }
 
-      this.currentCenterData = centerData || { name: '雙埔生活', id: centerId };
+      this.currentCenterData = centerData ? { ...centerData } : { name: '雙埔生活', id: centerId };
 
       this.currentCameras = cameras || [];
 
@@ -42692,16 +45081,21 @@ class MonitorApp {
           sortIndicator.innerText = this.getDayNightSortBannerText(this.dayNightFilterMode || 'opposite', this.currentCameras.length);
         } else if (centerId === 'favorites') {
           sortIndicator.innerText = `自選專屬視訊牆：已收藏 ${this.currentCameras.length} 處即時鏡頭 (點擊畫面星號 ★ 自由增刪)`;
-        } else if (centerId === 'tourist') {
-          sortIndicator.innerText = '台灣觀光精選 58 處：依「高畫質 × 熱門景點」優先排序（九份 ‧ 北車 ‧ 西門町 ‧ 大稻埕，急速秒開）';
+        } else if (this.isTaiwanTourCenter(centerId)) {
+          const count4k = this.currentCameras.filter(c => Number(c.maxRes) >= 2160).length;
+          const cityName = (this.currentCenterData?.name || '台灣觀光').replace(/\s*\(.+\)$/, '');
+          const qualBadge = count4k > 0 ? `（含 ${count4k} 處 4K UHD）` : '（1080P 官方實況）';
+          sortIndicator.innerText = centerId === 'tourist'
+            ? `全台精選觀光 ${this.currentCameras.length} 處${qualBadge}：依「4K 最高畫質 × 熱門景點」優先排序（多良車站 ‧ 阿里山 ‧ 大稻埕 ‧ 壽山 ‧ 高美濕地）`
+            : `${cityName}觀光精選 ${this.currentCameras.length} 處${qualBadge}：依「4K 最高畫質 × 熱門景點」優先排序`;
         } else {
           sortIndicator.innerText = '系統精選監控路口 ‧ 依優先順序即時呈現';
         }
       }
       this.updateSortPriorityUI();
 
-      // 依中心需求切換預設宮格：跨國實況預設四分割 (grid-4)、觀光預設急速六宮格 (grid-6)，青埔/新埔預設全部宮格 (grid-all)
-      if (this.isInternationalCenter(centerId) || centerId === 'tourist') {
+      // 依中心需求切換預設宮格：跨國實況預設四分割 (grid-4)、台灣觀光 12 縣市預設急速六宮格 (grid-6)，青埔/新埔預設全部宮格 (grid-all)
+      if (this.isInternationalCenter(centerId) || this.isTaiwanTourCenter(centerId)) {
         const defaultMode = this.isInternationalCenter(centerId) ? 'grid-4' : 'grid-6';
         this.currentGridMode = defaultMode;
         this.previousGridMode = defaultMode;
@@ -43126,9 +45520,9 @@ class MonitorApp {
     // 啟動所有可見鏡頭的播放引擎 (HLS / FLV / MJPEG / YouTube)
     this.playerEngine.initPlayersForVisibleCards(visibleCams);
 
-    // 觀光、收藏與全球跨國模式（全球4K／日本／韓國／亞太／歐洲／美洲）：動態將頂部交通看板與右側當地氣象、AQI、最近車站／公車、共享單車及氣象雷達錨定至目前首格可見鏡頭
-    if ((this.currentCenterId === 'tourist' || this.currentCenterId === 'favorites' || this.isInternationalCenter()) && visibleCams.length > 0) {
-      const groundCam = visibleCams.find(c => !String(c.name || '').includes('太空站')) || visibleCams[0];
+    // 台灣觀光 12 縣市、收藏與全球跨國模式：動態將頂部交通看板與右側當地氣象、AQI、航班雷達、在地脈動、最近車站／公車、共享單車及氣象雷達錨定至目前首格可見鏡頭
+    if ((this.isTaiwanTourCenter(this.currentCenterId) || this.currentCenterId === 'favorites' || this.isInternationalCenter()) && visibleCams.length > 0) {
+      const groundCam = visibleCams.find(c => !String(c.name || '').includes('太空站') && c.id !== 'tw-sat-cwa-himawari-4k') || visibleCams[0];
       this.syncScenicSpotLocalContext(groundCam);
     }
 
@@ -43146,7 +45540,8 @@ class MonitorApp {
     if (!leadCam || !Number.isFinite(Number(leadCam.lat)) || !Number.isFinite(Number(leadCam.lon))) return;
     const cid = this.currentCenterId;
     const isIntlTab = this.isInternationalCenter(cid);
-    if (cid !== 'tourist' && cid !== 'favorites' && !isIntlTab) return;
+    const isTwTourTab = this.isTaiwanTourCenter(cid);
+    if (!isTwTourTab && cid !== 'favorites' && !isIntlTab) return;
     const anchorKey = `${cid}:${leadCam.id}`;
     if (this._lastScenicAnchorKey === anchorKey) return;
     this._lastScenicAnchorKey = anchorKey;
@@ -43160,7 +45555,9 @@ class MonitorApp {
     if (this.currentCenterData && !isIntlTab) {
       this.currentCenterData.lat = lat;
       this.currentCenterData.lon = lon;
-      this.currentCenterData.name = cid === 'tourist' ? `觀光 (${spotLabel})` : `收藏 (${spotLabel})`;
+      const baseMeta = window.CAMERAS_DATA?.centers?.find(c => c.id === cid);
+      const baseTitle = baseMeta ? baseMeta.name : (cid === 'favorites' ? '收藏' : '觀光');
+      this.currentCenterData.name = isTwTourTab ? `${baseTitle} (${spotLabel})` : `收藏 (${spotLabel})`;
     } else if (this.currentCenterData && isIntlTab) {
       this.currentCenterData.lat = lat;
       this.currentCenterData.lon = lon;
@@ -43220,7 +45617,15 @@ class MonitorApp {
         if (typeof this.updateClockDisplay === 'function') this.updateClockDisplay();
       }
 
-      // 立即並行啟動航班雷達、地理雷達空域錨定與身歷其境在地脈動，無須等待行政區反向地理編碼完成
+      // 立即並行啟動當地氣象、雷達、航班雷達、地理雷達空域錨定與身歷其境在地脈動，無須等待行政區反向地理編碼完成
+      if (this.weatherMonitor) {
+        this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, inferredTz);
+        this.weatherMonitor.startAutoRefresh(lat, lon, spotLabel, inferredTz);
+        if (typeof this.weatherMonitor.fetchAndRenderGlobalBikes === 'function') {
+          this.weatherMonitor.fetchAndRenderGlobalBikes(lat, lon, cid, spotLabel);
+        }
+        this.weatherMonitor.refreshRadar(lat, lon);
+      }
       if (this.radarMap && typeof this.radarMap.anchorToActiveSpot === 'function') {
         this.radarMap.anchorToActiveSpot(lat, lon, spotLabel);
       }
@@ -43263,14 +45668,6 @@ class MonitorApp {
         });
       }
 
-      if (this.weatherMonitor) {
-        this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, inferredTz);
-        this.weatherMonitor.startAutoRefresh(lat, lon, spotLabel, inferredTz);
-        if (typeof this.weatherMonitor.fetchAndRenderGlobalBikes === 'function') {
-          this.weatherMonitor.fetchAndRenderGlobalBikes(lat, lon, cid, spotLabel);
-        }
-        this.weatherMonitor.refreshRadar(lat, lon);
-      }
       if (typeof window !== 'undefined' && window.localBusService) {
         window.localBusService.syncForCenter(cid, {
           lat,
@@ -43290,6 +45687,24 @@ class MonitorApp {
 
     // 切換回境內鏡頭前先隱藏海外百寶箱，防止 async 定位期間殘留海外匯率與時間資訊
     if (window.travelToolkitService) window.travelToolkitService.hide();
+    // 立即並行啟動當地氣象、雷達、境內航班雷達（自動鎖定 TSA/TPE/RMQ/TNN/KHH/HUN/TTT）與在地脈動，防止切換前舊雙埔氣象競態覆寫
+    if (this.weatherMonitor) {
+      this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, 'Asia/Taipei');
+      this.weatherMonitor.startAutoRefresh(lat, lon, spotLabel, 'Asia/Taipei');
+      this.weatherMonitor.refreshRadar(lat, lon);
+    }
+    if (window.flightRadarService) {
+      window.flightRadarService.syncForLocation(cid, { lat, lon, label: spotLabel });
+    }
+    if (window.immersivePulseService) {
+      window.immersivePulseService.syncForLocation(cid, {
+        lat,
+        lon,
+        label: spotLabel,
+        countryCode: 'TW',
+        tz: 'Asia/Taipei'
+      });
+    }
     const admin = (typeof window !== 'undefined' && window.localBusService)
       ? await window.localBusService.resolveTaiwanAdminArea(lat, lon)
       : null;
@@ -43307,13 +45722,8 @@ class MonitorApp {
       }
     }
 
-    if (this.weatherMonitor) {
-      this.weatherMonitor.fetchEnvironment(lat, lon, spotLabel, false, 'Asia/Taipei');
-      this.weatherMonitor.startAutoRefresh(lat, lon, spotLabel, 'Asia/Taipei');
-      if (typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
-        this.weatherMonitor.fetchAndRenderNearbyYouBike(lat, lon, tdxCity, cid, spotLabel);
-      }
-      this.weatherMonitor.refreshRadar(lat, lon);
+    if (this.weatherMonitor && typeof this.weatherMonitor.fetchAndRenderNearbyYouBike === 'function') {
+      this.weatherMonitor.fetchAndRenderNearbyYouBike(lat, lon, tdxCity, cid, spotLabel);
     }
     if (typeof window !== 'undefined' && window.localBusService) {
       window.localBusService.syncForCenter(cid, {
@@ -44052,10 +46462,10 @@ window.addEventListener('DOMContentLoaded', () => {
     window.earthquakeMonitor.init();
   }
 
-  // 啟動後台預熱前 6 路臺北市交工處觀光鏡頭，切換至「觀光」時秒開起播
+  // 啟動後台預熱前 6 路臺北市交工處觀光鏡頭，切換至「台北市」或「全台精選」時秒開起播
   if (typeof window.prewarmTaipeiBote === 'function') {
     setTimeout(() => {
-      if (window.monitorApp && window.monitorApp.currentCenterId !== 'tourist') {
+      if (window.monitorApp && window.monitorApp.currentCenterId !== 'tourist' && window.monitorApp.currentCenterId !== 'tw_taipei') {
         window.prewarmTaipeiBote();
       }
     }, 1200);
