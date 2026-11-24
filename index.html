@@ -9189,6 +9189,8 @@ html[data-theme="light"] .filter-search-box {
 }
 
 html[data-theme="light"] .filter-search-input {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
   color: #0f172a !important;
 }
 
@@ -11173,6 +11175,628 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
   color: #334155 !important;
 }
 
+/* ==========================================================================
+   全站資訊架構整合升級 (Unified 2-Tier Command Header + 5-Tab Telemetry Hub Dock)
+   - 頂部導航分層：第一層「4 大領域切換 + 核心工具」，第二層「該域精簡 5-6 子頻道 + 宮格版面」
+   - 右側面板分頁中樞：固定頂部即時摘要條 + 5 大主題分頁（氣象 / 雷達 / 交通 / 脈動 / 全覽）
+   ========================================================================== */
+.top-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  background: rgba(6, 10, 19, 0.9) !important;
+}
+
+.top-nav-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 14px;
+  min-width: 0;
+}
+
+.top-nav-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 14px;
+  background: rgba(9, 14, 27, 0.78);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+
+/* 第一層中央：4 大核心領域膠囊切換列 (台灣生活 / 世界城市 / 自然奇景 / 我的收藏) */
+.domain-switch-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(12, 18, 34, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
+}
+
+.domain-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.2s var(--ease-expo);
+}
+
+.domain-tab-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.domain-tab-btn.active {
+  background: linear-gradient(135deg, rgba(var(--ambient-accent), 0.24), rgba(var(--ambient-secondary), 0.18));
+  border-color: rgba(var(--ambient-accent), 0.52);
+  color: #ffffff;
+  box-shadow: 0 2px 12px rgba(var(--ambient-accent), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.domain-tab-btn.active i {
+  color: rgb(var(--ambient-accent));
+}
+
+.domain-tab-btn[data-domain-tab="favorites"].active i {
+  color: #fbbf24;
+}
+
+.domain-fav-count {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.22);
+  color: #fbbf24;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.domain-fav-count.is-visible {
+  display: inline-flex;
+}
+
+.nav-utility-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+/* 第二層左側：當前領域精簡子頻道列 (僅呈現該域 5-6 頻道，免無止盡水平捲動) */
+.subchannel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.active-domain-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: rgb(var(--ambient-accent));
+  background: rgba(var(--ambient-accent), 0.11);
+  border: 1px solid rgba(var(--ambient-accent), 0.26);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.top-nav-secondary .center-switch-outer {
+  order: unset !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.top-nav-secondary .center-switch-group {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0;
+  gap: 4px;
+}
+
+.top-nav-secondary .center-btn {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.top-nav-secondary .center-btn.active {
+  background: linear-gradient(135deg, rgba(var(--ambient-accent), 0.22), rgba(var(--ambient-secondary), 0.16));
+  border-color: rgba(var(--ambient-accent), 0.55);
+  color: #ffffff;
+}
+
+/* 依所屬大域純 CSS 篩選顯示子頻道，保留全部 17 個 DOM 節點零破壞 */
+.center-switch-group[data-active-domain="taiwan"] .center-btn:not([data-domain="taiwan"]),
+.center-switch-group[data-active-domain="world"] .center-btn:not([data-domain="world"]),
+.center-switch-group[data-active-domain="nature"] .center-btn:not([data-domain="nature"]),
+.center-switch-group[data-active-domain="favorites"] .center-btn:not([data-domain="favorites"]) {
+  display: none !important;
+}
+
+.fav-domain-quick-bar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.fav-domain-quick-bar.is-visible {
+  display: inline-flex;
+}
+
+.fav-quick-jump-btn {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  background: rgba(14, 165, 233, 0.12);
+  color: #bae6fd;
+  font-size: 0.69rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.fav-quick-jump-btn:hover {
+  background: rgba(14, 165, 233, 0.28);
+  color: #ffffff;
+}
+
+/* 第二層右側：精簡版面宮格選擇器 + 單頁滿版切換 */
+.layout-control-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.layout-control-strip .grid-selector {
+  padding: 2px;
+  border-radius: 8px;
+  gap: 1px;
+}
+
+.layout-control-strip .grid-btn {
+  padding: 3px 6px;
+  font-size: 0.71rem;
+}
+
+/* 輕量化視訊牆上方篩選列 (單行水平可滑動標籤列，騰出更多垂直空間給即時影像矩陣) */
+.camera-filter-bar {
+  padding: 5px 8px !important;
+  gap: 6px !important;
+  border-radius: 10px !important;
+}
+
+.filter-search-box {
+  min-width: 165px !important;
+}
+
+.filter-pills-row {
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1px;
+}
+
+.filter-pills-row::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pills-row .filter-tag-pill {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+html[data-theme="light"] .filter-search-box {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .filter-search-input {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .filter-search-input::placeholder {
+  color: #64748b !important;
+}
+
+/* 右側智慧分頁控制中樞 (Sticky 5-Tab Telemetry Hub Dock) */
+.sidebar-hub-dock {
+  position: sticky;
+  top: 0;
+  z-index: 28;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 9px;
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(13, 19, 34, 0.96) 0%, rgba(9, 14, 26, 0.94) 100%);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-quick-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.67rem;
+  font-family: var(--font-mono);
+  color: #cbd5e1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sidebar-quick-summary::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-sum-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 1px 5px;
+  border-radius: 5px;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.quick-sum-chip:hover {
+  background: rgba(56, 189, 248, 0.15);
+  color: #ffffff;
+}
+
+.quick-sum-chip strong {
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.sidebar-hub-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.sidebar-tab-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s var(--ease-expo);
+}
+
+.sidebar-tab-btn i {
+  font-size: 0.78rem;
+}
+
+.sidebar-tab-btn:hover {
+  color: #f8fafc;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.sidebar-tab-btn.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(56, 189, 248, 0.24));
+  border-color: rgba(0, 240, 255, 0.58);
+  color: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 240, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.sidebar-tab-btn.active i {
+  color: #00f0ff;
+}
+
+.sidebar-tab-badge {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: rgba(0, 240, 255, 0.22);
+  border: 1px solid rgba(0, 240, 255, 0.5);
+  color: #67e8f9;
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 800;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.sidebar-tab-badge.is-visible {
+  display: inline-flex;
+}
+
+.sidebar-audio-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  display: none;
+}
+
+.sidebar-audio-dot.is-live {
+  display: block;
+}
+
+/* 純 CSS 側邊欄主題分頁篩選（不覆寫個別元件之 style.display 條件顯示） */
+.sidebar-section[data-active-tab="weather"] > .widget-card:not([data-sidebar-group="weather"]),
+.sidebar-section[data-active-tab="radar"] > .widget-card:not([data-sidebar-group="radar"]),
+.sidebar-section[data-active-tab="transit"] > .widget-card:not([data-sidebar-group="transit"]),
+.sidebar-section[data-active-tab="immersive"] > .widget-card:not([data-sidebar-group="immersive"]) {
+  display: none !important;
+}
+
+/* 身歷其境卡片內部 4 段子檢視膠囊 */
+.immersive-subtabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.immersive-subtab-btn {
+  padding: 4px 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(192, 132, 252, 0.24);
+  background: rgba(15, 23, 42, 0.68);
+  color: #cbd5e1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.16s ease;
+}
+
+.immersive-subtab-btn:hover {
+  border-color: #d8b4fe;
+  color: #ffffff;
+}
+
+.immersive-subtab-btn.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(99, 102, 241, 0.28));
+  border-color: #c084fc;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.28);
+}
+
+/* 淺色主題完整適配 */
+html[data-theme="light"] .top-nav {
+  background: rgba(248, 250, 252, 0.94) !important;
+}
+
+html[data-theme="light"] .top-nav-secondary {
+  background: rgba(241, 245, 249, 0.92) !important;
+  border-top-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme="light"] .domain-switch-bar {
+  background: #e2e8f0 !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] .domain-tab-btn {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .domain-tab-btn.active {
+  background: #ffffff !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  color: #0369a1 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme="light"] .active-domain-tag {
+  background: #e0f2fe !important;
+  border-color: rgba(2, 132, 199, 0.28) !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="light"] .top-nav-secondary .center-btn {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(15, 23, 42, 0.09) !important;
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .top-nav-secondary .center-btn.active {
+  background: #0284c7 !important;
+  border-color: #0369a1 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .sidebar-hub-dock {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(2, 132, 199, 0.22) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme="light"] .sidebar-quick-summary {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .quick-sum-chip strong {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .sidebar-tab-btn {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .sidebar-tab-btn.active {
+  background: #e0f2fe !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] .sidebar-tab-btn.active i {
+  color: #0284c7 !important;
+}
+
+html[data-theme="light"] .sidebar-tab-badge {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0369a1 !important;
+}
+
+html[data-theme="light"] .immersive-subtab-btn {
+  background: #f1f5f9 !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .immersive-subtab-btn.active {
+  background: #ede9fe !important;
+  border-color: #7c3aed !important;
+  color: #5b21b6 !important;
+}
+
+/* 中型螢幕與平板最佳化 (max-width: 1200px) */
+@media (max-width: 1200px) {
+  .top-nav-primary {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 6px 10px;
+  }
+  .domain-switch-bar {
+    order: 3;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .domain-tab-btn {
+    justify-content: center;
+    padding: 5px 6px;
+  }
+  .top-nav-secondary {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 5px 10px;
+  }
+  .layout-control-strip {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* 手機直向響應式最佳化 (max-width: 768px) */
+@media (max-width: 768px) {
+  .top-nav-primary {
+    padding: 7px 10px 6px !important;
+    gap: 6px !important;
+  }
+  .brand-section {
+    width: auto !important;
+    flex: 1 1 auto;
+  }
+  .nav-utility-group {
+    margin-left: auto;
+    gap: 4px;
+  }
+  .nav-utility-group .clock-widget,
+  .nav-utility-group #btnFullscreen {
+    display: none !important;
+  }
+  .nav-utility-group #btnToggleSidebar span {
+    display: none;
+  }
+  .active-domain-tag {
+    display: none !important;
+  }
+  .top-nav-secondary {
+    padding: 5px 10px 7px !important;
+    gap: 6px !important;
+  }
+  .subchannel-row {
+    width: 100%;
+  }
+  .layout-control-strip {
+    width: 100%;
+    gap: 6px;
+  }
+  .layout-control-strip .grid-selector {
+    flex: 1 1 auto !important;
+    width: auto !important;
+  }
+  .sidebar-hub-dock {
+    position: relative;
+    top: auto;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -11239,168 +11863,196 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
     </div>
   </div>
 
-  <!-- 頂部科技指揮導航列 -->
+  <!-- 頂部雙層科技指揮導航列 (第一層：品牌 + 4 大領域切換 + 核心工具 / 第二層：精簡子頻道 + 版面宮格) -->
   <header class="top-nav">
-    <div class="brand-section">
-      <div class="brand-badge">
-        <i class="fa-solid fa-satellite-dish"></i>
-      </div>
-      <div>
-        <h1 id="brandTitle" class="brand-title">雙埔生活</h1>
-      </div>
-      <!-- 極簡即時環境安全與特報監測膠囊 (整合原側邊欄卡牌，節省空間) -->
-      <div id="disasterAlertBanner" class="disaster-compact-pill" tabindex="0" role="button" title="雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中">
-        <span class="pill-dot"></span>
-        <span id="disasterAlertText" class="disaster-pill-text"><i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全</span>
-      </div>
-    </div>
-
-    <!-- 監控中心切換 (附近 vs 雙埔 vs 青埔 vs 新埔 vs 觀光 vs 全球4K vs 日本..日夜 vs 收藏) -->
-    <div class="center-switch-outer">
-      <button type="button" id="btnCenterScrollLeft" class="center-scroll-arrow is-hidden" aria-label="向左捲動分類" title="向左檢視前面分類">
-        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
-      </button>
-      <div class="center-switch-group">
-      <button class="center-btn" data-center="nearby" title="附近：自動偵測目前所在位置，由近到遠呈現鄰近即時監視器與生活資訊">
-        <i class="fa-solid fa-location-crosshairs"></i>
-        <span>附近</span>
-      </button>
-      <button class="center-btn active" data-center="dual" title="雙埔：青埔與新埔各半平均顯示 (4格/6格/9格/12格/16格)">
-        <i class="fa-solid fa-layer-group"></i>
-        <span>雙埔</span>
-      </button>
-      <button class="center-btn" data-center="qingpu" title="青埔">
-        <i class="fa-solid fa-building-user"></i>
-        <span>青埔</span>
-      </button>
-      <button class="center-btn" data-center="banqiao" title="新埔">
-        <i class="fa-solid fa-house-signal"></i>
-        <span>新埔</span>
-      </button>
-      <button class="center-btn" data-center="tourist" title="九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水">
-        <i class="fa-solid fa-plane-arrival"></i>
-        <span>觀光</span>
-      </button>
-      <button class="center-btn" data-center="world" title="全球 4K 旗艦總覽 80 處：集結八大洲際與極地、雨林、海洋最高畫質 2160P 與最高即時人氣直播">
-        <i class="fa-solid fa-globe"></i>
-        <span>全球4K</span>
-      </button>
-      <button class="center-btn" data-center="japan" title="日本全境 80 處：東京台場 4K ‧ 澀谷 4K ‧ 富士山 4K ‧ 道頓堀 ‧ 晴空塔 ‧ 京都嵐山 ‧ 上高地 ‧ 北海道 ‧ 沖繩">
-        <i class="fa-solid fa-torii-gate"></i>
-        <span>日本</span>
-      </button>
-      <button class="center-btn" data-center="korea" title="韓國全境 24 處：首爾漢江 4K ‧ 盤浦噴泉 4K ‧ 弘大商圈 4K ‧ 東大門 DDP 4K ‧ 釜山廣安大橋 4K ‧ 景福宮 ‧ 濟州島">
-        <i class="fa-solid fa-landmark"></i>
-        <span>韓國</span>
-      </button>
-      <button class="center-btn" data-center="apac" title="亞太與中東 24 處：雪梨港灣 4K ‧ 泰國蘇美島與曼谷 4K ‧ 新加坡 4K ‧ 紐西蘭奧克蘭 4K ‧ 峇里島 ‧ 香港維港 ‧ 麥加聖城">
-        <i class="fa-solid fa-umbrella-beach"></i>
-        <span>亞太</span>
-      </button>
-      <button class="center-btn" data-center="europe" title="歐洲絕景 30 處：威尼斯里亞托橋與大運河 4K ‧ 倫敦泰晤士河 4K ‧ 阿姆斯特丹 4K ‧ 瑞士阿爾卑斯雪山 ‧ 巴黎鐵塔 ‧ 北歐極光峽灣鐵道">
-        <i class="fa-solid fa-mountain-sun"></i>
-        <span>歐洲</span>
-      </button>
-      <button class="center-btn" data-center="americas" title="美洲奇觀 30 處：洛杉磯威尼斯海灘 4K ‧ 國際太空站俯瞰地球 4K ‧ 拉斯維加斯 4K ‧ SpaceX 星艦基地 4K ‧ 夏威夷 ‧ 紐約時代廣場 ‧ 尼加拉瀑布">
-        <i class="fa-solid fa-earth-americas"></i>
-        <span>美洲</span>
-      </button>
-      <button class="center-btn" data-center="polar" title="極地極光 26 處：芬蘭拉普蘭極光 4K ‧ 格陵蘭冰峽灣浮冰 4K ‧ 冰島活火山熔岩 4K ‧ 聖誕老人村 ‧ 阿拉斯加與北極熊 ‧ 南極門戶烏斯懷亞與企鵝棲地">
-        <i class="fa-solid fa-snowflake"></i>
-        <span>極地極光</span>
-      </button>
-      <button class="center-btn" data-center="rainforest" title="雨林生態 26 處：哥斯大黎加與巴拿馬熱帶雨林金剛鸚鵡／大嘴鳥／蜂鳥 ‧ 康乃爾森林飛羽 4K ‧ 秘魯厄瓜多雲霧雨林 ‧ 剛果雨林 ‧ 非洲納米比與波札那野生象群水坑">
-        <i class="fa-solid fa-tree"></i>
-        <span>雨林生態</span>
-      </button>
-      <button class="center-btn" data-center="ocean" title="海洋珊瑚 24 處：加勒比海庫拉索 4K 水下珊瑚礁 ‧ 蒙特雷灣療癒水母與海獺 ‧ 邁阿密海底珊瑚城 ‧ 馬約卡與馬德拉 4K 碧藍海灣">
-        <i class="fa-solid fa-water"></i>
-        <span>海洋珊瑚</span>
-      </button>
-      <button class="center-btn" data-center="scenic" title="絕美風景精選：瑞士阿爾卑斯雪山 ‧ 義大利埃特納活火山與多洛米蒂 ‧ 挪威峽灣 ‧ 富士山 ‧ 落磯山與尼加拉瀑布（依 4K 最高畫質 × 熱門度優先排序）">
-        <i class="fa-solid fa-mountain"></i>
-        <span>絕美風景</span>
-      </button>
-      <button class="center-btn" data-center="daynight" title="日夜極景實況：台灣白天自動看全球夜色與晨昏、台灣夜晚自動看全球陽光白晝（依 4K 最高畫質 × 熱門度優先排序）">
-        <i class="fa-solid fa-moon" style="color:#fbbf24;"></i>
-        <span>日夜極景</span>
-      </button>
-      <button class="center-btn" data-center="favorites" title="我的最愛：自選跨區跨國專屬監視器收藏牆">
-        <i class="fa-solid fa-star" style="color:#fbbf24;"></i>
-        <span>收藏</span>
-        <span id="favCountBadge" class="fav-count-pill is-empty"></span>
-      </button>
-    </div>
-      <button type="button" id="btnCenterScrollRight" class="center-scroll-arrow is-hidden" aria-label="向右捲動分類" title="向右檢視更多分類（極地極光／雨林／海洋／風景／日夜／收藏）">
-        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-      </button>
-    </div>
-
-    <!-- 網格與控制列 (完整支援 1/4/6/9/12/16/全部) -->
-    <div class="nav-actions">
-      <!-- 畫面分割模式 -->
-      <div class="grid-selector">
-        <button class="grid-btn" data-grid="grid-1" title="單一焦點特寫"><i class="fa-regular fa-square"></i> 1格</button>
-        <button class="grid-btn" data-grid="grid-4" title="四分割標準"><i class="fa-solid fa-table-cells-large"></i> 4格</button>
-        <button class="grid-btn active" data-grid="grid-6" title="六重視角 (雙域模式：青埔3 + 新埔3各半均分)"><i class="fa-solid fa-table-cells"></i> 6格</button>
-        <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙埔模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
-        <button class="grid-btn" data-grid="grid-12" title="十二分割廣域監控"><i class="fa-solid fa-grip"></i> 12格</button>
-        <button class="grid-btn" data-grid="grid-16" title="十六分割廣域電視牆 (雙埔模式：青埔8 + 新埔8)"><i class="fa-solid fa-table-cells"></i> 16格</button>
-        <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
-      </div>
-
-      <!-- 控制工具操作列 (整合成同一組，完美對齊，手機版單行滿版無縫填滿) -->
-      <div class="nav-control-group">
-        <!-- 畫面版型與在地生活資訊切換 -->
-        <div class="mode-toggles-wrapper">
-          <button id="btnToggleAdaptive" class="mode-toggle-btn" aria-pressed="false" aria-label="切換單頁滿版或自由捲動模式" title="切換顯示模式：自由捲動最大化 (預設) / 單頁滿版 (免捲動)">
-            <i class="fa-solid fa-expand" aria-hidden="true"></i> <span>單頁滿版</span>
-          </button>
-          <button id="btnToggleSidebar" class="mode-toggle-btn active" aria-label="顯示或收合在地生活資訊面板" aria-expanded="true" title="顯示/收合右側氣象、空氣品質與周遭地圖等在地生活資訊">
-            <i class="fa-solid fa-circle-info" aria-hidden="true"></i> <span>當地資訊</span>
-          </button>
+    <!-- 第一層：主指揮列 -->
+    <div class="top-nav-primary">
+      <div class="brand-section">
+        <div class="brand-badge">
+          <i class="fa-solid fa-satellite-dish"></i>
         </div>
+        <div>
+          <h1 id="brandTitle" class="brand-title">雙埔生活</h1>
+        </div>
+        <!-- 極簡即時環境安全與特報監測膠囊 -->
+        <div id="disasterAlertBanner" class="disaster-compact-pill" tabindex="0" role="button" title="雙埔生活全域環境安全 ‧ 氣象署特報與地震即時監測中">
+          <span class="pill-dot"></span>
+          <span id="disasterAlertText" class="disaster-pill-text"><i class="fa-solid fa-shield-halved" style="color:#10b981; margin-right:2px;"></i> 全域安全</span>
+        </div>
+      </div>
 
-        <!-- 功能圖示按鈕組 (指令搜尋、重新整理、全螢幕) -->
-        <div class="nav-icon-tools">
-          <button id="btnCommandPalette" class="cmd-palette-trigger" type="button" aria-label="開啟快速指令面板 (Ctrl+K)" title="快速搜尋鏡頭、站點與區域切換 (⌘K / Ctrl+K)">
-            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-            <span class="cmd-trigger-label">快搜</span>
-            <kbd class="cmd-kbd">⌘K</kbd>
+      <!-- 4 大核心領域切換膠囊 (徹底解決 17 頻道擠成一排之視覺雜亂) -->
+      <nav id="domainSwitchBar" class="domain-switch-bar" aria-label="主領域切換">
+        <button type="button" class="domain-tab-btn active" data-domain-tab="taiwan" onclick="window.monitorApp?.switchDomain('taiwan')" title="台灣生活與通勤監控：附近、雙埔、青埔、新埔、台灣觀光">
+          <i class="fa-solid fa-house-signal"></i>
+          <span>台灣生活</span>
+        </button>
+        <button type="button" class="domain-tab-btn" data-domain-tab="world" onclick="window.monitorApp?.switchDomain('world')" title="世界各大洲城市 4K 實況：全球4K、日本、韓國、亞太、歐洲、美洲">
+          <i class="fa-solid fa-earth-asia"></i>
+          <span>世界城市</span>
+        </button>
+        <button type="button" class="domain-tab-btn" data-domain-tab="nature" onclick="window.monitorApp?.switchDomain('nature')" title="地球自然奇景與療癒實況：極地極光、雨林生態、海洋珊瑚、絕美風景、日夜極景">
+          <i class="fa-solid fa-mountain-sun"></i>
+          <span>自然奇景</span>
+        </button>
+        <button type="button" class="domain-tab-btn" data-domain-tab="favorites" onclick="window.monitorApp?.switchDomain('favorites')" title="我的最愛跨區跨國自選監控牆與情境預設集">
+          <i class="fa-solid fa-star"></i>
+          <span>我的收藏</span>
+          <span id="domainFavBadge" class="domain-fav-count"></span>
+        </button>
+      </nav>
+
+      <!-- 右側核心快捷工具列 -->
+      <div class="nav-utility-group">
+        <button id="btnCommandPalette" class="cmd-palette-trigger" type="button" aria-label="開啟快速指令面板 (Ctrl+K)" title="快速搜尋鏡頭、站點與區域切換 (⌘K / Ctrl+K)">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <span class="cmd-trigger-label">快搜</span>
+          <kbd class="cmd-kbd">⌘K</kbd>
+        </button>
+        <button id="btnToggleSidebar" class="mode-toggle-btn active" aria-label="顯示或收合在地生活資訊面板" aria-expanded="true" title="顯示/收合右側氣象、雷達、交通與身歷其境面板">
+          <i class="fa-solid fa-table-columns" aria-hidden="true"></i> <span>資訊面板</span>
+        </button>
+        <div id="themeSwitcherWrap" class="theme-switcher-wrap">
+          <button id="btnThemeToggle" class="theme-toggle-btn" type="button" aria-label="切換外觀主題" aria-haspopup="true" aria-expanded="false" title="切換外觀主題：跟隨裝置主題 / 淺色主題 / 深色主題">
+            <i id="themeToggleIcon" class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
+            <span id="themeToggleLabel" class="theme-toggle-label">跟隨系統</span>
           </button>
-          <div id="themeSwitcherWrap" class="theme-switcher-wrap">
-            <button id="btnThemeToggle" class="theme-toggle-btn" type="button" aria-label="切換外觀主題" aria-haspopup="true" aria-expanded="false" title="切換外觀主題：跟隨裝置主題 / 淺色主題 / 深色主題">
-              <i id="themeToggleIcon" class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i>
-              <span id="themeToggleLabel" class="theme-toggle-label">跟隨系統</span>
+          <div id="themePopoverMenu" class="theme-popover-menu" role="menu" aria-label="外觀主題選擇">
+            <button type="button" class="theme-menu-option active" data-theme-opt="system" role="menuitemradio" aria-checked="true">
+              <span class="opt-left"><i class="fa-solid fa-circle-half-stroke"></i> 跟隨裝置主題</span>
+              <i class="fa-solid fa-check opt-check"></i>
             </button>
-            <div id="themePopoverMenu" class="theme-popover-menu" role="menu" aria-label="外觀主題選擇">
-              <button type="button" class="theme-menu-option active" data-theme-opt="system" role="menuitemradio" aria-checked="true">
-                <span class="opt-left"><i class="fa-solid fa-circle-half-stroke"></i> 跟隨裝置主題</span>
-                <i class="fa-solid fa-check opt-check"></i>
-              </button>
-              <button type="button" class="theme-menu-option" data-theme-opt="light" role="menuitemradio" aria-checked="false">
-                <span class="opt-left"><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> 淺色系主題</span>
-                <i class="fa-solid fa-check opt-check"></i>
-              </button>
-              <button type="button" class="theme-menu-option" data-theme-opt="dark" role="menuitemradio" aria-checked="false">
-                <span class="opt-left"><i class="fa-solid fa-moon" style="color:#818cf8;"></i> 深色系主題</span>
-                <i class="fa-solid fa-check opt-check"></i>
-              </button>
-            </div>
+            <button type="button" class="theme-menu-option" data-theme-opt="light" role="menuitemradio" aria-checked="false">
+              <span class="opt-left"><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> 淺色系主題</span>
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
+            <button type="button" class="theme-menu-option" data-theme-opt="dark" role="menuitemradio" aria-checked="false">
+              <span class="opt-left"><i class="fa-solid fa-moon" style="color:#818cf8;"></i> 深色系主題</span>
+              <i class="fa-solid fa-check opt-check"></i>
+            </button>
           </div>
-          <button id="btnRefreshAll" class="tool-icon-btn nav-tool-btn" aria-label="立即重新整理全部資料" title="立即重新整理全部視訊與資訊">
-            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        </div>
+        <button id="btnRefreshAll" class="tool-icon-btn nav-tool-btn" aria-label="立即重新整理全部資料" title="立即重新整理全部視訊與資訊">
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+        </button>
+        <button id="btnFullscreen" class="tool-icon-btn nav-tool-btn" aria-label="切換全螢幕模式" title="切換全螢幕模式">
+          <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
+        </button>
+        <!-- 數位時鐘 -->
+        <div class="clock-widget">
+          <span id="clockTime" class="clock-time">--:--:--</span>
+          <span id="clockDate" class="clock-date">同步時間中</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 第二層：精簡子頻道與視訊宮格控制列 -->
+    <div class="top-nav-secondary">
+      <div class="subchannel-row">
+        <span id="activeDomainIndicator" class="active-domain-tag">
+          <i class="fa-solid fa-location-dot"></i> 台灣生活
+        </span>
+        <!-- 17 個頻道保留完整 DOM 節點並透過 data-domain 精準分群顯示 (每域僅顯示 5-6 顆，一眼全覽零擁擠) -->
+        <div class="center-switch-outer">
+          <button type="button" id="btnCenterScrollLeft" class="center-scroll-arrow is-hidden" aria-label="向左捲動分類" title="向左檢視前面分類">
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
           </button>
-          <button id="btnFullscreen" class="tool-icon-btn nav-tool-btn" aria-label="切換全螢幕模式" title="切換全螢幕模式">
-            <i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
+          <div class="center-switch-group" data-active-domain="taiwan">
+            <button class="center-btn" data-center="nearby" data-domain="taiwan" title="附近：自動偵測目前所在位置，由近到遠呈現鄰近即時監視器與生活資訊">
+              <i class="fa-solid fa-location-crosshairs"></i>
+              <span>附近</span>
+            </button>
+            <button class="center-btn active" data-center="dual" data-domain="taiwan" title="雙埔：青埔與新埔各半平均顯示 (4格/6格/9格/12格/16格)">
+              <i class="fa-solid fa-layer-group"></i>
+              <span>雙埔</span>
+            </button>
+            <button class="center-btn" data-center="qingpu" data-domain="taiwan" title="青埔高鐵特區">
+              <i class="fa-solid fa-building-user"></i>
+              <span>青埔</span>
+            </button>
+            <button class="center-btn" data-center="banqiao" data-domain="taiwan" title="板橋新埔商圈">
+              <i class="fa-solid fa-house-signal"></i>
+              <span>新埔</span>
+            </button>
+            <button class="center-btn" data-center="tourist" data-domain="taiwan" title="九份 ‧ 西門町 ‧ 大稻埕 ‧ 淡水">
+              <i class="fa-solid fa-plane-arrival"></i>
+              <span>觀光</span>
+            </button>
+            <button class="center-btn" data-center="world" data-domain="world" title="全球 4K 旗艦總覽 80 處：集結八大洲際與極地、雨林、海洋最高畫質 2160P 與最高即時人氣直播">
+              <i class="fa-solid fa-globe"></i>
+              <span>全球4K</span>
+            </button>
+            <button class="center-btn" data-center="japan" data-domain="world" title="日本全境 80 處：東京台場 4K ‧ 澀谷 4K ‧ 富士山 4K ‧ 道頓堀 ‧ 晴空塔 ‧ 京都嵐山 ‧ 上高地 ‧ 北海道 ‧ 沖繩">
+              <i class="fa-solid fa-torii-gate"></i>
+              <span>日本</span>
+            </button>
+            <button class="center-btn" data-center="korea" data-domain="world" title="韓國全境 24 處：首爾漢江 4K ‧ 盤浦噴泉 4K ‧ 弘大商圈 4K ‧ 東大門 DDP 4K ‧ 釜山廣安大橋 4K ‧ 景福宮 ‧ 濟州島">
+              <i class="fa-solid fa-landmark"></i>
+              <span>韓國</span>
+            </button>
+            <button class="center-btn" data-center="apac" data-domain="world" title="亞太與中東 24 處：雪梨港灣 4K ‧ 泰國蘇美島與曼谷 4K ‧ 新加坡 4K ‧ 紐西蘭奧克蘭 4K ‧ 峇里島 ‧ 香港維港 ‧ 麥加聖城">
+              <i class="fa-solid fa-umbrella-beach"></i>
+              <span>亞太</span>
+            </button>
+            <button class="center-btn" data-center="europe" data-domain="world" title="歐洲絕景 30 處：威尼斯里亞托橋與大運河 4K ‧ 倫敦泰晤士河 4K ‧ 阿姆斯特丹 4K ‧ 瑞士阿爾卑斯雪山 ‧ 巴黎鐵塔 ‧ 北歐極光峽灣鐵道">
+              <i class="fa-solid fa-mountain-sun"></i>
+              <span>歐洲</span>
+            </button>
+            <button class="center-btn" data-center="americas" data-domain="world" title="美洲奇觀 30 處：洛杉磯威尼斯海灘 4K ‧ 國際太空站俯瞰地球 4K ‧ 拉斯維加斯 4K ‧ SpaceX 星艦基地 4K ‧ 夏威夷 ‧ 紐約時代廣場 ‧ 尼加拉瀑布">
+              <i class="fa-solid fa-earth-americas"></i>
+              <span>美洲</span>
+            </button>
+            <button class="center-btn" data-center="polar" data-domain="nature" title="極地極光 26 處：芬蘭拉普蘭極光 4K ‧ 格陵蘭冰峽灣浮冰 4K ‧ 冰島活火山熔岩 4K ‧ 聖誕老人村 ‧ 阿拉斯加與北極熊 ‧ 南極門戶烏斯懷亞與企鵝棲地">
+              <i class="fa-solid fa-snowflake"></i>
+              <span>極地極光</span>
+            </button>
+            <button class="center-btn" data-center="rainforest" data-domain="nature" title="雨林生態 26 處：哥斯大黎加與巴拿馬熱帶雨林金剛鸚鵡／大嘴鳥／蜂鳥 ‧ 康乃爾森林飛羽 4K ‧ 秘魯厄瓜多雲霧雨林 ‧ 剛果雨林 ‧ 非洲納米比與波札那野生象群水坑">
+              <i class="fa-solid fa-tree"></i>
+              <span>雨林生態</span>
+            </button>
+            <button class="center-btn" data-center="ocean" data-domain="nature" title="海洋珊瑚 24 處：加勒比海庫拉索 4K 水下珊瑚礁 ‧ 蒙特雷灣療癒水母與海獺 ‧ 邁阿密海底珊瑚城 ‧ 馬約卡與馬德拉 4K 碧藍海灣">
+              <i class="fa-solid fa-water"></i>
+              <span>海洋珊瑚</span>
+            </button>
+            <button class="center-btn" data-center="scenic" data-domain="nature" title="絕美風景精選：瑞士阿爾卑斯雪山 ‧ 義大利埃特納活火山與多洛米蒂 ‧ 挪威峽灣 ‧ 富士山 ‧ 落磯山與尼加拉瀑布（依 4K 最高畫質 × 熱門度優先排序）">
+              <i class="fa-solid fa-mountain"></i>
+              <span>絕美風景</span>
+            </button>
+            <button class="center-btn" data-center="daynight" data-domain="nature" title="日夜極景實況：台灣白天自動看全球夜色與晨昏、台灣夜晚自動看全球陽光白晝（依 4K 最高畫質 × 熱門度優先排序）">
+              <i class="fa-solid fa-moon" style="color:#fbbf24;"></i>
+              <span>日夜極景</span>
+            </button>
+            <button class="center-btn" data-center="favorites" data-domain="favorites" title="我的最愛：自選跨區跨國專屬監視器收藏牆">
+              <i class="fa-solid fa-star" style="color:#fbbf24;"></i>
+              <span>收藏</span>
+              <span id="favCountBadge" class="fav-count-pill is-empty"></span>
+            </button>
+          </div>
+          <button type="button" id="btnCenterScrollRight" class="center-scroll-arrow is-hidden" aria-label="向右捲動分類" title="向右檢視更多分類">
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
           </button>
+        </div>
+        <div id="favDomainQuickBar" class="fav-domain-quick-bar">
+          <span>跨區自選牆</span>
+          <button type="button" class="fav-quick-jump-btn" onclick="window.monitorApp?.switchDomain('taiwan')">＋ 台灣路口</button>
+          <button type="button" class="fav-quick-jump-btn" onclick="window.monitorApp?.switchDomain('world')">＋ 全球4K</button>
         </div>
       </div>
 
-      <!-- 數位時鐘 -->
-      <div class="clock-widget">
-        <span id="clockTime" class="clock-time">--:--:--</span>
-        <span id="clockDate" class="clock-date">同步時間中</span>
+      <!-- 第二層右側：精簡宮格分割 + 單頁滿版開關 -->
+      <div class="layout-control-strip">
+        <div class="grid-selector">
+          <button class="grid-btn" data-grid="grid-1" title="單一焦點特寫"><i class="fa-regular fa-square"></i> 1格</button>
+          <button class="grid-btn" data-grid="grid-4" title="四分割標準"><i class="fa-solid fa-table-cells-large"></i> 4格</button>
+          <button class="grid-btn active" data-grid="grid-6" title="六重視角 (雙域模式：青埔3 + 新埔3各半均分)"><i class="fa-solid fa-table-cells"></i> 6格</button>
+          <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙埔模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
+          <button class="grid-btn" data-grid="grid-12" title="十二分割廣域監控"><i class="fa-solid fa-grip"></i> 12格</button>
+          <button class="grid-btn" data-grid="grid-16" title="十六分割廣域電視牆 (雙埔模式：青埔8 + 新埔8)"><i class="fa-solid fa-table-cells"></i> 16格</button>
+          <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
+        </div>
+        <button id="btnToggleAdaptive" class="mode-toggle-btn" aria-pressed="false" aria-label="切換單頁滿版或自由捲動模式" title="切換顯示模式：自由捲動最大化 (預設) / 單頁滿版 (免捲動)">
+          <i class="fa-solid fa-expand" aria-hidden="true"></i> <span>單頁滿版</span>
+        </button>
       </div>
     </div>
   </header>
@@ -11493,11 +12145,54 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
       </div>
     </section>
 
-    <!-- 右側即時環境與生活安全面板 -->
-    <aside class="sidebar-section">
+    <!-- 右側整合式智慧分頁環境與戰術雷達面板 -->
+    <aside id="sidebarSection" class="sidebar-section" data-active-tab="weather">
 
-      <!-- 區域 2：雙埔氣象面板 -->
-      <div class="widget-card" id="weatherWidgetCard">
+      <!-- 固定置頂：即時環境摘要脈動列 ＋ 5 大功能主題智慧分頁中樞 -->
+      <div id="sidebarHubDock" class="sidebar-hub-dock">
+        <div id="sidebarQuickSummaryStrip" class="sidebar-quick-summary" aria-label="即時環境與空域摘要">
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('weather')" title="切換至氣象環境分頁">
+            <span>🌤️</span><strong id="quickSumTemp">--°C</strong>
+          </span>
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('radar')" title="切換至雷達飛航分頁">
+            <span>✈️</span><strong id="quickSumFlights">掃描空域</strong>
+          </span>
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('transit')" title="切換至在地交通分頁">
+            <span>🚌</span><strong id="quickSumTransit">公車/單車</strong>
+          </span>
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="切換至身歷其境分頁">
+            <span>🧭</span><strong id="quickSumPulse">現場脈動</strong>
+          </span>
+        </div>
+        <div id="sidebarHubTabs" class="sidebar-hub-tabs" role="tablist" aria-label="右側資訊面板分類分頁">
+          <button type="button" class="sidebar-tab-btn active" role="tab" aria-selected="true" data-sidebar-tab="weather" onclick="window.monitorApp?.switchSidebarTab('weather')" title="即時氣象、匯率時差、空氣品質、降雨走勢與外出管家">
+            <i class="fa-solid fa-cloud-sun"></i>
+            <span>氣象</span>
+          </button>
+          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="radar" onclick="window.monitorApp?.switchSidebarTab('radar')" title="全球即時氣象雷達、動態飛機移動、地理雷達時間軸、地震震央與入出境航班">
+            <i class="fa-solid fa-tower-broadcast"></i>
+            <span>雷達飛航</span>
+            <span id="sidebarRadarTabBadge" class="sidebar-tab-badge"></span>
+          </button>
+          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="transit" onclick="window.monitorApp?.switchSidebarTab('transit')" title="最近公車站牌、YouBike / 全球共享單車、停車場空位與台鐵誤點">
+            <i class="fa-solid fa-bus"></i>
+            <span>交通</span>
+          </button>
+          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="immersive" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="各國廣播電台、自然環境音場、道地會話發音、文化速查、潮汐雪況、ISS 與即時新聞地標">
+            <i class="fa-solid fa-compass"></i>
+            <span>脈動</span>
+            <span id="sidebarAudioLiveDot" class="sidebar-audio-dot"></span>
+          </button>
+          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="all" onclick="window.monitorApp?.switchSidebarTab('all')" title="一次展開全部 4 大領域資訊卡片">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>全覽</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ 分組 1：氣象環境 (weather) ═══ -->
+      <!-- 即時氣象與 7 日趨勢面板 -->
+      <div class="widget-card" id="weatherWidgetCard" data-sidebar-group="weather">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-cloud-sun"></i> 即時氣象
@@ -11570,16 +12265,10 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
       </div>
 
       <!-- 跨國旅遊百寶箱 (台灣時差對照 ‧ 即時雙向匯率換算器 ‧ 極光 Kp 與觀景視野指標) -->
-      <div class="widget-card" id="intlTravelToolkitCard" style="display:none;"></div>
+      <div class="widget-card" id="intlTravelToolkitCard" data-sidebar-group="weather" style="display:none;"></div>
 
-      <!-- 當地機場即時入出境航班 & 天空飛航雷達 (FlightRadar24 / OpenSky / ADS-B 即時串接) -->
-      <div class="widget-card" id="flightRadarWidgetCard"></div>
-
-      <!-- 身歷其境 ‧ 當地即時生活脈動 (當地廣播環境音 ‧ 海岸浪高水溫 ‧ 黃金/藍調時刻與月相 ‧ 國家節慶 ‧ 周邊真實地標導覽) -->
-      <div class="widget-card" id="immersivePulseWidgetCard"></div>
-
-      <!-- 區域 3：空氣品質指標 (AQI) -->
-      <div class="widget-card" id="aqiWidgetCard">
+      <!-- 空氣品質指標 (AQI) -->
+      <div class="widget-card" id="aqiWidgetCard" data-sidebar-group="weather">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-mask-face"></i> 空氣品質
@@ -11617,8 +12306,8 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
         </div>
       </div>
 
-      <!-- 區域 3：未來 10 小時降雨機率柱狀圖 -->
-      <div class="widget-card" id="rainForecastWidget">
+      <!-- 未來 10 小時降雨機率柱狀圖 -->
+      <div class="widget-card" id="rainForecastWidget" data-sidebar-group="weather">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-umbrella"></i> 降雨機率走勢
@@ -11633,56 +12322,8 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
         </div>
       </div>
 
-      <!-- 全台與雙埔最近公車站牌即時到站動態看板 (TDX 空間座標精準串接) -->
-      <div id="busWidgetCard" class="widget-card">
-        <div class="widget-title-row">
-          <div class="widget-title">
-            <i class="fa-solid fa-bus" style="color: #38bdf8;"></i> <span id="busWidgetTitleText">最近公車站牌</span>
-          </div>
-          <div class="live-sync-badge" style="cursor:pointer;" onclick="window.localBusService?.refreshNow(true)" title="點擊立即重新同步最新公車到站秒數">
-            <span class="pulse-live-dot" id="busWidgetLiveDot"></span>
-            <span id="busWidgetSyncText">定位站牌中...</span>
-          </div>
-        </div>
-        <div id="busDualAreaBar" class="youbike-filter-pills" style="display:none;">
-          <button type="button" class="youbike-filter-btn active" data-bus-area="qp" onclick="window.localBusService?.switchDualArea('qp')">青埔最近站牌</button>
-          <button type="button" class="youbike-filter-btn" data-bus-area="bp" onclick="window.localBusService?.switchDualArea('bp')">新埔最近站牌</button>
-        </div>
-        <div id="busStopSwitcherBar" class="bus-stop-switcher"></div>
-        <div id="busWidgetBody" class="bus-widget-list">
-          <div style="padding:14px 10px; text-align:center; color:var(--text-dim); font-size:0.78rem;">
-            <i class="fa-solid fa-spinner fa-spin" style="color:#38bdf8; margin-right:6px;"></i> 正在串接附近最近公車站牌與即時到站動態...
-          </div>
-        </div>
-      </div>
-
-      <!-- 雙埔公共自行車 YouBike 2.0 即時動態看板 (置於降雨機率走勢下方) -->
-      <div id="youbikeWidgetCard" class="widget-card">
-        <div class="widget-title-row">
-          <div class="widget-title">
-            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike車況</span>
-          </div>
-          <div class="live-sync-badge">
-            <span class="pulse-live-dot"></span>
-            <span id="youbikeSyncText">同步中...</span>
-          </div>
-        </div>
-        <div id="youbikeFilterBar" class="youbike-filter-pills">
-          <button type="button" class="youbike-filter-btn active" data-yb-filter="all" onclick="window.weatherMonitor?.filterYouBike('all', this)">雙埔全部</button>
-          <button type="button" class="youbike-filter-btn" data-yb-filter="qp" onclick="window.weatherMonitor?.filterYouBike('qp', this)">青埔 5 站</button>
-          <button type="button" class="youbike-filter-btn" data-yb-filter="bp" onclick="window.weatherMonitor?.filterYouBike('bp', this)">新埔 2 站</button>
-        </div>
-        <div id="youbikeStationList" class="youbike-station-list">
-          <!-- 由 JS 動態注入 YouBike 站點與車況 -->
-        </div>
-      </div>
-
-      <!-- 周邊路外停車場即時剩餘空位 ＆ 台鐵即時誤點看板 -->
-      <div id="traParkingWidgetCard" class="widget-card"></div>
-
-
-      <!-- 區域 4：生活安全管家與 4 大外出指標 -->
-      <div class="widget-card">
+      <!-- 生活安全管家與 4 大外出指標 -->
+      <div class="widget-card" id="lifeAssistantWidgetCard" data-sidebar-group="weather">
         <div class="widget-title-row">
           <div class="widget-title">
             <i class="fa-solid fa-bell"></i> 生活外出管家
@@ -11697,11 +12338,12 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
         </div>
       </div>
 
-      <!-- 區域 5：氣象雷達回波圖 (台灣中央氣象署 4 圖層 ‧ 跨國自動切換 Windy 全球即時氣象雷達 4 圖層) -->
-      <div id="cwaRadarWidgetCard" class="widget-card">
+      <!-- ═══ 分組 2：雷達飛航戰情室 (radar) ═══ -->
+      <!-- 氣象雷達回波圖 (台灣中央氣象署 4 圖層 ‧ 跨國 Windy 全球即時氣象雷達 ‧ 疊加 60fps 動態飛機與真實風場流線) -->
+      <div id="cwaRadarWidgetCard" class="widget-card" data-sidebar-group="radar">
         <div class="widget-title-row">
           <div class="widget-title">
-            <i class="fa-solid fa-radar"></i> <span id="radarCardTitleText">氣象署雷達回波</span>
+            <i class="fa-solid fa-tower-broadcast" style="color:#00f0ff;"></i> <span id="radarCardTitleText">氣象署雷達回波</span>
           </div>
           <span id="radarUpdateTime" class="widget-badge">最新同步</span>
         </div>
@@ -11714,7 +12356,7 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
           <button class="radar-layer-btn" data-layer="O-A0038-001.png" onclick="window.weatherMonitor.switchRadarLayer('O-A0038-001.png', this)" title="全台即時氣溫分佈圖">全台氣溫</button>
         </div>
 
-        <!-- 跨國全球即時氣象雷達切換列 (日本 / 韓國 / 亞太 / 歐洲 / 美洲) -->
+        <!-- 跨國全球即時氣象雷達切換列 -->
         <div id="radarIntlLayerBar" class="radar-layer-bar" style="display:none;">
           <button class="radar-layer-btn active" data-intl-overlay="radar" onclick="window.weatherMonitor?.switchIntlRadarOverlay('radar', this)" title="全球即時降雨都卜勒雷達">降雨雷達</button>
           <button class="radar-layer-btn" data-intl-overlay="wind" onclick="window.weatherMonitor?.switchIntlRadarOverlay('wind', this)" title="全球即時風場與氣流">即時風場</button>
@@ -11760,8 +12402,8 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
         <div id="weatherRadarLockedBar" class="w-radar-locked-bar" style="display:none;"></div>
       </div>
 
-      <!-- 區域 7：周遭地理雷達地圖 -->
-      <div class="widget-card radar-map-card">
+      <!-- 周遭地理雷達地圖 (每秒平滑移動飛機 × 2.5小時雲雨動態時間軸 × 紅外線衛星 × ISS 軌道 × 即時震央) -->
+      <div id="geoRadarWidgetCard" class="widget-card radar-map-card" data-sidebar-group="radar">
         <div class="widget-title-row">
           <div id="radarMapTitle" class="widget-title">
             <i class="fa-solid fa-map-location-dot"></i> 周遭地理雷達
@@ -11803,6 +12445,61 @@ html[data-theme="light"] .radar-hud-telemetry-grid {
 
         <div id="geoRadarCockpitHud" class="geo-radar-cockpit-hud" style="display:none;"></div>
       </div>
+
+      <!-- 當地機場即時入出境航班 & 天空飛航雷達清單 -->
+      <div class="widget-card" id="flightRadarWidgetCard" data-sidebar-group="radar"></div>
+
+      <!-- ═══ 分組 3：在地交通 (transit) ═══ -->
+      <!-- 全台與雙埔最近公車站牌即時到站動態看板 -->
+      <div id="busWidgetCard" class="widget-card" data-sidebar-group="transit">
+        <div class="widget-title-row">
+          <div class="widget-title">
+            <i class="fa-solid fa-bus" style="color: #38bdf8;"></i> <span id="busWidgetTitleText">最近公車站牌</span>
+          </div>
+          <div class="live-sync-badge" style="cursor:pointer;" onclick="window.localBusService?.refreshNow(true)" title="點擊立即重新同步最新公車到站秒數">
+            <span class="pulse-live-dot" id="busWidgetLiveDot"></span>
+            <span id="busWidgetSyncText">定位站牌中...</span>
+          </div>
+        </div>
+        <div id="busDualAreaBar" class="youbike-filter-pills" style="display:none;">
+          <button type="button" class="youbike-filter-btn active" data-bus-area="qp" onclick="window.localBusService?.switchDualArea('qp')">青埔最近站牌</button>
+          <button type="button" class="youbike-filter-btn" data-bus-area="bp" onclick="window.localBusService?.switchDualArea('bp')">新埔最近站牌</button>
+        </div>
+        <div id="busStopSwitcherBar" class="bus-stop-switcher"></div>
+        <div id="busWidgetBody" class="bus-widget-list">
+          <div style="padding:14px 10px; text-align:center; color:var(--text-dim); font-size:0.78rem;">
+            <i class="fa-solid fa-spinner fa-spin" style="color:#38bdf8; margin-right:6px;"></i> 正在串接附近最近公車站牌與即時到站動態...
+          </div>
+        </div>
+      </div>
+
+      <!-- 雙埔公共自行車 YouBike 2.0 / 全球共享單車即時動態看板 -->
+      <div id="youbikeWidgetCard" class="widget-card" data-sidebar-group="transit">
+        <div class="widget-title-row">
+          <div class="widget-title">
+            <i class="fa-solid fa-bicycle" style="color: #facc15;"></i> <span id="youbikeTitleText">YouBike車況</span>
+          </div>
+          <div class="live-sync-badge">
+            <span class="pulse-live-dot"></span>
+            <span id="youbikeSyncText">同步中...</span>
+          </div>
+        </div>
+        <div id="youbikeFilterBar" class="youbike-filter-pills">
+          <button type="button" class="youbike-filter-btn active" data-yb-filter="all" onclick="window.weatherMonitor?.filterYouBike('all', this)">雙埔全部</button>
+          <button type="button" class="youbike-filter-btn" data-yb-filter="qp" onclick="window.weatherMonitor?.filterYouBike('qp', this)">青埔 5 站</button>
+          <button type="button" class="youbike-filter-btn" data-yb-filter="bp" onclick="window.weatherMonitor?.filterYouBike('bp', this)">新埔 2 站</button>
+        </div>
+        <div id="youbikeStationList" class="youbike-station-list">
+          <!-- 由 JS 動態注入 YouBike 站點與車況 -->
+        </div>
+      </div>
+
+      <!-- 周邊路外停車場即時剩餘空位 ＆ 台鐵即時誤點看板 -->
+      <div id="traParkingWidgetCard" class="widget-card" data-sidebar-group="transit"></div>
+
+      <!-- ═══ 分組 4：身歷其境在地脈動 (immersive) ═══ -->
+      <!-- 當地廣播環境音 ‧ 白噪音混音 ‧ 道地會話真人發音 ‧ 文化速查 ‧ 海洋潮汐 ‧ 山岳雪況 ‧ ISS ‧ 即時新聞與維基地標 -->
+      <div class="widget-card" id="immersivePulseWidgetCard" data-sidebar-group="immersive"></div>
 
     </aside>
   </main>
@@ -15324,6 +16021,10 @@ class WeatherEnvironmentMonitor {
         precipMm: Math.max(Number(qpCur.precipitation) || 0, Number(bpCur.precipitation) || 0)
       });
     }
+    const qsTempEl = document.getElementById('quickSumTemp');
+    if (qsTempEl) {
+      qsTempEl.textContent = `${Math.round(Number(qpCur.temperature_2m) || 0)}°/${Math.round(Number(bpCur.temperature_2m) || 0)}°C`;
+    }
 
     const qpW = this.getWeatherCodeInfo(qpCur.weather_code);
     const bpW = this.getWeatherCodeInfo(bpCur.weather_code);
@@ -15759,6 +16460,10 @@ class WeatherEnvironmentMonitor {
         gustKmh: Math.round(Number(cur.wind_gusts_10m) || 0),
         precipMm: Number(cur.precipitation) || 0
       });
+    }
+    const qsTempEl = document.getElementById('quickSumTemp');
+    if (qsTempEl && cur.temperature_2m != null) {
+      qsTempEl.textContent = `${Math.round(Number(cur.temperature_2m))}°C`;
     }
     const weatherInfo = this.getWeatherCodeInfo(cur.weather_code);
     const uvInfo = this.getUvIndexInfo(cur.uv_index);
@@ -17356,12 +18061,14 @@ class WeatherEnvironmentMonitor {
   refreshRadar(latOverride = null, lonOverride = null) {
     if (typeof document === 'undefined') return;
     const app = typeof window !== 'undefined' ? window.monitorApp : null;
-    const targetLat = Number.isFinite(Number(latOverride))
+    const hasLatOverride = latOverride !== null && latOverride !== undefined && latOverride !== '' && Number.isFinite(Number(latOverride));
+    const hasLonOverride = lonOverride !== null && lonOverride !== undefined && lonOverride !== '' && Number.isFinite(Number(lonOverride));
+    const targetLat = hasLatOverride
       ? Number(latOverride)
-      : (Number.isFinite(Number(this.activeSingleParams?.lat)) ? Number(this.activeSingleParams.lat) : (Number(app?.currentCenterData?.lat) || 35.6895));
-    const targetLon = Number.isFinite(Number(lonOverride))
+      : (this.activeSingleParams?.lat != null && Number.isFinite(Number(this.activeSingleParams.lat)) ? Number(this.activeSingleParams.lat) : (Number(app?.currentCenterData?.lat) || 35.6895));
+    const targetLon = hasLonOverride
       ? Number(lonOverride)
-      : (Number.isFinite(Number(this.activeSingleParams?.lon)) ? Number(this.activeSingleParams.lon) : (Number(app?.currentCenterData?.lon) || 139.6917));
+      : (this.activeSingleParams?.lon != null && Number.isFinite(Number(this.activeSingleParams.lon)) ? Number(this.activeSingleParams.lon) : (Number(app?.currentCenterData?.lon) || 139.6917));
 
     const isTwCoords = typeof LocalGeoBusService === 'undefined' || LocalGeoBusService.isTaiwanCoords(targetLat, targetLon);
     const isIntl = (app && typeof app.isInternationalCenter === 'function' && app.isInternationalCenter()) ||
@@ -17391,7 +18098,7 @@ class WeatherEnvironmentMonitor {
         const srcKey = `${ov}:${targetLat.toFixed(2)},${targetLon.toFixed(2)}`;
         if (this._lastWindySrcKey !== srcKey) {
           this._lastWindySrcKey = srcKey;
-          windyFrame.src = `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km/h&zoom=7&overlay=${encodeURIComponent(ov)}&product=${ov === 'radar' ? 'radar' : 'ecmwf'}&level=surface&lat=${targetLat.toFixed(3)}&lon=${targetLon.toFixed(3)}`;
+          windyFrame.src = `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=%C2%B0C&metricWind=km/h&zoom=7&overlay=${encodeURIComponent(ov)}&product=${ov === 'radar' ? 'radar' : 'ecmwf'}&level=surface&lat=${targetLat.toFixed(3)}&lon=${targetLon.toFixed(3)}&detailLat=${targetLat.toFixed(3)}&detailLon=${targetLon.toFixed(3)}&marker=true`;
         }
       }
       if (radarTime) radarTime.innerText = '即時互動圖層';
@@ -20479,8 +21186,36 @@ class NeighborhoodRadarMap {
     `;
   }
 
-  // 點擊側邊欄航班卡片或氣象雷達飛機時，自動平移地理雷達地圖至該架飛機座標並開啟資訊視窗
+  // 當「雷達飛航」或「全覽」分頁從隱藏切換為顯示時，重算 Leaflet 畫布尺寸並還原精準視野
+  onContainerShown() {
+    if (!this.map) return;
+    setTimeout(() => {
+      if (!this.map) return;
+      try {
+        this.map.invalidateSize(false);
+        if (this._lastFlightPayload && this._lastFlightPayload.flights && this._lastFlightPayload.flights.length > 0 && this.viewPreset === 'airspace') {
+          this._applyActiveViewPreset(false);
+        } else if (this._lastCenterInfo && Number.isFinite(Number(this._lastCenterInfo.lat)) && Number.isFinite(Number(this._lastCenterInfo.lon))) {
+          const curZoom = this.map.getZoom();
+          if (!Number.isFinite(curZoom) || curZoom <= 2) {
+            this._applyActiveViewPreset(false);
+          }
+        }
+      } catch (_) {}
+    }, 55);
+  }
+
+  // 點擊側邊欄航班卡片或氣象雷達飛機時，自動切換至雷達飛航分頁並平移地理雷達地圖至該架飛機座標
   focusFlightMarker(flightId, lat, lon) {
+    if (typeof window !== 'undefined' && window.monitorApp) {
+      if (window.monitorApp.isSidebarCollapsed) {
+        const btnSide = document.getElementById('btnToggleSidebar');
+        if (btnSide) btnSide.click();
+      }
+      if (window.monitorApp.activeSidebarTab !== 'radar' && window.monitorApp.activeSidebarTab !== 'all' && typeof window.monitorApp.switchSidebarTab === 'function') {
+        window.monitorApp.switchSidebarTab('radar', false);
+      }
+    }
     if (!this.map) return;
     if (!this.layerState.flights) {
       this.toggleTacticalLayer('flights');
@@ -20490,18 +21225,23 @@ class NeighborhoodRadarMap {
     const liveTarget = flights.find(f => String(f.id || f.flightNo) === String(flightId));
     const fLat = liveTarget ? Number(liveTarget.lat) : Number(lat);
     const fLon = liveTarget ? Number(liveTarget.lon) : Number(lon);
-    if (Number.isFinite(fLat) && Number.isFinite(fLon)) {
-      const targetZoom = Math.max(this.map.getZoom() || 10, 10);
-      this.map.setView([fLat, fLon], targetZoom, { animate: true });
-    }
-    const marker = this.flightMarkerMap && this.flightMarkerMap.get(String(flightId));
-    if (marker && typeof marker.openPopup === 'function') {
-      marker.openPopup();
-    }
-    const mapCard = typeof document !== 'undefined' ? document.getElementById('leafletMap') : null;
-    if (mapCard && typeof mapCard.scrollIntoView === 'function') {
-      try { mapCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
-    }
+    const doPanAndOpen = () => {
+      if (!this.map) return;
+      try { this.map.invalidateSize(false); } catch (_) {}
+      if (Number.isFinite(fLat) && Number.isFinite(fLon)) {
+        const targetZoom = Math.max(this.map.getZoom() || 10, 10);
+        this.map.setView([fLat, fLon], targetZoom, { animate: true });
+      }
+      const marker = this.flightMarkerMap && this.flightMarkerMap.get(String(flightId));
+      if (marker && typeof marker.openPopup === 'function') {
+        marker.openPopup();
+      }
+      const mapCard = typeof document !== 'undefined' ? document.getElementById('leafletMap') : null;
+      if (mapCard && typeof mapCard.scrollIntoView === 'function') {
+        try { mapCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+      }
+    };
+    setTimeout(doPanAndOpen, 70);
   }
 }
 
@@ -36896,6 +37636,22 @@ class FlightRadarService {
       </div>
       <div class="flight-radar-list">${listHtml}</div>
     `;
+
+    // 同步更新右側置頂摘要條與「雷達飛航」分頁即時飛機數徽章
+    const qsFlEl = document.getElementById('quickSumFlights');
+    if (qsFlEl) {
+      qsFlEl.textContent = sum.total > 0 ? `${ap.iata} ${sum.total}架` : `${ap.iata} 掃描中`;
+    }
+    const tabBadge = document.getElementById('sidebarRadarTabBadge');
+    if (tabBadge) {
+      if (sum.total > 0) {
+        tabBadge.textContent = String(sum.total);
+        tabBadge.classList.add('is-visible');
+      } else {
+        tabBadge.textContent = '';
+        tabBadge.classList.remove('is-visible');
+      }
+    }
   }
 }
 
@@ -38741,6 +39497,20 @@ class ImmersiveLocalPulseService {
       </div>
     ` : '';
 
+    const sec = this.pulseSection || 'all';
+    const showAudio = (sec === 'all' || sec === 'audio');
+    const showNature = (sec === 'all' || sec === 'nature');
+    const showExplore = (sec === 'all' || sec === 'explore');
+
+    const subtabsHtml = `
+      <div class="immersive-subtabs" role="tablist" aria-label="身歷其境子分類">
+        <button type="button" class="immersive-subtab-btn ${sec === 'all' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('all')">✨ 全部</button>
+        <button type="button" class="immersive-subtab-btn ${sec === 'audio' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('audio')">🎧 音場語言</button>
+        <button type="button" class="immersive-subtab-btn ${sec === 'nature' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('nature')">🌊 天地太空</button>
+        <button type="button" class="immersive-subtab-btn ${sec === 'explore' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('explore')">📰 新聞地標</button>
+      </div>
+    `;
+
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
@@ -38749,8 +39519,10 @@ class ImmersiveLocalPulseService {
         </div>
         <span class="widget-badge">${eHtml(culture.countryName)} (${eHtml(this.countryCode)}) ‧ 現場感知</span>
       </div>
-      ${radioBoxHtml}
-      ${phraseBoxHtml}
+      ${subtabsHtml}
+      ${showAudio ? radioBoxHtml : ''}
+      ${showAudio ? phraseBoxHtml : ''}
+      ${showNature ? `
       <div class="immersive-astro-grid">
         <div class="immersive-mini-card">
           <div class="immersive-mini-label"><i class="fa-solid fa-camera-retro" style="color:${astro.lightColor};"></i>當地光影與攝影時刻</div>
@@ -38766,9 +39538,28 @@ class ImmersiveLocalPulseService {
       ${marineHtml}
       ${alpineHtml}
       ${issHtml}
-      ${newsHtml}
-      ${landmarksHtml}
+      ` : ''}
+      ${showExplore ? newsHtml : ''}
+      ${showExplore ? landmarksHtml : ''}
     `;
+
+    // 同步右側「脈動」分頁音場播放指示點與頂部摘要文字
+    const isAnyAudio = Boolean(this.isPlayingRadio || this.ambientType);
+    const audioDot = document.getElementById('sidebarAudioLiveDot');
+    if (audioDot) audioDot.classList.toggle('is-live', isAnyAudio);
+    const qsPulse = document.getElementById('quickSumPulse');
+    if (qsPulse) {
+      qsPulse.textContent = isAnyAudio
+        ? '🔊 音場播放中'
+        : `${culture.countryName}脈動`;
+    }
+  }
+
+  setPulseSection(sectionKey = 'all') {
+    if (!['all', 'audio', 'nature', 'explore'].includes(sectionKey)) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    this.pulseSection = sectionKey;
+    this.renderWidget();
   }
 }
 
@@ -39358,6 +40149,94 @@ class MonitorApp {
     }
   }
 
+  // ==========================================================================
+  // 全站 4 大領域導航分群 & 右側 5 大主題分頁中樞控制引擎
+  // ==========================================================================
+  getDomainForCenter(centerId) {
+    const map = {
+      nearby: 'taiwan', dual: 'taiwan', qingpu: 'taiwan', banqiao: 'taiwan', tourist: 'taiwan',
+      world: 'world', japan: 'world', korea: 'world', apac: 'world', europe: 'world', americas: 'world',
+      polar: 'nature', rainforest: 'nature', ocean: 'nature', scenic: 'nature', daynight: 'nature',
+      favorites: 'favorites'
+    };
+    return map[centerId] || 'taiwan';
+  }
+
+  syncDomainNavForCenter(centerId) {
+    const domain = this.getDomainForCenter(centerId);
+    this.activeDomain = domain;
+    if (!this._lastCenterByDomain) {
+      this._lastCenterByDomain = { taiwan: 'dual', world: 'world', nature: 'polar', favorites: 'favorites' };
+    }
+    if (centerId) this._lastCenterByDomain[domain] = centerId;
+
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('.domain-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.domainTab === domain);
+    });
+    const switchGroup = document.querySelector('.center-switch-group');
+    if (switchGroup) {
+      switchGroup.setAttribute('data-active-domain', domain);
+    }
+    const indicator = document.getElementById('activeDomainIndicator');
+    if (indicator) {
+      const tagMap = {
+        taiwan: '<i class="fa-solid fa-house-signal"></i> 台灣生活',
+        world: '<i class="fa-solid fa-earth-asia"></i> 世界城市',
+        nature: '<i class="fa-solid fa-mountain-sun"></i> 自然奇景',
+        favorites: '<i class="fa-solid fa-star" style="color:#fbbf24;"></i> 收藏牆'
+      };
+      indicator.innerHTML = tagMap[domain] || tagMap.taiwan;
+    }
+    const favQuickBar = document.getElementById('favDomainQuickBar');
+    if (favQuickBar) {
+      favQuickBar.classList.toggle('is-visible', domain === 'favorites');
+    }
+    if (typeof this.updateCenterScrollUI === 'function') {
+      requestAnimationFrame(() => this.updateCenterScrollUI());
+    }
+  }
+
+  switchDomain(domainId) {
+    if (!['taiwan', 'world', 'nature', 'favorites'].includes(domainId)) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    if (!this._lastCenterByDomain) {
+      this._lastCenterByDomain = { taiwan: 'dual', world: 'world', nature: 'polar', favorites: 'favorites' };
+    }
+    const targetCenter = this._lastCenterByDomain[domainId] || (domainId === 'world' ? 'world' : (domainId === 'nature' ? 'polar' : (domainId === 'favorites' ? 'favorites' : 'dual')));
+    this.syncDomainNavForCenter(targetCenter);
+    if (targetCenter !== this.currentCenterId) {
+      this.switchCenter(targetCenter);
+    }
+  }
+
+  switchSidebarTab(tabId = 'weather', savePref = true) {
+    const valid = ['weather', 'radar', 'transit', 'immersive', 'all'];
+    const nextTab = valid.includes(tabId) ? tabId : 'weather';
+    this.activeSidebarTab = nextTab;
+    if (savePref && typeof localStorage !== 'undefined') {
+      try { localStorage.setItem('dpu_sidebar_tab', nextTab); } catch (_) {}
+    }
+    if (typeof document === 'undefined') return;
+    const aside = document.getElementById('sidebarSection') || document.querySelector('.sidebar-section');
+    if (aside) {
+      aside.setAttribute('data-active-tab', nextTab);
+    }
+    document.querySelectorAll('.sidebar-tab-btn').forEach(btn => {
+      const isAct = btn.dataset.sidebarTab === nextTab;
+      btn.classList.toggle('active', isAct);
+      btn.setAttribute('aria-selected', String(isAct));
+    });
+    if (nextTab === 'radar' || nextTab === 'all') {
+      if (this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
+        this.radarMap.onContainerShown();
+      }
+      if (typeof window !== 'undefined' && window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.drawFrame === 'function') {
+        requestAnimationFrame(() => window.weatherSkyTacticalOverlay.drawFrame(0.016));
+      }
+    }
+  }
+
   // 初始化系統
   async init() {
     if (this._initDone) return;
@@ -39385,6 +40264,14 @@ class MonitorApp {
 
     // 啟動首頁：檢查網址是否帶有跨裝置視訊牆同步參數 (#wall= 或 #sync=)，否則啟動預設雙埔
     const importedWall = await this.tryImportWallFromUrlHash();
+    let savedTab = 'weather';
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const t = localStorage.getItem('dpu_sidebar_tab');
+        if (['weather', 'radar', 'transit', 'immersive', 'all'].includes(t)) savedTab = t;
+      } catch (_) {}
+    }
+    this.switchSidebarTab(savedTab, false);
     await this.switchCenter(importedWall ? 'favorites' : this.currentCenterId);
 
     // 持久化還原與 ARIA 狀態同步：若使用者上次收合了側邊欄，自動套用收合狀態
@@ -39399,8 +40286,8 @@ class MonitorApp {
       if (btnToggleSidebar) {
         btnToggleSidebar.classList.remove('active');
         btnToggleSidebar.setAttribute('aria-expanded', 'false');
-        btnToggleSidebar.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>';
-        btnToggleSidebar.title = '點擊展開右側在地即時氣象、AQI與地圖生活指標';
+        btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>資訊面板</span>';
+        btnToggleSidebar.title = '點擊展開右側氣象、雷達飛航、交通與身歷其境面板';
       }
     } else if (btnToggleSidebar) {
       btnToggleSidebar.setAttribute('aria-expanded', 'true');
@@ -39820,16 +40707,27 @@ class MonitorApp {
 
   updateFavBadge() {
     const badge = document.getElementById('favCountBadge');
-    if (!badge) return;
+    const domainBadge = document.getElementById('domainFavBadge');
     const count = this.getFavorites().length;
-    if (count > 0) {
-      badge.textContent = String(count);
-      badge.classList.remove('is-empty');
-      badge.classList.add('is-visible');
-    } else {
-      badge.textContent = '';
-      badge.classList.add('is-empty');
-      badge.classList.remove('is-visible');
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = String(count);
+        badge.classList.remove('is-empty');
+        badge.classList.add('is-visible');
+      } else {
+        badge.textContent = '';
+        badge.classList.add('is-empty');
+        badge.classList.remove('is-visible');
+      }
+    }
+    if (domainBadge) {
+      if (count > 0) {
+        domainBadge.textContent = String(count);
+        domainBadge.classList.add('is-visible');
+      } else {
+        domainBadge.textContent = '';
+        domainBadge.classList.remove('is-visible');
+      }
     }
   }
 
@@ -40814,17 +41712,17 @@ class MonitorApp {
           if (this.isSidebarCollapsed) {
             container.classList.add('sidebar-collapsed');
             btnToggleSidebar.classList.remove('active');
-            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>';
-            btnToggleSidebar.title = '點擊展開右側在地即時氣象、AQI與地圖生活指標';
+            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>資訊面板</span>';
+            btnToggleSidebar.title = '點擊展開右側氣象、雷達飛航、交通與身歷其境面板';
           } else {
             container.classList.remove('sidebar-collapsed');
             btnToggleSidebar.classList.add('active');
-            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-circle-info"></i> <span>當地資訊</span>';
+            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>資訊面板</span>';
             btnToggleSidebar.title = '點擊收合右側資訊面板，讓視訊牆全寬展開';
           }
         }
-        if (this.radarMap && this.radarMap.map) {
-          setTimeout(() => this.radarMap.map.invalidateSize(), 460);
+        if (!this.isSidebarCollapsed && this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
+          setTimeout(() => this.radarMap.onContainerShown(), 420);
         }
         this.applyAdaptiveViewportFit();
       });
@@ -41658,6 +42556,7 @@ class MonitorApp {
     if (typeof document !== 'undefined' && document.body) {
       document.body.dataset.themeCenter = centerId;
     }
+    this.syncDomainNavForCenter(centerId);
     this.syncCenterLocalization(centerId);
     this.filterKeyword = '';
     this.filterTag = 'all';
