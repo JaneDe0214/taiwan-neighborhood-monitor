@@ -313,6 +313,12 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("date.nager.at"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.wheretheiss.at"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("news.google.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("linear-1224.frequency.stream"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("directes-tv-int.3catdirectes.cat"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("53ff3982.wurl.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("volcanoes.usgs.gov"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("weather.cs.uit.no"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("pixelcaster.com"))
 
         assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
         assertFalse(WebAssetRouting.isNativeInterceptHost("evil-opendata.vip"))
