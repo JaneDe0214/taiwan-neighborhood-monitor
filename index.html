@@ -13516,6 +13516,223 @@ window.buildYoutubeEmbedUrl = function buildYoutubeEmbedUrl(videoId) {
 };
 
 /**
+ * 全站統一「溫柔舒適女聲」語音合成引擎 (GentleVoiceEngine)
+ * - Android 原生 App 優先呼叫 AndroidBridge.speakText (原生 Google/系統 TextToSpeech 溫柔女聲評分選取)
+ * - 瀏覽器端預熱 speechSynthesis.getVoices()，以神經網路女聲評分演算法優先選用 HsiaoChen/HsiaoYu/Nanami/Aria/Google 女聲/Yating/Sayaka
+ * - 主動排除男聲與舊版偏粗 SAPI5 桌機聲線 (Hanhan/Haruka/Desktop)，並套用柔和語速與溫暖音調曲線
+ */
+window.GentleVoiceEngine = (function createGentleVoiceEngine() {
+  let cachedVoices = [];
+  let pendingWaiters = [];
+
+  const MALE_PATTERNS = [
+    /\bmale\b/i, /\bman\b/i, /男/,
+    /zhiwei|yunjhe|yunjian|yunxi|kangkang|david|mark|george|daniel|richard|james|guy|ryan|christopher|eric|steffan|ichiro|keita|otoya|injoon|paul|henri|stefan|conrad|cosimo|diego|pablo|alvaro|antonio|duarte|niwat|namminh|ardi|osman|alex|fred|bruce|ralph|albert|junior|aaron|arthur|oliver|martin|thomas|luca|jorge|carlos|henrik|finn|harri|soren|marek|jakub|tamas|nestoras|ahmet|avri|hamed|sagar|daudi|babek|gunnar/i,
+    /cmn-tw-x-ctd|ja-jp-x-jad|en-us-x-iom|en-us-x-iol|en-us-x-tpd|ko-kr-x-koc|ko-kr-x-kod/i
+  ];
+
+  const TIER1_GENTLE_FEMALE = [
+    { re: /hsiaochen|曉臻/i, bonus: 175 },
+    { re: /hsiaoyu|曉雨/i, bonus: 170 },
+    { re: /nanami|mayu|shiori/i, bonus: 175 },
+    { re: /sunhi|seohyeon/i, bonus: 175 },
+    { re: /aria|jenny|ava|emma|sonia|libby|natasha|clara/i, bonus: 170 },
+    { re: /google\s*uk\s*english\s*female/i, bonus: 165 },
+    { re: /google\s*(國語（臺灣）|國語\(臺灣\)|國語|日本語|한국의|français|deutsch|italiano|español|português|us\s*english)/i, bonus: 160 },
+    { re: /meijia|美佳|kyoko|o-ren|yuna|samantha|karen|moira|tessa|allison|zoe|siri/i, bonus: 150 },
+    { re: /denise|vivienne|am[eé]lie|audrey|hortense|julie|katja|amala|anna|hedda|elsa|isabella|alice|elvira|dalia|m[oó]nica|paulina|helena|francisca|raquel|luciana|premwadee|kanya|hoaimy|linh|gadis|damayanti|yasmin|colette|fenna|ellen|sofie|alva|pernille|nora|noora|satu|christel|sara|zofia|zosia|vlasta|zuzana|noemi|t[uü]nde|athina|melina|emel|yelda|hila|carmit|zariyah|laila|mariam|hemkala|zuri|rehema|banu|gudrun/i, bonus: 155 },
+    { re: /yating|雅婷|sayaka/i, bonus: 130 },
+    { re: /ayumi|heami|hazel|susan|zira/i, bonus: 110 },
+    { re: /cmn-tw-x-ctc|cmn-tw-x-cte|ja-jp-x-jab|ja-jp-x-jac|en-us-x-sfg|en-us-x-tpf|en-us-x-iob|ko-kr-x-ism|ko-kr-x-kob/i, bonus: 145 }
+  ];
+
+  const LEGACY_COARSE_RE = /hanhan|涵涵|haruka|desktop|espeak/i;
+  const NEURAL_SOFT_RE = /natural|neural|online|wavenet|enhanced|premium|siri|google/i;
+
+  function refreshVoices() {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof window.speechSynthesis.getVoices !== 'function') {
+      return [];
+    }
+    const list = window.speechSynthesis.getVoices() || [];
+    if (list.length > 0) {
+      cachedVoices = list;
+      if (pendingWaiters.length > 0) {
+        const w = pendingWaiters.splice(0, pendingWaiters.length);
+        w.forEach(fn => { try { fn(list); } catch (_) {} });
+      }
+    }
+    return cachedVoices;
+  }
+
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      refreshVoices();
+      if (typeof window.speechSynthesis.addEventListener === 'function') {
+        window.speechSynthesis.addEventListener('voiceschanged', refreshVoices);
+      } else {
+        window.speechSynthesis.onvoiceschanged = refreshVoices;
+      }
+    } catch (_) {}
+  }
+
+  function isMaleVoice(name) {
+    return MALE_PATTERNS.some(re => re.test(name));
+  }
+
+  function scoreVoice(voice, targetLang) {
+    const vLang = String(voice?.lang || '').replace(/_/g, '-').toLowerCase();
+    const tLang = String(targetLang || 'zh-TW').replace(/_/g, '-').toLowerCase();
+    const vPrefix = vLang.split('-')[0];
+    const tPrefix = tLang.split('-')[0];
+    if (!vPrefix || vPrefix !== tPrefix) return -9999;
+
+    const name = String(voice?.name || '');
+    let score = 0;
+
+    // 語系與區域精準度
+    if (vLang === tLang) {
+      score += 120;
+    } else if (tLang === 'zh-tw' && (vLang.includes('tw') || vLang.includes('hant'))) {
+      score += 115;
+    } else if (tLang === 'zh-tw' && (vLang.includes('cn') || vLang.includes('hk') || vLang.includes('hans'))) {
+      score -= 45;
+    } else {
+      score += 50;
+    }
+
+    // 嚴格排除男聲
+    if (isMaleVoice(name)) {
+      score -= 320;
+    }
+
+    // 溫柔女聲名稱加權
+    for (const entry of TIER1_GENTLE_FEMALE) {
+      if (entry.re.test(name)) {
+        score += entry.bonus;
+        break;
+      }
+    }
+
+    // 神經網路／雲端高自然度加權
+    if (NEURAL_SOFT_RE.test(name)) {
+      score += 55;
+    }
+    if (/\bfemale\b|女/i.test(name)) {
+      score += 30;
+    }
+    if (!voice.localService) {
+      score += 18;
+    }
+
+    // 降權舊版偏粗 SAPI5 桌機語音 (僅於無更柔和聲線時保底)
+    if (LEGACY_COARSE_RE.test(name)) {
+      score -= 55;
+    }
+
+    return score;
+  }
+
+  function pickBestVoice(voices, langCode = 'zh-TW') {
+    const list = Array.isArray(voices) ? voices : [];
+    let best = null;
+    let bestScore = -9998;
+    for (const v of list) {
+      const s = scoreVoice(v, langCode);
+      if (s > bestScore) {
+        bestScore = s;
+        best = v;
+      }
+    }
+    return best;
+  }
+
+  function getAcousticProfile(voice, style = 'phrase') {
+    const name = String(voice?.name || '');
+    const isNeural = NEURAL_SOFT_RE.test(name);
+    const isCoarse = LEGACY_COARSE_RE.test(name);
+    const isMale = isMaleVoice(name);
+
+    // 依聲線質地微調語速、音調與音量，讓發音聽起來更溫柔舒適不刺耳
+    if (style === 'alert') {
+      if (isMale) return { rate: 0.94, pitch: 1.16, volume: 0.94 };
+      if (isCoarse) return { rate: 0.94, pitch: 1.11, volume: 0.95 };
+      return isNeural ? { rate: 0.97, pitch: 1.04, volume: 1.0 } : { rate: 0.95, pitch: 1.08, volume: 0.98 };
+    }
+    if (style === 'alarm') {
+      if (isMale) return { rate: 0.92, pitch: 1.17, volume: 0.92 };
+      if (isCoarse) return { rate: 0.90, pitch: 1.12, volume: 0.90 };
+      return isNeural ? { rate: 0.93, pitch: 1.05, volume: 0.95 } : { rate: 0.92, pitch: 1.09, volume: 0.94 };
+    }
+    // 預設 phrase：柔和、慢節奏、溫暖女聲
+    if (isMale) return { rate: 0.89, pitch: 1.18, volume: 0.85 };
+    if (isCoarse) return { rate: 0.88, pitch: 1.13, volume: 0.86 };
+    return isNeural ? { rate: 0.90, pitch: 1.05, volume: 0.92 } : { rate: 0.89, pitch: 1.09, volume: 0.90 };
+  }
+
+  function speakWeb(text, langCode, style, voices) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+      return null;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = langCode || 'zh-TW';
+      const chosen = pickBestVoice(voices, utter.lang);
+      if (chosen) utter.voice = chosen;
+      const profile = getAcousticProfile(chosen, style);
+      utter.rate = profile.rate;
+      utter.pitch = profile.pitch;
+      utter.volume = profile.volume;
+      window.speechSynthesis.speak(utter);
+      return { voiceName: chosen?.name || 'default', ...profile };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function speak(text, langCode = 'zh-TW', style = 'phrase') {
+    const cleanText = String(text || '').trim();
+    if (!cleanText) return null;
+
+    // 1. Android 原生 App 優先走原生 TextToSpeech 溫柔女聲管線
+    try {
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.speakText === 'function') {
+        const handled = window.AndroidBridge.speakText(cleanText, String(langCode || 'zh-TW'), String(style || 'phrase'));
+        if (handled) {
+          return { voiceName: 'AndroidNativeGentleFemaleTTS', rate: 0.90, pitch: 1.07, volume: 0.95 };
+        }
+      }
+    } catch (_) {}
+
+    // 2. Web Speech API：若尚未載入語音清單則短暫等待 voiceschanged (最多 220ms) 以避免首次誤用系統粗聲預設
+    const voices = refreshVoices();
+    if (voices.length > 0) {
+      return speakWeb(cleanText, langCode, style, voices);
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      let fired = false;
+      const runOnce = (vList) => {
+        if (fired) return;
+        fired = true;
+        speakWeb(cleanText, langCode, style, vList || refreshVoices());
+      };
+      pendingWaiters.push(runOnce);
+      setTimeout(() => runOnce(refreshVoices()), 220);
+      return { voiceName: 'pending-gentle-female' };
+    }
+    return null;
+  }
+
+  return {
+    speak,
+    pickBestVoice,
+    scoreVoice,
+    getAcousticProfile,
+    getVoices: refreshVoices
+  };
+})();
+
+/**
  * 區域環境即時影像監控系統 - 全能自適應視訊播放引擎 (HLS + FLV + MJPEG)
  */
 
@@ -22893,10 +23110,10 @@ class EarthquakeEmergencyMonitor {
         for (let i = 0; i < 3; i++) {
           const osc = this.audioCtx.createOscillator();
           const gain = this.audioCtx.createGain();
-          osc.type = 'sawtooth';
+          osc.type = 'triangle';
           osc.frequency.setValueAtTime(880, now + i * 0.25);
           osc.frequency.setValueAtTime(660, now + i * 0.25 + 0.12);
-          gain.gain.setValueAtTime(0.3, now + i * 0.25);
+          gain.gain.setValueAtTime(0.24, now + i * 0.25);
           gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.25 + 0.22);
           osc.connect(gain);
           gain.connect(this.audioCtx.destination);
@@ -22906,11 +23123,12 @@ class EarthquakeEmergencyMonitor {
       }
     } catch (_) {}
     try {
-      if (eq && typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') {
-        const u = new SpeechSynthesisUtterance(`地震速報，震央${eq.place || '近海'}，規模${eq.mag || ''}，預估震度${eq.estIntensity || 4}級，請注意安全。`);
-        u.lang = 'zh-TW';
-        u.rate = 1.05;
-        window.speechSynthesis.speak(u);
+      if (eq && typeof window !== 'undefined' && window.GentleVoiceEngine) {
+        window.GentleVoiceEngine.speak(
+          `地震速報，震央${eq.place || '近海'}，規模${eq.mag || ''}，預估震度${eq.estIntensity || 4}級，請注意安全。`,
+          'zh-TW',
+          'alert'
+        );
       }
     } catch (_) {}
   }
@@ -43942,12 +44160,8 @@ class ArrivalAlarmManager {
     const minPhrase = leftMin <= 1 ? '即將進站' : `預計在 ${leftMin} 分鐘內進站`;
     const speechText = `進站提醒：${alarm.stopName || ''}，${alarm.title}往${alarm.destination}，${minPhrase}，請準備搭車。`;
     try {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(speechText);
-        utter.lang = 'zh-TW';
-        utter.rate = 1.02;
-        window.speechSynthesis.speak(utter);
+      if (typeof window !== 'undefined' && window.GentleVoiceEngine) {
+        window.GentleVoiceEngine.speak(speechText, 'zh-TW', 'alarm');
       }
     } catch (_) {}
 
@@ -47410,22 +47624,11 @@ class ImmersiveLocalPulseService {
       }
     } catch (_) {}
 
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') {
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(nativeText);
-        utter.lang = langCode || 'en-US';
-        utter.rate = 0.96;
-        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-        const prefix = String(langCode || 'en').split('-')[0].toLowerCase();
-        const exactVoice = voices.find(v => String(v.lang || '').toLowerCase() === String(langCode).toLowerCase()) ||
-                           voices.find(v => String(v.lang || '').toLowerCase().startsWith(prefix));
-        if (exactVoice) utter.voice = exactVoice;
-        window.speechSynthesis.speak(utter);
-      } catch (_) {}
+    if (typeof window !== 'undefined' && window.GentleVoiceEngine) {
+      window.GentleVoiceEngine.speak(nativeText, langCode || 'en-US', 'phrase');
     }
     if (typeof window !== 'undefined' && window.showToast) {
-      window.showToast(`🔊 當地語音發音：${nativeText}${zhMeaning ? ` (${zhMeaning})` : ''}`, 'info');
+      window.showToast(`🔊 溫柔女聲發音：${nativeText}${zhMeaning ? ` (${zhMeaning})` : ''}`, 'info');
     }
   }
 

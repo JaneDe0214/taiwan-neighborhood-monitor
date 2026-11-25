@@ -19,6 +19,8 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.MediaStore
+import android.speech.tts.TextToSpeech
+import android.speech.tts.Voice
 import android.util.Base64
 import android.util.Rational
 import android.view.HapticFeedbackConstants
@@ -1243,6 +1245,13 @@ class AndroidNativeBridge(
     private val lastFetchTimes = ConcurrentHashMap<String, Long>()
     @Volatile
     private var isForegroundActive: Boolean = true
+    private var ttsEngine: TextToSpeech? = null
+    @Volatile
+    private var ttsReady: Boolean = false
+    @Volatile
+    private var ttsInitializing: Boolean = false
+    @Volatile
+    private var pendingSpeech: Triple<String, String, String>? = null
 
     fun setForegroundActive(active: Boolean) {
         isForegroundActive = active
@@ -1251,13 +1260,110 @@ class AndroidNativeBridge(
     fun isForeground(): Boolean = isForegroundActive
 
     /**
-     * 取消所有背景協程與網路連線，防止 Activity 銷毀後記憶體洩漏
+     * 取消所有背景協程、網路連線與原生語音引擎，防止 Activity 銷毀後記憶體洩漏
      */
     fun cancelScope() {
         bridgeScope.cancel()
         try {
             okHttpClient.dispatcher.cancelAll()
         } catch (_: Exception) {}
+        pendingSpeech = null
+        ttsReady = false
+        ttsInitializing = false
+        try {
+            ttsEngine?.stop()
+            ttsEngine?.shutdown()
+        } catch (_: Exception) {}
+        ttsEngine = null
+    }
+
+    private fun speakWithNativeTts(text: String, langCode: String, style: String) {
+        val tts = ttsEngine ?: return
+        try {
+            val normTag = langCode.ifBlank { "zh-TW" }.replace('_', '-')
+            val targetLocale = Locale.forLanguageTag(normTag)
+            val availableVoices = try { tts.voices?.toList().orEmpty() } catch (_: Exception) { emptyList() }
+            if (availableVoices.isNotEmpty()) {
+                val candidates = availableVoices.map { v ->
+                    GentleVoiceSelector.VoiceCandidate(
+                        name = v.name.orEmpty(),
+                        languageTag = v.locale?.toLanguageTag().orEmpty(),
+                        quality = v.quality,
+                        isNetworkRequired = v.isNetworkConnectionRequired,
+                        features = v.features.orEmpty()
+                    )
+                }
+                val bestIdx = GentleVoiceSelector.pickBestVoiceIndex(candidates, normTag)
+                if (bestIdx in availableVoices.indices) {
+                    tts.voice = availableVoices[bestIdx]
+                } else {
+                    tts.language = targetLocale
+                }
+            } else {
+                tts.language = targetLocale
+            }
+            val (rate, pitch) = GentleVoiceSelector.acousticParams(style)
+            tts.setSpeechRate(rate)
+            tts.setPitch(pitch)
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "dpu_gentle_${System.currentTimeMillis()}")
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * 原生溫柔女聲語音朗讀橋接 (優先選用高自然度女性聲線，套用柔和語速與溫暖音調)
+     */
+    @JavascriptInterface
+    fun speakText(text: String, langCode: String, style: String): Boolean {
+        if (!isTrustedOrigin() || !isActivityAlive()) return false
+        val safeText = text.trim().take(400)
+        if (safeText.isEmpty()) return false
+        val safeLang = langCode.trim().ifEmpty { "zh-TW" }
+        val safeStyle = style.trim().ifEmpty { "phrase" }
+        activity.runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
+            if (ttsReady && ttsEngine != null) {
+                speakWithNativeTts(safeText, safeLang, safeStyle)
+            } else {
+                pendingSpeech = Triple(safeText, safeLang, safeStyle)
+                if (!ttsInitializing && ttsEngine == null) {
+                    ttsInitializing = true
+                    try {
+                        ttsEngine = TextToSpeech(activity.applicationContext) { status ->
+                            ttsInitializing = false
+                            if (status == TextToSpeech.SUCCESS && isActivityAlive()) {
+                                ttsReady = true
+                                val queued = pendingSpeech
+                                pendingSpeech = null
+                                if (queued != null) {
+                                    activity.runOnUiThread {
+                                        if (isActivityAlive()) {
+                                            speakWithNativeTts(queued.first, queued.second, queued.third)
+                                        }
+                                    }
+                                }
+                            } else {
+                                ttsReady = false
+                                pendingSpeech = null
+                            }
+                        }
+                    } catch (_: Exception) {
+                        ttsInitializing = false
+                        ttsReady = false
+                        pendingSpeech = null
+                    }
+                }
+            }
+        }
+        return true
+    }
+
+    @JavascriptInterface
+    fun stopSpeaking() {
+        if (!isTrustedOrigin()) return
+        pendingSpeech = null
+        activity.runOnUiThread {
+            try { ttsEngine?.stop() } catch (_: Exception) {}
+        }
     }
 
     @JavascriptInterface
@@ -2925,5 +3031,88 @@ internal object WebAssetRouting {
             }
         }
         return if (out.size() > 0) out.toByteArray() else null
+    }
+}
+
+/**
+ * 原生 Android TextToSpeech 溫柔女聲評分與聲學參數選擇器（純 Kotlin 邏輯，供 AndroidNativeBridge 與單元測試共用）
+ */
+internal object GentleVoiceSelector {
+    data class VoiceCandidate(
+        val name: String,
+        val languageTag: String,
+        val quality: Int,
+        val isNetworkRequired: Boolean,
+        val features: Set<String> = emptySet()
+    )
+
+    private val maleRegex = Regex(
+        "\\b(male|man)\\b|男|zhiwei|yunjhe|yunjian|yunxi|kangkang|david|mark|george|daniel|ichiro|keita|injoon|paul|stefan|cosimo|pablo|cmn-tw-x-ctd|ja-jp-x-jad|en-us-x-iom|en-us-x-iol|en-us-x-tpd|ko-kr-x-koc|ko-kr-x-kod",
+        RegexOption.IGNORE_CASE
+    )
+    private val gentleFemaleRegex = Regex(
+        "female|女|cmn-tw-x-ctc|cmn-tw-x-cte|ja-jp-x-jab|ja-jp-x-jac|en-us-x-sfg|en-us-x-tpf|en-us-x-iob|en-us-x-iog|ko-kr-x-ism|ko-kr-x-kob|hsiaochen|hsiaoyu|yating|meijia|nanami|kyoko|sayaka|ayumi|sunhi|yuna|aria|jenny|samantha|ava|emma|sonia|denise|katja|elsa|elvira",
+        RegexOption.IGNORE_CASE
+    )
+    private val legacyCoarseRegex = Regex("hanhan|haruka|espeak|pico", RegexOption.IGNORE_CASE)
+
+    fun scoreCandidate(c: VoiceCandidate, targetLangTag: String): Int {
+        val vLang = c.languageTag.replace('_', '-').lowercase(Locale.US)
+        val tLang = targetLangTag.ifBlank { "zh-TW" }.replace('_', '-').lowercase(Locale.US)
+        val vPrefix = vLang.substringBefore('-')
+        val tPrefix = tLang.substringBefore('-')
+        if (vPrefix.isEmpty() || vPrefix != tPrefix) return Int.MIN_VALUE
+
+        var score = 0
+        when {
+            vLang == tLang -> score += 120
+            tLang == "zh-tw" && (vLang.contains("tw") || vLang.contains("hant")) -> score += 115
+            tLang == "zh-tw" && (vLang.contains("cn") || vLang.contains("hk") || vLang.contains("hans")) -> score -= 45
+            else -> score += 50
+        }
+
+        val featLower = c.features.joinToString(" ").lowercase(Locale.US)
+        val isMale = maleRegex.containsMatchIn(c.name) ||
+            (featLower.contains("male") && !featLower.contains("female"))
+        if (isMale) {
+            score -= 320
+        }
+        if (gentleFemaleRegex.containsMatchIn(c.name) || featLower.contains("female")) {
+            score += 160
+        }
+        if (legacyCoarseRegex.containsMatchIn(c.name)) {
+            score -= 55
+        }
+        if (c.quality >= Voice.QUALITY_VERY_HIGH) {
+            score += 50
+        } else if (c.quality >= Voice.QUALITY_HIGH) {
+            score += 35
+        }
+        // 同品質優先選用本機低延遲封包，避免網路波動卡頓
+        if (!c.isNetworkRequired) {
+            score += 12
+        }
+        return score
+    }
+
+    fun pickBestVoiceIndex(candidates: List<VoiceCandidate>, targetLangTag: String): Int {
+        var bestIdx = -1
+        var bestScore = Int.MIN_VALUE
+        candidates.forEachIndexed { idx, cand ->
+            val s = scoreCandidate(cand, targetLangTag)
+            if (s > bestScore) {
+                bestScore = s
+                bestIdx = idx
+            }
+        }
+        return bestIdx
+    }
+
+    fun acousticParams(style: String): Pair<Float, Float> {
+        return when (style.lowercase(Locale.US)) {
+            "alert" -> 0.95f to 1.06f
+            "alarm" -> 0.92f to 1.07f
+            else -> 0.89f to 1.08f
+        }
     }
 }

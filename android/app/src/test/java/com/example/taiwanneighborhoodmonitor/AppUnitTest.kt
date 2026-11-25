@@ -360,4 +360,30 @@ class AppUnitTest {
         val extracted = WebAssetRouting.extractFirstJpegFrame(ByteArrayInputStream(prefix + expected + trailing))
         assertArrayEquals(expected, extracted)
     }
+
+    @Test
+    fun gentleVoiceSelector_prefersTaiwanAndJapanGentleFemaleVoicesOverMale() {
+        val twCandidates = listOf(
+            GentleVoiceSelector.VoiceCandidate("cmn-tw-x-ctd-local", "zh-TW", 400, false), // 男聲
+            GentleVoiceSelector.VoiceCandidate("cmn-cn-x-ccc-local", "zh-CN", 500, false), // 非台灣區域
+            GentleVoiceSelector.VoiceCandidate("cmn-tw-x-ctc-local", "zh-TW", 400, false)  // 台灣溫柔女聲
+        )
+        assertEquals(2, GentleVoiceSelector.pickBestVoiceIndex(twCandidates, "zh-TW"))
+
+        val jpCandidates = listOf(
+            GentleVoiceSelector.VoiceCandidate("ja-jp-x-jad-local", "ja-JP", 400, false), // 男聲
+            GentleVoiceSelector.VoiceCandidate("ja-jp-x-jab-local", "ja-JP", 400, false)  // 日本女聲
+        )
+        assertEquals(1, GentleVoiceSelector.pickBestVoiceIndex(jpCandidates, "ja-JP"))
+
+        val enCandidates = listOf(
+            GentleVoiceSelector.VoiceCandidate("en-us-x-iom-local", "en-US", 500, false), // 男聲
+            GentleVoiceSelector.VoiceCandidate("en-us-x-tpf-local", "en-US", 400, false)  // 溫柔英文女聲
+        )
+        assertEquals(1, GentleVoiceSelector.pickBestVoiceIndex(enCandidates, "en-US"))
+
+        val (rate, pitch) = GentleVoiceSelector.acousticParams("phrase")
+        assertTrue(rate in 0.85f..0.95f)
+        assertTrue(pitch in 1.04f..1.12f)
+    }
 }
