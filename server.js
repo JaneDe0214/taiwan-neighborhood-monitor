@@ -101,7 +101,7 @@ const cache = {
 // 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
 const BOTE_ORIGIN = 'https://hls.bote.gov.taipei';
 const BOTE_REFERER = 'https://hls.bote.gov.taipei/live/index.html';
-const BOTE_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const BOTE_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
 const boteHttpsAgent = new https.Agent({
   keepAlive: true,
   maxSockets: 24,
@@ -408,7 +408,7 @@ function fetchRemoteText(url, acceptHeader, timeoutMs = 8000, hopCount = 0) {
 
     const req = clientMod.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
         'Accept': acceptHeader,
         'Accept-Encoding': 'gzip, deflate, br'
       }
@@ -503,7 +503,7 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'Content-Length': Buffer.byteLength(postData),
         'Accept-Encoding': 'gzip, deflate, br',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
         'Referer': 'https://www.thsrc.com.tw/ArticleContent/a3b630bb-1066-4352-a1ef-58c7b4e8ef7c',
         'Origin': 'https://www.thsrc.com.tw'
       }

@@ -407,6 +407,16 @@ class MainActivity : ComponentActivity() {
                 }
                 val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
                 val tempWebView = WebView(this@MainActivity)
+                var popupDestroyed = false
+                val destroyPopupOnce: () -> Unit = {
+                    if (!popupDestroyed) {
+                        popupDestroyed = true
+                        try {
+                            tempWebView.stopLoading()
+                            tempWebView.destroy()
+                        } catch (_: Exception) {}
+                    }
+                }
                 tempWebView.webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
                         val u = req?.url
@@ -415,10 +425,12 @@ class MainActivity : ComponentActivity() {
                                 Toast.makeText(this@MainActivity, "此裝置未安裝可開啟外部連結的應用程式", Toast.LENGTH_SHORT).show()
                             }
                         }
-                        v?.destroy()
+                        destroyPopupOnce()
                         return true
                     }
                 }
+                // 防護逾時清理：避免外部彈窗未觸發導向時永久殘留 WebView 導致記憶體洩漏
+                tempWebView.postDelayed(destroyPopupOnce, 10_000L)
                 transport.webView = tempWebView
                 resultMsg.sendToTarget()
                 return true
@@ -796,7 +808,7 @@ class MainActivity : ComponentActivity() {
                     .url(currentUrl)
                     .header("Referer", "https://hls.bote.gov.taipei/live/index.html")
                     .header("Origin", "https://hls.bote.gov.taipei")
-                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
                     .header("Accept", "*/*")
                 if (!rangeHeader.isNullOrBlank()) {
                     reqBuilder.header("Range", rangeHeader)
@@ -896,7 +908,7 @@ class MainActivity : ComponentActivity() {
                         handedOff = true
                         ByteArrayInputStream(ByteArray(0))
                     } else {
-                        val rawStream = resp.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+                        val rawStream = resp.body.byteStream()
                         object : FilterInputStream(rawStream) {
                             override fun close() {
                                 try {
@@ -945,7 +957,7 @@ class MainActivity : ComponentActivity() {
             val isMapTile = isOsmTile || host == "server.arcgisonline.com"
             val reqBuilder = Request.Builder()
                 .url(urlString)
-                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36 TaiwanNeighborhoodMonitor/1.0")
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 15; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 TaiwanNeighborhoodMonitor/2.0")
                 .header("Accept", "*/*")
             if (isOsmTile) {
                 reqBuilder.header("Referer", "https://appassets.androidplatform.net/")
@@ -995,7 +1007,7 @@ class MainActivity : ComponentActivity() {
                     handedOff = true
                     ByteArrayInputStream(ByteArray(0))
                 } else {
-                    val rawStream = response.body?.byteStream() ?: ByteArrayInputStream(ByteArray(0))
+                    val rawStream = response.body.byteStream()
                     object : FilterInputStream(rawStream) {
                         override fun close() {
                             try {
@@ -1192,8 +1204,13 @@ class MainActivity : ComponentActivity() {
             }
         } catch (_: Exception) {}
         networkCallback = null
-        synchronized(pendingLocationRequests) {
+        val pendingLocSnapshot = synchronized(pendingLocationRequests) {
+            val copy = pendingLocationRequests.toList()
             pendingLocationRequests.clear()
+            copy
+        }
+        for ((orig, cb) in pendingLocSnapshot) {
+            try { cb.invoke(orig, false, false) } catch (_: Exception) {}
         }
         hideCustomFullscreenView()
         if (::nativeBridge.isInitialized) {
@@ -1519,7 +1536,7 @@ class AndroidNativeBridge(
                         if (response.isSuccessful) {
                             val contentType = response.header("Content-Type").orEmpty()
                             val isMultipart = contentType.contains("multipart/x-mixed-replace", ignoreCase = true)
-                            response.body?.byteStream()?.use { stream ->
+                            response.body.byteStream().use { stream ->
                                 val extracted = if (isMultipart) {
                                     WebAssetRouting.extractFirstJpegFrame(stream)
                                 } else {
@@ -1588,7 +1605,7 @@ class AndroidNativeBridge(
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val stream = response.body?.byteStream() ?: return ""
+                    val stream = response.body.byteStream()
                     val bounded = WebAssetRouting.readBoundedBytes(stream, maxBytes = 10 * 1024 * 1024, rejectOnOverflow = true) ?: return ""
                     String(bounded, Charsets.UTF_8)
                 } else {
@@ -1643,7 +1660,7 @@ class AndroidNativeBridge(
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    val stream = response.body?.byteStream() ?: return ""
+                    val stream = response.body.byteStream()
                     val bounded = WebAssetRouting.readBoundedBytes(stream, maxBytes = 8 * 1024 * 1024, rejectOnOverflow = true) ?: return ""
                     String(bounded, Charsets.UTF_8)
                 } else {
@@ -2016,8 +2033,9 @@ class AndroidNativeBridge(
             )
             for (url in cloudUrls) {
                 val res = fetchHttp(url, 3500)
-                if (res.isNotBlank() && res.trim().startsWith("{")) {
-                    dataMemoryCache["parking"] = res
+                val trimmed = res.trim()
+                if (trimmed.startsWith("{") && (try { JSONObject(trimmed).has("lots") } catch (_: Exception) { false })) {
+                    dataMemoryCache["parking"] = trimmed
                     lastFetchTimes["parking"] = System.currentTimeMillis()
                     notifyDataUpdated("parking")
                     return@withContext
@@ -2084,8 +2102,9 @@ class AndroidNativeBridge(
             )
             for (url in cloudUrls) {
                 val res = fetchHttp(url, 3500)
-                if (res.isNotBlank() && res.trim().startsWith("{")) {
-                    dataMemoryCache["thsr"] = res
+                val trimmed = res.trim()
+                if (trimmed.startsWith("{") && (try { val obj = JSONObject(trimmed); obj.has("south") && obj.has("north") } catch (_: Exception) { false })) {
+                    dataMemoryCache["thsr"] = trimmed
                     lastFetchTimes["thsr"] = System.currentTimeMillis()
                     notifyDataUpdated("thsr")
                     return@withContext
@@ -2146,8 +2165,9 @@ class AndroidNativeBridge(
             )
             for (url in cloudUrls) {
                 val res = fetchHttp(url, 3500)
-                if (res.isNotBlank() && res.trim().startsWith("{")) {
-                    dataMemoryCache["tymetro"] = res
+                val trimmed = res.trim()
+                if (trimmed.startsWith("{") && (try { val obj = JSONObject(trimmed); obj.has("south") && obj.has("north") } catch (_: Exception) { false })) {
+                    dataMemoryCache["tymetro"] = trimmed
                     lastFetchTimes["tymetro"] = System.currentTimeMillis()
                     notifyDataUpdated("tymetro")
                     return@withContext
@@ -2564,16 +2584,16 @@ internal object TransitParsers {
             val headers = splitCsvLine(lines[0]).map { it.trim().trim('"') }
             if (headers.isEmpty()) return result
 
-            val idxSno = headers.indexOf("sno")
-            val idxSna = headers.indexOf("sna")
-            if (idxSno < 0 && idxSna < 0) return result
+            val headerIndexMap = HashMap<String, Int>(headers.size * 2)
+            headers.forEachIndexed { idx, h -> headerIndexMap.putIfAbsent(h, idx) }
+            if (!headerIndexMap.containsKey("sno") && !headerIndexMap.containsKey("sna")) return result
 
             for (lineIdx in 1 until lines.size) {
                 val cols = splitCsvLine(lines[lineIdx])
                 if (cols.size < headers.size / 2) continue
 
                 fun col(name: String): String {
-                    val idx = headers.indexOf(name)
+                    val idx = headerIndexMap[name] ?: return ""
                     return if (idx in cols.indices) cols[idx].trim().trim('"') else ""
                 }
 
@@ -2805,11 +2825,16 @@ internal object WebAssetRouting {
         return m?.groupValues?.getOrNull(1) ?: "global"
     }
 
+    private class DirectByteArrayOutputStream(initialCapacity: Int = 8192) : ByteArrayOutputStream(initialCapacity) {
+        fun rawBuffer(): ByteArray = buf
+        fun rawSize(): Int = count
+    }
+
     /**
-     * 從無盡 multipart/x-mixed-replace MJPEG 串流串流式擷取第一張完整 JPEG 畫格 (逐塊讀取並解析區段長度跳過 APP1/EXIF 內嵌縮圖之 FF D9，直到 SOS 後真結尾即刻停止讀取，上限 8 MB 防溢位)
+     * 從無盡 multipart/x-mixed-replace MJPEG 串流串流式擷取第一張完整 JPEG 畫格 (採零複製內部緩衝區 O(N) 掃描，跳過 APP1/EXIF 內嵌縮圖之 FF D9，直到 SOS 後真結尾即刻停止讀取，上限 8 MB 防溢位)
      */
     fun extractFirstJpegFrame(input: InputStream, maxScanBytes: Int = 8 * 1024 * 1024): ByteArray? {
-        val out = ByteArrayOutputStream()
+        val out = DirectByteArrayOutputStream(16384)
         val buf = ByteArray(4096)
         var totalRead = 0
         var startIdx = -1
@@ -2822,10 +2847,12 @@ internal object WebAssetRouting {
             if (n <= 0) break
             out.write(buf, 0, n)
             totalRead += n
-            val raw = out.toByteArray()
+            val raw = out.rawBuffer()
+            val rawLen = out.rawSize()
 
             if (startIdx < 0) {
-                for (i in 0 until raw.size - 1) {
+                val searchFrom = maxOf(0, rawLen - n - 1)
+                for (i in searchFrom until rawLen - 1) {
                     if ((raw[i].toInt() and 0xFF) == 0xFF && (raw[i + 1].toInt() and 0xFF) == 0xD8) {
                         startIdx = i
                         scanPos = i + 2
@@ -2835,7 +2862,7 @@ internal object WebAssetRouting {
             }
             if (startIdx < 0) continue
 
-            while (scanPos < raw.size - 1) {
+            while (scanPos < rawLen - 1) {
                 val b0 = raw[scanPos].toInt() and 0xFF
                 if (!inEntropyData) {
                     if (b0 != 0xFF) {
@@ -2843,8 +2870,8 @@ internal object WebAssetRouting {
                         continue
                     }
                     var ffEnd = scanPos
-                    while (ffEnd < raw.size && (raw[ffEnd].toInt() and 0xFF) == 0xFF) ffEnd++
-                    if (ffEnd >= raw.size) break
+                    while (ffEnd < rawLen && (raw[ffEnd].toInt() and 0xFF) == 0xFF) ffEnd++
+                    if (ffEnd >= rawLen) break
                     val marker = raw[ffEnd].toInt() and 0xFF
                     val afterMarker = ffEnd + 1
                     if (marker == 0x00 || (marker in 0xD0..0xD8)) {
@@ -2854,10 +2881,10 @@ internal object WebAssetRouting {
                     if (marker == 0xD9) {
                         return raw.copyOfRange(startIdx, afterMarker)
                     }
-                    if (afterMarker + 2 > raw.size) break
+                    if (afterMarker + 2 > rawLen) break
                     val segLen = ((raw[afterMarker].toInt() and 0xFF) shl 8) or (raw[afterMarker + 1].toInt() and 0xFF)
                     val nextPos = afterMarker + maxOf(2, segLen)
-                    if (nextPos > raw.size) break
+                    if (nextPos > rawLen) break
                     scanPos = nextPos
                     if (marker == 0xDA) {
                         inEntropyData = true

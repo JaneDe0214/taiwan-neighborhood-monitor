@@ -4,13 +4,13 @@ plugins {
 
 android {
     namespace = "com.example.taiwanneighborhoodmonitor"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         applicationId = "com.example.taiwanneighborhoodmonitor"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0.0"
     }
 
     buildTypes {
@@ -43,7 +43,7 @@ kotlin {
 
 // 建置前自動將根目錄最新前端檔案與即時快照資料集同步至 Android assets，徹底消除雙端版本落差
 val repoRootDir = rootProject.projectDir.parentFile
-val syncWebAssets by tasks.registering(Copy::class) {
+val syncWebAssets = tasks.register<Copy>("syncWebAssets") {
     from(repoRootDir) {
         include("index.html", "manifest.json", "dpuLogo.jpg", "dpuLogo_icon.png", "favicon.png")
     }
@@ -71,5 +71,5 @@ dependencies {
   // 單元測試
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation("org.json:json:20240303")
+  testImplementation(libs.org.json)
 }

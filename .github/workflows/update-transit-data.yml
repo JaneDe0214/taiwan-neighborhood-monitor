@@ -26,14 +26,14 @@ jobs:
       contents: write
     steps:
       - name: 檢出專案程式碼 (淺層檢出極速加速)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 2
 
       - name: 設定 Node.js 環境
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
 
       - name: 執行全量大眾運輸與 YouBike 同步中樞腳本
         run: node scripts/sync-all.js

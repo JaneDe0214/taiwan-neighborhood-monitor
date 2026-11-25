@@ -344,4 +344,20 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.buildSnapshotFallbackUrls("javascript:alert(1)").isEmpty())
         assertTrue(WebAssetRouting.buildSnapshotFallbackUrls(null).isEmpty())
     }
+
+    @Test
+    fun extractFirstJpegFrame_handlesLargeMultiChunkFrameZeroCopy() {
+        val prefix = ByteArray(4095) { 0x2D } // 刻意讓 FF D8 跨 4096-byte 讀取邊界
+        val sosHeader = byteArrayOf(
+            0xFF.toByte(), 0xD8.toByte(),
+            0xFF.toByte(), 0xDA.toByte(), 0x00, 0x04, 0x11, 0x22
+        )
+        val entropyPayload = ByteArray(20000) { idx -> if (idx % 97 == 0) 0x55 else 0x33 }
+        val eoi = byteArrayOf(0xFF.toByte(), 0xD9.toByte())
+        val trailing = "--boundary\r\nNEXT_FRAME".toByteArray()
+        val expected = sosHeader + entropyPayload + eoi
+
+        val extracted = WebAssetRouting.extractFirstJpegFrame(ByteArrayInputStream(prefix + expected + trailing))
+        assertArrayEquals(expected, extracted)
+    }
 }

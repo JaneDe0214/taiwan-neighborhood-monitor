@@ -28,7 +28,7 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
 
     const req = mod.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8',
         'Accept-Encoding': 'gzip, deflate, br'
       }
@@ -449,9 +449,14 @@ async function syncParking(outDir) {
       { key: 'SJO', lat: 9.9939, lon: -84.2088 },
       { key: 'GIG', lat: -22.8099, lon: -43.2505 },
       { key: 'CUR', lat: 12.1889, lon: -68.9598 },
-      { key: 'PMI', lat: 39.5517, lon: 2.7388 }
+      { key: 'PMI', lat: 39.5517, lon: 2.7388 },
+      { key: 'KTM', lat: 27.6966, lon: 85.3591 },
+      { key: 'JRO', lat: -3.4294, lon: 37.0745 },
+      { key: 'GYD', lat: 40.4675, lon: 50.0467 },
+      { key: 'TER', lat: 38.7618, lon: -27.0908 },
+      { key: 'CTU', lat: 30.5785, lon: 103.9471 }
     ];
-    const newsCountries = ['TW', 'JP', 'KR', 'AU', 'SG', 'TH', 'CH', 'GB', 'FR', 'IT', 'NO', 'FI', 'IS', 'US', 'CA', 'CR', 'BR', 'CW', 'ES'];
+    const newsCountries = ['TW', 'JP', 'KR', 'AU', 'SG', 'TH', 'CH', 'GB', 'FR', 'IT', 'NO', 'FI', 'IS', 'US', 'CA', 'CR', 'BR', 'CW', 'ES', 'NP', 'TZ', 'AZ'];
 
     const [lots, qpParking, bpParking, qpBus, bpBus, qpTra, bpTra, fwLive, flightHubList, newsCountryList] = await Promise.all([
       server.fetchThsrParkingData().catch(() => []),
