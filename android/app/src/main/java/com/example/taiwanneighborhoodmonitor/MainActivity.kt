@@ -2904,6 +2904,8 @@ internal object WebAssetRouting {
         "kyoto-u.ac.jp",
         "shinshu-u.ac.jp",
         "iwate-u.ac.jp",
+        "fujiyama.tv",
+        "fujigoko.tv",
         "france24.com",
         "skycdp.com",
         "flightradar24.com",

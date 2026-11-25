@@ -304,6 +304,8 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("dqga3jatxofgx.cloudfront.net"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("iptv.peer.biz"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("media-tyo.hls.nhkworld.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("fujiyama.tv"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("cam.fujigoko.tv"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("data-cloud.flightradar24.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("opendata.adsb.fi"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.adsbdb.com"))
