@@ -34,6 +34,7 @@
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:description="@string/app_desc"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -51,8 +52,7 @@
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
-            android:screenOrientation="unspecified">
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode">
             <!-- 手機版主畫面啟動器 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

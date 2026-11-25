@@ -9348,15 +9348,29 @@ html[data-theme="light"] .cam-map-tag:hover {
   color: #0369a1 !important;
 }
 
+html[data-theme="light"] .area-tag {
+  font-weight: 700;
+}
+html[data-theme="light"] .area-tag.tag-qp {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0369a1;
+  border-color: rgba(2, 132, 199, 0.34);
+}
+html[data-theme="light"] .area-tag.tag-bp {
+  background: rgba(109, 40, 217, 0.11);
+  color: #5b21b6;
+  border-color: rgba(109, 40, 217, 0.30);
+}
+
 html[data-theme="light"] .format-res-badge {
   background: #eef2f7;
   border-color: rgba(15, 23, 42, 0.12);
   color: #0369a1;
 }
 html[data-theme="light"] .format-res-badge.is-4k {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(217, 119, 6, 0.42);
-  color: #b45309;
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(180, 83, 9, 0.42);
+  color: #92400e;
 }
 html[data-theme="light"] .format-res-badge.is-2k {
   background: rgba(2, 132, 199, 0.12);
@@ -12910,17 +12924,11 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
           <button class="filter-tag-pill daynight-mode-pill" data-daynight-mode="night" data-region-scope="daynight" type="button" style="display:none;" title="只顯示當地此刻為夜景星光之高畫質鏡頭">🌙 全球夜色</button>
           <button class="filter-tag-pill daynight-mode-pill" data-daynight-mode="twilight" data-region-scope="daynight" type="button" style="display:none;" title="只顯示當地此刻正值日出或夕陽餘暉魔幻時刻之鏡頭">🌇 晨昏魔幻</button>
           <button class="filter-tag-pill active" data-filter-tag="all" type="button">全部</button>
-          <button class="filter-tag-pill" data-filter-tag="交通" type="button">交通路況</button>
-          <button class="filter-tag-pill" data-filter-tag="風景" type="button">風景地標</button>
-          <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
-          <button class="filter-tag-pill" data-filter-tag="4k" type="button">4K 高畫質</button>
-          <button class="filter-tag-pill" data-filter-tag="悠閒慢活" type="button" title="篩選全球海島沙灘、露天咖啡館、阿爾卑斯山城、360° 環景、療癒水母海獺與慢電視實況">🍃 悠閒慢活</button>
-          <button class="filter-tag-pill" data-filter-tag="多元直連" type="button" title="世界即時之窗多元來源：篩選非 YouTube 之原生 4K/1080P HLS (.m3u8)、360° 環景、全片幅單眼 DSLR、太空衛星與官方直連畫面">🛰️ 多元直連</button>
-          <button id="filterPillFuji" class="filter-tag-pill" data-filter-tag="富士山" data-region-scope="japan,world,scenic,favorites" type="button" style="display:none;">富士山</button>
-          <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" data-region-scope="japan,favorites" type="button" style="display:none;">溫泉名勝</button>
           <button class="filter-tag-pill" data-filter-tag="大學校園" data-region-scope="jp_campus,japan" type="button" style="display:none;">🎓 大學校園</button>
           <button class="filter-tag-pill" data-filter-tag="天文星空" data-region-scope="jp_campus,japan,polar,scenic" type="button" style="display:none;">🔭 天文星空</button>
           <button class="filter-tag-pill" data-filter-tag="山海研究" data-region-scope="jp_campus,polar,scenic" type="button" style="display:none;">🏔️ 山海研究</button>
+          <button id="filterPillFuji" class="filter-tag-pill" data-filter-tag="富士山" data-region-scope="japan,world,scenic,favorites" type="button" style="display:none;">富士山</button>
+          <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" data-region-scope="japan,favorites" type="button" style="display:none;">溫泉名勝</button>
           <button class="filter-tag-pill" data-filter-tag="漢江海灣" data-region-scope="korea,world" type="button" style="display:none;">漢江海灣</button>
           <button class="filter-tag-pill" data-filter-tag="東南亞" data-region-scope="apac,world" type="button" style="display:none;">東南亞海島</button>
           <button class="filter-tag-pill" data-filter-tag="紐澳" data-region-scope="apac,world" type="button" style="display:none;">紐澳港灣</button>
@@ -12939,6 +12947,12 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
           <button class="filter-tag-pill" data-filter-tag="海灘" data-region-scope="americas,apac,ocean,scenic,world" type="button" style="display:none;">海灘衝浪</button>
           <button class="filter-tag-pill" data-filter-tag="太空" data-region-scope="americas,world" type="button" style="display:none;">太空星艦</button>
           <button class="filter-tag-pill" data-filter-tag="國家公園" data-region-scope="americas,apac,polar,rainforest,scenic" type="button" style="display:none;">國家公園</button>
+          <button class="filter-tag-pill" data-filter-tag="4k" type="button">4K 高畫質</button>
+          <button class="filter-tag-pill" data-filter-tag="悠閒慢活" type="button" title="篩選全球海島沙灘、露天咖啡館、阿爾卑斯山城、360° 環景、療癒水母海獺與慢電視實況">🍃 悠閒慢活</button>
+          <button class="filter-tag-pill" data-filter-tag="多元直連" type="button" title="世界即時之窗多元來源：篩選非 YouTube 之原生 4K/1080P HLS (.m3u8)、360° 環景、全片幅單眼 DSLR、太空衛星與官方直連畫面">🛰️ 多元直連</button>
+          <button class="filter-tag-pill" data-filter-tag="交通" type="button">交通路況</button>
+          <button class="filter-tag-pill" data-filter-tag="風景" type="button">風景地標</button>
+          <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
         </div>
         <div class="filter-meta-controls">
           <button id="btnWorldTeleport" class="sort-priority-btn" type="button" onclick="window.monitorApp && window.monitorApp.teleportRandomWorldWindow()" title="世界即時之窗任意門：隨機探索全球一處高畫質實況視窗並同步當地時區、氣象與匯率">
@@ -18414,10 +18428,11 @@ class WeatherEnvironmentMonitor {
     }
 
     const activeCtr = typeof window !== 'undefined' && window.monitorApp?.currentCenterId ? window.monitorApp.currentCenterId : 'dual';
-    const regionTitles = { world: '全球 4K 實況', japan: '日本實況', korea: '韓國實況', apac: '亞太實況', europe: '歐洲實況', americas: '美洲實況', polar: '極地極光實況', rainforest: '雨林生態實況', ocean: '海洋珊瑚實況', scenic: '絕美風景實況', daynight: '日夜極景實況' };
+    const regionTitles = { world: '全球 4K 實況', japan: '日本實況', jp_campus: '日本大學觀測', korea: '韓國實況', apac: '亞太實況', europe: '歐洲實況', americas: '美洲實況', polar: '極地極光實況', rainforest: '雨林生態實況', ocean: '海洋珊瑚實況', scenic: '絕美風景實況', daynight: '日夜極景實況' };
     const regionSafeBadges = {
       world: { text: '全球板塊安全', title: '全球主要板塊即時監測中 ‧ 當地氣象與強震即時監測正常' },
       japan: { text: '日本全域安全', title: '日本列島即時監測中 ‧ 當地氣象與強震即時監測正常' },
+      jp_campus: { text: '日本校園安全', title: '日本各地大學與研究觀測所即時監測中 ‧ 當地氣象與地震即時監測正常' },
       korea: { text: '韓國全域安全', title: '韓國全境即時監測中 ‧ 當地氣象與地震即時監測正常' },
       apac: { text: '亞太全域安全', title: '亞太重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
       europe: { text: '歐洲全域安全', title: '歐洲重點區域監測中 ‧ 當地氣象與地震即時監測正常' },
@@ -22501,7 +22516,7 @@ class NeighborhoodRadarMap {
             ${routeHtml}
             <div style="color:#475569;font-size:0.73rem;margin-top:2px;">
               高度：<b>${Number(fl.altM || fl.altMeters || 0).toLocaleString()} m</b> (${Number(fl.altFt || 0).toLocaleString()} ft)<br/>
-              時速：<b>${Number(fl.speedKmh || 0)} km/h</b> ‧ 航向：<b>${trackDeg}°</b> ‧ 距鏡頭 <b>${Number(fl.distKm || 0).toFixed(1)} km</b>
+              ${Number(fl.speedKmh) > 0 ? `時速：<b>${Number(fl.speedKmh)} km/h</b>` : (fl.onGround ? '<b>地面滑行</b>' : '<b>速度遙測中</b>')} ‧ 航向：<b>${trackDeg}°</b> ‧ 距鏡頭 <b>${Number(fl.distKm || 0).toFixed(1)} km</b>
             </div>
             <button onclick="window.monitorApp?.radarMap?.lockFlightTarget('${eJs(fId)}', true)" style="margin-top:5px;width:100%;background:#0284c7;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.74rem;font-weight:700;">
               🎯 鎖定座艙視角即時跟隨
@@ -22654,7 +22669,7 @@ class NeighborhoodRadarMap {
       </div>
       <div class="radar-hud-telemetry-grid">
         <span>${eHtml(routeTxt)}</span>
-        <span>高度 <b>${altM}m</b> ‧ 時速 <b>${spd}km/h</b> ‧ 航向 <b>${trk}°</b></span>
+        <span>高度 <b>${altM}m</b> ‧ ${spd > 0 ? `時速 <b>${spd}km/h</b>` : (fl.onGround ? '<b>地面滑行</b>' : '<b>速度遙測中</b>')} ‧ 航向 <b>${trk}°</b></span>
       </div>
     `;
   }
@@ -23069,9 +23084,10 @@ class EarthquakeEmergencyMonitor {
     const textEl = document.getElementById('disasterAlertText');
     if (!banner || !textEl) return;
 
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
     const areaPrefix = eq.regionLabel || '雙埔';
     banner.classList.add('has-warning', 'active');
-    textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:2px;"></i> 有感地震 ‧ 規模 ${eq.mag} (震度 ${eq.estIntensity}級)`;
+    textEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:2px;"></i> 有感地震 ‧ 規模 ${eHtml(eq.mag)} (震度 ${eHtml(eq.estIntensity)}級)`;
     banner.title = `【有感地震速報】震央：${eq.place}，規模 ${eq.mag}，${areaPrefix}預估震度約 ${eq.estIntensity} 級，點擊查看避難引導！`;
   }
 
@@ -26049,9 +26065,10 @@ class TwinCityTransitMonitor {
         tymetroTotal.innerHTML = `<i class="fa-regular fa-clock"></i> 約 <strong>${firstTymetroPlan ? firstTymetroPlan.totalDuration : (plans[0] ? plans[0].totalDuration : '67分鐘')}</strong>`;
       }
 
+      const eHtmlT = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
       const tymetroStatus = mainSlot.querySelector('[data-f-tymetro-status]');
       if (tymetroStatus) {
-        tymetroStatus.innerHTML = `<i class="fa-solid fa-clock"></i> ${tymetro.platformStatus}`;
+        tymetroStatus.innerHTML = `<i class="fa-solid fa-clock"></i> ${eHtmlT(tymetro.platformStatus)}`;
       }
 
       const tymetroGlow = mainSlot.querySelector('[data-f-tymetro-glow]');
@@ -26071,7 +26088,7 @@ class TwinCityTransitMonitor {
       // 4. 環狀線軌道
       const circularStatus = mainSlot.querySelector('[data-f-circular-status]');
       if (circularStatus) {
-        circularStatus.innerHTML = `<i class="fa-regular fa-clock"></i> ${circular.platformStatus}`;
+        circularStatus.innerHTML = `<i class="fa-regular fa-clock"></i> ${eHtmlT(circular.platformStatus)}`;
       }
 
       const circularBadge = mainSlot.querySelector('[data-f-circular-badge]');
@@ -26409,8 +26426,8 @@ class TwinCityTransitMonitor {
         </button>
 
         ${activeAlert ? `
-          <span class="incident-badge pulse-red" style="cursor:pointer;" onclick="window.transitMonitor.toggleCollapse()" title="${activeAlert.lineName}${activeAlert.title}：${activeAlert.desc}">
-            🚨 ${activeAlert.lineName}${activeAlert.title}
+          <span class="incident-badge pulse-red" style="cursor:pointer;" onclick="window.transitMonitor.toggleCollapse()" title="${window.escHtml(activeAlert.lineName)}${window.escHtml(activeAlert.title)}：${window.escHtml(activeAlert.desc)}">
+            🚨 ${window.escHtml(activeAlert.lineName)}${window.escHtml(activeAlert.title)}
           </span>
         ` : ''}
 
@@ -26481,12 +26498,12 @@ class TwinCityTransitMonitor {
           <span class="station-label">${isToQingpu ? '板橋站 (BL07)' : '新埔站 (BL08)'}</span>
         </div>
         ${bannan.carWeight && Array.isArray(bannan.carWeight.cars) && bannan.carWeight.cars.length > 0 ? `
-          <div class="bannan-car-crowd-row" title="${bannan.carWeight.station}站即時車廂擁擠度 (1~6車)">
-            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${bannan.carWeight.station}站車廂</span>
+          <div class="bannan-car-crowd-row" title="${window.escHtml(bannan.carWeight.station)}站即時車廂擁擠度 (1~6車)">
+            <span class="crowd-station-badge"><i class="fa-solid fa-users"></i> ${window.escHtml(bannan.carWeight.station)}站車廂</span>
             <div class="crowd-cars-strip">
               ${bannan.carWeight.cars.map(c => `
-                <div class="crowd-car-box level-${c.level}" title="${c.carNum}：${c.status}">
-                  <span>${c.carNum.replace('車','')}</span>
+                <div class="crowd-car-box level-${Number(c.level) || 1}" title="${window.escHtml(c.carNum)}：${window.escHtml(c.status)}">
+                  <span>${window.escHtml(String(c.carNum || '').replace('車',''))}</span>
                 </div>
               `).join('')}
             </div>
@@ -26512,7 +26529,7 @@ class TwinCityTransitMonitor {
           </div>
           <span class="pids-mini-pill thsr-pill-pids" data-f-thsr-status><i class="fa-solid fa-clock"></i> ${thsr.platformStatus}</span>
           ${thsrAlert ? 
-            `<span class="pids-alert-tag pulse-warn" title="${thsrAlert.title}: ${thsrAlert.desc}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${thsrAlert.title})</span>` : ''}
+            `<span class="pids-alert-tag pulse-warn" title="${window.escHtml(thsrAlert.title)}: ${window.escHtml(thsrAlert.desc)}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${window.escHtml(thsrAlert.title)})</span>` : ''}
           ${isMultiTrains ? 
             `<span class="pids-ontrack-pill thsr-ontrack-multi" title="全線列車追蹤"><i class="fa-solid fa-bolt"></i> ${thsr.activeTrains.length} 班行駛中</span>` : 
             (thsr.isRunning ? `<span class="pids-ontrack-pill" title="軌道在途班次"><i class="fa-solid fa-bolt"></i> ${thsr.activeTrainNo}次 行駛中</span>` : '')
@@ -26554,9 +26571,9 @@ class TwinCityTransitMonitor {
             <span class="parking-title-tag"><i class="fa-solid fa-square-parking"></i> 桃園站停車</span>
             <div class="parking-lots-strip">
               ${thsr.parkingLots.map(lot => `
-                <span class="parking-lot-chip ${lot.available < 8 ? 'lot-tight' : 'lot-available'}" title="${lot.name}：剩餘 ${lot.spaceText}">
-                  ${lot.name.includes('P1') ? 'P1' : (lot.name.includes('P2') ? 'P2' : (lot.name.includes('P3') ? 'P3立體' : '停車場'))}: 
-                  <strong>${lot.available}</strong>/${lot.total}格
+                <span class="parking-lot-chip ${Number(lot.available) < 8 ? 'lot-tight' : 'lot-available'}" title="${window.escHtml(lot.name)}：剩餘 ${window.escHtml(lot.spaceText)}">
+                  ${String(lot.name || '').includes('P1') ? 'P1' : (String(lot.name || '').includes('P2') ? 'P2' : (String(lot.name || '').includes('P3') ? 'P3立體' : '停車場'))}: 
+                  <strong>${Number(lot.available) || 0}</strong>/${Number(lot.total) || 0}格
                 </span>
               `).join('')}
             </div>
@@ -26616,7 +26633,7 @@ class TwinCityTransitMonitor {
             <i class="fa-solid fa-clock"></i> ${tymetro.platformStatus}
           </span>
           ${tymetroAlert ? 
-            `<span class="pids-alert-tag pulse-warn" title="${tymetroAlert.title}: ${tymetroAlert.desc}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${tymetroAlert.title})</span>` : ''}
+            `<span class="pids-alert-tag pulse-warn" title="${window.escHtml(tymetroAlert.title)}: ${window.escHtml(tymetroAlert.desc)}"><i class="fa-solid fa-triangle-exclamation"></i> 運轉受阻 (${window.escHtml(tymetroAlert.title)})</span>` : ''}
           ${tymetroActiveTrains.length > 0 ? `<span class="pids-ontrack-pill ${tymetroActiveTrains[0].isExpress ? 'tymetro-ontrack-express' : 'tymetro-ontrack-commuter'}" title="全線列車追蹤"><i class="fa-solid fa-plane"></i> ${tymetroActiveTrains.length} 班行駛中</span>` : ''}
           <span class="leg-info">${tymetro.durationText}</span>
         </div>
@@ -26969,11 +26986,11 @@ class TwinCityTransitMonitor {
         <div class="incident-alert-banner">
           <div class="incident-left-group">
             <span class="incident-badge">🚨 營運異常</span>
-            <span class="incident-line-tag line-${activeAlert.line}">${activeAlert.lineName}</span>
-            <span class="incident-msg">${activeAlert.title}：${activeAlert.desc}</span>
+            <span class="incident-line-tag line-${window.escHtml(activeAlert.line)}">${window.escHtml(activeAlert.lineName)}</span>
+            <span class="incident-msg">${window.escHtml(activeAlert.title)}：${window.escHtml(activeAlert.desc)}</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <span class="incident-time-tag"><i class="fa-regular fa-clock"></i> 發布 ${activeAlert.time}</span>
+            <span class="incident-time-tag"><i class="fa-regular fa-clock"></i> 發布 ${window.escHtml(activeAlert.time)}</span>
             <button class="mock-test-btn" onclick="window.transitMonitor.clearAlert()" title="解除通報回到正常狀態">
               恢復正常
             </button>
@@ -46806,7 +46823,7 @@ class FlightRadarService {
             </div>
             ${routeHtml}
             <div class="flight-telemetry-row">
-              <span>高度 <strong>${Number(fl.altM || 0).toLocaleString()}m</strong> ‧ 時速 <strong>${Number(fl.speedKmh || 0)}km/h</strong> ‧ 航向 ${Number(fl.track || 0)}°</span>
+              <span>高度 <strong>${Number(fl.altM || 0).toLocaleString()}m</strong> ‧ ${Number(fl.speedKmh) > 0 ? `時速 <strong>${Number(fl.speedKmh)}km/h</strong>` : (fl.onGround ? '<strong>地面滑行</strong>' : '<strong>速度遙測中</strong>')} ‧ 航向 ${Number(fl.track || 0)}°</span>
               <span class="flight-map-locate-tag"><i class="fa-solid fa-location-crosshairs"></i> 距 ${Number(fl.distKm || 0).toFixed(1)}km</span>
             </div>
           </div>
@@ -47105,7 +47122,7 @@ class WeatherSkyTacticalOverlay {
       </div>
       <div class="radar-hud-telemetry-grid">
         <span>${eHtml(routeStr)}</span>
-        <span>高度 <b>${Number(fl.altM || 0).toLocaleString()}m</b> ‧ 時速 <b>${Number(fl.speedKmh || 0)}km/h</b> ‧ 航向 <b>${Math.round(Number(fl.track) || 0)}°</b></span>
+        <span>高度 <b>${Number(fl.altM || 0).toLocaleString()}m</b> ‧ ${Number(fl.speedKmh) > 0 ? `時速 <b>${Number(fl.speedKmh)}km/h</b>` : (fl.onGround ? '<b>地面滑行</b>' : '<b>速度遙測中</b>')} ‧ 航向 <b>${Math.round(Number(fl.track) || 0)}°</b></span>
       </div>
     `;
   }
@@ -50055,7 +50072,8 @@ class MonitorApp {
       'Africa/Windhoek': '納米比亞時間',
       'Africa/Nairobi': '東非時間',
       'Africa/Gaborone': '波札那時間',
-      'Africa/Johannesburg': '南非時間'
+      'Africa/Johannesburg': '南非時間',
+      'Africa/Kinshasa': '剛果時間'
     };
     const updateTime = () => {
       const now = new Date();
@@ -53867,7 +53885,7 @@ class MonitorApp {
     // 氣象署雷達回波圖特寫
     if (camId === 'RADAR_CWA') {
       modalTitle.innerText = '中央氣象署 (CWA) - 台灣全區即時降雨雷達回波圖';
-      modalBody.innerHTML = '<img referrerpolicy="no-referrer" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png?_t=' + Date.now() + '" style="width: 100%; max-height: 75vh; object-fit: contain;" />';
+      modalBody.innerHTML = '<img referrerpolicy="no-referrer" alt="中央氣象署台灣全區即時降雨雷達回波圖" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png?_t=' + Date.now() + '" style="width: 100%; max-height: 75vh; object-fit: contain;" />';
       modal.classList.add('active');
       requestAnimationFrame(() => document.getElementById('modalCloseBtn')?.focus());
       return;
@@ -53880,6 +53898,9 @@ class MonitorApp {
     const eHtml = typeof window !== 'undefined' && window.escHtml ? window.escHtml : (v => String(v ?? ''));
     const hasCoords = cam.lat != null && cam.lon != null && Number.isFinite(Number(cam.lat)) && Number.isFinite(Number(cam.lon));
     const streetViewUrl = hasCoords ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${Number(cam.lat)},${Number(cam.lon)}` : '';
+    if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.setPipAutoEnterEnabled === 'function') {
+      try { window.AndroidBridge.setPipAutoEnterEnabled(true); } catch (_) {}
+    }
     modalTitle.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding-right: 16px;">
         <span>${cam.areaTag ? '[' + eHtml(cam.areaTag) + '] ' : ''}${eHtml(cam.name)}</span>
@@ -54089,7 +54110,7 @@ class MonitorApp {
     if (isPanoModal) {
       modalBody.innerHTML = `
         <div id="modalPanoViewport" style="position:relative; width:100%; height:72vh; overflow-x:auto; overflow-y:hidden; background:#05080f; border-radius:8px; cursor:grab; user-select:none; -webkit-overflow-scrolling:touch;">
-          <img id="modalImgFeed" referrerpolicy="no-referrer" src="${initialSrc}" draggable="false" style="height:100%; width:auto; max-width:none; display:block; pointer-events:none;" />
+          <img id="modalImgFeed" referrerpolicy="no-referrer" alt="${eHtml(cam.name)} 360° 超高解析全景實況" src="${initialSrc}" draggable="false" style="height:100%; width:auto; max-width:none; display:block; pointer-events:none;" />
           <div style="position:sticky; left:12px; bottom:12px; display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; background:rgba(5,8,15,0.78); border:1px solid rgba(56,189,248,0.4); color:#e2e8f0; font-size:0.75rem; pointer-events:none; margin-top:-40px; margin-left:12px; backdrop-filter:blur(6px);">
             <i class="fa-solid fa-compass" style="color:#38bdf8;"></i> 左右拖曳自由環顧 360° 超高解析全景
           </div>
@@ -54097,7 +54118,7 @@ class MonitorApp {
       `;
     } else {
       modalBody.innerHTML = `
-        <img id="modalImgFeed" referrerpolicy="no-referrer" src="${initialSrc}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
+        <img id="modalImgFeed" referrerpolicy="no-referrer" alt="${eHtml(cam.name)} 即時畫面" src="${initialSrc}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
       `;
     }
     modal.classList.add('active');
@@ -54165,6 +54186,9 @@ class MonitorApp {
       this._modalRetryTimer = null;
     }
 
+    if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.setPipAutoEnterEnabled === 'function') {
+      try { window.AndroidBridge.setPipAutoEnterEnabled(false); } catch (_) {}
+    }
     const modal = document.getElementById('cameraModal');
     if (modal) modal.classList.remove('active');
 

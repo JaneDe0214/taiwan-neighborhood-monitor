@@ -2,5 +2,4 @@
 <full-backup-content>
     <exclude domain="sharedpref" path="WebViewChromiumPrefs.xml" />
     <exclude domain="root" path="app_webview" />
-    <exclude domain="cache" path="." />
 </full-backup-content>

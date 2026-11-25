@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Rect
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.Uri
@@ -175,8 +176,7 @@ class MainActivity : ComponentActivity() {
         // 手機與平板動態套用狀態列、挖孔鏡頭區、底部手勢列與虛擬鍵盤安全邊距，徹底杜絕遮擋（子母畫面 PiP 模式下自動歸零邊距以填滿 16:9 視窗）
         if (!isTvDevice) {
             ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { v, windowInsets ->
-                val isPipNow = inNativePipMode ||
-                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)
+                val isPipNow = inNativePipMode || isInPictureInPictureMode
                 if (isPipNow) {
                     v.setPadding(0, 0, 0, 0)
                 } else {
@@ -1143,6 +1143,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    internal fun buildPipParams(autoEnter: Boolean): PictureInPictureParams? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return null
+        val builder = PictureInPictureParams.Builder()
+            .setAspectRatio(Rational(16, 9))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val sourceRect = Rect()
+            if (::webView.isInitialized && webView.getGlobalVisibleRect(sourceRect) && !sourceRect.isEmpty) {
+                builder.setSourceRectHint(sourceRect)
+            }
+            builder.setSeamlessResizeEnabled(true)
+            if (autoEnter) {
+                builder.setAutoEnterEnabled(true)
+            } else {
+                builder.setAutoEnterEnabled(false)
+            }
+        }
+        return builder.build()
+    }
+
+    internal fun updatePipParams(autoEnter: Boolean) {
+        if (isTvDevice || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return
+        try {
+            buildPipParams(autoEnter)?.let { setPictureInPictureParams(it) }
+        } catch (_: Exception) {}
+    }
+
     internal fun applyKeepScreenOn(enable: Boolean, updatePreference: Boolean = false) {
         if (updatePreference) {
             keepScreenOnPreferred = enable
@@ -1470,6 +1497,18 @@ class AndroidNativeBridge(
     }
 
     /**
+     * 設定 Android 12+ 滑回桌面時是否自動無縫進入 16:9 子母畫面 (單鏡放大播放時啟用)
+     */
+    @JavascriptInterface
+    fun setPipAutoEnterEnabled(enabled: Boolean) {
+        if (!isPipSupported() || !isActivityAlive() || !isTrustedOrigin()) return
+        activity.runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
+            (activity as? MainActivity)?.updatePipParams(autoEnter = enabled)
+        }
+    }
+
+    /**
      * 進入 Android 原生 16:9 子母畫面懸浮監看視窗 (失敗時主動通知前端回滾狀態以免鎖死操作)
      */
     @JavascriptInterface
@@ -1480,10 +1519,10 @@ class AndroidNativeBridge(
             var entered = false
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val params = PictureInPictureParams.Builder()
-                        .setAspectRatio(Rational(16, 9))
-                        .build()
-                    entered = activity.enterPictureInPictureMode(params)
+                    val params = (activity as? MainActivity)?.buildPipParams(autoEnter = true)
+                    if (params != null) {
+                        entered = activity.enterPictureInPictureMode(params)
+                    }
                 }
             } catch (_: Exception) {
                 entered = false

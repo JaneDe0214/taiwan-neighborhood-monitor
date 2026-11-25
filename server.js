@@ -4884,6 +4884,11 @@ function runAsyncRoute(fn, req, res, ...args) {
 
 // 建立 HTTP 伺服器
 const server = http.createServer((req, res) => {
+  // 全站資安防護標頭（防 MIME 嗅探、保護跨網域 Referrer、最小權限硬體存取）
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), payment=(), usb=()');
+
   let parsedUrl;
   let pathname;
   try {
@@ -5108,11 +5113,13 @@ const server = http.createServer((req, res) => {
 
     const contentType = mimeTypes[ext] || 'application/octet-stream';
     const cacheCtrl = normLower.startsWith('data/') ? 'no-cache' : 'public, max-age=30';
+    const extraSecurityHeaders = ext === '.html' ? { 'X-Frame-Options': 'SAMEORIGIN' } : {};
     if (req.method === 'HEAD') {
       res.writeHead(200, {
         'Content-Type': contentType,
         'Content-Length': stats.size,
-        'Cache-Control': cacheCtrl
+        'Cache-Control': cacheCtrl,
+        ...extraSecurityHeaders
       });
       res.end();
       return;
@@ -5128,7 +5135,8 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, {
         'Content-Type': contentType,
         'Content-Length': content.length,
-        'Cache-Control': cacheCtrl
+        'Cache-Control': cacheCtrl,
+        ...extraSecurityHeaders
       });
       res.end(content);
     });
