@@ -11853,6 +11853,649 @@ html[data-theme="light"] .immersive-subtab-btn.active {
   }
 }
 
+/* ==========================================================================
+   World Presence Studio (世界臨場之窗 2.0) — 極簡去雜訊架構、現場臨場感知艙與劇院沉浸模式
+   ========================================================================== */
+
+/* 1. 精簡格線選擇器 + 更多版面浮動選單 */
+.layout-control-strip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grid-more-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.grid-more-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--text-muted);
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.grid-more-toggle-btn:hover,
+.grid-more-toggle-btn[aria-expanded="true"] {
+  color: #e2e8f0;
+  border-color: rgba(56, 189, 248, 0.48);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.grid-more-toggle-btn.has-active-extra {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(14, 165, 233, 0.16);
+}
+
+.grid-more-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 1250;
+  min-width: 196px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(11, 18, 32, 0.96);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px);
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grid-more-popover.is-open {
+  display: flex;
+}
+
+.grid-more-popover-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  padding: 2px 4px 0;
+}
+
+.grid-more-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.grid-more-options .grid-btn {
+  justify-content: center;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(30, 41, 59, 0.55);
+}
+
+.grid-more-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.16);
+  margin: 2px 0;
+}
+
+.grid-more-popover #btnToggleAdaptive {
+  width: 100%;
+  justify-content: center;
+  padding: 6px 10px;
+}
+
+/* 頂部劇院沉浸視窗按鈕 */
+.cinema-mode-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(192, 132, 252, 0.38);
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.38), rgba(30, 58, 138, 0.38));
+  color: #e9d5ff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cinema-mode-trigger:hover {
+  border-color: rgba(216, 180, 254, 0.75);
+  background: linear-gradient(135deg, rgba(107, 33, 168, 0.58), rgba(29, 78, 216, 0.52));
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.28);
+}
+
+/* 2. 單行極簡快搜與標籤篩選列 */
+@media (min-width: 960px) {
+  .camera-filter-bar {
+    flex-wrap: nowrap !important;
+    padding: 5px 10px !important;
+    gap: 8px !important;
+    min-height: 38px;
+  }
+  .camera-filter-bar .filter-search-box {
+    flex: 0 1 220px !important;
+    min-width: 165px !important;
+  }
+  .camera-filter-bar .filter-pills-row {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    padding-bottom: 0 !important;
+  }
+  .camera-filter-bar .filter-pills-row::-webkit-scrollbar {
+    display: none;
+  }
+  .camera-filter-bar .filter-meta-controls {
+    flex-shrink: 0 !important;
+    margin-left: auto;
+  }
+}
+
+/* 3. 🌍 現場臨場感知艙 (#worldPresenceBar) */
+.world-presence-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: linear-gradient(100deg, rgba(15, 23, 42, 0.92) 0%, rgba(17, 24, 39, 0.88) 55%, rgba(30, 27, 75, 0.78) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.26);
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.world-presence-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.world-presence-bar.phase-twilight {
+  border-color: rgba(251, 146, 60, 0.42);
+  background: linear-gradient(100deg, rgba(15, 23, 42, 0.93) 0%, rgba(67, 20, 7, 0.48) 55%, rgba(49, 46, 129, 0.68) 100%);
+}
+
+.world-presence-bar.phase-day {
+  border-color: rgba(56, 189, 248, 0.34);
+  background: linear-gradient(100deg, rgba(15, 23, 42, 0.90) 0%, rgba(12, 74, 110, 0.42) 58%, rgba(15, 23, 42, 0.88) 100%);
+}
+
+.world-presence-bar.phase-night {
+  border-color: rgba(129, 140, 248, 0.34);
+  background: linear-gradient(100deg, rgba(9, 14, 28, 0.95) 0%, rgba(30, 27, 75, 0.62) 58%, rgba(15, 23, 42, 0.92) 100%);
+}
+
+.wp-destination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.wp-flag-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 7px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.24), rgba(99, 102, 241, 0.26));
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  color: #e0f2fe;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.wp-place-block {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.wp-place-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wp-place-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  max-width: 148px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-live-clock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  color: #7dd3fc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wp-meta-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.wp-solar-chip {
+  font-weight: 700;
+}
+
+.wp-solar-chip.is-twilight { color: #fdba74; }
+.wp-solar-chip.is-day { color: #fde047; }
+.wp-solar-chip.is-night { color: #a5b4fc; }
+
+.wp-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.wp-sensory-deck {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.wp-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(30, 41, 59, 0.62);
+  color: #e2e8f0;
+  font-size: 0.71rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.wp-action-pill:hover {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(30, 41, 59, 0.95);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.wp-action-pill.is-radio-live {
+  border-color: rgba(192, 132, 252, 0.78);
+  background: linear-gradient(135deg, rgba(126, 34, 206, 0.55), rgba(14, 165, 233, 0.35));
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.35);
+}
+
+.wp-action-pill.is-ambient-live {
+  border-color: rgba(45, 212, 191, 0.72);
+  background: rgba(13, 148, 136, 0.34);
+  color: #99f6e4;
+}
+
+.wp-action-pill.is-greeting {
+  border-color: rgba(251, 191, 36, 0.36);
+  background: rgba(120, 53, 15, 0.28);
+  color: #fde68a;
+}
+
+.wp-action-pill.is-greeting:hover {
+  border-color: rgba(251, 191, 36, 0.7);
+  background: rgba(146, 64, 14, 0.45);
+}
+
+.wp-radio-next-btn {
+  padding: 4px 6px;
+  margin-left: -2px;
+}
+
+/* 動態音頻等化器動畫 */
+.wp-eq-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 11px;
+}
+
+.wp-eq-bars i {
+  display: block;
+  width: 2.5px;
+  background: #e9d5ff;
+  border-radius: 2px;
+  animation: wpEqBounce 0.75s ease-in-out infinite alternate;
+}
+
+.wp-eq-bars i:nth-child(1) { height: 5px; animation-delay: 0s; }
+.wp-eq-bars i:nth-child(2) { height: 11px; animation-delay: 0.18s; }
+.wp-eq-bars i:nth-child(3) { height: 7px; animation-delay: 0.34s; }
+
+@keyframes wpEqBounce {
+  0% { transform: scaleY(0.35); }
+  100% { transform: scaleY(1); }
+}
+
+.wp-journey-deck {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.wp-journey-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.58);
+  color: #cbd5e1;
+  font-size: 0.69rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.wp-journey-pill:hover {
+  border-color: rgba(251, 191, 36, 0.55);
+  color: #fef08a;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.wp-journey-pill.is-active-mood {
+  border-color: rgba(251, 146, 60, 0.75);
+  background: linear-gradient(135deg, rgba(194, 65, 12, 0.42), rgba(124, 45, 18, 0.45));
+  color: #ffedd5;
+}
+
+.wp-journey-pill.is-teleport {
+  border-color: rgba(56, 189, 248, 0.42);
+  background: linear-gradient(135deg, rgba(3, 105, 161, 0.36), rgba(67, 56, 202, 0.36));
+  color: #bae6fd;
+}
+
+.wp-journey-pill.is-teleport:hover {
+  border-color: rgba(125, 211, 252, 0.8);
+  color: #ffffff;
+}
+
+/* 4. 卡片次要工具漸隱降噪 (滑鼠懸停或鍵盤聚焦時完整浮現) */
+@media (hover: hover) and (pointer: fine) {
+  .cam-card .cam-footer-actions {
+    opacity: 0.42;
+    transition: opacity 0.2s ease;
+  }
+  .cam-card:hover .cam-footer-actions,
+  .cam-card:focus-within .cam-footer-actions {
+    opacity: 1;
+  }
+}
+
+/* 非通勤視角下精簡外出管家高度，讓右側「當地氣候」單屏全覽免捲動 */
+#lifeAssistantWidgetCard.is-scenic-compact #lifeAssistantList {
+  display: none;
+}
+
+/* 5. 🎬 劇院沉浸視窗模式 (Cinema Zen Mode) */
+body.cinema-zen-mode {
+  overflow: hidden !important;
+  background: #030712 !important;
+}
+
+body.cinema-zen-mode .top-nav,
+body.cinema-zen-mode #sidebarSection,
+body.cinema-zen-mode #transitTransitBar,
+body.cinema-zen-mode #freewaySpeedBar,
+body.cinema-zen-mode #worldPresenceBar,
+body.cinema-zen-mode #cameraFilterBar,
+body.cinema-zen-mode #scenePresetBar {
+  display: none !important;
+}
+
+body.cinema-zen-mode .dashboard-container {
+  display: block !important;
+  padding: 8px 10px !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+}
+
+body.cinema-zen-mode .matrix-section {
+  height: 100% !important;
+  margin: 0 !important;
+}
+
+body.cinema-zen-mode #cameraGrid {
+  height: calc(100vh - 16px) !important;
+  max-height: calc(100vh - 16px) !important;
+  gap: 8px !important;
+}
+
+body.cinema-zen-mode .cam-card-footer {
+  display: none !important;
+}
+
+body.cinema-zen-mode .cam-card-header {
+  padding: 5px 10px !important;
+  background: rgba(8, 13, 25, 0.78) !important;
+}
+
+body.cinema-zen-mode #toastContainer {
+  bottom: 72px !important;
+}
+
+.cinema-floating-hud {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2200;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: rgba(9, 14, 26, 0.84);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.68), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(18px);
+  transition: opacity 0.45s ease, transform 0.3s ease;
+}
+
+.cinema-floating-hud::-webkit-scrollbar {
+  display: none;
+}
+
+.cinema-floating-hud.is-idle:not(:hover):not(:focus-within) {
+  opacity: 0.16;
+}
+
+.cinema-hud-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(127, 29, 29, 0.42);
+  color: #fecaca;
+  font-size: 0.71rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cinema-hud-exit-btn:hover {
+  background: rgba(185, 28, 28, 0.68);
+  color: #ffffff;
+}
+
+/* 6. 淺色系主題 (Light Theme) 完整高對比適配 */
+html[data-theme="light"] .grid-more-toggle-btn {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+html[data-theme="light"] .grid-more-toggle-btn.has-active-extra {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+}
+
+html[data-theme="light"] .grid-more-popover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: #cbd5e1;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+}
+
+html[data-theme="light"] .grid-more-options .grid-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+html[data-theme="light"] .grid-more-options .grid-btn.active {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+}
+
+html[data-theme="light"] .cinema-mode-trigger {
+  background: linear-gradient(135deg, #f3e8ff, #e0f2fe);
+  border-color: #c084fc;
+  color: #581c87;
+}
+
+html[data-theme="light"] .world-presence-bar {
+  background: linear-gradient(100deg, #ffffff 0%, #f8fafc 55%, #f0f9ff 100%);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+html[data-theme="light"] .wp-place-name {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .wp-flag-badge {
+  background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+html[data-theme="light"] .wp-live-clock-pill {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+html[data-theme="light"] .wp-solar-chip.is-twilight { color: #c2410c; }
+html[data-theme="light"] .wp-solar-chip.is-day { color: #b45309; }
+html[data-theme="light"] .wp-solar-chip.is-night { color: #4338ca; }
+
+html[data-theme="light"] .wp-action-pill,
+html[data-theme="light"] .wp-journey-pill {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+html[data-theme="light"] .wp-action-pill:hover,
+html[data-theme="light"] .wp-journey-pill:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+html[data-theme="light"] .wp-action-pill.is-radio-live {
+  background: linear-gradient(135deg, #7e22ce, #0284c7);
+  border-color: #7e22ce;
+  color: #ffffff;
+}
+
+html[data-theme="light"] .wp-action-pill.is-ambient-live {
+  background: #ccfbf1;
+  border-color: #14b8a6;
+  color: #0f766e;
+}
+
+html[data-theme="light"] .wp-action-pill.is-greeting {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+html[data-theme="light"] .wp-journey-pill.is-teleport {
+  background: #e0f2fe;
+  border-color: #38bdf8;
+  color: #0369a1;
+}
+
+@media (max-width: 768px) {
+  .cinema-mode-trigger span {
+    display: none;
+  }
+  .cinema-mode-trigger {
+    padding: 5px 8px;
+  }
+  .world-presence-bar {
+    padding: 6px 9px;
+    gap: 7px;
+  }
+  .wp-place-name {
+    max-width: 120px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -11937,27 +12580,27 @@ html[data-theme="light"] .immersive-subtab-btn.active {
         </div>
       </div>
 
-      <!-- 4 大核心領域切換膠囊 (徹底解決 17 頻道擠成一排之視覺雜亂) -->
+      <!-- 5 大核心領域切換膠囊 (清晰區隔日常通勤、台灣漫遊、世界之窗、自然療癒與專屬收藏) -->
       <nav id="domainSwitchBar" class="domain-switch-bar" aria-label="主領域切換">
-        <button type="button" class="domain-tab-btn active" data-domain-tab="taiwan" onclick="window.monitorApp?.switchDomain('taiwan')" title="台灣生活與通勤監控：附近、雙埔、青埔、新埔">
+        <button type="button" class="domain-tab-btn active" data-domain-tab="taiwan" onclick="window.monitorApp?.switchDomain('taiwan')" title="日常通勤與生活監控：附近、雙埔、青埔、新埔">
           <i class="fa-solid fa-house-signal"></i>
-          <span>台灣生活</span>
+          <span>日常通勤</span>
         </button>
-        <button type="button" class="domain-tab-btn" data-domain-tab="tw_tour" onclick="window.monitorApp?.switchDomain('tw_tour')" title="台灣觀光 12 大縣市專區：全台精選、台北市、新北市、桃園、宜蘭、台中、南投嘉義、台南、高雄、屏東墾丁、花蓮、台東（依 4K 畫質 × 熱門景點自動排序）">
+        <button type="button" class="domain-tab-btn" data-domain-tab="tw_tour" onclick="window.monitorApp?.switchDomain('tw_tour')" title="台灣漫遊 12 大縣市專區：全台精選、台北市、新北市、桃園、宜蘭、台中、南投嘉義、台南、高雄、屏東墾丁、花蓮、台東">
           <i class="fa-solid fa-compass"></i>
-          <span>台灣觀光</span>
+          <span>台灣漫遊</span>
         </button>
-        <button type="button" class="domain-tab-btn" data-domain-tab="world" onclick="window.monitorApp?.switchDomain('world')" title="世界各大洲城市 4K 實況：全球4K、日本、韓國、亞太、歐洲、美洲">
+        <button type="button" class="domain-tab-btn" data-domain-tab="world" onclick="window.monitorApp?.switchDomain('world')" title="世界之窗各大洲 4K 實況：全球4K、日本、韓國、亞太、歐洲、美洲">
           <i class="fa-solid fa-earth-asia"></i>
-          <span>世界城市</span>
+          <span>世界之窗</span>
         </button>
-        <button type="button" class="domain-tab-btn" data-domain-tab="nature" onclick="window.monitorApp?.switchDomain('nature')" title="地球自然奇景與療癒實況：極地極光、雨林生態、海洋珊瑚、絕美風景、日夜極景">
+        <button type="button" class="domain-tab-btn" data-domain-tab="nature" onclick="window.monitorApp?.switchDomain('nature')" title="自然療癒奇景實況：極地極光、雨林生態、海洋珊瑚、絕美風景、日夜極景">
           <i class="fa-solid fa-mountain-sun"></i>
-          <span>自然奇景</span>
+          <span>自然療癒</span>
         </button>
-        <button type="button" class="domain-tab-btn" data-domain-tab="favorites" onclick="window.monitorApp?.switchDomain('favorites')" title="我的最愛跨區跨國自選監控牆與情境預設集">
+        <button type="button" class="domain-tab-btn" data-domain-tab="favorites" onclick="window.monitorApp?.switchDomain('favorites')" title="專屬收藏跨區跨國自選視訊牆與情境預設集">
           <i class="fa-solid fa-star"></i>
-          <span>我的收藏</span>
+          <span>專屬收藏</span>
           <span id="domainFavBadge" class="domain-fav-count"></span>
         </button>
       </nav>
@@ -11969,8 +12612,12 @@ html[data-theme="light"] .immersive-subtab-btn.active {
           <span class="cmd-trigger-label">快搜</span>
           <kbd class="cmd-kbd">⌘K</kbd>
         </button>
-        <button id="btnToggleSidebar" class="mode-toggle-btn active" aria-label="顯示或收合在地生活資訊面板" aria-expanded="true" title="顯示/收合右側氣象、雷達、交通與身歷其境面板">
-          <i class="fa-solid fa-table-columns" aria-hidden="true"></i> <span>資訊面板</span>
+        <button id="btnCinemaMode" class="cinema-mode-trigger" type="button" aria-pressed="false" aria-label="開啟劇院沉浸視窗模式 (快捷鍵 Z)" title="劇院沉浸視窗模式 (Z)：隱藏所有工具列與側欄，讓即時視窗與當地環境音場純粹滿版呈現">
+          <i class="fa-solid fa-film" aria-hidden="true"></i>
+          <span>沉浸視窗</span>
+        </button>
+        <button id="btnToggleSidebar" class="mode-toggle-btn active" aria-label="顯示或收合當地透鏡面板" aria-expanded="true" title="顯示/收合右側當地氣候、在地人文、天空雷達與周邊交通面板">
+          <i class="fa-solid fa-table-columns" aria-hidden="true"></i> <span>當地透鏡</span>
         </button>
         <div id="themeSwitcherWrap" class="theme-switcher-wrap">
           <button id="btnThemeToggle" class="theme-toggle-btn" type="button" aria-label="切換外觀主題" aria-haspopup="true" aria-expanded="false" title="切換外觀主題：跟隨裝置主題 / 淺色主題 / 深色主題">
@@ -12144,20 +12791,33 @@ html[data-theme="light"] .immersive-subtab-btn.active {
         </div>
       </div>
 
-      <!-- 第二層右側：精簡宮格分割 + 單頁滿版開關 -->
+      <!-- 第二層右側：精簡常用宮格 + 進階版面收納選單 -->
       <div class="layout-control-strip">
         <div class="grid-selector">
           <button class="grid-btn" data-grid="grid-1" title="單一焦點特寫"><i class="fa-regular fa-square"></i> 1格</button>
-          <button class="grid-btn" data-grid="grid-4" title="四分割標準"><i class="fa-solid fa-table-cells-large"></i> 4格</button>
-          <button class="grid-btn active" data-grid="grid-6" title="六重視角 (雙域模式：青埔3 + 新埔3各半均分)"><i class="fa-solid fa-table-cells"></i> 6格</button>
-          <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙埔模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
-          <button class="grid-btn" data-grid="grid-12" title="十二分割廣域監控"><i class="fa-solid fa-grip"></i> 12格</button>
-          <button class="grid-btn" data-grid="grid-16" title="十六分割廣域電視牆 (雙埔模式：青埔8 + 新埔8)"><i class="fa-solid fa-table-cells"></i> 16格</button>
-          <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
+          <button class="grid-btn" data-grid="grid-4" title="四分割劇院視窗"><i class="fa-solid fa-table-cells-large"></i> 4格</button>
+          <button class="grid-btn active" data-grid="grid-6" title="六重視角黃金分割 (雙埔模式：青埔3 + 新埔3各半均分)"><i class="fa-solid fa-table-cells"></i> 6格</button>
         </div>
-        <button id="btnToggleAdaptive" class="mode-toggle-btn" aria-pressed="false" aria-label="切換單頁滿版或自由捲動模式" title="切換顯示模式：自由捲動最大化 (預設) / 單頁滿版 (免捲動)">
-          <i class="fa-solid fa-expand" aria-hidden="true"></i> <span>單頁滿版</span>
-        </button>
+        <div id="gridMoreWrap" class="grid-more-wrap">
+          <button type="button" id="btnGridMoreToggle" class="grid-more-toggle-btn" aria-haspopup="true" aria-expanded="false" title="展開更多視訊牆分割版面 (9格 / 12格 / 16格 / 全部 / 單頁滿版)">
+            <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+            <span id="gridMoreBtnLabel">更多版面</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:0.62rem;opacity:0.8;" aria-hidden="true"></i>
+          </button>
+          <div id="gridMorePopover" class="grid-more-popover" role="menu" aria-label="更多視訊牆分割版面">
+            <div class="grid-more-popover-label">多路電視牆分割</div>
+            <div class="grid-more-options">
+              <button class="grid-btn" data-grid="grid-9" title="九分割矩陣 (雙埔模式：青埔5 + 新埔4)"><i class="fa-solid fa-border-all"></i> 9格</button>
+              <button class="grid-btn" data-grid="grid-12" title="十二分割廣域監控"><i class="fa-solid fa-grip"></i> 12格</button>
+              <button class="grid-btn" data-grid="grid-16" title="十六分割廣域電視牆 (雙埔模式：青埔8 + 新埔8)"><i class="fa-solid fa-table-cells"></i> 16格</button>
+              <button class="grid-btn" data-grid="grid-all" title="全開不限數量"><i class="fa-solid fa-bars"></i> 全部</button>
+            </div>
+            <div class="grid-more-divider"></div>
+            <button id="btnToggleAdaptive" class="mode-toggle-btn" aria-pressed="false" aria-label="切換單頁滿版或自由捲動模式" title="切換顯示模式：自由捲動最大化 (預設) / 單頁滿版 (免捲動)">
+              <i class="fa-solid fa-expand" aria-hidden="true"></i> <span>單頁滿版</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -12167,9 +12827,11 @@ html[data-theme="light"] .immersive-subtab-btn.active {
     
     <!-- 左側視訊矩陣區 -->
     <section class="matrix-section">
-      <!-- 雙埔大眾運輸即時通勤走廊 (高鐵極速線 + 環狀機捷線) -->
-      <!-- 雙埔通勤速報與即時路網 (收合時為超薄整合膠囊列，展開時為詳細軌道走廊) -->
+      <!-- 雙埔大眾運輸即時通勤走廊 (僅於日常通勤視角顯示高鐵極速線 + 環狀機捷線) -->
       <div id="transitTransitBar" class="transit-corridor-bar is-collapsed-bar"></div>
+
+      <!-- 🌍 現場臨場感知艙：於台灣漫遊、世界之窗、自然療癒與跨國收藏視角呈現當地時間、晨昏光影、廣播電台、環境音場、母語問候與情境漫遊 -->
+      <div id="worldPresenceBar" class="world-presence-bar" style="display:none;" role="region" aria-label="當地即時臨場感知艙"></div>
 
       <!-- 國道即時路段車速與壅塞速報列 -->
       <div id="freewaySpeedBar" class="freeway-speed-bar" style="display:none;" role="region" aria-label="國道即時路段車速速報"></div>
@@ -12253,42 +12915,42 @@ html[data-theme="light"] .immersive-subtab-btn.active {
     <!-- 右側整合式智慧分頁環境與戰術雷達面板 -->
     <aside id="sidebarSection" class="sidebar-section" data-active-tab="weather">
 
-      <!-- 固定置頂：即時環境摘要脈動列 ＋ 5 大功能主題智慧分頁中樞 -->
+      <!-- 固定置頂：即時環境摘要脈動列 ＋ 4+1 當地透鏡智慧分頁中樞 -->
       <div id="sidebarHubDock" class="sidebar-hub-dock">
         <div id="sidebarQuickSummaryStrip" class="sidebar-quick-summary" aria-label="即時環境與空域摘要">
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('weather')" title="切換至氣象環境分頁">
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('weather')" title="切換至當地氣候分頁">
             <span>🌤️</span><strong id="quickSumTemp">--°C</strong>
           </span>
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('radar')" title="切換至雷達飛航分頁">
-            <span>✈️</span><strong id="quickSumFlights">掃描空域</strong>
-          </span>
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('transit')" title="切換至在地交通分頁">
-            <span>🚌</span><strong id="quickSumTransit">公車/單車</strong>
-          </span>
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="切換至身歷其境分頁">
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="切換至在地人文音場分頁">
             <span>🧭</span><strong id="quickSumPulse">現場脈動</strong>
           </span>
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('radar')" title="切換至天空雷達飛航分頁">
+            <span>✈️</span><strong id="quickSumFlights">掃描空域</strong>
+          </span>
+          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('transit')" title="切換至周邊交通分頁">
+            <span>🚌</span><strong id="quickSumTransit">公車/單車</strong>
+          </span>
         </div>
-        <div id="sidebarHubTabs" class="sidebar-hub-tabs" role="tablist" aria-label="右側資訊面板分類分頁">
-          <button type="button" class="sidebar-tab-btn active" role="tab" aria-selected="true" data-sidebar-tab="weather" onclick="window.monitorApp?.switchSidebarTab('weather')" title="即時氣象、匯率時差、空氣品質、降雨走勢與外出管家">
+        <div id="sidebarHubTabs" class="sidebar-hub-tabs" role="tablist" aria-label="右側當地透鏡分類分頁">
+          <button type="button" class="sidebar-tab-btn active" role="tab" aria-selected="true" data-sidebar-tab="weather" onclick="window.monitorApp?.switchSidebarTab('weather')" title="當地即時氣象、匯率時差、空氣品質、降雨走勢與外出指數">
             <i class="fa-solid fa-cloud-sun"></i>
-            <span>氣象</span>
+            <span>氣候</span>
+          </button>
+          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="immersive" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="當地廣播電台、自然與咖啡館環境音場、道地會話真人發音、文化速查、海洋潮汐、山岳雪況與即時新聞地標">
+            <i class="fa-solid fa-headphones-simple"></i>
+            <span>人文</span>
+            <span id="sidebarAudioLiveDot" class="sidebar-audio-dot"></span>
           </button>
           <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="radar" onclick="window.monitorApp?.switchSidebarTab('radar')" title="全球即時氣象雷達、動態飛機移動、地理雷達時間軸、地震震央與入出境航班">
             <i class="fa-solid fa-tower-broadcast"></i>
-            <span>雷達飛航</span>
+            <span>雷達</span>
             <span id="sidebarRadarTabBadge" class="sidebar-tab-badge"></span>
           </button>
           <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="transit" onclick="window.monitorApp?.switchSidebarTab('transit')" title="最近公車站牌、YouBike / 全球共享單車、停車場空位與台鐵誤點">
             <i class="fa-solid fa-bus"></i>
             <span>交通</span>
           </button>
-          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="immersive" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="各國廣播電台、自然環境音場、道地會話發音、文化速查、潮汐雪況、ISS 與即時新聞地標">
-            <i class="fa-solid fa-compass"></i>
-            <span>脈動</span>
-            <span id="sidebarAudioLiveDot" class="sidebar-audio-dot"></span>
-          </button>
-          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="all" onclick="window.monitorApp?.switchSidebarTab('all')" title="一次展開全部 4 大領域資訊卡片">
+          <button type="button" class="sidebar-tab-btn" role="tab" aria-selected="false" data-sidebar-tab="all" onclick="window.monitorApp?.switchSidebarTab('all')" title="一次展開全部 4 大當地透鏡資訊卡片">
             <i class="fa-solid fa-layer-group"></i>
             <span>全覽</span>
           </button>
@@ -12608,6 +13270,9 @@ html[data-theme="light"] .immersive-subtab-btn.active {
 
     </aside>
   </main>
+
+  <!-- 🎬 劇院沉浸視窗模式：懸浮玻璃現場感知控制艙 (滑鼠閒置自動淡出，移動即喚醒) -->
+  <div id="cinemaFloatingHud" class="cinema-floating-hud" style="display:none;" role="region" aria-label="劇院沉浸視窗懸浮控制列"></div>
 
   <!-- 全螢幕大圖放大檢視 Modal 視窗 (符合 WAI-ARIA Dialog 標準) -->
   <div id="cameraModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -16757,6 +17422,14 @@ class WeatherEnvironmentMonitor {
       qsTempEl.textContent = `${Math.round(Number(cur.temperature_2m))}°C`;
     }
     const weatherInfo = this.getWeatherCodeInfo(cur.weather_code);
+    this.latestQuickWeather = {
+      tempC: cur.temperature_2m != null ? Math.round(Number(cur.temperature_2m)) : null,
+      desc: weatherInfo ? weatherInfo.desc : '',
+      locationName: locationName || ''
+    };
+    if (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.refreshWorldPresenceBar === 'function') {
+      requestAnimationFrame(() => window.monitorApp.refreshWorldPresenceBar(false));
+    }
     const uvInfo = this.getUvIndexInfo(cur.uv_index);
     const gustInfo = this.getWindGustInfo(cur.wind_gusts_10m);
     const visInfo = this.getVisibilityInfo(cur.visibility);
@@ -24977,22 +25650,14 @@ class TwinCityTransitMonitor {
         if (favContainer) favContainer.style.display = 'none';
         return;
       }
+      // 台灣漫遊、世界之窗、自然療癒、附近與收藏模式：鄰近公車已完整收納於右側「交通」透鏡分頁 (#busWidgetCard)，隱藏頂部重複巨型公車框以釋放視訊牆高度
       const isIntlMode = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(curCenterId);
       const isTwTourMode = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(curCenterId);
       const isNearbyBusMode = isIntlMode || curCenterId === 'nearby' || isTwTourMode || (curCenterId === 'favorites' && Boolean(window.localBusService && window.localBusService.target));
       if (isNearbyBusMode) {
         const container = document.getElementById(this.containerId);
         if (container) {
-          container.style.display = '';
-          let cityId = window.localBusService?.adminInfo?.cityId || 'newtaipei';
-          if (!window.localBusService?.adminInfo && window.monitorApp && window.monitorApp.userLocation && window.monitorApp.dynamicCameraLoader) {
-            const city = window.monitorApp.dynamicCameraLoader.detectCityByCoords(
-              window.monitorApp.userLocation.lat,
-              window.monitorApp.userLocation.lon
-            );
-            if (city && (city.datasetId || city.id)) cityId = city.datasetId || city.id;
-          }
-          this.renderNearbyTransit(cityId, container);
+          container.style.display = 'none';
         }
         return;
       }
@@ -40750,9 +41415,10 @@ class ImmersiveLocalPulseService {
     this.selectedRadioIdx = 0;
     this.isPlayingRadio = false;
     this.audioEl = null;
-    this.ambientMode = ''; // '' | 'ocean' | 'rain' | 'forest' | 'fire'
+    this.ambientMode = ''; // '' | 'ocean' | 'rain' | 'cafe' | 'forest' | 'fire'
     this._ambientCtx = null;
     this._ambientNodes = [];
+    this.pulseSection = 'audio'; // 預設聚焦「音場會話」精簡單屏體驗，告別千像素捲動牆
     this.marine = null;
     this.alpine = null;
     this.iss = null;
@@ -41241,6 +41907,19 @@ class ImmersiveLocalPulseService {
         lfoGain.connect(filter.frequency);
         lfo.start();
         nodes.push(lfo, lfoGain);
+      } else if (mode === 'cafe') {
+        filter.type = 'bandpass';
+        filter.frequency.value = 390;
+        filter.Q.value = 0.85;
+        masterGain.gain.value = 0.23;
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.frequency.value = 0.08;
+        lfoGain.gain.value = 110;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+        nodes.push(lfo, lfoGain);
       } else if (mode === 'fire') {
         filter.type = 'lowpass';
         filter.frequency.value = 240;
@@ -41253,7 +41932,13 @@ class ImmersiveLocalPulseService {
       src.start();
       this._ambientNodes = nodes;
       this.ambientMode = mode;
-      const modeNames = { ocean: '🌊 海岸浪濤環境音', rain: '🌧️ 街頭微雨環境音', forest: '🌲 森林微風環境音', fire: '🔥 極地壁爐柴火音' };
+      const modeNames = {
+        ocean: '🌊 海岸浪濤環境音',
+        rain: '🌧️ 街頭微雨環境音',
+        cafe: '☕ 街角咖啡館環境音',
+        forest: '🌲 森林微風環境音',
+        fire: '🔥 極地壁爐柴火音'
+      };
       if (window.showToast) window.showToast(`🎧 已開啟身歷其境音場：${modeNames[mode] || mode}`, 'info');
     } catch (_) {
       this.ambientMode = '';
@@ -41675,6 +42360,36 @@ class ImmersiveLocalPulseService {
     };
   }
 
+  cycleNextRadioStation() {
+    if (!Array.isArray(this.radios) || this.radios.length === 0) return;
+    const nextIdx = (this.selectedRadioIdx + 1) % this.radios.length;
+    this.selectedRadioIdx = nextIdx;
+    this.playCurrentRadio();
+  }
+
+  getCurrentGreetingInfo() {
+    const culture = this.getCultureProfile(this.countryCode);
+    const astro = this.astro || this.computeSolarAndLunarPulse(this.target?.lat || 25.0153, this.target?.lon || 121.2213);
+    const hr = astro && astro.localSolarHour != null ? astro.localSolarHour : 12;
+    const greeting = (hr >= 5 && hr < 11)
+      ? culture.morning
+      : ((hr >= 11 && hr < 18) ? culture.afternoon : culture.evening);
+    return {
+      countryCode: this.countryCode || 'TW',
+      countryName: culture.countryName || '當地',
+      langName: culture.langName || '',
+      langCode: culture.langCode || 'en-US',
+      native: greeting?.native || 'Hello!',
+      phonetic: greeting?.phonetic || '',
+      zh: greeting?.zh || '當地問候'
+    };
+  }
+
+  speakCurrentGreeting() {
+    const g = this.getCurrentGreetingInfo();
+    this.speakPhrase(g.native, g.langCode, `${g.countryName} ${g.zh}`);
+  }
+
   selectRadioStation(idx) {
     const nextIdx = Number(idx);
     if (!Number.isFinite(nextIdx) || nextIdx < 0 || nextIdx >= this.radios.length) return;
@@ -41786,10 +42501,11 @@ class ImmersiveLocalPulseService {
           </select>
         </div>
         <div class="ambient-soundscape-bar" role="group" aria-label="自然環境音場混音器">
-          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'ocean' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('ocean')" title="疊加療癒海岸浪濤自然環境音">🌊 海浪音</button>
-          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'rain' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('rain')" title="疊加街頭微雨放鬆白噪音">🌧️ 微雨聲</button>
-          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'forest' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('forest')" title="疊加山林微風吹拂環境音">🌲 森林風</button>
-          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'fire' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('fire')" title="疊加極地木屋壁爐溫暖柴火音">🔥 壁爐火</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'ocean' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('ocean')" title="疊加療癒海岸浪濤自然環境音">🌊 海浪</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'rain' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('rain')" title="疊加街頭微雨放鬆白噪音">🌧️ 微雨</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'cafe' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('cafe')" title="疊加歐洲與東京街角露天咖啡館溫暖環境音">☕ 咖啡館</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'forest' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('forest')" title="疊加山林微風吹拂環境音">🌲 森林</button>
+          <button type="button" class="ambient-sound-pill ${this.ambientMode === 'fire' ? 'active' : ''}" onclick="window.immersivePulseService?.toggleAmbientSound('fire')" title="疊加極地木屋壁爐溫暖柴火音">🔥 壁爐</button>
         </div>
       </div>
     ` : '';
@@ -41990,27 +42706,27 @@ class ImmersiveLocalPulseService {
       </div>
     ` : '';
 
-    const sec = this.pulseSection || 'all';
+    const sec = this.pulseSection || 'audio';
     const showAudio = (sec === 'all' || sec === 'audio');
     const showNature = (sec === 'all' || sec === 'nature');
     const showExplore = (sec === 'all' || sec === 'explore');
 
     const subtabsHtml = `
-      <div class="immersive-subtabs" role="tablist" aria-label="身歷其境子分類">
-        <button type="button" class="immersive-subtab-btn ${sec === 'all' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('all')">✨ 全部</button>
-        <button type="button" class="immersive-subtab-btn ${sec === 'audio' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('audio')">🎧 音場語言</button>
-        <button type="button" class="immersive-subtab-btn ${sec === 'nature' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('nature')">🌊 天地太空</button>
-        <button type="button" class="immersive-subtab-btn ${sec === 'explore' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('explore')">📰 新聞地標</button>
+      <div class="immersive-subtabs" role="tablist" aria-label="在地人文子分類">
+        <button type="button" class="immersive-subtab-btn ${sec === 'audio' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('audio')">🎧 音場會話</button>
+        <button type="button" class="immersive-subtab-btn ${sec === 'nature' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('nature')">🌊 山海天文</button>
+        <button type="button" class="immersive-subtab-btn ${sec === 'explore' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('explore')">🏛️ 地標新聞</button>
+        <button type="button" class="immersive-subtab-btn ${sec === 'all' ? 'active' : ''}" onclick="window.immersivePulseService?.setPulseSection('all')">✨ 全開</button>
       </div>
     `;
 
     card.innerHTML = `
       <div class="widget-title-row">
         <div class="widget-title">
-          <i class="fa-solid fa-compass" style="color:#c084fc;"></i>
-          <span>身歷其境 ‧ 當地即時脈動</span>
+          <i class="fa-solid fa-headphones-simple" style="color:#c084fc;"></i>
+          <span>在地人文 ‧ 現場音場與脈動</span>
         </div>
-        <span class="widget-badge">${eHtml(culture.countryName)} (${eHtml(this.countryCode)}) ‧ 現場感知</span>
+        <span class="widget-badge">${eHtml(culture.countryName)} (${eHtml(this.countryCode)}) ‧ 臨場感知</span>
       </div>
       ${subtabsHtml}
       ${showAudio ? radioBoxHtml : ''}
@@ -42036,15 +42752,18 @@ class ImmersiveLocalPulseService {
       ${showExplore ? landmarksHtml : ''}
     `;
 
-    // 同步右側「脈動」分頁音場播放指示點與頂部摘要文字
-    const isAnyAudio = Boolean(this.isPlayingRadio || this.ambientType);
+    // 同步右側「人文」分頁音場播放指示點、頂部摘要文字與現場臨場感知艙
+    const isAnyAudio = Boolean(this.isPlayingRadio || this.ambientMode);
     const audioDot = document.getElementById('sidebarAudioLiveDot');
     if (audioDot) audioDot.classList.toggle('is-live', isAnyAudio);
     const qsPulse = document.getElementById('quickSumPulse');
     if (qsPulse) {
       qsPulse.textContent = isAnyAudio
         ? '🔊 音場播放中'
-        : `${culture.countryName}脈動`;
+        : `${culture.countryName}人文`;
+    }
+    if (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.refreshWorldPresenceBar === 'function') {
+      window.monitorApp.refreshWorldPresenceBar(false);
     }
   }
 
@@ -42737,11 +43456,11 @@ class MonitorApp {
     const indicator = document.getElementById('activeDomainIndicator');
     if (indicator) {
       const tagMap = {
-        taiwan: '<i class="fa-solid fa-house-signal"></i> 台灣生活',
-        tw_tour: '<i class="fa-solid fa-compass"></i> 台灣觀光',
-        world: '<i class="fa-solid fa-earth-asia"></i> 世界城市',
-        nature: '<i class="fa-solid fa-mountain-sun"></i> 自然奇景',
-        favorites: '<i class="fa-solid fa-star" style="color:#fbbf24;"></i> 收藏牆'
+        taiwan: '<i class="fa-solid fa-house-signal"></i> 日常通勤',
+        tw_tour: '<i class="fa-solid fa-compass"></i> 台灣漫遊',
+        world: '<i class="fa-solid fa-earth-asia"></i> 世界之窗',
+        nature: '<i class="fa-solid fa-mountain-sun"></i> 自然療癒',
+        favorites: '<i class="fa-solid fa-star" style="color:#fbbf24;"></i> 專屬收藏'
       };
       indicator.innerHTML = tagMap[domain] || tagMap.taiwan;
     }
@@ -42856,12 +43575,14 @@ class MonitorApp {
       if (btnToggleSidebar) {
         btnToggleSidebar.classList.remove('active');
         btnToggleSidebar.setAttribute('aria-expanded', 'false');
-        btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>資訊面板</span>';
-        btnToggleSidebar.title = '點擊展開右側氣象、雷達飛航、交通與身歷其境面板';
+        btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>當地透鏡</span>';
+        btnToggleSidebar.title = '點擊展開右側當地氣候、在地人文、天空雷達與周邊交通面板';
       }
     } else if (btnToggleSidebar) {
       btnToggleSidebar.setAttribute('aria-expanded', 'true');
     }
+    this.updateGridMoreUI();
+    this.refreshWorldPresenceBar(false);
 
     // 啟動出門前 3 秒智慧外出快報膠囊計算
     if (this.commuteCapsuleTimer) {
@@ -42967,6 +43688,8 @@ class MonitorApp {
             const suffix = showForeignSuffix ? ` (${tzLabelMap[targetTz] || '當地時間'})` : '';
             dateEl.innerText = `${y}年${m}月${d}日${suffix}`;
           }
+          this._latestClockTimeStr = timeStr;
+          this.refreshWorldPresenceBar(true);
           return;
         } catch (_) {}
       }
@@ -42983,11 +43706,299 @@ class MonitorApp {
         tkClk.textContent = timeStr.slice(0, 5);
       }
       if (dateEl) dateEl.innerText = dateStr;
+      this._latestClockTimeStr = timeStr;
+      this.refreshWorldPresenceBar(true);
     };
     this.updateClockDisplay = updateTime;
     updateTime();
     if (this.clockTimer) clearInterval(this.clockTimer);
     this.clockTimer = setInterval(updateTime, 1000);
+  }
+
+  // ===== World Presence Studio (現場臨場感知艙 ‧ 情境漫遊 ‧ 劇院沉浸視窗) =====
+  isWorldPresenceCenter(centerId = this.currentCenterId) {
+    if (!centerId || ['dual', 'qingpu', 'banqiao'].includes(centerId)) return false;
+    if (centerId === 'favorites') return this.getFavorites().length > 0;
+    return true;
+  }
+
+  getCountryFlagEmoji(cc) {
+    const clean = String(cc || '').trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(clean)) return '🌍';
+    return String.fromCodePoint(127397 + clean.charCodeAt(0), 127397 + clean.charCodeAt(1));
+  }
+
+  updateGridMoreUI() {
+    if (typeof document === 'undefined') return;
+    const toggleBtn = document.getElementById('btnGridMoreToggle');
+    const labelEl = document.getElementById('gridMoreBtnLabel');
+    if (!toggleBtn || !labelEl) return;
+    const extraLabels = {
+      'grid-9': '9格',
+      'grid-12': '12格',
+      'grid-16': '16格',
+      'grid-all': '全部'
+    };
+    const extraTxt = extraLabels[this.currentGridMode] || '';
+    if (extraTxt) {
+      labelEl.textContent = this.isAdaptiveFit ? `${extraTxt}‧滿版` : extraTxt;
+      toggleBtn.classList.add('has-active-extra');
+    } else if (this.isAdaptiveFit) {
+      labelEl.textContent = '單頁滿版';
+      toggleBtn.classList.add('has-active-extra');
+    } else {
+      labelEl.textContent = '更多版面';
+      toggleBtn.classList.remove('has-active-extra');
+    }
+  }
+
+  async startMoodJourney(mood = 'twilight') {
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    const validMood = ['twilight', 'night', 'day'].includes(mood) ? mood : 'twilight';
+    this.dayNightFilterMode = validMood;
+    if (this.currentCenterId !== 'daynight') {
+      await this.switchCenter('daynight');
+    } else {
+      this.setDayNightMode(validMood);
+    }
+    const moodToastMap = {
+      twilight: '🌅 情境漫遊：已鎖定地球此刻正值「日出／夕陽魔幻時刻」的高畫質視窗',
+      night: '🌃 情境漫遊：已為您點亮全球「璀璨城市夜景與星空」實況視窗',
+      day: '☀️ 情境漫遊：已切換至全球「晴朗陽光海灣與山岳」實況視窗'
+    };
+    if (typeof window !== 'undefined' && window.showToast) {
+      window.showToast(moodToastMap[validMood] || moodToastMap.twilight, 'info');
+    }
+  }
+
+  armCinemaHudIdleTimer() {
+    const hud = typeof document !== 'undefined' ? document.getElementById('cinemaFloatingHud') : null;
+    if (!hud) return;
+    hud.classList.remove('is-idle');
+    if (this._cinemaIdleTimer) clearTimeout(this._cinemaIdleTimer);
+    if (!this.isCinemaMode) return;
+    this._cinemaIdleTimer = setTimeout(() => {
+      if (this.isCinemaMode && hud) hud.classList.add('is-idle');
+    }, 3800);
+  }
+
+  toggleCinemaMode(forceState = null) {
+    if (typeof document === 'undefined' || !document.body) return;
+    if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
+    const next = typeof forceState === 'boolean' ? forceState : !this.isCinemaMode;
+    this.isCinemaMode = next;
+    document.body.classList.toggle('cinema-zen-mode', next);
+    const btn = document.getElementById('btnCinemaMode');
+    if (btn) {
+      btn.setAttribute('aria-pressed', String(next));
+      btn.classList.toggle('active', next);
+    }
+    const hud = document.getElementById('cinemaFloatingHud');
+    if (hud) {
+      hud.style.display = next ? 'flex' : 'none';
+    }
+    this.refreshWorldPresenceBar(false);
+    if (next) {
+      this.armCinemaHudIdleTimer();
+      if (window.showToast) {
+        window.showToast('🎬 已進入「劇院沉浸視窗」模式（移動滑鼠喚醒底部控制艙，按 Esc 返回）', 'info');
+      }
+    } else {
+      if (this._cinemaIdleTimer) {
+        clearTimeout(this._cinemaIdleTimer);
+        this._cinemaIdleTimer = null;
+      }
+      this.applyAdaptiveViewportFit();
+      if (!this.isSidebarCollapsed && this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
+        setTimeout(() => this.radarMap.onContainerShown(), 180);
+      }
+    }
+  }
+
+  refreshWorldPresenceBar(clockOnly = false) {
+    if (typeof document === 'undefined') return;
+    const bar = document.getElementById('worldPresenceBar');
+    const hud = document.getElementById('cinemaFloatingHud');
+    const showPresence = this.isWorldPresenceCenter(this.currentCenterId);
+
+    const filterTeleportBtn = document.getElementById('btnWorldTeleport');
+    if (filterTeleportBtn) {
+      filterTeleportBtn.classList.toggle('is-hidden', showPresence);
+    }
+
+    const clockTxt = this._latestClockTimeStr || (document.getElementById('clockTime')?.innerText || '--:--:--');
+    if (clockOnly) {
+      const wpClock = document.getElementById('wpLocalClockText');
+      if (wpClock) wpClock.textContent = clockTxt;
+      const hudClock = document.getElementById('cinemaHudClockText');
+      if (hudClock) hudClock.textContent = clockTxt;
+      return;
+    }
+
+    if (bar) {
+      bar.style.display = (showPresence && !this.isCinemaMode) ? 'flex' : 'none';
+    }
+    if (!showPresence && !this.isCinemaMode) return;
+
+    const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
+    const pulse = (typeof window !== 'undefined') ? window.immersivePulseService : null;
+    const lat = Number(pulse?.target?.lat ?? this.weatherMonitor?.activeSingleParams?.lat ?? this.currentCenterData?.lat ?? 25.0153);
+    const lon = Number(pulse?.target?.lon ?? this.weatherMonitor?.activeSingleParams?.lon ?? this.currentCenterData?.lon ?? 121.2213);
+    const isTw = typeof LocalGeoBusService === 'undefined' || LocalGeoBusService.isTaiwanCoords(lat, lon);
+    const cc = pulse?.countryCode || (isTw ? 'TW' : 'JP');
+    const flag = this.getCountryFlagEmoji(cc);
+
+    const rawSpot = pulse?.target?.label || this.weatherMonitor?.latestQuickWeather?.locationName || this.currentCenterData?.name || '即時視窗';
+    const cleanSpot = String(rawSpot).replace(/\s*\(.+\)$/, '').trim() || rawSpot;
+
+    const targetTz = this.getActiveTimezone();
+    let tzDiffLabel = '台灣時間';
+    if (!isTw || (targetTz && targetTz !== 'Asia/Taipei')) {
+      const offHrs = (this.weatherMonitor && typeof this.weatherMonitor.activeTzOffsetHours === 'number' && Number.isFinite(this.weatherMonitor.activeTzOffsetHours))
+        ? this.weatherMonitor.activeTzOffsetHours
+        : WeatherEnvironmentMonitor.resolveTimezoneOffsetHours(targetTz || 'auto', new Date(), lon);
+      const diffFromTw = Math.round((offHrs - 8) * 2) / 2;
+      tzDiffLabel = diffFromTw === 0
+        ? '與台灣同時區'
+        : `較台灣 ${diffFromTw > 0 ? `+${diffFromTw}` : diffFromTw}h`;
+    }
+
+    const solar = this.computeCameraSolarState({ lat, lon }, new Date()) || { phase: 'day', icon: '☀️', label: '白晝' };
+    const phaseTitleMap = {
+      twilight: '🌅 魔幻晨昏',
+      day: '☀️ 晴朗白晝',
+      night: '🌙 靜謐夜色'
+    };
+    const solarDisplay = phaseTitleMap[solar.phase] || `${solar.icon} ${solar.label}`;
+
+    const qw = this.weatherMonitor?.latestQuickWeather;
+    const tempTxt = (qw && qw.tempC != null)
+      ? `${qw.tempC}°C${qw.desc ? ` ${qw.desc}` : ''}`
+      : (document.getElementById('quickSumTemp')?.textContent || '--°C');
+
+    const isRadioPlaying = Boolean(pulse?.isPlayingRadio);
+    const activeRadioObj = (pulse && Array.isArray(pulse.radios)) ? (pulse.radios[pulse.selectedRadioIdx] || pulse.radios[0]) : null;
+    const radioShortCity = activeRadioObj?.city || (pulse?.getCultureProfile(cc)?.countryName || '當地');
+    const hasMultiRadios = Boolean(pulse && Array.isArray(pulse.radios) && pulse.radios.length > 1);
+    const ambient = pulse?.ambientMode || '';
+    const greeting = pulse ? pulse.getCurrentGreetingInfo() : { native: '你好！', zh: '問候', countryName: '台灣' };
+    const shortNative = greeting.native.length > 12 ? `${greeting.native.slice(0, 11)}…` : greeting.native;
+    const curMood = this.currentCenterId === 'daynight' ? (this.dayNightFilterMode || '') : '';
+
+    if (bar && showPresence) {
+      bar.classList.remove('phase-twilight', 'phase-day', 'phase-night');
+      bar.classList.add(`phase-${solar.phase}`);
+      bar.innerHTML = `
+        <div class="wp-destination">
+          <span class="wp-flag-badge" title="國家／地區代號：${eHtml(cc)}">${eHtml(cc)}</span>
+          <div class="wp-place-block">
+            <div class="wp-place-title-row">
+              <span class="wp-place-name" title="${eHtml(rawSpot)}">${eHtml(cleanSpot)}</span>
+              <span class="wp-live-clock-pill" title="當地即時標準時間 (${eHtml(tzDiffLabel)})">
+                <i class="fa-regular fa-clock" style="font-size:0.64rem;"></i>
+                <span id="wpLocalClockText">${eHtml(clockTxt)}</span>
+              </span>
+            </div>
+            <div class="wp-meta-sub">
+              <span>${eHtml(tzDiffLabel)}</span>
+              <span>‧</span>
+              <span class="wp-solar-chip is-${eHtml(solar.phase)}">${eHtml(solarDisplay)}</span>
+              <span>‧</span>
+              <span>🌡️ ${eHtml(tempTxt)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wp-divider" aria-hidden="true"></div>
+
+        <div class="wp-sensory-deck" role="group" aria-label="當地聲音與母語臨場體驗">
+          <button type="button" id="wpRadioBtn" class="wp-action-pill ${isRadioPlaying ? 'is-radio-live' : ''}"
+                  onclick="window.immersivePulseService?.toggleRadioPlay()"
+                  title="${isRadioPlaying ? `正在播放：${eHtml(activeRadioObj?.name || '當地廣播')}（點擊停止）` : `一鍵聆聽「${eHtml(activeRadioObj?.name || `${radioShortCity}廣播電台`)}」真實放送`}">
+            ${isRadioPlaying
+              ? `<span class="wp-eq-bars" aria-hidden="true"><i></i><i></i><i></i></span><span>${eHtml(radioShortCity)}電台</span>`
+              : `<span>📻</span><span>${eHtml(radioShortCity)}電台</span>`}
+          </button>
+          ${hasMultiRadios ? `
+          <button type="button" class="wp-action-pill wp-radio-next-btn"
+                  onclick="window.immersivePulseService?.cycleNextRadioStation()"
+                  title="切換下一台當地廣播頻道">
+            <i class="fa-solid fa-forward-step" style="font-size:0.64rem;"></i>
+          </button>` : ''}
+          <button type="button" class="wp-action-pill ${ambient === 'ocean' ? 'is-ambient-live' : ''}"
+                  onclick="window.immersivePulseService?.toggleAmbientSound('ocean')"
+                  title="疊加療癒海岸浪濤音場">🌊${ambient === 'ocean' ? ' 海浪' : ''}</button>
+          <button type="button" class="wp-action-pill ${ambient === 'rain' ? 'is-ambient-live' : ''}"
+                  onclick="window.immersivePulseService?.toggleAmbientSound('rain')"
+                  title="疊加街頭微雨白噪音">🌧️${ambient === 'rain' ? ' 微雨' : ''}</button>
+          <button type="button" class="wp-action-pill ${ambient === 'cafe' ? 'is-ambient-live' : ''}"
+                  onclick="window.immersivePulseService?.toggleAmbientSound('cafe')"
+                  title="疊加街角露天咖啡館溫暖環境音">☕${ambient === 'cafe' ? ' 咖啡館' : ''}</button>
+          <button type="button" class="wp-action-pill ${ambient === 'forest' ? 'is-ambient-live' : ''}"
+                  onclick="window.immersivePulseService?.toggleAmbientSound('forest')"
+                  title="疊加山林微風環境音">🌲${ambient === 'forest' ? ' 森林' : ''}</button>
+          <button type="button" id="wpGreetingBtn" class="wp-action-pill is-greeting"
+                  onclick="window.immersivePulseService?.speakCurrentGreeting()"
+                  title="點擊聆聽當地此刻真人母語問候發音：「${eHtml(greeting.native)}」(${eHtml(greeting.zh)})">
+            <span>🗣️</span><span>${eHtml(shortNative)}</span>
+          </button>
+        </div>
+
+        <div class="wp-journey-deck" role="group" aria-label="世界情境漫遊">
+          <button type="button" class="wp-journey-pill ${curMood === 'twilight' ? 'is-active-mood' : ''}"
+                  onclick="window.monitorApp?.startMoodJourney('twilight')"
+                  title="追尋地球此刻正值日出或夕陽餘暉魔幻時刻的 4K 實況視窗">🌅 晨昏</button>
+          <button type="button" class="wp-journey-pill ${curMood === 'night' ? 'is-active-mood' : ''}"
+                  onclick="window.monitorApp?.startMoodJourney('night')"
+                  title="探索全球此刻正值璀璨夜色與極光星空的 4K 實況視窗">🌃 夜景</button>
+          <button type="button" class="wp-journey-pill ${curMood === 'day' ? 'is-active-mood' : ''}"
+                  onclick="window.monitorApp?.startMoodJourney('day')"
+                  title="切換至全球此刻陽光普照的碧藍海灣與高山實況視窗">☀️ 白晝</button>
+          <button type="button" class="wp-journey-pill is-teleport"
+                  onclick="window.monitorApp?.teleportRandomWorldWindow()"
+                  title="世界任意門：隨機穿越至全球或台灣任一處高畫質實況視窗">🎲 任意門</button>
+        </div>
+      `;
+    }
+
+    if (hud && this.isCinemaMode) {
+      hud.innerHTML = `
+        <span class="wp-flag-badge" style="height:22px;min-width:26px;font-size:0.66rem;">${eHtml(cc)}</span>
+        <strong style="font-size:0.78rem;color:#f8fafc;white-space:nowrap;">${eHtml(cleanSpot)}</strong>
+        <span class="wp-live-clock-pill"><span id="cinemaHudClockText">${eHtml(clockTxt)}</span></span>
+        <span style="font-size:0.7rem;color:#cbd5e1;white-space:nowrap;">${eHtml(solarDisplay)} ‧ ${eHtml(tempTxt)}</span>
+        <div class="wp-divider" aria-hidden="true"></div>
+        <button type="button" class="wp-action-pill ${isRadioPlaying ? 'is-radio-live' : ''}"
+                onclick="window.immersivePulseService?.toggleRadioPlay()"
+                title="播放／停止當地廣播電台">
+          ${isRadioPlaying ? '<span class="wp-eq-bars"><i></i><i></i><i></i></span>' : '📻'} <span>電台</span>
+        </button>
+        <button type="button" class="wp-action-pill ${ambient === 'ocean' ? 'is-ambient-live' : ''}"
+                onclick="window.immersivePulseService?.toggleAmbientSound('ocean')" title="海浪環境音">🌊</button>
+        <button type="button" class="wp-action-pill ${ambient === 'rain' ? 'is-ambient-live' : ''}"
+                onclick="window.immersivePulseService?.toggleAmbientSound('rain')" title="微雨環境音">🌧️</button>
+        <button type="button" class="wp-action-pill ${ambient === 'cafe' ? 'is-ambient-live' : ''}"
+                onclick="window.immersivePulseService?.toggleAmbientSound('cafe')" title="街角咖啡館環境音">☕</button>
+        <div class="wp-divider" aria-hidden="true"></div>
+        <button type="button" class="wp-action-pill ${this.currentGridMode === 'grid-1' ? 'is-ambient-live' : ''}"
+                onclick="window.monitorApp?.setGridMode('grid-1')" title="單一滿版視窗">1格</button>
+        <button type="button" class="wp-action-pill ${this.currentGridMode === 'grid-4' ? 'is-ambient-live' : ''}"
+                onclick="window.monitorApp?.setGridMode('grid-4')" title="四分割視窗">4格</button>
+        <button type="button" class="wp-action-pill ${this.currentGridMode === 'grid-6' ? 'is-ambient-live' : ''}"
+                onclick="window.monitorApp?.setGridMode('grid-6')" title="六分割視窗">6格</button>
+        ${this.totalPages > 1 ? `
+        <button type="button" class="wp-action-pill" onclick="window.monitorApp?.changePage(-1)" title="上一頁 ([)">‹</button>
+        <span style="font-size:0.69rem;color:#94a3b8;font-variant-numeric:tabular-nums;">${this.currentPage + 1}/${this.totalPages}</span>
+        <button type="button" class="wp-action-pill" onclick="window.monitorApp?.changePage(1)" title="下一頁 (])">›</button>
+        ` : ''}
+        <button type="button" class="wp-journey-pill is-teleport"
+                onclick="window.monitorApp?.teleportRandomWorldWindow()" title="隨機穿越世界任意門">🎲 任意門</button>
+        <button type="button" class="cinema-hud-exit-btn"
+                onclick="window.monitorApp?.toggleCinemaMode(false)" title="退出劇院沉浸視窗模式 (快捷鍵 Esc 或 Z)">
+          <i class="fa-solid fa-xmark"></i> 退出沉浸
+        </button>
+      `;
+    }
   }
 
 
@@ -43935,6 +44946,10 @@ class MonitorApp {
     const isIntl = this.isInternationalCenter();
     const isScreenAwake = window.wakeLockManager ? window.wakeLockManager.enabled : true;
     const quickOps = [
+      { title: this.isCinemaMode ? '🎬 退出「劇院沉浸視窗」模式 (Esc / Z)' : '🎬 開啟「劇院沉浸視窗」全螢幕無干擾模式 (快捷鍵 Z)', sub: '隱藏所有工具列與側欄，讓 4K 實況視窗與當地廣播／環境音場純粹滿版呈現', badge: '沉浸體驗', icon: 'fa-film', run: () => this.toggleCinemaMode() },
+      { title: '🌅 情境漫遊：追尋地球此刻「日出／夕陽魔幻時刻」', sub: '自動計算全球太陽仰角，篩選此刻正值晨曦或黃昏餘暉的高畫質視窗', badge: '情境漫遊', icon: 'fa-sun', run: () => this.startMoodJourney('twilight') },
+      { title: '🌃 情境漫遊：探索全球「璀璨城市夜景與星空」', sub: '一鍵切換至地球夜晚半球之百萬夜景、港灣燈火與極光實況', badge: '情境漫遊', icon: 'fa-moon', run: () => this.startMoodJourney('night') },
+      { title: '☕ 開啟／關閉「街角咖啡館」身歷其境環境音場', sub: '疊加溫暖露天咖啡館環境聲，搭配歐洲廣場、東京街頭或淡水河畔實況', badge: '現場音場', icon: 'fa-mug-hot', run: () => window.immersivePulseService?.toggleAmbientSound('cafe') },
       { title: isScreenAwake ? '螢幕常亮防休眠：目前「開啟中」（點擊改為系統預設休眠）' : '開啟「觀看時螢幕常亮不休眠」模式', sub: '觀看即時路況與跨國 4K 直播時保持手機螢幕常亮，防止自動變暗或黑畫面關閉', badge: '螢幕常亮', icon: 'fa-lightbulb', run: () => window.wakeLockManager?.toggle(true) },
       { title: '🌍 世界任意門：一鍵隨機穿越全球高畫質即時之窗', sub: '隨機探索太空衛星、阿爾卑斯 360° 全景、國際原生 HLS 直播與世界 4K 奇觀', badge: '世界之窗', icon: 'fa-wand-magic-sparkles', run: () => this.teleportRandomWorldWindow() },
       { title: '手機 ⇄ Google TV 跨裝置掃描 QR Code／配對碼同步收藏牆', sub: '產生 QR Code 與 4 位數配對碼，一鍵將收藏與多組情境視訊牆同步至電視或另一台手機', badge: '跨裝置同步', icon: 'fa-qrcode', run: () => this.openWallSyncModal() },
@@ -44245,6 +45260,39 @@ class MonitorApp {
       });
     }
 
+    // 更多版面浮動選單開關與點擊外部自動關閉
+    const btnGridMoreToggle = document.getElementById('btnGridMoreToggle');
+    const gridMorePopover = document.getElementById('gridMorePopover');
+    const gridMoreWrap = document.getElementById('gridMoreWrap');
+    const closeGridMorePopover = () => {
+      if (gridMorePopover) gridMorePopover.classList.remove('is-open');
+      if (btnGridMoreToggle) btnGridMoreToggle.setAttribute('aria-expanded', 'false');
+    };
+    if (btnGridMoreToggle && gridMorePopover) {
+      btnGridMoreToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = gridMorePopover.classList.toggle('is-open');
+        btnGridMoreToggle.setAttribute('aria-expanded', String(isOpen));
+      });
+      document.addEventListener('click', (e) => {
+        if (gridMoreWrap && !gridMoreWrap.contains(e.target)) {
+          closeGridMorePopover();
+        }
+      });
+    }
+
+    // 劇院沉浸視窗模式按鈕與滑鼠喚醒控制艙
+    const btnCinemaMode = document.getElementById('btnCinemaMode');
+    if (btnCinemaMode) {
+      btnCinemaMode.addEventListener('click', () => this.toggleCinemaMode());
+    }
+    window.addEventListener('mousemove', () => {
+      if (this.isCinemaMode) this.armCinemaHudIdleTimer();
+    }, { passive: true });
+    window.addEventListener('touchstart', () => {
+      if (this.isCinemaMode) this.armCinemaHudIdleTimer();
+    }, { passive: true });
+
     // 網格模式切換按鈕 (1, 4, 6, 9, 10, 12, 16, all)
     document.querySelectorAll('.grid-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -44253,6 +45301,7 @@ class MonitorApp {
           if (typeof window.triggerHaptic === 'function') window.triggerHaptic();
           document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
+          closeGridMorePopover();
           this.setGridMode(grid);
         }
       });
@@ -44274,11 +45323,13 @@ class MonitorApp {
           btnToggleAdaptive.innerHTML = '<i class="fa-solid fa-expand"></i> <span>單頁滿版</span>';
           btnToggleAdaptive.title = '切換顯示模式：目前為自由捲動最大化 (點擊切換為單頁滿版)';
         }
+        this.updateGridMoreUI();
+        closeGridMorePopover();
         this.applyAdaptiveViewportFit();
       });
     }
 
-    // 當地資訊面板切換 (酷炫動態展開/收合右側氣象、AQI與地理雷達)
+    // 當地透鏡面板切換 (動態展開/收合右側當地氣候、在地人文、天空雷達與周邊交通)
     const btnToggleSidebar = document.getElementById('btnToggleSidebar');
     if (btnToggleSidebar) {
       btnToggleSidebar.addEventListener('click', () => {
@@ -44293,13 +45344,13 @@ class MonitorApp {
           if (this.isSidebarCollapsed) {
             container.classList.add('sidebar-collapsed');
             btnToggleSidebar.classList.remove('active');
-            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>資訊面板</span>';
-            btnToggleSidebar.title = '點擊展開右側氣象、雷達飛航、交通與身歷其境面板';
+            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>當地透鏡</span>';
+            btnToggleSidebar.title = '點擊展開右側當地氣候、在地人文、天空雷達與周邊交通面板';
           } else {
             container.classList.remove('sidebar-collapsed');
             btnToggleSidebar.classList.add('active');
-            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>資訊面板</span>';
-            btnToggleSidebar.title = '點擊收合右側資訊面板，讓視訊牆全寬展開';
+            btnToggleSidebar.innerHTML = '<i class="fa-solid fa-table-columns"></i> <span>當地透鏡</span>';
+            btnToggleSidebar.title = '點擊收合右側當地透鏡面板，讓視訊牆全寬展開';
           }
         }
         if (!this.isSidebarCollapsed && this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
@@ -44468,7 +45519,14 @@ class MonitorApp {
         return;
       }
       if (!isInputFocused && !isCpActive && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        if (e.key === '[' || e.key === 'PageUp') {
+        if (e.key === 'z' || e.key === 'Z') {
+          const modalEl = document.getElementById('cameraModal');
+          if (!modalEl || !modalEl.classList.contains('active')) {
+            e.preventDefault();
+            this.toggleCinemaMode();
+            return;
+          }
+        } else if (e.key === '[' || e.key === 'PageUp') {
           if (this.totalPages > 1) {
             e.preventDefault();
             this.changePage(-1);
@@ -44483,6 +45541,12 @@ class MonitorApp {
         }
       }
       if (e.key === 'Escape') {
+        const gmPop = document.getElementById('gridMorePopover');
+        if (gmPop && gmPop.classList.contains('is-open')) {
+          gmPop.classList.remove('is-open');
+          document.getElementById('btnGridMoreToggle')?.setAttribute('aria-expanded', 'false');
+          return;
+        }
         const eqOverlay = document.getElementById('earthquakeModalOverlay');
         if (eqOverlay && eqOverlay.classList.contains('active')) {
           if (window.earthquakeMonitor && typeof window.earthquakeMonitor.dismissAlert === 'function') {
@@ -44497,8 +45561,20 @@ class MonitorApp {
           this.closeWallSyncModal();
           return;
         }
-        if (isCpActive) this.closeCommandPalette();
-        else this.closeModal();
+        if (isCpActive) {
+          this.closeCommandPalette();
+          return;
+        }
+        const camModal = document.getElementById('cameraModal');
+        if (camModal && camModal.classList.contains('active')) {
+          this.closeModal();
+          return;
+        }
+        if (this.isCinemaMode) {
+          this.toggleCinemaMode(false);
+          return;
+        }
+        this.closeModal();
       }
     });
 
@@ -44732,12 +45808,14 @@ class MonitorApp {
     const secHeaderHeight = sectionHeader && sectionHeader.offsetHeight > 0 && window.getComputedStyle(sectionHeader).display !== 'none' ? sectionHeader.offsetHeight : 0;
     const transitBar = document.getElementById('transitTransitBar');
     const transitHeight = transitBar && transitBar.offsetHeight > 0 && window.getComputedStyle(transitBar).display !== 'none' ? transitBar.offsetHeight + 10 : 0;
+    const wpBar = document.getElementById('worldPresenceBar');
+    const wpHeight = wpBar && wpBar.offsetHeight > 0 && window.getComputedStyle(wpBar).display !== 'none' ? wpBar.offsetHeight + 8 : 0;
     const filterBar = document.getElementById('cameraFilterBar');
     const filterHeight = filterBar && filterBar.offsetHeight > 0 && window.getComputedStyle(filterBar).display !== 'none' ? filterBar.offsetHeight + 10 : 0;
 
-    // 計算可用高度 (納入大眾運輸走廊與篩選列高度，確保單頁滿版免捲動零切角)
+    // 計算可用高度 (納入大眾運輸走廊、現場臨場感知艙與篩選列高度，確保單頁滿版免捲動零切角)
     const paddingOffset = 18;
-    const availableHeight = Math.max(280, window.innerHeight - headerHeight - secHeaderHeight - transitHeight - filterHeight - paddingOffset);
+    const availableHeight = Math.max(280, window.innerHeight - headerHeight - secHeaderHeight - transitHeight - wpHeight - filterHeight - paddingOffset);
 
     if (this.currentGridMode === 'grid-all') {
       grid.style.height = 'auto';
@@ -44984,10 +46062,23 @@ class MonitorApp {
         label: locFullLabel
       });
     }
+    if (window.flightRadarService) {
+      window.flightRadarService.syncForLocation('nearby', { lat, lon, label: locShortLabel });
+    }
+    if (window.immersivePulseService) {
+      window.immersivePulseService.syncForLocation('nearby', {
+        lat,
+        lon,
+        label: locShortLabel,
+        countryCode: isTaiwan ? 'TW' : (admin?.countryCode || ''),
+        tz: targetTz
+      });
+    }
     if (this.transitMonitor) {
       this.transitMonitor.lastNearbySignature = null;
       this.transitMonitor.render();
     }
+    this.refreshWorldPresenceBar(false);
 
     // 9. 更新雷達地圖中心至使用者位置
     if (this.radarMap) {
@@ -45042,10 +46133,16 @@ class MonitorApp {
       this.weatherMonitor.refreshRadar();
     }
 
+    const isCommuteCorridor = (centerId === 'dual' || centerId === 'qingpu' || centerId === 'banqiao');
     const transitBar = document.getElementById('transitTransitBar');
     if (transitBar) {
-      transitBar.style.display = '';
+      transitBar.style.display = isCommuteCorridor ? '' : 'none';
     }
+    const lifeCard = document.getElementById('lifeAssistantWidgetCard');
+    if (lifeCard) {
+      lifeCard.classList.toggle('is-scenic-compact', !isCommuteCorridor && centerId !== 'nearby');
+    }
+    this.refreshWorldPresenceBar(false);
 
     // 依當前分頁顯示對應之區域特色篩選膠囊與日夜模式按鈕高亮
     document.querySelectorAll('.filter-tag-pill[data-region-scope]').forEach(pill => {
@@ -45169,7 +46266,10 @@ class MonitorApp {
       this.weatherMonitor.nearbyYouBikeStations = [];
       this.weatherMonitor.nearbyYouBikeEmptyReason = '';
       this.weatherMonitor.nearbyYouBikeIsGlobal = false;
+      this.weatherMonitor.latestQuickWeather = null;
     }
+    const qsTempReset = typeof document !== 'undefined' ? document.getElementById('quickSumTemp') : null;
+    if (qsTempReset) qsTempReset.textContent = '--°C';
     if (typeof document !== 'undefined' && document.body) {
       document.body.dataset.themeCenter = centerId;
     }
@@ -45600,6 +46700,7 @@ class MonitorApp {
         btn.classList.remove('active');
       }
     });
+    this.updateGridMoreUI();
     this.renderVideoMatrix();
     this.applyAdaptiveViewportFit();
   }
@@ -45786,11 +46887,13 @@ class MonitorApp {
     // 啟動所有可見鏡頭的播放引擎 (HLS / FLV / MJPEG / YouTube)
     this.playerEngine.initPlayersForVisibleCards(visibleCams);
 
-    // 台灣觀光 12 縣市、收藏與全球跨國模式：動態將頂部交通看板與右側當地氣象、AQI、航班雷達、在地脈動、最近車站／公車、共享單車及氣象雷達錨定至目前首格可見鏡頭
+    // 台灣觀光 12 縣市、收藏與全球跨國模式：動態將現場臨場感知艙與右側當地氣象、AQI、航班雷達、在地人文、最近車站／公車、共享單車及氣象雷達錨定至目前首格可見鏡頭
     if ((this.isTaiwanTourCenter(this.currentCenterId) || this.currentCenterId === 'favorites' || this.isInternationalCenter()) && visibleCams.length > 0) {
       const groundCam = visibleCams.find(c => !String(c.name || '').includes('太空站') && c.id !== 'tw-sat-cwa-himawari-4k') || visibleCams[0];
       this.syncScenicSpotLocalContext(groundCam);
     }
+    this.updateGridMoreUI();
+    this.refreshWorldPresenceBar(false);
 
     // 閒置時預先快取下一頁前 4 支鏡頭之即時預覽縮圖，確保翻頁與自動巡播零等待秒開
     if (this.totalPages > 1 && this.currentCameras.length > maxDisplay) {
@@ -45836,7 +46939,7 @@ class MonitorApp {
     if (busCard) busCard.style.display = '';
     if (ybCard) ybCard.style.display = '';
     if (cwaCard) cwaCard.style.display = '';
-    if (transitBar) transitBar.style.display = '';
+    if (transitBar) transitBar.style.display = 'none';
 
     if (!isTw) {
       // 海外鏡頭：區分「同分頁城市膠囊高亮 (<=220km)」與「全球 45 城 IANA 時區推論 (<=650km)」
@@ -46003,6 +47106,7 @@ class MonitorApp {
       this.transitMonitor.lastNearbySignature = null;
       this.transitMonitor.render();
     }
+    this.refreshWorldPresenceBar(false);
     if (this.radarMap && this.currentCenterData) {
       this.radarMap.setCenterAndCameras(this.currentCenterData, this.getOrderedCameras(this.currentCameras));
     }
