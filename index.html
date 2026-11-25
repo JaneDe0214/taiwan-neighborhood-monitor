@@ -160,6 +160,7 @@ body[data-theme-center="tw_taitung"]   { --ambient-accent: 14, 165, 233;  --ambi
 body[data-theme-center="tw_islands"]   { --ambient-accent: 6, 182, 212;   --ambient-secondary: 52, 211, 153; }
 body[data-theme-center="world"]    { --ambient-accent: 14, 165, 233;  --ambient-secondary: 236, 72, 153; }
 body[data-theme-center="japan"]    { --ambient-accent: 244, 63, 94;   --ambient-secondary: 245, 158, 11; }
+body[data-theme-center="jp_campus"] { --ambient-accent: 99, 102, 241; --ambient-secondary: 244, 114, 182; }
 body[data-theme-center="korea"]    { --ambient-accent: 56, 189, 248;  --ambient-secondary: 244, 63, 94; }
 body[data-theme-center="apac"]     { --ambient-accent: 20, 184, 166;  --ambient-secondary: 250, 204, 21; }
 body[data-theme-center="europe"]   { --ambient-accent: 99, 102, 241;  --ambient-secondary: 45, 212, 191; }
@@ -12791,6 +12792,10 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
               <i class="fa-solid fa-torii-gate"></i>
               <span>日本</span>
             </button>
+            <button class="center-btn" data-center="jp_campus" data-domain="world" title="日本大學校園景觀與學術觀測 22 處：北見工大知床 4K ‧ 富山短大 4K 立山 ‧ 東北大學 ‧ 廣島大學 ‧ 三重大學 ‧ 東京大學木曾觀測所 ‧ 京都大學潮岬 ‧ 國立極地研究所南極昭和基地 ‧ 國立天文台昴星團">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <span>日本大學</span>
+            </button>
             <button class="center-btn" data-center="korea" data-domain="world" title="韓國全境精選：首爾漢江 4K ‧ 盤浦噴泉 4K ‧ 弘大商圈 4K ‧ 東大門 DDP 4K ‧ 釜山廣安大橋 4K ‧ 濟州島 ‧ 江原道束草東海">
               <i class="fa-solid fa-landmark"></i>
               <span>韓國</span>
@@ -12913,6 +12918,9 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
           <button class="filter-tag-pill" data-filter-tag="多元直連" type="button" title="世界即時之窗多元來源：篩選非 YouTube 之原生 4K/1080P HLS (.m3u8)、360° 環景、全片幅單眼 DSLR、太空衛星與官方直連畫面">🛰️ 多元直連</button>
           <button id="filterPillFuji" class="filter-tag-pill" data-filter-tag="富士山" data-region-scope="japan,world,scenic,favorites" type="button" style="display:none;">富士山</button>
           <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" data-region-scope="japan,favorites" type="button" style="display:none;">溫泉名勝</button>
+          <button class="filter-tag-pill" data-filter-tag="大學校園" data-region-scope="jp_campus,japan" type="button" style="display:none;">🎓 大學校園</button>
+          <button class="filter-tag-pill" data-filter-tag="天文星空" data-region-scope="jp_campus,japan,polar,scenic" type="button" style="display:none;">🔭 天文星空</button>
+          <button class="filter-tag-pill" data-filter-tag="山海研究" data-region-scope="jp_campus,polar,scenic" type="button" style="display:none;">🏔️ 山海研究</button>
           <button class="filter-tag-pill" data-filter-tag="漢江海灣" data-region-scope="korea,world" type="button" style="display:none;">漢江海灣</button>
           <button class="filter-tag-pill" data-filter-tag="東南亞" data-region-scope="apac,world" type="button" style="display:none;">東南亞海島</button>
           <button class="filter-tag-pill" data-filter-tag="紐澳" data-region-scope="apac,world" type="button" style="display:none;">紐澳港灣</button>
@@ -15877,6 +15885,13 @@ class WeatherEnvironmentMonitor {
         { key: 'kansai', label: '京阪', fullName: '大阪 ‧ 京都', lat: 34.6937, lon: 135.5023, tz: 'Asia/Tokyo' },
         { key: 'hokkaido', label: '北海道', fullName: '北海道札幌', lat: 43.0618, lon: 141.3545, tz: 'Asia/Tokyo' },
         { key: 'okinawa', label: '沖繩', fullName: '沖繩那霸', lat: 26.2124, lon: 127.6809, tz: 'Asia/Tokyo' }
+      ],
+      jp_campus: [
+        { key: 'sendai', label: '東北仙台', fullName: '東北大學青葉山', lat: 38.2557, lon: 140.8364, tz: 'Asia/Tokyo' },
+        { key: 'toyama', label: '富山立山', fullName: '富山大學 ‧ 富山短大', lat: 36.6820, lon: 137.1636, tz: 'Asia/Tokyo' },
+        { key: 'musashino', label: '東京武藏野', fullName: '成蹊大學 ‧ 木曾觀測所', lat: 35.7130, lon: 139.5736, tz: 'Asia/Tokyo' },
+        { key: 'hiroshima', label: '東廣島', fullName: '廣島大學校區', lat: 34.4027, lon: 132.7133, tz: 'Asia/Tokyo' },
+        { key: 'shiretoko', label: '北海道知床', fullName: '北見工大知床觀測', lat: 44.0846, lon: 145.0029, tz: 'Asia/Tokyo' }
       ],
       korea: [
         { key: 'seoul', label: '首爾', fullName: '首爾漢江', lat: 37.5665, lon: 126.9780, tz: 'Asia/Seoul' },
@@ -22751,7 +22766,7 @@ class EarthquakeEmergencyMonitor {
 
   // 切換地震監測區域 ('taiwan' | 'world' | 'japan' | 'korea' | 'apac' | 'europe' | 'americas' | 'polar' | 'rainforest' | 'ocean' | 'scenic' | 'daynight')
   setRegion(mode = 'taiwan') {
-    const validModes = ['taiwan', 'world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'];
+    const validModes = ['taiwan', 'world', 'japan', 'jp_campus', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'];
     const nextMode = validModes.includes(mode) ? mode : 'taiwan';
     if (this.regionMode === nextMode) return;
     this.regionMode = nextMode;
@@ -22771,6 +22786,7 @@ class EarthquakeEmergencyMonitor {
     const bannerMap = {
       world: { text: '全球板塊安全', title: '全球主要板塊地震帶即時監測中 ‧ 30 分鐘內無顯著強震通報' },
       japan: { text: '日本全域安全', title: '日本列島地震即時監測中 ‧ 30 分鐘內無顯著強震通報' },
+      jp_campus: { text: '日本校園安全', title: '日本各地大學與研究觀測所周邊地震即時監測中 ‧ 30 分鐘內無顯著強震通報' },
       korea: { text: '韓國全域安全', title: '朝鮮半島周邊地震監測中 ‧ 30 分鐘內無顯著強震通報' },
       apac: { text: '亞太全域安全', title: '亞太環太平洋與印澳板塊監測中 ‧ 30 分鐘內無顯著強震通報' },
       europe: { text: '歐洲全域安全', title: '歐洲與冰島火山地震帶監測中 ‧ 30 分鐘內無顯著強震通報' },
@@ -22808,6 +22824,7 @@ class EarthquakeEmergencyMonitor {
             const toastMap = {
               world: '全球主要觀測區安全 ‧ 30 分鐘內無顯著強震通報',
               japan: '日本列島全域安全 ‧ 30 分鐘內無顯著強震通報',
+              jp_campus: '日本各地大學校園與觀測所安全 ‧ 30 分鐘內無顯著強震通報',
               korea: '韓國全境安全 ‧ 30 分鐘內無顯著有感地震通報',
               apac: '亞太重點觀測區安全 ‧ 30 分鐘內無顯著強震通報',
               europe: '歐洲重點觀測區安全 ‧ 30 分鐘內無顯著強震通報',
@@ -22846,6 +22863,7 @@ class EarthquakeEmergencyMonitor {
         taiwan: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=21.5&maxlatitude=26.0&minlongitude=119.5&maxlongitude=123.0&minmagnitude=3.0&limit=3',
         world: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minmagnitude=5.3&limit=3',
         japan: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=24.0&maxlatitude=46.0&minlongitude=122.0&maxlongitude=148.0&minmagnitude=4.5&limit=3',
+        jp_campus: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=24.0&maxlatitude=46.0&minlongitude=122.0&maxlongitude=148.0&minmagnitude=4.5&limit=3',
         korea: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=32.5&maxlatitude=39.5&minlongitude=124.0&maxlongitude=131.5&minmagnitude=3.8&limit=3',
         apac: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=-48.0&maxlatitude=25.0&minlongitude=95.0&maxlongitude=180.0&minmagnitude=5.0&limit=3',
         europe: 'https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&minlatitude=35.0&maxlatitude=71.0&minlongitude=-26.0&maxlongitude=32.0&minmagnitude=4.8&limit=3',
@@ -22873,6 +22891,7 @@ class EarthquakeEmergencyMonitor {
         taiwan: [121.5, 24.0, 10],
         world: [139.7, 35.7, 15],
         japan: [139.7, 35.7, 15],
+        jp_campus: [139.57, 35.71, 15],
         korea: [127.0, 37.5, 10],
         apac: [151.2, -33.9, 10],
         europe: [8.5, 47.4, 10],
@@ -27695,6 +27714,14 @@ window.CAMERAS_DATA = {
       "lat": 35.6295,
       "lon": 139.7745,
       "description": "全球最高畫質與最高同時觀看人氣總覽：集結日本、韓國、亞太、歐洲、美洲 4K UHD 旗艦直播"
+    },
+    {
+      "id": "jp_campus",
+      "name": "日本大學校園與觀測",
+      "address": "日本各地大學官方公開景觀與天文／極地研究站",
+      "lat": 35.7130,
+      "lon": 139.5736,
+      "description": "收錄日本各大學與國立研究機構官方主動公開的校園風景、山海氣象與天文極地實況"
     },
     {
       "id": "japan",
@@ -39412,7 +39439,538 @@ window.CAMERAS_DATA = {
         "isSatelliteMap": true
       }
     ],
+    "jp_campus": [
+      {
+        "id": "jpc-01-kitami-shiretoko-4k",
+        "cctvCode": "JPC-01-KITAMI-SHIRETOKO-4K",
+        "name": "北見工業大學 雪冰環境研究室 ‧ 北海道知床連山 4K 超高解析即時觀測 (Kitami IT 4K)",
+        "authority": "北見工業大学 雪氷環境研究室 公式 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://dias.rd.kitami-it.ac.jp/~ohno_dias/images/lastcamera.jpg",
+        "sourceUrl": "https://dias.rd.kitami-it.ac.jp/~ohno_dias/",
+        "sourceBadge": "大學直連 4K",
+        "lat": 44.0846,
+        "lon": 145.0029,
+        "tz": "Asia/Tokyo",
+        "areaTag": "北海道知床",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 1,
+        "refreshIntervalMs": 120000,
+        "tag": "日本 大學 山海研究 風景 4K 北海道 知床 國家公園 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1920,
+        "defaultOrder": 1
+      },
+      {
+        "id": "jpc-09-toyama-tateyama-4k",
+        "cctvCode": "JPC-09-TOYAMA-TATEYAMA-4K",
+        "name": "富山短期大學 ‧ 校園遠眺北阿爾卑斯立山連峰 4K UHD 即時景觀 (Toyama College 4K)",
+        "authority": "富山短期大学 公式 4K Live",
+        "type": "youtube",
+        "videoId": "p7AcExUWinM",
+        "lat": 36.682,
+        "lon": 137.1636,
+        "tz": "Asia/Tokyo",
+        "areaTag": "富山校園",
+        "streamUrl": "https://www.youtube.com/watch?v=p7AcExUWinM",
+        "sourceUrl": "https://www.youtube.com/watch?v=p7AcExUWinM",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "concurrentViewers": 20,
+        "tag": "日本 大學校園 富山 立山連峰 雪山 風景 4K 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1880,
+        "defaultOrder": 2
+      },
+      {
+        "id": "jpc-02-nipr-syowa-antarctica",
+        "cctvCode": "JPC-02-NIPR-SYOWA-ANTARCTICA",
+        "name": "日本國立極地研究所 NIPR ‧ 南極昭和基地基本觀測棟屋頂 1080P 即時觀測 (Syowa Station, Antarctica)",
+        "authority": "国立極地研究所 NIPR 公式 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://www.nipr.ac.jp/syowa-cam1.jpg",
+        "sourceUrl": "https://www.nipr.ac.jp/antarctic/syowa-camera/",
+        "sourceBadge": "極地研直連",
+        "lat": -69.0041,
+        "lon": 39.5818,
+        "tz": "Antarctica/Syowa",
+        "areaTag": "南極昭和基地",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 1,
+        "refreshIntervalMs": 60000,
+        "tag": "日本 學術研究 山海研究 南極 昭和基地 極地 極光 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1850,
+        "defaultOrder": 3
+      },
+      {
+        "id": "jpc-10-naoj-subaru-maunakea",
+        "cctvCode": "JPC-10-NAOJ-SUBARU-MAUNAKEA",
+        "name": "日本國立天文台 NAOJ ‧ 昴星團望遠鏡 4,200m 星空銀河與雲海日出 24H 直播 (Subaru Telescope)",
+        "authority": "国立天文台 NAOJ × 朝日新聞宇宙部",
+        "type": "youtube",
+        "videoId": "OVcVOJYXUsc",
+        "lat": 19.8255,
+        "lon": -155.476,
+        "tz": "Pacific/Honolulu",
+        "areaTag": "昴星團天文台",
+        "streamUrl": "https://www.youtube.com/watch?v=OVcVOJYXUsc",
+        "sourceUrl": "https://www.youtube.com/watch?v=OVcVOJYXUsc",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 72,
+        "tag": "日本 天文星空 學術觀測 國立天文台 昴星團 星空 流星 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1820,
+        "defaultOrder": 4
+      },
+      {
+        "id": "jpc-11-utokyo-kiso-obs",
+        "cctvCode": "JPC-11-UTOKYO-KISO-OBS",
+        "name": "東京大學木曾觀測所 ‧ 長野深山 24H 流星雨與銀河星空即時觀測 (U-Tokyo Kiso Observatory)",
+        "authority": "東京大学木曽観測所 × 朝日新聞宇宙部",
+        "type": "youtube",
+        "videoId": "_HZDjlfTuvQ",
+        "lat": 35.7973,
+        "lon": 137.6254,
+        "tz": "Asia/Tokyo",
+        "areaTag": "東大木曾觀測所",
+        "streamUrl": "https://www.youtube.com/watch?v=_HZDjlfTuvQ",
+        "sourceUrl": "https://www.youtube.com/watch?v=_HZDjlfTuvQ",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 25,
+        "tag": "日本 東京大學 天文星空 觀測所 流星 星空 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1790,
+        "defaultOrder": 5
+      },
+      {
+        "id": "jpc-12-tohoku-aobayama",
+        "cctvCode": "JPC-12-TOHOKU-AOBAYAMA",
+        "name": "東北大學未來科學技術共同研究中心 ‧ 仙台青葉山校區四季景觀實況 (Tohoku Univ. Aobayama)",
+        "authority": "東北大学 NICHe 公式",
+        "type": "youtube",
+        "videoId": "NuTt9nk5tMA",
+        "lat": 38.2557,
+        "lon": 140.8364,
+        "tz": "Asia/Tokyo",
+        "areaTag": "東北大青葉山",
+        "streamUrl": "https://www.youtube.com/watch?v=NuTt9nk5tMA",
+        "sourceUrl": "https://www.youtube.com/watch?v=NuTt9nk5tMA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 15,
+        "tag": "日本 東北大學 仙台 大學校園 校園風景 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1760,
+        "defaultOrder": 6
+      },
+      {
+        "id": "jpc-13-hiroshima-higashi",
+        "cctvCode": "JPC-13-HIROSHIMA-HIGASHI",
+        "name": "廣島大學官方 ‧ 東廣島森林校區廣場與四季天際線即時實況 (Hiroshima University)",
+        "authority": "広島大学公式 HiroshimaUniv",
+        "type": "youtube",
+        "videoId": "qW-_IQ9dukE",
+        "lat": 34.4027,
+        "lon": 132.7133,
+        "tz": "Asia/Tokyo",
+        "areaTag": "廣島大學",
+        "streamUrl": "https://www.youtube.com/watch?v=qW-_IQ9dukE",
+        "sourceUrl": "https://www.youtube.com/watch?v=qW-_IQ9dukE",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 18,
+        "tag": "日本 廣島大學 大學校園 校園風景 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1740,
+        "defaultOrder": 7
+      },
+      {
+        "id": "jpc-03-mie-univ-suzuka",
+        "cctvCode": "JPC-03-MIE-UNIV-SUZUKA",
+        "name": "三重大學 生物資源學研究科 7 樓 ‧ 鈴鹿山脈與校園全景即時氣象鏡頭 (Mie Univ. Cam 1)",
+        "authority": "三重大学 気象・気候ダイナミクス研究室 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://atm.bio.mie-u.ac.jp/livecam/top_page_camera1/image_top.jpg",
+        "sourceUrl": "https://atm.bio.mie-u.ac.jp/livecam/",
+        "sourceBadge": "三重大直連",
+        "lat": 34.746,
+        "lon": 136.5245,
+        "tz": "Asia/Tokyo",
+        "areaTag": "三重大學",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 1,
+        "refreshIntervalMs": 60000,
+        "tag": "日本 三重大學 大學校園 山海研究 氣象 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1710,
+        "defaultOrder": 8
+      },
+      {
+        "id": "jpc-04-mie-univ-isebay",
+        "cctvCode": "JPC-04-MIE-UNIV-ISEBAY",
+        "name": "三重大學 生物資源學研究科 7 樓 ‧ 伊勢灣海景與校園天空即時觀測 (Mie Univ. Cam 3)",
+        "authority": "三重大学 気象・気候ダイナミクス研究室 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://atm.bio.mie-u.ac.jp/livecam/top_page_camera3/image_top.jpg",
+        "sourceUrl": "https://atm.bio.mie-u.ac.jp/livecam/",
+        "sourceBadge": "三重大直連",
+        "lat": 34.746,
+        "lon": 136.5245,
+        "tz": "Asia/Tokyo",
+        "areaTag": "三重大學",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 1,
+        "refreshIntervalMs": 60000,
+        "tag": "日本 三重大學 大學校園 山海研究 海灣 氣象 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1680,
+        "defaultOrder": 9
+      },
+      {
+        "id": "jpc-14-kanoya-shiromizu",
+        "cctvCode": "JPC-14-KANOYA-SHIROMIZU",
+        "name": "鹿屋體育大學官方 ‧ 鹿兒島白水校區綠蔭運動校園全景實況 (NIFS Kanoya Campus)",
+        "authority": "鹿屋体育大学スポーツ情報センター 公式",
+        "type": "youtube",
+        "videoId": "oUH66g3sgmc",
+        "lat": 31.466,
+        "lon": 130.7852,
+        "tz": "Asia/Tokyo",
+        "areaTag": "鹿屋體育大學",
+        "streamUrl": "https://www.youtube.com/watch?v=oUH66g3sgmc",
+        "sourceUrl": "https://www.youtube.com/watch?v=oUH66g3sgmc",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 12,
+        "tag": "日本 鹿兒島 鹿屋體育大學 大學校園 校園風景 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1660,
+        "defaultOrder": 10
+      },
+      {
+        "id": "jpc-15-kanoya-osumiko",
+        "cctvCode": "JPC-15-KANOYA-OSUMIKO",
+        "name": "鹿屋體育大學官方 ‧ 鹿兒島大隅湖水岸與群山療癒景觀實況 (NIFS Osumi Lake)",
+        "authority": "鹿屋体育大学スポーツ情報センター 公式",
+        "type": "youtube",
+        "videoId": "MBeT3dWEFM4",
+        "lat": 31.459,
+        "lon": 130.8221,
+        "tz": "Asia/Tokyo",
+        "areaTag": "鹿屋大隅湖",
+        "streamUrl": "https://www.youtube.com/watch?v=MBeT3dWEFM4",
+        "sourceUrl": "https://www.youtube.com/watch?v=MBeT3dWEFM4",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 10,
+        "tag": "日本 鹿兒島 鹿屋體育大學 大學校園 湖 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1640,
+        "defaultOrder": 11
+      },
+      {
+        "id": "jpc-16-naoj-ishigakijima",
+        "cctvCode": "JPC-16-NAOJ-ISHIGAKIJIMA",
+        "name": "沖繩石垣島天文台（國立天文台 NAOJ 共同營運）‧ 八重山南國星空即時觀測",
+        "authority": "石垣島天文台 (NAOJ 共同研究)",
+        "type": "youtube",
+        "videoId": "DorhRe9a4Ds",
+        "lat": 24.3735,
+        "lon": 124.1391,
+        "tz": "Asia/Tokyo",
+        "areaTag": "石垣島天文台",
+        "streamUrl": "https://www.youtube.com/watch?v=DorhRe9a4Ds",
+        "sourceUrl": "https://www.youtube.com/watch?v=DorhRe9a4Ds",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 14,
+        "tag": "日本 沖繩 石垣島 天文星空 國立天文台 星空 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1620,
+        "defaultOrder": 12
+      },
+      {
+        "id": "jpc-17-dodaira-obs",
+        "cctvCode": "JPC-17-DODAIRA-OBS",
+        "name": "堂平天文台（原東京大學東京天文台堂平觀測所）‧ 埼玉山巔俯瞰關東平原與星空",
+        "authority": "堂平天文台 ライブカメラ",
+        "type": "youtube",
+        "videoId": "EyKmYGezUL0",
+        "lat": 36.0024,
+        "lon": 139.1931,
+        "tz": "Asia/Tokyo",
+        "areaTag": "埼玉堂平天文台",
+        "streamUrl": "https://www.youtube.com/watch?v=EyKmYGezUL0",
+        "sourceUrl": "https://www.youtube.com/watch?v=EyKmYGezUL0",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 12,
+        "tag": "日本 埼玉 東京大學 天文星空 天文台 星空 夜景 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1600,
+        "defaultOrder": 13
+      },
+      {
+        "id": "jpc-05-seikei-allsky",
+        "cctvCode": "JPC-05-SEIKEI-ALLSKY",
+        "name": "東京武藏野 成蹊大學氣象觀測所 ‧ 全天空雲景與星空魚眼即時觀測 (Seikei All-Sky)",
+        "authority": "成蹊気象観測所 公式 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://www.seikei.ac.jp/obs/smodata/allskycam.jpg",
+        "sourceUrl": "https://www.seikei.ac.jp/gakuen/esd/obs/realtime/cloud.html",
+        "sourceBadge": "成蹊大直連",
+        "lat": 35.713,
+        "lon": 139.5736,
+        "tz": "Asia/Tokyo",
+        "areaTag": "東京成蹊大",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 1,
+        "refreshIntervalMs": 60000,
+        "tag": "日本 東京 成蹊大學 天文星空 氣象 全天空 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1580,
+        "defaultOrder": 14
+      },
+      {
+        "id": "jpc-06-kyoto-dpri-shionomisaki",
+        "cctvCode": "JPC-06-KYOTO-DPRI-SHIONOMISAKI",
+        "name": "京都大學防災研究所 ‧ 和歌山潮岬風力實驗所太平洋海象觀測 (Kyoto Univ. DPRI)",
+        "authority": "京都大学防災研究所 潮岬風力実験所 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://rcfcd.dpri.kyoto-u.ac.jp/frs/swel/web_camera/camera1_image.jpg",
+        "sourceUrl": "https://rcfcd.dpri.kyoto-u.ac.jp/frs/swel/camera.html",
+        "sourceBadge": "京大直連",
+        "lat": 33.4494,
+        "lon": 135.7592,
+        "tz": "Asia/Tokyo",
+        "areaTag": "京大潮岬",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 1,
+        "refreshIntervalMs": 60000,
+        "tag": "日本 京都大學 和歌山 山海研究 海洋 海象 氣象 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1560,
+        "defaultOrder": 15
+      },
+      {
+        "id": "jpc-07-shinshu-kamikochi",
+        "cctvCode": "JPC-07-SHINSHU-KAMIKOCHI",
+        "name": "信州大學 山岳環境研究中心 ‧ 長野上高地北阿爾卑斯氣象觀測站 (Shinshu Univ.)",
+        "authority": "信州大学 山岳環境研究センター (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://ims.shinshu-u.ac.jp/~metims_web/jpg-box/kmkcst/Dir4.jpg",
+        "sourceUrl": "https://ims.shinshu-u.ac.jp/~metims_web/",
+        "sourceBadge": "信大直連",
+        "lat": 36.2485,
+        "lon": 137.6384,
+        "tz": "Asia/Tokyo",
+        "areaTag": "信大上高地",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 1,
+        "refreshIntervalMs": 120000,
+        "tag": "日本 信州大學 長野 上高地 山海研究 雪山 氣象 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1540,
+        "defaultOrder": 16
+      },
+      {
+        "id": "jpc-18-toyama-univ-gofuku",
+        "cctvCode": "JPC-18-TOYAMA-UNIV-GOFUKU",
+        "name": "富山大學五福校區前 ‧ 大學正門大道與路面電車日常街景實況 (Toyama University)",
+        "authority": "富山市五福 富山大学前ライブカメラ",
+        "type": "youtube",
+        "videoId": "TBEbCGN0CO0",
+        "lat": 36.699,
+        "lon": 137.1879,
+        "tz": "Asia/Tokyo",
+        "areaTag": "富山大學前",
+        "streamUrl": "https://www.youtube.com/watch?v=TBEbCGN0CO0",
+        "sourceUrl": "https://www.youtube.com/watch?v=TBEbCGN0CO0",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 10,
+        "tag": "日本 富山大學 大學校園 街景 交通 路面電車",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1520,
+        "defaultOrder": 17
+      },
+      {
+        "id": "jpc-19-nagasaki-univ-ohashi",
+        "cctvCode": "JPC-19-NAGASAKI-UNIV-OHASHI",
+        "name": "長崎大學大橋校區前 ‧ 校園周邊大道與長崎路面電車風光實況 (Nagasaki University)",
+        "authority": "長崎市大橋町 長崎大学前ライブカメラ",
+        "type": "youtube",
+        "videoId": "zfgsLnSmV2o",
+        "lat": 32.7853,
+        "lon": 129.8639,
+        "tz": "Asia/Tokyo",
+        "areaTag": "長崎大學前",
+        "streamUrl": "https://www.youtube.com/watch?v=zfgsLnSmV2o",
+        "sourceUrl": "https://www.youtube.com/watch?v=zfgsLnSmV2o",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 10,
+        "tag": "日本 長崎大學 大學校園 街景 交通 路面電車",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1500,
+        "defaultOrder": 18
+      },
+      {
+        "id": "jpc-20-tottori-univ-koyama",
+        "cctvCode": "JPC-20-TOTTORI-UNIV-KOYAMA",
+        "name": "鳥取大學湖山校區周邊 ‧ 湖山池水岸與山陰晴雨遠景實況 (Tottori Univ. Area)",
+        "authority": "鳥取大学湖山キャンパス周辺 眺望ライブ",
+        "type": "youtube",
+        "videoId": "849SJO-DAg8",
+        "lat": 35.5146,
+        "lon": 134.1714,
+        "tz": "Asia/Tokyo",
+        "areaTag": "鳥取大學周邊",
+        "streamUrl": "https://www.youtube.com/watch?v=849SJO-DAg8",
+        "sourceUrl": "https://www.youtube.com/watch?v=849SJO-DAg8",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 8,
+        "tag": "日本 鳥取大學 大學校園 湖 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1480,
+        "defaultOrder": 19
+      },
+      {
+        "id": "jpc-21-toyama-tandai-no1",
+        "cctvCode": "JPC-21-TOYAMA-TANDAI-NO1",
+        "name": "富山短期大學官方 No.1 ‧ 校園遠眺立山連峰與富山平野景觀 (Toyama College No.1)",
+        "authority": "富山短期大学 公式",
+        "type": "youtube",
+        "videoId": "UTdqJ4oaSzA",
+        "lat": 36.682,
+        "lon": 137.1636,
+        "tz": "Asia/Tokyo",
+        "areaTag": "富山短期大學",
+        "streamUrl": "https://www.youtube.com/watch?v=UTdqJ4oaSzA",
+        "sourceUrl": "https://www.youtube.com/watch?v=UTdqJ4oaSzA",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 8,
+        "tag": "日本 富山 大學校園 立山連峰 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1460,
+        "defaultOrder": 20
+      },
+      {
+        "id": "jpc-22-toyama-tandai-no2",
+        "cctvCode": "JPC-22-TOYAMA-TANDAI-NO2",
+        "name": "富山短期大學官方 No.2 ‧ 富山校區四季庭園與天空實況 (Toyama College No.2)",
+        "authority": "富山短期大学 公式",
+        "type": "youtube",
+        "videoId": "lgpzMfosSpo",
+        "lat": 36.682,
+        "lon": 137.1636,
+        "tz": "Asia/Tokyo",
+        "areaTag": "富山短期大學",
+        "streamUrl": "https://www.youtube.com/watch?v=lgpzMfosSpo",
+        "sourceUrl": "https://www.youtube.com/watch?v=lgpzMfosSpo",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "concurrentViewers": 8,
+        "tag": "日本 富山 大學校園 校園風景 風景 悠閒慢活",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1440,
+        "defaultOrder": 21
+      },
+      {
+        "id": "jpc-08-iwate-univ-mtiwate",
+        "cctvCode": "JPC-08-IWATE-UNIV-MTIWATE",
+        "name": "岩手大學工學部 ‧ 盛岡校區遠眺名峰岩手山定點氣象觀測 (Iwate Univ. Mt. Iwate)",
+        "authority": "岩手大学工学部 CG研究室 公式 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://dcp.cg.cis.iwate-u.ac.jp/live_cam/mtiwate.jpg",
+        "sourceUrl": "https://dcp.cg.cis.iwate-u.ac.jp/live_cam/",
+        "sourceBadge": "岩手大直連",
+        "lat": 39.7134,
+        "lon": 141.1362,
+        "tz": "Asia/Tokyo",
+        "areaTag": "岩手大學",
+        "status": "ONLINE",
+        "maxRes": 480,
+        "fps": 1,
+        "refreshIntervalMs": 120000,
+        "tag": "日本 岩手大學 大學校園 山海研究 雪山 氣象 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1420,
+        "defaultOrder": 22
+      }
+    ],
     "polar": [
+      {
+        "id": "pl-46-nipr-syowa-antarctica",
+        "cctvCode": "PL-46-NIPR-SYOWA-ANTARCTICA",
+        "name": "南極昭和基地 69.0°S ‧ 日本國立極地研究所基本觀測棟屋頂 1080P 即時觀測 (NIPR Syowa Station)",
+        "authority": "国立極地研究所 NIPR 公式 (.ac.jp)",
+        "type": "snapshot",
+        "streamUrl": "https://www.nipr.ac.jp/syowa-cam1.jpg",
+        "sourceUrl": "https://www.nipr.ac.jp/antarctic/syowa-camera/",
+        "sourceBadge": "南極站直連",
+        "lat": -69.0041,
+        "lon": 39.5818,
+        "tz": "Antarctica/Syowa",
+        "areaTag": "南極昭和基地",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 1,
+        "refreshIntervalMs": 60000,
+        "tag": "南極 昭和基地 極地 極光 企鵝 學術研究 風景 悠閒慢活 多元直連",
+        "distanceMeters": 0,
+        "distanceKm": 0,
+        "popScore": 1890,
+        "defaultOrder": 4
+      },
       {
         "id": "pl-01-levi-aurora-4k",
         "cctvCode": "PL-01-LEVI-AURORA-4K",
@@ -43312,7 +43870,7 @@ window.CAMERAS_DATA = {
     if (cam.tz && cam.tz !== 'auto') return cam.tz;
     const lat = Number(cam.lat), lon = Number(cam.lon);
     if (centerKey === 'dual' || centerKey === 'qingpu' || centerKey === 'banqiao' || (typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(centerKey))) return 'Asia/Taipei';
-    if (centerKey === 'japan') return 'Asia/Tokyo';
+    if (centerKey === 'japan' || centerKey === 'jp_campus') return 'Asia/Tokyo';
     if (centerKey === 'korea') return 'Asia/Seoul';
     if (Number.isFinite(lat) && Number.isFinite(lon)) {
       if (lat >= 21.5 && lat <= 26.5 && lon >= 118.0 && lon <= 122.5) return 'Asia/Taipei';
@@ -45203,7 +45761,7 @@ class TravelToolkitService {
     if (/布拉格|捷克|Prague/.test(s)) return 'CZK';
     if (/科羅拉多|狄龍湖|特柳賴德|懷俄明|傑克森霍爾|大提頓|雷尼爾山|美國|夏威夷|阿拉斯加|紐約|舊金山|邁阿密|奧勒岡|洛杉磯|拉斯維加斯|聖地牙哥|蒙特雷|New_York|Los_Angeles|Chicago|Anchorage|Honolulu|Phoenix|Denver/.test(s)) return 'USD';
     if (/加拿大|班夫|坎莫爾|邱吉爾|溫哥華|安大略|Edmonton|Vancouver|Winnipeg|Toronto|Banff/.test(s)) return 'CAD';
-    if (/日本|東京|大阪|京都|富士山|北海道|沖繩|白馬|Tokyo/.test(s) || centerId === 'japan') return 'JPY';
+    if (/日本|東京|大阪|京都|富士山|北海道|沖繩|白馬|大學|Tokyo/.test(s) || centerId === 'japan' || centerId === 'jp_campus') return 'JPY';
     if (/韓國|首爾|釜山|濟州|漢江|Seoul/.test(s) || centerId === 'korea') return 'KRW';
     if (/倫敦|英國|泰晤士|London/.test(s)) return 'GBP';
     if (/瑞士|策馬特|少女峰|蘇黎世|聖莫里茨|阿爾卑斯|Verbier|Zermatt|Zurich/.test(s)) return 'CHF';
@@ -47599,7 +48157,7 @@ class ImmersiveLocalPulseService {
     if (typeof LocalGeoBusService !== 'undefined' && LocalGeoBusService.isTaiwanCoords(lat, lon)) return 'TW';
     if (lat >= 24.0 && lat <= 46.5 && lon >= 122.8 && lon <= 149.0) return 'JP';
     if (lat >= 33.0 && lat <= 39.0 && lon >= 124.0 && lon <= 131.5) return 'KR';
-    if (centerId === 'japan') return 'JP';
+    if (centerId === 'japan' || centerId === 'jp_campus') return 'JP';
     if (centerId === 'korea') return 'KR';
     if (window.flightRadarService) {
       const ap = window.flightRadarService.findNearestAirport(lat, lon);
@@ -48653,7 +49211,7 @@ class MonitorApp {
 
   // 判斷是否為跨國實況分頁 (全球 4K / 日本 / 韓國 / 亞太 / 歐洲 / 美洲 / 極地極光 / 雨林生態 / 海洋珊瑚 / 絕美風景 / 日夜極景)
   isInternationalCenter(centerId = this.currentCenterId) {
-    return ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(centerId);
+    return ['world', 'japan', 'jp_campus', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(centerId);
   }
 
   // 判斷是否為台灣觀光 12 縣市專區 (全台精選 / 台北 / 新北 / 桃園 / 宜蘭 / 台中 / 南投嘉義 / 台南 / 高雄 / 屏東墾丁 / 花蓮 / 台東)
@@ -49090,6 +49648,7 @@ class MonitorApp {
       const defaultTzMap = {
         world: 'Asia/Tokyo',
         japan: 'Asia/Tokyo',
+        jp_campus: 'Asia/Tokyo',
         korea: 'Asia/Seoul',
         apac: 'Australia/Sydney',
         europe: 'Europe/Rome',
@@ -49118,7 +49677,7 @@ class MonitorApp {
 
   // 🌍 世界任意門：一鍵隨機穿越全球與台灣高畫質即時之窗
   async teleportRandomWorldWindow() {
-    const worldCenters = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight', 'tourist', 'tw_taipei', 'tw_newtaipei', 'tw_taichung', 'tw_central', 'tw_kaohsiung', 'tw_hualien', 'tw_taitung'];
+    const worldCenters = ['world', 'japan', 'jp_campus', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight', 'tourist', 'tw_taipei', 'tw_newtaipei', 'tw_taichung', 'tw_central', 'tw_kaohsiung', 'tw_hualien', 'tw_taitung'];
     const candidates = worldCenters.filter(c => c !== this.currentCenterId);
     const nextCenter = candidates[Math.floor(Math.random() * candidates.length)] || 'world';
     await this.switchCenter(nextCenter);
@@ -49247,7 +49806,7 @@ class MonitorApp {
     if (this.isTaiwanTourCenter(centerId)) return 'tw_tour';
     const map = {
       nearby: 'taiwan', dual: 'taiwan', qingpu: 'taiwan', banqiao: 'taiwan',
-      world: 'world', japan: 'world', korea: 'world', apac: 'world', europe: 'world', americas: 'world',
+      world: 'world', japan: 'world', jp_campus: 'world', korea: 'world', apac: 'world', europe: 'world', americas: 'world',
       polar: 'nature', rainforest: 'nature', ocean: 'nature', scenic: 'nature', daynight: 'nature',
       favorites: 'favorites'
     };
@@ -49488,6 +50047,7 @@ class MonitorApp {
       'America/Nuuk': '格陵蘭時間',
       'America/Winnipeg': '北極熊灣時間',
       'America/Argentina/Ushuaia': '火地島時間',
+      'Antarctica/Syowa': '南極昭和基地時間',
       'America/Costa_Rica': '哥斯大黎加時間',
       'America/Panama': '巴拿馬時間',
       'America/Guayaquil': '安地斯時間',
@@ -50775,6 +51335,7 @@ class MonitorApp {
       { title: '切換至台灣觀光「離島金馬澎」4K 專區', sub: '金門建功嶼摩西分海 4K、澎湖觀音亭虹橋 4K、南方四島東嶼坪嶼 4K、慈湖三角堡 4K、馬祖南北竿', badge: '台灣觀光', icon: 'fa-water-ladder', run: () => this.switchCenter('tw_islands') },
       { title: '切換至「全球 4K」世界百大旗艦總覽', sub: '跨洲際與極地、雨林、海洋嚴選 120 處原生 4K 2160P 與高人氣直播', badge: '全球旗艦', icon: 'fa-globe', run: () => this.switchCenter('world') },
       { title: '切換至「日本」全境跨國實況', sub: '東京台場 4K、澀谷全向路口、富士山 4K、京都車站與嵐山、上高地 4K、北海道、沖繩宮古島', badge: '國際實況', icon: 'fa-torii-gate', run: () => this.switchCenter('japan') },
+      { title: '切換至「日本大學」校園與學術觀測', sub: '北見工大知床 4K、富山短大 4K、東北大學、廣島大學、三重大學、東大木曾觀測所、京大潮岬、南極昭和基地', badge: '學術實況', icon: 'fa-graduation-cap', run: () => this.switchCenter('jp_campus') },
       { title: '切換至「韓國」全境跨國實況', sub: '首爾漢江 4K、盤浦噴泉 4K、東大門 DDP 4K、弘大商圈、釜山廣安大橋、濟州島、江原道束草', badge: '國際實況', icon: 'fa-landmark', run: () => this.switchCenter('korea') },
       { title: '切換至「亞太」與中東非洲跨國實況', sub: '雪梨港灣 4K、蘇美島與普吉島 4K、新加坡 4K、馬爾地夫 4K、杜拜、吉隆坡、菲律賓、峇里島、南非開普敦', badge: '國際實況', icon: 'fa-umbrella-beach', run: () => this.switchCenter('apac') },
       { title: '切換至「歐洲」多國跨國絕景', sub: '威尼斯 4K、阿姆斯特丹 4K、布拉格 4K、希臘愛琴海、伊斯坦堡、匈牙利、克羅埃西亞、羅馬梵蒂岡、瑞士、倫敦、蘇格蘭', badge: '國際實況', icon: 'fa-mountain-sun', run: () => this.switchCenter('europe') },
@@ -51952,6 +52513,7 @@ class MonitorApp {
       tw_islands: '離島金馬澎 4K',
       world: '全球 4K 實況',
       japan: '日本實況',
+      jp_campus: '日本大學與觀測',
       korea: '韓國實況',
       apac: '亞太實況',
       europe: '歐洲絕景',
@@ -52018,6 +52580,7 @@ class MonitorApp {
         tw_islands: '快搜離島 4K 景點：金門建功嶼摩西分海、慈湖三角堡、澎湖觀音亭、南方四島東嶼坪嶼、馬祖南北竿...',
         world: '快搜全球 4K 地標：東京台場、首爾漢江、雪梨港灣、威尼斯、布拉格、紐約時代廣場、舊金山金門大橋、多倫多...',
         japan: '快搜日本景點、富士山、澀谷、京都、上高地、飛驒高山、溫泉、北海道、沖繩宮古島或 4K...',
+        jp_campus: '快搜東北大學、廣島大學、三重大學、富山短大 4K、北見工大知床、東大木曾、京大潮岬、南極昭和基地或天文台...',
         korea: '快搜首爾漢江、盤浦噴泉、東大門 DDP、景福宮、弘大、釜山廣安大橋、濟州島、江原道束草或 4K...',
         apac: '快搜雪梨港灣、蘇美島、普吉島、新加坡、馬爾地夫、杜拜、吉隆坡、菲律賓、峇里島、香港、紐西蘭、南非開普敦或 4K...',
         europe: '快搜威尼斯、阿姆斯特丹、布拉格、希臘愛琴海、伊斯坦堡、匈牙利、克羅埃西亞、羅馬梵蒂岡、瑞士、倫敦、蘇格蘭、馬德里、里斯本或 4K...',
@@ -52049,6 +52612,7 @@ class MonitorApp {
         tw_islands: '<i class="fa-solid fa-water-ladder"></i> 金門澎湖馬祖離島雷達',
         world: '<i class="fa-solid fa-earth-asia"></i> 全球 4K 實況地理雷達',
         japan: '<i class="fa-solid fa-map-location-dot"></i> 日本全境地理雷達',
+        jp_campus: '<i class="fa-solid fa-graduation-cap"></i> 日本大學與學術觀測站雷達',
         korea: '<i class="fa-solid fa-map-location-dot"></i> 韓國全境地理雷達',
         apac: '<i class="fa-solid fa-map-location-dot"></i> 亞太洲際地理雷達',
         europe: '<i class="fa-solid fa-map-location-dot"></i> 歐洲洲際地理雷達',
@@ -52255,6 +52819,8 @@ class MonitorApp {
           sortIndicator.innerText = `全球 4K 旗艦總覽 ${totalCnt} 處${badge4k}：集結各大洲與極地、雨林、海洋最高畫質 2160P 與最高即時人氣直播`;
         } else if (centerId === 'japan') {
           sortIndicator.innerText = `日本全境 ${totalCnt} 處即時實況${badge4k}：依「4K 高畫質 × 即時人氣」優先排序（台場 4K ‧ 澀谷 ‧ 富士山 ‧ 京都 ‧ 上高地 ‧ 北海道 ‧ 沖繩）`;
+        } else if (centerId === 'jp_campus') {
+          sortIndicator.innerText = `日本大學校園與學術觀測 ${totalCnt} 處${badge4k}：官方公開大學校景與天文／極地研究站（含 8 處非 YouTube .ac.jp 直連與南極昭和基地）`;
         } else if (centerId === 'korea') {
           sortIndicator.innerText = `韓國全境 ${totalCnt} 處即時實況${badge4k}：依「4K 高畫質 × 即時人氣」優先排序（漢江 4K ‧ 盤浦噴泉 4K ‧ 廣安大橋 4K ‧ 濟州島 ‧ 江原道束草）`;
         } else if (centerId === 'apac') {
@@ -52446,6 +53012,9 @@ class MonitorApp {
     if (tag === '悠閒慢活') {
       return Boolean(c.isPanorama360) || /悠閒|慢活|療癒|海灘|海灣|潟湖|咖啡|酒吧|日落|夕照|溫泉|運河|湖|水母|海獺|珊瑚|極光|峽灣|山城|郵輪|空拍|雨林|水坑|naturescape|zenlife|myzen|ibiza|cinque terre|como|samui|maldives|waikiki/i.test(t);
     }
+    if (tag === '大學校園') return t.includes('大學校園') || t.includes('校園風景') || t.includes('東北大學') || t.includes('廣島大學') || t.includes('三重大學') || t.includes('鹿屋體育大學') || t.includes('富山短期大學') || t.includes('富山大學') || t.includes('長崎大學') || t.includes('鳥取大學') || t.includes('岩手大學');
+    if (tag === '天文星空') return t.includes('天文星空') || t.includes('天文台') || t.includes('觀測所') || t.includes('木曾') || t.includes('昴星團') || t.includes('全天空') || t.includes('流星');
+    if (tag === '山海研究') return t.includes('山海研究') || t.includes('極地研') || t.includes('昭和基地') || t.includes('知床') || t.includes('潮岬') || t.includes('上高地') || t.includes('岩手山') || t.includes('鈴鹿') || t.includes('伊勢灣');
     if (tag === '富士山') return t.includes('富士山') || t.includes('fuji');
     if (tag === '溫泉') return t.includes('溫泉') || t.includes('湯畑') || t.includes('熱海') || t.includes('別府') || t.includes('白濱') || t.includes('箱根') || t.includes('草津') || t.includes('onsen');
     if (tag === '漢江海灣') return t.includes('漢江') || t.includes('海灣') || t.includes('釜山') || t.includes('濟州') || t.includes('江原') || t.includes('束草');

@@ -319,6 +319,13 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("volcanoes.usgs.gov"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("weather.cs.uit.no"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("pixelcaster.com"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("www.nipr.ac.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("dias.rd.kitami-it.ac.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("atm.bio.mie-u.ac.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("www.seikei.ac.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("rcfcd.dpri.kyoto-u.ac.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("ims.shinshu-u.ac.jp"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("dcp.cg.cis.iwate-u.ac.jp"))
 
         assertFalse(WebAssetRouting.isNativeInterceptHost("www.youtube.com"))
         assertFalse(WebAssetRouting.isNativeInterceptHost("evil-opendata.vip"))
