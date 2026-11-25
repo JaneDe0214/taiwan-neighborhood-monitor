@@ -1459,11 +1459,60 @@ body {
   border-radius: 0 !important;
   transition: opacity 0.3s ease;
   border: none;
-  image-rendering: auto;
-  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
   transform: translateZ(0);
   backface-visibility: hidden;
   filter: none;
+}
+
+/* 無損 360° 超寬環景巡弋視窗：1:1 垂直滿高展開，零上下黑邊壓扁失真，支援自動平滑巡弋與手動拖曳環顧 */
+.video-wrapper.is-pano-360 {
+  display: block !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.video-wrapper.is-pano-360::-webkit-scrollbar {
+  display: none;
+}
+
+.video-wrapper.is-pano-360.is-dragging-pano {
+  cursor: grabbing;
+}
+
+.video-wrapper.is-pano-360 img.cam-feed {
+  height: 100% !important;
+  width: auto !important;
+  min-width: 100%;
+  max-width: none !important;
+  max-height: 100% !important;
+  object-fit: cover !important;
+}
+
+.pano-360-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 38px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(8, 15, 30, 0.80);
+  border: 1px solid rgba(56, 189, 248, 0.44);
+  color: #bae6fd;
+  font-size: 0.64rem;
+  font-weight: 700;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
+body.cinema-zen-mode .pano-360-badge {
+  bottom: 8px;
 }
 
 /* 原生全螢幕 / 全畫面渲染 */
@@ -12855,7 +12904,8 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
           <button class="filter-tag-pill" data-filter-tag="風景" type="button">風景地標</button>
           <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
           <button class="filter-tag-pill" data-filter-tag="4k" type="button">4K 高畫質</button>
-          <button class="filter-tag-pill" data-filter-tag="多元直連" type="button" title="世界即時之窗多元來源：篩選原生 HLS (.m3u8)、4K 太空衛星、太陽天文台、360° 全幅與官方交控直連畫面">🛰️ 多元直連</button>
+          <button class="filter-tag-pill" data-filter-tag="悠閒慢活" type="button" title="篩選全球海島沙灘、露天咖啡館、阿爾卑斯山城、360° 環景、療癒水母海獺與慢電視實況">🍃 悠閒慢活</button>
+          <button class="filter-tag-pill" data-filter-tag="多元直連" type="button" title="世界即時之窗多元來源：篩選非 YouTube 之原生 4K/1080P HLS (.m3u8)、360° 環景、全片幅單眼 DSLR、太空衛星與官方直連畫面">🛰️ 多元直連</button>
           <button id="filterPillFuji" class="filter-tag-pill" data-filter-tag="富士山" data-region-scope="japan,world,scenic,favorites" type="button" style="display:none;">富士山</button>
           <button id="filterPillOnsen" class="filter-tag-pill" data-filter-tag="溫泉" data-region-scope="japan,favorites" type="button" style="display:none;">溫泉名勝</button>
           <button class="filter-tag-pill" data-filter-tag="漢江海灣" data-region-scope="korea,world" type="button" style="display:none;">漢江海灣</button>
@@ -13487,15 +13537,19 @@ class CameraPlayerEngine {
     this.initYoutubeQualityBridge();
   }
 
-  // 掃描 HLS 多碼率清單，精準選出真實最高解析度與最高位元率軌道索引 (防止部分 m3u8 將最高畫質置於 index 0)
+  // 掃描 HLS 多碼率清單，精準選出真實最高解析度與最高位元率視訊軌道索引 (過濾純音訊軌，確保第一時間鎖定 4K/1080P 最高畫質)
   static pickHighestHlsLevel(levels) {
     if (!Array.isArray(levels) || levels.length === 0) return -1;
     let bestIdx = 0;
     let bestScore = -1;
     for (let i = 0; i < levels.length; i++) {
       const lv = levels[i] || {};
-      const pixels = (Number(lv.width) || 0) * (Number(lv.height) || 0);
+      const w = Number(lv.width) || 0;
+      const h = Number(lv.height) || 0;
+      const pixels = w * h;
       const bitrate = Number(lv.bitrate || lv.maxBitrate || 0);
+      const isAudioOnly = pixels === 0 && Boolean(lv.audioCodec) && !lv.videoCodec;
+      if (isAudioOnly) continue;
       const score = pixels * 1000 + Math.round(bitrate / 1000);
       if (score >= bestScore) {
         bestScore = score;
@@ -13820,8 +13874,17 @@ class CameraPlayerEngine {
     const updateDisplay = (fps) => {
       const width = videoEl.videoWidth || 0;
       const height = videoEl.videoHeight || 0;
+      const mbps = cam._liveBitrateMbps ? ` ‧ ${cam._liveBitrateMbps}M` : '';
+      if (width >= 3200 || height >= 1800) {
+        resEl.classList.add('is-4k');
+        resEl.classList.remove('is-2k');
+      } else if (width >= 2000 || height >= 1300) {
+        resEl.classList.add('is-2k');
+        resEl.classList.remove('is-4k');
+      }
       if (width > 0 && height > 0) {
-        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${width}×${height} ‧ ${fps} FPS`;
+        const tag4k = (width >= 3200 || height >= 1800) ? '4K ' : '';
+        resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${tag4k}${width}×${height}${mbps} ‧ ${fps} FPS`;
       } else {
         resEl.innerHTML = `<i class="fa-solid fa-video"></i> 串流中 ‧ ${fps} FPS`;
       }
@@ -14126,6 +14189,13 @@ class CameraPlayerEngine {
       clearInterval(this.timerId);
       this.timerId = null;
     }
+    if (this.panoGlideTimer) {
+      clearInterval(this.panoGlideTimer);
+      this.panoGlideTimer = null;
+    }
+    if (this.panoWrappers) {
+      this.panoWrappers.clear();
+    }
     this.retryCounts.clear();
     if (this.recoveryDebounce) this.recoveryDebounce.clear();
 
@@ -14182,11 +14252,11 @@ class CameraPlayerEngine {
         </div>
       `;
     } else if (cam.type === 'youtube') {
-      // 官方 24H 高畫質即時串流 (附帶即時預覽底圖消除黑畫面等待、前 12 格 0ms 並行秒開、超過 12 格視口按需載入)
+      // 官方 24H 高畫質即時串流 (優先採用 1080P maxresdefault_live 零失真預覽底圖、前 12 格 0ms 並行秒開、超過 12 格視口按需載入)
       const ytUrl = window.buildYoutubeEmbedUrl(cam.videoId);
       const safeVid = encodeURIComponent(String(cam.videoId || '').trim());
       const backdropStyle = safeVid
-        ? `style="background-image:url('https://i.ytimg.com/vi/${safeVid}/hqdefault_live.jpg'),url('https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg');"`
+        ? `style="background-image:url('https://i.ytimg.com/vi/${safeVid}/maxresdefault_live.jpg'),url('https://i.ytimg.com/vi/${safeVid}/hqdefault_live.jpg'),url('https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg');"`
         : '';
       const deferLoad = index >= 12;
       mediaHtml = `
@@ -14199,7 +14269,7 @@ class CameraPlayerEngine {
         </div>
       `;
     } else if (cam.type === 'iframe') {
-      // 臺北市交工處官方原生即時串流 (直出動態直播：直接播放，絕不點進去)
+      // 官方原生即時內嵌串流 (直出動態直播：直接播放)
       const streamSrc = cam.streamUrl || `https://hls.bote.gov.taipei/live/index.html?id=${encodeURIComponent(cam.ccdId || cam.id)}`;
       mediaHtml = `
         <div class="video-wrapper bote-stream-wrapper" ondblclick="window.monitorApp.openFullscreen('${safeIdJs}')" title="按兩下開啟全螢幕檢視">
@@ -14217,15 +14287,17 @@ class CameraPlayerEngine {
       // 高公局國道/快速道路原生 MJPEG 動態串流
       mediaHtml = `
         <div class="video-wrapper" ondblclick="window.monitorApp.openFullscreen('${safeIdJs}')" title="按兩下開啟全螢幕檢視">
-          <img class="cam-feed mjpeg-feed" id="feed-${safeIdHtml}" data-raw-url="${eHtml(cam.streamUrl)}" referrerpolicy="no-referrer" src="${eHtml(cam.streamUrl)}" alt="${safeNameHtml}" loading="lazy" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${safeIdJs}')" />
+          <img class="cam-feed mjpeg-feed" id="feed-${safeIdHtml}" data-raw-url="${eHtml(cam.streamUrl)}" referrerpolicy="no-referrer" src="${eHtml(cam.streamUrl)}" alt="${safeNameHtml}" decoding="async" loading="lazy" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${safeIdJs}')" />
         </div>
       `;
     } else {
-      // 快照備援
+      // 高解析全片幅單眼 DSLR / 太空衛星 4K / 360° 無損環景實況觀測 (載入後依真實寬高比 >= 2.2 自動啟用無損 360° 巡弋)
+      const isPano = Boolean(cam.isPanorama360);
       const snapSep = String(cam.streamUrl || '').includes('?') ? '&' : '?';
+      const prioAttr = index < 6 ? 'fetchpriority="high"' : 'loading="lazy"';
       mediaHtml = `
-        <div class="video-wrapper" ondblclick="window.monitorApp.openFullscreen('${safeIdJs}')" title="按兩下開啟全螢幕檢視">
-          <img class="cam-feed snapshot-feed" id="feed-${safeIdHtml}" data-raw-url="${eHtml(cam.streamUrl)}" referrerpolicy="no-referrer" src="${eHtml(cam.streamUrl)}${snapSep}_t=${Date.now()}" alt="${safeNameHtml}" loading="lazy" ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${safeIdJs}')" />
+        <div class="video-wrapper ${isPano ? 'is-pano-360' : ''}" data-pano-cam="${isPano ? '1' : '0'}" ondblclick="window.monitorApp.openFullscreen('${safeIdJs}')" title="${isPano ? '左右拖曳環顧 360° 視野 ‧ 按兩下開啟全螢幕檢視' : '按兩下開啟全螢幕檢視'}">
+          <img class="cam-feed snapshot-feed" id="feed-${safeIdHtml}" data-raw-url="${eHtml(cam.streamUrl)}" referrerpolicy="no-referrer" src="${eHtml(cam.streamUrl)}${snapSep}_t=${Date.now()}" alt="${safeNameHtml}" decoding="async" ${prioAttr} ondblclick="event.stopPropagation(); window.monitorApp.openFullscreen('${safeIdJs}')" />
         </div>
       `;
     }
@@ -14348,10 +14420,119 @@ class CameraPlayerEngine {
       this.startLiveClock(cam.id);
     } else if (imgEl) {
       const wrapEl = imgEl.closest('.video-wrapper');
-      if (wrapEl) {
-        if (imgEl.complete) wrapEl.classList.add('is-ready');
-        else imgEl.addEventListener('load', () => wrapEl.classList.add('is-ready'), { once: true });
+      const onSnapReady = () => {
+        if (!wrapEl) return;
+        wrapEl.classList.add('is-ready');
+        const nw = imgEl.naturalWidth || 0;
+        const nh = imgEl.naturalHeight || 0;
+        if (nw > 0 && nh > 0) {
+          const isUltraWide = (nw / nh) >= 2.2;
+          const resEl = document.getElementById(`res-${cam.id}`);
+          if (resEl) {
+            resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${nw}×${nh} ‧ ${isUltraWide ? '360° 無損環景' : (cam.sourceBadge || '原圖直連')}`;
+            if (nw >= 3200 || nh >= 1800) resEl.classList.add('is-4k');
+          }
+          if (isUltraWide) {
+            this.enablePanoramaHorizonGlide(wrapEl, imgEl);
+          } else {
+            wrapEl.classList.remove('is-pano-360');
+          }
+        }
+      };
+      if (imgEl.complete && imgEl.naturalWidth > 0) onSnapReady();
+      else imgEl.addEventListener('load', onSnapReady, { once: true });
+    }
+  }
+
+  // 無損 360° 超寬環景平滑巡弋與手動拖曳環顧引擎
+  enablePanoramaHorizonGlide(wrapEl, imgEl) {
+    if (!wrapEl || !imgEl || wrapEl.dataset.panoBound === '1') return;
+    wrapEl.dataset.panoBound = '1';
+    wrapEl.classList.add('is-pano-360');
+    const cardHost = wrapEl.closest('.cam-card') || wrapEl;
+    if (!cardHost.querySelector('.pano-360-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'pano-360-badge';
+      badge.innerHTML = '<i class="fa-solid fa-compass"></i> 360° 環景 ‧ 可拖曳';
+      cardHost.appendChild(badge);
+    }
+
+    const state = {
+      wrapEl,
+      dir: 1,
+      pos: 0,
+      hovered: false,
+      dragging: false,
+      startX: 0,
+      startScroll: 0
+    };
+
+    requestAnimationFrame(() => {
+      const maxS = Math.max(0, wrapEl.scrollWidth - wrapEl.clientWidth);
+      if (maxS > 20) {
+        state.pos = Math.round(maxS * 0.25);
+        wrapEl.scrollLeft = state.pos;
       }
+    });
+
+    wrapEl.addEventListener('mouseenter', () => { state.hovered = true; }, { passive: true });
+    wrapEl.addEventListener('mouseleave', () => {
+      state.hovered = false;
+      state.dragging = false;
+      wrapEl.classList.remove('is-dragging-pano');
+    }, { passive: true });
+    wrapEl.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      state.dragging = true;
+      state.startX = e.clientX;
+      state.startScroll = wrapEl.scrollLeft;
+      wrapEl.classList.add('is-dragging-pano');
+    });
+    wrapEl.addEventListener('mousemove', (e) => {
+      if (!state.dragging) return;
+      e.preventDefault();
+      const next = state.startScroll - (e.clientX - state.startX);
+      wrapEl.scrollLeft = next;
+      state.pos = wrapEl.scrollLeft;
+    });
+    wrapEl.addEventListener('mouseup', () => {
+      state.dragging = false;
+      wrapEl.classList.remove('is-dragging-pano');
+    });
+    wrapEl.addEventListener('touchstart', () => { state.hovered = true; }, { passive: true });
+    wrapEl.addEventListener('touchend', () => {
+      setTimeout(() => {
+        state.pos = wrapEl.scrollLeft;
+        state.hovered = false;
+      }, 1500);
+    }, { passive: true });
+
+    if (!this.panoWrappers) this.panoWrappers = new Set();
+    this.panoWrappers.add(state);
+
+    if (!this.panoGlideTimer) {
+      this.panoGlideTimer = setInterval(() => {
+        if (this.isPaused || (typeof document !== 'undefined' && document.hidden)) return;
+        if (!this.panoWrappers || this.panoWrappers.size === 0) return;
+        this.panoWrappers.forEach(st => {
+          if (!st.wrapEl || !st.wrapEl.isConnected) {
+            this.panoWrappers.delete(st);
+            return;
+          }
+          if (st.hovered || st.dragging) return;
+          const maxScroll = st.wrapEl.scrollWidth - st.wrapEl.clientWidth;
+          if (maxScroll <= 8) return;
+          st.pos += st.dir * 0.65;
+          if (st.pos >= maxScroll) {
+            st.pos = maxScroll;
+            st.dir = -1;
+          } else if (st.pos <= 0) {
+            st.pos = 0;
+            st.dir = 1;
+          }
+          st.wrapEl.scrollLeft = st.pos;
+        });
+      }, 33);
     }
   }
 
@@ -14521,6 +14702,14 @@ class CameraPlayerEngine {
     if (!videoEl) return;
 
     let streamUrl = cam.streamUrl;
+    // HEVC 4K 與通用 H.264 1080P 智慧雙軌自動協商：支援硬體 HEVC 之裝置直出 3840×2160 4K，無 HEVC 解碼器之瀏覽器 0ms 無縫切換至通用 H.264 1080P 最高畫質
+    if (cam.fallbackHlsUrl && (cam.requiresHevc || (streamUrl && streamUrl.includes('Love_Nature_4K')))) {
+      const hevcSupported = typeof MediaSource !== 'undefined' && typeof MediaSource.isTypeSupported === 'function' &&
+        (MediaSource.isTypeSupported('video/mp4; codecs="hvc1.1.6.L153.B0"') || MediaSource.isTypeSupported('video/mp4; codecs="hev1.1.6.L153.B0"'));
+      if (!hevcSupported) {
+        streamUrl = cam.fallbackHlsUrl;
+      }
+    }
     // 若處於本機 file:// 協定且為代理路徑，指向本機伺服器 (預設 3000 埠)
     if (streamUrl.startsWith('/api/') && (window.location && window.location.protocol === 'file:')) {
       streamUrl = 'http://localhost:3000' + streamUrl;
@@ -14550,26 +14739,29 @@ class CameraPlayerEngine {
         const isTaipeiBote = (streamUrl && (streamUrl.includes('bote.gov.taipei') || streamUrl.includes('/api/bote/'))) || (cam.id && String(cam.id).startsWith('tpe-'));
         const isTaoyuanCctv = Boolean(streamUrl && streamUrl.includes('cctvtraffic.tycg.gov.tw'));
         const isNewTaipeiCctv = Boolean(streamUrl && streamUrl.includes('cctvatis'));
+        const isTrafficSingleTrack = isTaipeiBote || isTaoyuanCctv || isNewTaipeiCctv;
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: false,          // 關閉 LL 模式以獲得最佳硬體解碼平穩度
           startFragPrefetch: true,        // 全面開啟首片切片預抓，解析播放清單同時預載首個視訊區段以縮短轉圈等待
-          liveSyncDurationCount: isTaipeiBote ? 1.0 : (isTaoyuanCctv ? 1.0 : (isNewTaipeiCctv ? 1.5 : 2.0)), // 桃園 12 秒大切片 1 片秒開；新北 4 秒短切片 1.5 片兼顧秒開與零停頓滿幀 30fps
-          liveMaxLatencyDurationCount: isTaipeiBote ? 3.5 : (isTaoyuanCctv ? 4.0 : (isNewTaipeiCctv ? 4.5 : 6.0)),
+          liveSyncDurationCount: isTaipeiBote ? 1.0 : (isTaoyuanCctv ? 1.0 : (isNewTaipeiCctv ? 1.5 : 2.2)), // 桃園 12 秒大切片 1 片秒開；新北 4 秒短切片 1.5 片滿幀；國際高碼率 4K/1080P 2.2 片極致平順
+          liveMaxLatencyDurationCount: isTaipeiBote ? 3.5 : (isTaoyuanCctv ? 4.0 : (isNewTaipeiCctv ? 4.5 : 6.5)),
           liveDurationInfinity: true,
           maxLiveSyncPlaybackRate: 1.05,  // 內建極微幅平滑追幀，平緩無感，絕不爆衝耗盡緩衝
-          capLevelToPlayerSize: false,    // 解鎖最高畫質：絕不因容器小而降級
+          capLevelToPlayerSize: false,    // 解鎖最高畫質：絕不因多宮格容器尺寸而降級
+          maxDevicePixelRatio: 4,         // 完整支援 4K / Retina 高密度螢幕無損解析度
+          abrEwmaDefaultEstimate: isTrafficSingleTrack ? 6000000 : 28000000, // 國際多碼率串流預設以 28Mbps 頻寬估計，首片即直攻 4K/1080P 最高軌跡，零起播馬賽克
           autoLevelCapping: -1,
           startLevel: -1,
-          maxBufferLength: isTaipeiBote ? 6 : (isNewTaipeiCctv ? 8 : (isTaoyuanCctv ? 12 : 18)), // 輕量化緩衝，縮短首幀下載並降低 1080P 多路記憶體與 GPU 負載
-          maxMaxBufferLength: isTaipeiBote ? 12 : (isNewTaipeiCctv ? 16 : (isTaoyuanCctv ? 24 : 36)),
-          maxBufferSize: (isNewTaipeiCctv || isTaoyuanCctv || isTaipeiBote) ? (12 * 1024 * 1024) : (20 * 1024 * 1024),
-          backBufferLength: isTaipeiBote ? 4 : (isNewTaipeiCctv ? 4 : 6),
-          fragLoadingTimeOut: isTaipeiBote ? 8000 : 12000,   // 單一切片逾時快速重試
+          maxBufferLength: isTaipeiBote ? 6 : (isNewTaipeiCctv ? 8 : (isTaoyuanCctv ? 12 : 24)),
+          maxMaxBufferLength: isTaipeiBote ? 12 : (isNewTaipeiCctv ? 16 : (isTaoyuanCctv ? 24 : 48)),
+          maxBufferSize: isTrafficSingleTrack ? (12 * 1024 * 1024) : (52 * 1024 * 1024), // 52MB 緩衝池充裕承載 3840×2160 原生 4K TS/CMAF 切片
+          backBufferLength: isTaipeiBote ? 4 : (isNewTaipeiCctv ? 4 : 8),
+          fragLoadingTimeOut: isTaipeiBote ? 8000 : 14000,
           manifestLoadingTimeOut: isTaipeiBote ? 8000 : 10000,
           levelLoadingTimeOut: isTaipeiBote ? 8000 : 10000,
           fragLoadingMaxRetry: 8,         // 提升切片重試容錯次數至 8 次
-          fragLoadingRetryDelay: isTaipeiBote ? 350 : 500,   // 快速重試，無需乾等
+          fragLoadingRetryDelay: isTaipeiBote ? 350 : 500,
           manifestLoadingMaxRetry: 8,
           manifestLoadingRetryDelay: isTaipeiBote ? 350 : 500,
           nudgeOffset: 0.1,               // 遇時間戳微小空隙自動推進 0.1 秒除卡
@@ -14580,20 +14772,38 @@ class CameraPlayerEngine {
         hls.attachMedia(videoEl);
 
         // 僅在多碼率 (ABR levels > 1) 時鎖定最高畫質；單軌直播清單 (桃園/新北交控) 絕不重設 currentLevel 以杜絕重複抓取兩次 m3u8 拖慢起播
+        const syncHlsBitrateMeta = (lvlIdx) => {
+          const lv = hls.levels && hls.levels[lvlIdx];
+          const bps = Number(lv?.bitrate || lv?.maxBitrate || 0);
+          if (bps >= 100000) {
+            cam._liveBitrateMbps = (bps / 1000000).toFixed(1);
+          }
+        };
         const enforceHighestLevel = () => {
           if (hls.levels && hls.levels.length > 1) {
             const maxIdx = CameraPlayerEngine.pickHighestHlsLevel(hls.levels);
-            if (maxIdx >= 0 && hls.loadLevel !== maxIdx) {
-              hls.autoLevelCapping = -1;
-              hls.startLevel = maxIdx;
-              hls.currentLevel = maxIdx;
-              hls.loadLevel = maxIdx;
-              hls.nextLevel = maxIdx;
+            if (maxIdx >= 0) {
+              syncHlsBitrateMeta(maxIdx);
+              if (hls.loadLevel !== maxIdx) {
+                hls.autoLevelCapping = -1;
+                hls.startLevel = maxIdx;
+                hls.currentLevel = maxIdx;
+                hls.loadLevel = maxIdx;
+                hls.nextLevel = maxIdx;
+              }
             }
+          } else if (hls.levels && hls.levels.length === 1) {
+            syncHlsBitrateMeta(0);
           }
         };
 
         hls.on(Hls.Events.MANIFEST_LOADED, enforceHighestLevel);
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+          if (data && typeof data.level === 'number') {
+            syncHlsBitrateMeta(data.level);
+            this.detectVideoResolution(cam, videoEl);
+          }
+        });
         hls.on(Hls.Events.LEVEL_LOADED, () => {
           if (hls.levels && hls.levels.length > 1) {
             const maxIdx = CameraPlayerEngine.pickHighestHlsLevel(hls.levels);
@@ -15224,7 +15434,7 @@ class CameraPlayerEngine {
     this.mjpegTimers.set(cam.id, timer);
   }
 
-  // 批次定時更新快照 (高解析太空衛星與全幅觀測預設每 30 秒平滑更新，避免頻寬浪費)
+  // 批次定時無閃爍雙緩衝更新高解析觀測影像 (先於背景完成解碼再原子替換 src，實現零黑閃、零畫面撕裂)
   refreshSnapshots() {
     const snapshotImgs = document.querySelectorAll('img.snapshot-feed');
     const now = Date.now();
@@ -15237,16 +15447,27 @@ class CameraPlayerEngine {
         const sep = rawUrl.includes('?') ? '&' : '?';
         const newSrc = `${rawUrl}${sep}_t=${now}`;
         const tempImg = new Image();
-        tempImg.onload = () => {
+        tempImg.decoding = 'async';
+        tempImg.referrerPolicy = 'no-referrer';
+        const commitSwap = () => {
+          if (!img.isConnected) return;
           img.src = newSrc;
           const camId = img.id.replace('feed-', '');
           const wm = document.getElementById(`wm-${camId}`);
-          if (wm) { wm.style.background = '#10b981'; wm.title = '快照已更新'; }
+          if (wm) { wm.style.background = '#10b981'; wm.title = '高解析觀測已更新'; }
           if (tempImg.naturalWidth && tempImg.naturalHeight) {
             const resEl = document.getElementById(`res-${camId}`);
             if (resEl) {
-              resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${tempImg.naturalWidth}×${tempImg.naturalHeight} ‧ 定時快照`;
+              const isUltraWide = (tempImg.naturalWidth / tempImg.naturalHeight) >= 2.35;
+              resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${tempImg.naturalWidth}×${tempImg.naturalHeight} ‧ ${isUltraWide ? '360° 無損環景' : '原圖直連'}`;
             }
+          }
+        };
+        tempImg.onload = () => {
+          if (typeof tempImg.decode === 'function') {
+            tempImg.decode().then(commitSwap).catch(commitSwap);
+          } else {
+            commitSwap();
           }
         };
         tempImg.src = newSrc;
@@ -33174,6 +33395,86 @@ window.CAMERAS_DATA = {
         "maxRes": 1080,
         "concurrentViewers": 680,
         "popScore": 3150
+      },
+      {
+        "id": "jp-84-niseko-hanazono-4k",
+        "name": "北海道二世谷花園度假村 ‧ 羊蹄山粉雪山莊悠閒實況 4K (Niseko Hanazono 4K)",
+        "authority": "Hanazono Niseko Resort",
+        "type": "youtube",
+        "videoId": "1ksmiy6EsDo",
+        "lat": 42.8856,
+        "lon": 140.7106,
+        "areaTag": "北海道",
+        "tag": "風景 4K 悠閒慢活 雪峰",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "popScore": 936,
+        "defaultOrder": 82
+      },
+      {
+        "id": "jp-82-miura-beach-waves",
+        "name": "神奈川三浦海岸 ‧ 24H 太平洋療癒海浪原音慢活實況 (Miura Beach Waves Live)",
+        "authority": "TOKYO BAY LIVE CAMERA",
+        "type": "youtube",
+        "videoId": "MOkZUavnHM4",
+        "lat": 35.1869,
+        "lon": 139.6548,
+        "areaTag": "關東海岸",
+        "tag": "風景 海灘 悠閒慢活 療癒",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 914,
+        "defaultOrder": 83
+      },
+      {
+        "id": "jp-83-okinawa-malibu-beach",
+        "name": "沖繩恩納村馬里布海灘 ‧ 琉球珊瑚礁碧海藍天慢活實況 (Okinawa Malibu Beach)",
+        "authority": "沖繩 NOW 官方實況",
+        "type": "youtube",
+        "videoId": "3VuKgtoZWbQ",
+        "lat": 26.4357,
+        "lon": 127.7885,
+        "areaTag": "沖繩",
+        "tag": "風景 海灘 悠閒慢活 海灣",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 908,
+        "defaultOrder": 84
+      },
+      {
+        "id": "jp-86-kyoto-station-official",
+        "name": "京都車站前廣場 ‧ 京都市觀光協會古都日常實況 (Kyoto Station Official)",
+        "authority": "京都市觀光協會公式",
+        "type": "youtube",
+        "videoId": "ABJKHT5ZrF4",
+        "lat": 34.9866,
+        "lon": 135.7585,
+        "areaTag": "京都",
+        "tag": "風景 交通 悠閒慢活 古都",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 912,
+        "defaultOrder": 85
+      },
+      {
+        "id": "jp-85-sapporo-tanukikoji-lofi",
+        "name": "北海道札幌狸小路八丁目 ‧ 北國街角與 Lo-Fi 弛放慢活實況 (Sapporo Lo-Fi Live)",
+        "authority": "Hokkaido Kurashi Live",
+        "type": "youtube",
+        "videoId": "TPIzbMwlrOI",
+        "lat": 43.0566,
+        "lon": 141.3468,
+        "areaTag": "北海道",
+        "tag": "商圈 悠閒慢活 咖啡 夜景",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 904,
+        "defaultOrder": 86
       }
     ],
     "korea": [
@@ -34322,7 +34623,7 @@ window.CAMERAS_DATA = {
         "lat": 46.5572,
         "lon": 7.8352,
         "tz": "Europe/Zurich",
-        "streamUrl": "https://panodata.panomax.com/cams/5052/recent_full.jpg",
+        "streamUrl": "https://panodata.panomax.com/cams/5052/recent_hd.jpg",
         "sourceUrl": "https://schilthorn.panomax.com/",
         "status": "ONLINE",
         "fps": 1,
@@ -34332,7 +34633,9 @@ window.CAMERAS_DATA = {
         "defaultOrder": 31,
         "maxRes": 2160,
         "concurrentViewers": 320,
-        "popScore": 2360
+        "popScore": 2360,
+        "isPanorama360": true,
+        "sourceBadge": "360° 環景直連"
       },
       {
         "id": "eu-32-panomax-hallstatt-4k",
@@ -34343,7 +34646,7 @@ window.CAMERAS_DATA = {
         "lat": 47.5233,
         "lon": 13.6858,
         "tz": "Europe/Vienna",
-        "streamUrl": "https://panodata.panomax.com/cams/177/recent_full.jpg",
+        "streamUrl": "https://panodata.panomax.com/cams/505/recent_hd.jpg",
         "sourceUrl": "https://dachstein-krippenstein.panomax.com/",
         "status": "ONLINE",
         "fps": 1,
@@ -34353,28 +34656,32 @@ window.CAMERAS_DATA = {
         "defaultOrder": 32,
         "maxRes": 2160,
         "concurrentViewers": 290,
-        "popScore": 2290
+        "popScore": 2290,
+        "isPanorama360": true,
+        "sourceBadge": "360° 環景直連"
       },
       {
         "id": "eu-33-panomax-innsbruck-4k",
         "cctvCode": "EU-33-PANOMAX-INNSBRUCK-4K",
         "name": "奧地利因斯布魯克帕切科菲爾峰 ‧ 提洛阿爾卑斯 360° 環景直連 4K (Innsbruck Tyrol 360°)",
-        "authority": "Panomax 奧地利高山 360° 官方直連",
+        "authority": "Foto-Webcam 奧地利全片幅單眼觀測網",
         "type": "snapshot",
         "lat": 47.2089,
         "lon": 11.4608,
         "tz": "Europe/Vienna",
-        "streamUrl": "https://panodata.panomax.com/cams/1118/recent_full.jpg",
-        "sourceUrl": "https://patscherkofel.panomax.com/",
+        "streamUrl": "https://www.foto-webcam.eu/webcam/innsbruck/current/1920.jpg",
+        "sourceUrl": "https://www.foto-webcam.eu/webcam/innsbruck/",
         "status": "ONLINE",
         "fps": 1,
         "tag": "阿爾卑斯 峽灣雪峰 風景 多元直連 4K",
         "distanceMeters": 0,
         "distanceKm": 0,
         "defaultOrder": 33,
-        "maxRes": 2160,
+        "maxRes": 1440,
         "concurrentViewers": 240,
-        "popScore": 2180
+        "popScore": 2180,
+        "sourceBadge": "單眼原圖直連",
+        "isPanorama360": false
       },
       {
         "id": "eu-34-redbull-alps-hls",
@@ -34459,6 +34766,266 @@ window.CAMERAS_DATA = {
         "maxRes": 1080,
         "concurrentViewers": 490,
         "popScore": 2810
+      },
+      {
+        "id": "eu-48-ibiza-cafedelmar-4k",
+        "name": "西班牙伊比薩島 Café del Mar ‧ 地中海傳奇日落與弛放音樂海岸 4K (Ibiza Sunset 4K)",
+        "authority": "Café del Mar Ibiza Official",
+        "type": "youtube",
+        "videoId": "HP2PhJbLevY",
+        "lat": 38.9808,
+        "lon": 1.2966,
+        "areaTag": "伊比薩島",
+        "tag": "風景 海灘 4K 悠閒慢活 咖啡 酒吧 日落",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "popScore": 948,
+        "defaultOrder": 38
+      },
+      {
+        "id": "eu-41-panomax-matterhorn-360",
+        "name": "義瑞邊界馬特洪峰 Cervinia ‧ 360° 阿爾卑斯冰川雪峰無損環景 (Matterhorn 360°)",
+        "authority": "Panomax 歐洲高山 360° 觀測網",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/867/recent_hd.jpg",
+        "sourceUrl": "https://cervinia.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 45.9419,
+        "lon": 7.6625,
+        "areaTag": "馬特洪峰",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 928,
+        "defaultOrder": 39
+      },
+      {
+        "id": "eu-44-panomax-zugspitze-360",
+        "name": "德國最高峰楚格峰頂 2,962m ‧ 360° 四國阿爾卑斯雲海無損環景 (Zugspitze 360°)",
+        "authority": "Panomax 楚格峰頂觀測站",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/128/recent_hd.jpg",
+        "sourceUrl": "https://zugspitze.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 47.4212,
+        "lon": 10.9853,
+        "areaTag": "楚格峰",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 925,
+        "defaultOrder": 40
+      },
+      {
+        "id": "eu-45-panomax-cortina-5torri-360",
+        "name": "義大利多洛米蒂五塔峰 Cortina 5 Torri ‧ 360° 世界遺產奇峰環景 (Dolomites 360°)",
+        "authority": "Panomax 義大利多洛米蒂觀測網",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/6678/recent_hd.jpg",
+        "sourceUrl": "https://cortina.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 46.5081,
+        "lon": 12.0469,
+        "areaTag": "多洛米蒂",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 920,
+        "defaultOrder": 41
+      },
+      {
+        "id": "eu-43-panomax-montblanc-360",
+        "name": "法義白朗峰山群庫馬耶 Youla ‧ 360° 歐洲之巔雪峰無損環景 (Mont-Blanc 360°)",
+        "authority": "Panomax 白朗峰高山觀測網",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/1104/recent_hd.jpg",
+        "sourceUrl": "https://courmayeur.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 45.7731,
+        "lon": 6.9113,
+        "areaTag": "白朗峰",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 916,
+        "defaultOrder": 42
+      },
+      {
+        "id": "eu-42-panomax-plateau-rosa-360",
+        "name": "瑞義馬特洪峰冰川天堂 Plateau Rosa 3,480m ‧ 360° 極高海拔雪原環景",
+        "authority": "Panomax 冰川觀測網",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/931/recent_hd.jpg",
+        "sourceUrl": "https://cervinia.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 45.9353,
+        "lon": 7.7074,
+        "areaTag": "馬特洪峰",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 912,
+        "defaultOrder": 43
+      },
+      {
+        "id": "eu-46-panomax-salzburg-360",
+        "name": "奧地利薩爾茨堡音樂古都與阿爾卑斯山脈 ‧ 360° 城市山城無損環景 (Salzburg 360°)",
+        "authority": "Panomax 奧地利觀測網",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/5825/recent_hd.jpg",
+        "sourceUrl": "https://salzburg.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 47.7942,
+        "lon": 13.0104,
+        "areaTag": "薩爾茨堡",
+        "tag": "風景 阿爾卑斯 山城 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 904,
+        "defaultOrder": 44
+      },
+      {
+        "id": "eu-47-panomax-sylt-coast-360",
+        "name": "德國北海敘爾特島 Friesenkapelle ‧ 360° 療癒白沙丘與草甸海岸環景 (Sylt Island 360°)",
+        "authority": "Panomax 北海岸觀測網",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/3558/recent_hd.jpg",
+        "sourceUrl": "https://sylt.panomax.com/",
+        "sourceBadge": "360° 環景直連",
+        "lat": 54.9397,
+        "lon": 8.3287,
+        "areaTag": "敘爾特島",
+        "tag": "風景 海灘 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 892,
+        "defaultOrder": 45
+      },
+      {
+        "id": "eu-38-peertv-dolomites-hls",
+        "name": "義大利南蒂羅爾與多洛米蒂阿爾卑斯山谷 ‧ 超高碼率慢活實況原生 HLS 直連",
+        "authority": "Peer.tv Südtirol Alto Adige",
+        "type": "hls",
+        "streamUrl": "https://iptv.peer.biz/live/peertv-en.m3u8",
+        "sourceUrl": "https://tv.peer.biz/",
+        "sourceBadge": "高碼率 HLS 直連",
+        "lat": 46.4983,
+        "lon": 11.3548,
+        "areaTag": "南蒂羅爾",
+        "tag": "風景 阿爾卑斯 山城 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 25,
+        "popScore": 906,
+        "defaultOrder": 46
+      },
+      {
+        "id": "eu-51-lake-como-bellagio",
+        "name": "義大利科莫湖梅納焦與貝拉焦 ‧ 阿爾卑斯湖光山色慢活實況 (Lake Como Bellagio)",
+        "authority": "Como Cam Official",
+        "type": "youtube",
+        "videoId": "V2mO-6X0EwM",
+        "lat": 46.0206,
+        "lon": 9.2392,
+        "areaTag": "科莫湖",
+        "tag": "風景 阿爾卑斯 湖 悠閒慢活 山城",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 910,
+        "defaultOrder": 47
+      },
+      {
+        "id": "eu-49-cinqueterre-manarola",
+        "name": "義大利五漁村馬納羅拉 ‧ 地中海懸崖彩屋海灣悠閒實況 (Cinque Terre Manarola)",
+        "authority": "Paesaggi Digitali Italia",
+        "type": "youtube",
+        "videoId": "QpqsJKI0Wfk",
+        "lat": 44.1068,
+        "lon": 9.7289,
+        "areaTag": "五漁村",
+        "tag": "風景 海灣 山城 悠閒慢活",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 905,
+        "defaultOrder": 48
+      },
+      {
+        "id": "eu-50-cinqueterre-riomaggiore",
+        "name": "義大利五漁村里奧馬焦雷 ‧ 繽紛海港與海浪拍岸慢活實況 (Cinque Terre Riomaggiore)",
+        "authority": "Paesaggi Digitali Italia",
+        "type": "youtube",
+        "videoId": "A7oGJdUmVkg",
+        "lat": 44.0991,
+        "lon": 9.7375,
+        "areaTag": "五漁村",
+        "tag": "風景 海灣 山城 悠閒慢活",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 896,
+        "defaultOrder": 49
+      },
+      {
+        "id": "eu-52-lake-como-skyline",
+        "name": "義大利科莫湖全景天際線 ‧ 湖畔微風與渡輪穿梭慢活實況 (Lake Como Skyline)",
+        "authority": "Espansione TV Como",
+        "type": "youtube",
+        "videoId": "d0-a8UJAyvY",
+        "lat": 45.8122,
+        "lon": 9.0825,
+        "areaTag": "科莫湖",
+        "tag": "風景 湖 悠閒慢活 山城",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 898,
+        "defaultOrder": 50
+      },
+      {
+        "id": "eu-39-dachstein-alps-hls",
+        "name": "奧地利施拉德明達赫斯坦阿爾卑斯雪山 ‧ 山谷度假實況原生 HLS 直連",
+        "authority": "Schladming-Dachstein Live",
+        "type": "hls",
+        "streamUrl": "https://m317.video-stream-hosting.de/gzSoftware-live/_definst_/smil:livestream.smil/playlist.m3u8",
+        "sourceUrl": "https://www.schladming-dachstein.at/",
+        "sourceBadge": "原生 HLS 直連",
+        "lat": 47.3928,
+        "lon": 13.6872,
+        "areaTag": "奧地利雪山",
+        "tag": "風景 阿爾卑斯 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 25,
+        "popScore": 842,
+        "defaultOrder": 51
+      },
+      {
+        "id": "eu-40-myzen-relax-hls",
+        "name": "法國 MyZen 療癒自然頻道 ‧ 歐洲蔚藍海岸與山林慢電視原生 HLS 直連",
+        "authority": "MyZen TV France",
+        "type": "hls",
+        "streamUrl": "https://r.eu.cdn-redge.media/livehls/oeu/mt/live/myzen_tv/live.livx/playlist.m3u8",
+        "sourceUrl": "https://www.myzentv.com/",
+        "sourceBadge": "原生 HLS 直連",
+        "lat": 43.7,
+        "lon": 7.265,
+        "areaTag": "蔚藍海岸",
+        "tag": "風景 海灘 悠閒慢活 療癒 多元直連",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 25,
+        "popScore": 838,
+        "defaultOrder": 52
       }
     ],
     "americas": [
@@ -35196,6 +35763,92 @@ window.CAMERAS_DATA = {
         "maxRes": 1080,
         "concurrentViewers": 210,
         "popScore": 1850
+      },
+      {
+        "id": "am-39-hawaii-alamoana-4k",
+        "name": "夏威夷檀香山阿拉莫阿納魔幻島 ‧ 太平洋衝浪海灣與金色夕照 4K (Honolulu Beach 4K)",
+        "authority": "Hawaii Live 4K",
+        "type": "youtube",
+        "videoId": "y5XS3fMISRk",
+        "lat": 21.2869,
+        "lon": -157.8475,
+        "areaTag": "夏威夷",
+        "tag": "風景 海灘 海灣 4K 悠閒慢活 日落",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "popScore": 942,
+        "defaultOrder": 36
+      },
+      {
+        "id": "am-38-outdoor-america-hls",
+        "name": "美洲壯麗國家公園山林與溪流曠野 ‧ 1080P 原生 HLS 無損直連",
+        "authority": "Outdoor America Network",
+        "type": "hls",
+        "streamUrl": "https://d1e354daam8g5r.cloudfront.net/playlist.m3u8",
+        "sourceUrl": "https://www.outdooramerica.com/",
+        "sourceBadge": "原生 HLS 1080P",
+        "lat": 43.7904,
+        "lon": -110.6818,
+        "areaTag": "大提頓山脈",
+        "tag": "風景 國家公園 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 878,
+        "defaultOrder": 37
+      },
+      {
+        "id": "am-40-leavenworth-village",
+        "name": "華盛頓州萊溫芙絲巴伐利亞童話山城 ‧ 喀斯喀特山谷慢活街景 (Leavenworth Village)",
+        "authority": "Visit Leavenworth Official",
+        "type": "youtube",
+        "videoId": "TmtVbezZaqg",
+        "lat": 47.5962,
+        "lon": -120.6615,
+        "areaTag": "華盛頓山城",
+        "tag": "風景 商圈 山城 悠閒慢活",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 888,
+        "defaultOrder": 38
+      },
+      {
+        "id": "am-36-keywest-beachtv-hls",
+        "name": "佛羅里達西嶼 Key West 與礁島群 ‧ 碧藍珊瑚海岸度假原生 HLS 直連",
+        "authority": "Beach TV Florida Keys",
+        "type": "hls",
+        "streamUrl": "https://5ed325193d4e1.streamlock.net:444/LiveTV/KTVHD/playlist.m3u8",
+        "sourceUrl": "https://www.destinationnetwork.com/",
+        "sourceBadge": "原生 HLS 直連",
+        "lat": 24.5551,
+        "lon": -81.78,
+        "areaTag": "佛羅里達西嶼",
+        "tag": "風景 海灘 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 30,
+        "popScore": 848,
+        "defaultOrder": 39
+      },
+      {
+        "id": "am-37-palmbeaches-hls",
+        "name": "佛羅里達棕櫚灘海岸 ‧ 陽光沙灘與遊艇碼頭慢活原生 HLS 直連",
+        "authority": "The Palm Beaches TV",
+        "type": "hls",
+        "streamUrl": "https://live.feed.thepalmbeaches.tv/index.m3u8",
+        "sourceUrl": "https://www.thepalmbeaches.tv/",
+        "sourceBadge": "原生 HLS 直連",
+        "lat": 26.7056,
+        "lon": -80.0364,
+        "areaTag": "棕櫚灘",
+        "tag": "風景 海灘 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 30,
+        "popScore": 845,
+        "defaultOrder": 40
       }
     ],
     "apac": [
@@ -35723,6 +36376,56 @@ window.CAMERAS_DATA = {
         "distanceKm": 0,
         "defaultOrder": 25,
         "popScore": 3480
+      },
+      {
+        "id": "ap-28-maldives-lagoon-4k",
+        "name": "馬爾地夫洲際度假村 ‧ 印度洋翡翠潟湖與白沙海浪慢活 4K (Maldives Lagoon 4K)",
+        "authority": "Maldives Luxury Island Live",
+        "type": "youtube",
+        "videoId": "_BMi3usEwi8",
+        "lat": 5.1481,
+        "lon": 73.1286,
+        "areaTag": "馬爾地夫",
+        "tag": "風景 海灘 海灣 4K 悠閒慢活 潟湖",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "popScore": 944,
+        "defaultOrder": 26
+      },
+      {
+        "id": "ap-27-samui-bophut-4k",
+        "name": "泰國蘇美島波普漁夫村海灘 ‧ 椰林海風露天酒吧慢活 4K (Koh Samui Beach 4K)",
+        "authority": "The Real Samui Webcam",
+        "type": "youtube",
+        "videoId": "CSp55hSd_6A",
+        "lat": 9.5612,
+        "lon": 100.0306,
+        "areaTag": "蘇美島",
+        "tag": "風景 東南亞 海灘 4K 悠閒慢活 咖啡",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "popScore": 938,
+        "defaultOrder": 27
+      },
+      {
+        "id": "ap-26-intravel-world-hls",
+        "name": "INTRAVEL 世界慢旅頻道 ‧ 海島度假與古都風光 1080P 原生 HLS 直連",
+        "authority": "INTRAVEL Global Slow TV",
+        "type": "hls",
+        "streamUrl": "https://amg00861-amg00861c10-rakuten-uk-3152.playouts.now.amagi.tv/playlist.m3u8",
+        "sourceUrl": "https://intravel.net/",
+        "sourceBadge": "原生 HLS 1080P",
+        "lat": -8.4095,
+        "lon": 115.1889,
+        "areaTag": "峇里島",
+        "tag": "風景 東南亞 海島 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 882,
+        "defaultOrder": 28
       }
     ],
     "polar": [
@@ -36334,6 +37037,38 @@ window.CAMERAS_DATA = {
         "distanceKm": 0,
         "defaultOrder": 29,
         "popScore": 1960
+      },
+      {
+        "id": "pl-30-norway-flam-fjord",
+        "name": "挪威弗洛姆松恩峽灣碼頭 ‧ 高山鐵道終點與峽灣倒影慢活實況 (Port of Flåm Fjord)",
+        "authority": "Port of Flåm Norway",
+        "type": "youtube",
+        "videoId": "o6obskJPWdw",
+        "lat": 60.8638,
+        "lon": 7.1144,
+        "areaTag": "挪威峽灣",
+        "tag": "風景 峽灣雪峰 悠閒慢活 郵輪",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 906,
+        "defaultOrder": 30
+      },
+      {
+        "id": "pl-31-norway-nordfjordeid",
+        "name": "挪威北峽灣港灣 Nordfjordeid ‧ 北歐靜謐鏡面峽灣與白屋山城實況",
+        "authority": "Live Norway Official",
+        "type": "youtube",
+        "videoId": "jPwf4_MVpuE",
+        "lat": 61.9061,
+        "lon": 5.9922,
+        "areaTag": "挪威峽灣",
+        "tag": "風景 峽灣雪峰 悠閒慢活 山城",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 894,
+        "defaultOrder": 31
       }
     ],
     "rainforest": [
@@ -36882,6 +37617,44 @@ window.CAMERAS_DATA = {
         "distanceKm": 0,
         "defaultOrder": 26,
         "popScore": 730
+      },
+      {
+        "id": "rf-27-lovenature-4k-hls",
+        "name": "Love Nature 4K UHD ‧ 地球雨林與野生自然奇觀 3840×2160 原生 HLS 超高畫質直連",
+        "authority": "Love Nature 4K Global UHD",
+        "type": "hls",
+        "streamUrl": "https://pb-ehs1glsha1juy.akamaized.net/Love_Nature_4K.m3u8",
+        "fallbackHlsUrl": "https://aegis-cloudfront-1.tubi.video/6d6d0f24-8445-4b4c-bdf6-44f9e38beaa4/playlist.m3u8",
+        "requiresHevc": true,
+        "sourceUrl": "https://lovenature.com/",
+        "sourceBadge": "原生 4K HLS",
+        "lat": -3.4653,
+        "lon": -62.2159,
+        "areaTag": "全球生態 4K",
+        "tag": "風景 雨林 國家公園 4K 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "fps": 30,
+        "popScore": 952,
+        "defaultOrder": 27
+      },
+      {
+        "id": "rf-28-wildearth-safari-hls",
+        "name": "南非克魯格國家公園 Djuma 保護區 ‧ WildEarth 即時野生動物巡獵 1080P 原生 HLS 直連",
+        "authority": "WildEarth Live Safari",
+        "type": "hls",
+        "streamUrl": "https://dqga3jatxofgx.cloudfront.net/WildEarth.m3u8",
+        "sourceUrl": "https://wildearth.tv/",
+        "sourceBadge": "原生 HLS 1080P",
+        "lat": -24.76,
+        "lon": 31.49,
+        "areaTag": "南非保護區",
+        "tag": "風景 水坑 國家公園 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 915,
+        "defaultOrder": 28
       }
     ],
     "ocean": [
@@ -37409,6 +38182,92 @@ window.CAMERAS_DATA = {
         "distanceKm": 0,
         "defaultOrder": 25,
         "popScore": 2420
+      },
+      {
+        "id": "oc-28-panomax-vikingsea-cruise-360",
+        "name": "Viking Sea 維京海洋號豪華郵輪 ‧ 加勒比海碧藍航線甲板 360° 無損環景",
+        "authority": "Viking Ocean Cruises 360°",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/1342/recent_hd.jpg",
+        "sourceUrl": "https://viking.panomax.com/",
+        "sourceBadge": "360° 郵輪直連",
+        "lat": 17.12,
+        "lon": -61.8483,
+        "areaTag": "加勒比海郵輪",
+        "tag": "風景 海灣 海灘 4K 悠閒慢活 郵輪 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 922,
+        "defaultOrder": 26
+      },
+      {
+        "id": "oc-27-panomax-mseuropa-cruise-360",
+        "name": "MS EUROPA 歐洲號旗艦郵輪 ‧ 大西洋遠洋航行甲板 360° 無損環景",
+        "authority": "Hapag-Lloyd Cruises 360°",
+        "type": "snapshot",
+        "isPanorama360": true,
+        "streamUrl": "https://panodata.panomax.com/cams/1007/recent_hd.jpg",
+        "sourceUrl": "https://hl-cruises.panomax.com/",
+        "sourceBadge": "360° 郵輪直連",
+        "lat": 38.7114,
+        "lon": -9.1233,
+        "areaTag": "大西洋郵輪",
+        "tag": "風景 海灣 4K 悠閒慢活 郵輪 多元直連",
+        "status": "ONLINE",
+        "maxRes": 2160,
+        "popScore": 918,
+        "defaultOrder": 27
+      },
+      {
+        "id": "oc-29-monterey-moonjelly",
+        "name": "美國蒙特雷灣水族館 ‧ 深藍夢幻海月水母無重力漂浮療癒實況 (Moon Jelly Cam)",
+        "authority": "Monterey Bay Aquarium Official",
+        "type": "youtube",
+        "videoId": "zL68biE6wAs",
+        "lat": 36.6183,
+        "lon": -121.9015,
+        "areaTag": "蒙特雷灣",
+        "tag": "風景 水母 珊瑚 悠閒慢活 療癒",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 924,
+        "defaultOrder": 28
+      },
+      {
+        "id": "oc-30-vancouver-seaotter",
+        "name": "加拿大溫哥華水族館 ‧ 超萌海獺水上漂浮抱手午睡療癒實況 (Sea Otter Cam)",
+        "authority": "Vancouver Aquarium Official",
+        "type": "youtube",
+        "videoId": "_KXHUb0wFRE",
+        "lat": 49.3005,
+        "lon": -123.1309,
+        "areaTag": "溫哥華",
+        "tag": "風景 水母 海獺 悠閒慢活 療癒",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 920,
+        "defaultOrder": 29
+      },
+      {
+        "id": "oc-26-naturescape-hls",
+        "name": "Stingray Naturescape ‧ 全球熱帶珊瑚海岸與陽光沙灘 1080P 慢電視原生 HLS 直連",
+        "authority": "Stingray Naturescape",
+        "type": "hls",
+        "streamUrl": "https://lotus.stingray.com/manifest/naturescape-a003-montreal/samsungtvplus/master.m3u8",
+        "sourceUrl": "https://naturescape.tv/",
+        "sourceBadge": "原生 HLS 1080P",
+        "lat": 21.4691,
+        "lon": -78.6569,
+        "areaTag": "熱帶海島",
+        "tag": "風景 海灘 珊瑚 悠閒慢活 療癒 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 902,
+        "defaultOrder": 30
       }
     ],
     "scenic": [
@@ -37799,7 +38658,7 @@ window.CAMERAS_DATA = {
         "lat": 46.5572,
         "lon": 7.8352,
         "tz": "Europe/Zurich",
-        "streamUrl": "https://panodata.panomax.com/cams/5052/recent_full.jpg",
+        "streamUrl": "https://panodata.panomax.com/cams/5052/recent_hd.jpg",
         "sourceUrl": "https://schilthorn.panomax.com/",
         "status": "ONLINE",
         "maxRes": 2160,
@@ -37809,7 +38668,9 @@ window.CAMERAS_DATA = {
         "distanceMeters": 0,
         "distanceKm": 0,
         "defaultOrder": 19,
-        "popScore": 2360
+        "popScore": 2360,
+        "isPanorama360": true,
+        "sourceBadge": "360° 環景直連"
       },
       {
         "id": "sc-20-panomax-hallstatt-4k",
@@ -37820,7 +38681,7 @@ window.CAMERAS_DATA = {
         "lat": 47.5233,
         "lon": 13.6858,
         "tz": "Europe/Vienna",
-        "streamUrl": "https://panodata.panomax.com/cams/177/recent_full.jpg",
+        "streamUrl": "https://panodata.panomax.com/cams/505/recent_hd.jpg",
         "sourceUrl": "https://dachstein-krippenstein.panomax.com/",
         "status": "ONLINE",
         "maxRes": 2160,
@@ -37830,7 +38691,9 @@ window.CAMERAS_DATA = {
         "distanceMeters": 0,
         "distanceKm": 0,
         "defaultOrder": 20,
-        "popScore": 2290
+        "popScore": 2290,
+        "isPanorama360": true,
+        "sourceBadge": "360° 環景直連"
       },
       {
         "id": "sc-21-nps-mtrainier-glacier",
@@ -37852,6 +38715,145 @@ window.CAMERAS_DATA = {
         "distanceKm": 0,
         "defaultOrder": 21,
         "popScore": 1850
+      },
+      {
+        "id": "sc-24-dslr-zugspitze-glacier",
+        "name": "德國楚格峰南坡冰川高原 ‧ 全片幅單眼 DSLR 日夜星空無損觀測 (Zugspitze Glacier DSLR)",
+        "authority": "Foto-Webcam 全片幅單眼觀測網",
+        "type": "snapshot",
+        "streamUrl": "https://www.foto-webcam.eu/webcam/zugspitze-sued/current/1920.jpg",
+        "sourceUrl": "https://www.foto-webcam.eu/webcam/zugspitze-sued/",
+        "sourceBadge": "單眼原圖直連",
+        "lat": 47.4165,
+        "lon": 10.9796,
+        "areaTag": "楚格峰冰川",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "popScore": 892,
+        "defaultOrder": 22
+      },
+      {
+        "id": "sc-27-dslr-kronplatz-dolomites",
+        "name": "義大利多洛米蒂皇冠山 2,275m ‧ 全片幅單眼 DSLR 雲海與銀河星夜觀測 (Kronplatz DSLR)",
+        "authority": "Foto-Webcam 全片幅單眼觀測網",
+        "type": "snapshot",
+        "streamUrl": "https://www.foto-webcam.eu/webcam/kronplatz/current/1920.jpg",
+        "sourceUrl": "https://www.foto-webcam.eu/webcam/kronplatz/",
+        "sourceBadge": "單眼原圖直連",
+        "lat": 46.7381,
+        "lon": 11.9585,
+        "areaTag": "多洛米蒂",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "popScore": 888,
+        "defaultOrder": 23
+      },
+      {
+        "id": "sc-25-dslr-kochelsee-lake",
+        "name": "德國巴伐利亞科赫爾湖 ‧ 全片幅單眼 DSLR 靜謐湖畔倒影觀測 (Lake Kochelsee DSLR)",
+        "authority": "Foto-Webcam 全片幅單眼觀測網",
+        "type": "snapshot",
+        "streamUrl": "https://www.foto-webcam.eu/webcam/kochelsee/current/1920.jpg",
+        "sourceUrl": "https://www.foto-webcam.eu/webcam/kochelsee/",
+        "sourceBadge": "單眼原圖直連",
+        "lat": 47.6584,
+        "lon": 11.3652,
+        "areaTag": "巴伐利亞湖區",
+        "tag": "風景 阿爾卑斯 湖 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "popScore": 882,
+        "defaultOrder": 24
+      },
+      {
+        "id": "sc-26-dslr-tegernsee-lake",
+        "name": "德國泰根湖瓦爾貝格峰 ‧ 全片幅單眼 DSLR 湖光山色觀測 (Lake Tegernsee DSLR)",
+        "authority": "Foto-Webcam 全片幅單眼觀測網",
+        "type": "snapshot",
+        "streamUrl": "https://www.foto-webcam.eu/webcam/wallberg/current/1920.jpg",
+        "sourceUrl": "https://www.foto-webcam.eu/webcam/wallberg/",
+        "sourceBadge": "單眼原圖直連",
+        "lat": 47.6631,
+        "lon": 11.7915,
+        "areaTag": "泰根湖",
+        "tag": "風景 阿爾卑斯 湖 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "popScore": 878,
+        "defaultOrder": 25
+      },
+      {
+        "id": "sc-28-dslr-wendelstein-alps",
+        "name": "德國巴伐利亞溫德爾施泰因山天文台 ‧ 全片幅單眼銀河雲海觀測 (Wendelstein DSLR)",
+        "authority": "Foto-Webcam 全片幅單眼觀測網",
+        "type": "snapshot",
+        "streamUrl": "https://www.foto-webcam.eu/webcam/wendelstein/current/1920.jpg",
+        "sourceUrl": "https://www.foto-webcam.eu/webcam/wendelstein/",
+        "sourceBadge": "單眼原圖直連",
+        "lat": 47.7036,
+        "lon": 12.0122,
+        "areaTag": "阿爾卑斯",
+        "tag": "風景 阿爾卑斯 峽灣雪峰 悠閒慢活 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1440,
+        "popScore": 876,
+        "defaultOrder": 26
+      },
+      {
+        "id": "sc-22-zenlife-hls",
+        "name": "Stingray ZenLIFE ‧ 世界靜謐山水與冥想慢電視 1080P 原生 HLS 直連",
+        "authority": "Stingray ZenLIFE",
+        "type": "hls",
+        "streamUrl": "https://lotus.stingray.com/manifest/zenlife-zen001-montreal/samsungtvplus/master.m3u8",
+        "sourceUrl": "https://zenlife.tv/",
+        "sourceBadge": "原生 HLS 1080P",
+        "lat": 45.5017,
+        "lon": -73.5673,
+        "areaTag": "靜謐自然",
+        "tag": "風景 湖 瀑布 悠閒慢活 療癒 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 896,
+        "defaultOrder": 27
+      },
+      {
+        "id": "sc-23-dronetv-aerial-hls",
+        "name": "DroneTV 世界慢速空拍之窗 ‧ 全球峽灣海岸與山脈 1080P 原生 HLS 直連",
+        "authority": "AirVuz DroneTV",
+        "type": "hls",
+        "streamUrl": "https://airvuz-dronetv-1-us.ohlscdn.wurl.tv/playlist.m3u8",
+        "sourceUrl": "https://www.airvuz.com/dronetv",
+        "sourceBadge": "原生 HLS 1080P",
+        "lat": 44.9778,
+        "lon": -93.265,
+        "areaTag": "全球空拍",
+        "tag": "風景 峽灣雪峰 海灣 悠閒慢活 空拍 多元直連",
+        "status": "ONLINE",
+        "maxRes": 1080,
+        "fps": 30,
+        "popScore": 890,
+        "defaultOrder": 28
+      },
+      {
+        "id": "sc-29-screendreams-hls",
+        "name": "Screen Dreams 世界風景畫框 ‧ 24H 悠閒大自然環境視窗原生 HLS 直連",
+        "authority": "Screen Dreams Ambient",
+        "type": "hls",
+        "streamUrl": "https://stream-us-east-1.getpublica.com/playlist.m3u8?network_id=2240",
+        "sourceUrl": "https://www.screendreams.tv/",
+        "sourceBadge": "原生 HLS 直連",
+        "lat": 36.5725,
+        "lon": -121.9486,
+        "areaTag": "風景畫框",
+        "tag": "風景 悠閒慢活 療癒 多元直連",
+        "status": "ONLINE",
+        "maxRes": 720,
+        "fps": 30,
+        "popScore": 846,
+        "defaultOrder": 29
       }
     ]
   }
@@ -42970,7 +43972,7 @@ class MonitorApp {
       }
     }
     merged.sort((a, b) => this.computeCameraSortScore(b) - this.computeCameraSortScore(a));
-    const top80 = merged.slice(0, 80);
+    const top80 = merged.slice(0, 100);
     // 為「地標順序」模式建立九大主題均衡輪替順序
     const byRegion = pools.map(list => list.filter(c => top80.some(t => t.id === c.id)));
     const balancedIds = [];
@@ -46585,7 +47587,10 @@ class MonitorApp {
     if (!c || !rawTag || rawTag === 'all') return true;
     const tag = String(rawTag).toLowerCase();
     if (tag === '多元直連') return c.type !== 'youtube';
-    const t = ((c.name || '') + ' ' + (c.tag || '') + ' ' + (c.authority || '') + ' ' + (c.description || '') + ' ' + (c.areaTag || '') + ' ' + (c.district || '')).toLowerCase();
+    const t = ((c.name || '') + ' ' + (c.tag || '') + ' ' + (c.authority || '') + ' ' + (c.description || '') + ' ' + (c.areaTag || '') + ' ' + (c.district || '') + ' ' + (c.sourceBadge || '')).toLowerCase();
+    if (tag === '悠閒慢活') {
+      return Boolean(c.isPanorama360) || /悠閒|慢活|療癒|海灘|海灣|潟湖|咖啡|酒吧|日落|夕照|溫泉|運河|湖|水母|海獺|珊瑚|極光|峽灣|山城|郵輪|空拍|雨林|水坑|naturescape|zenlife|myzen|ibiza|cinque terre|como|samui|maldives|waikiki/i.test(t);
+    }
     if (tag === '富士山') return t.includes('富士山') || t.includes('fuji');
     if (tag === '溫泉') return t.includes('溫泉') || t.includes('湯畑') || t.includes('熱海') || t.includes('別府') || t.includes('白濱') || t.includes('箱根') || t.includes('草津') || t.includes('onsen');
     if (tag === '漢江海灣') return t.includes('漢江') || t.includes('海灣') || t.includes('釜山') || t.includes('濟州');
