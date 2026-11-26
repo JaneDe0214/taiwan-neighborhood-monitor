@@ -1,7 +1,7 @@
 {
-  "name": "雙埔生活 - 即時環境與大眾運輸監控系統",
+  "name": "雙埔生活 × 世界即時之窗 — 即時環境與大眾運輸監控系統",
   "short_name": "雙埔生活",
-  "description": "新埔 ‧ 青埔雙核心生活圈即時視訊、氣象、空氣品質、高鐵／機捷／捷運通勤走廊與 YouBike 2.0 動態看板",
+  "description": "新埔 ‧ 青埔雙核心高鐵／機捷／捷運通勤走廊、YouBike 2.0，以及全台與世界 957 處 4K 景點、日本私藏秘境與自然療癒即時實況視窗",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#05080f",
@@ -19,7 +19,43 @@
       "src": "dpuLogo_icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "dpuLogo_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "雙埔即時通勤走廊",
+      "short_name": "雙埔通勤",
+      "description": "即時查看高鐵、機捷、北捷與青埔／新埔路況",
+      "url": "./index.html?center=dual",
+      "icons": [{ "src": "favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "日本私藏秘境實況",
+      "short_name": "日本秘境",
+      "description": "對馬山貓、袋熊、海豹、摩周湖與絕海孤島直連",
+      "url": "./index.html?center=japan&tag=%E7%A7%98%E5%A2%83%E5%A5%87%E8%B6%A3",
+      "icons": [{ "src": "favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "台灣漫遊 4K 景點",
+      "short_name": "台灣漫遊",
+      "description": "多良車站、阿里山雲海、大稻埕與全台熱門 4K 實況",
+      "url": "./index.html?center=tourist",
+      "icons": [{ "src": "favicon.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "極地極光與自然療癒",
+      "short_name": "極地療癒",
+      "description": "芬蘭極光、格陵蘭浮冰、雨林飛羽與海底珊瑚礁",
+      "url": "./index.html?center=polar",
+      "icons": [{ "src": "favicon.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

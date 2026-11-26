@@ -1100,9 +1100,9 @@ class MainActivity : ComponentActivity() {
         if (isTvDevice && ::webView.isInitialized) {
             val tvJs = when (keyCode) {
                 KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_MEDIA_PREVIOUS ->
-                    "window.monitorApp && window.monitorApp.changePage && window.monitorApp.changePage(-1);"
+                    "(function(){ const m=document.getElementById('cameraModal'); if(m&&m.classList.contains('active')&&window.monitorApp?.stepModalCamera){window.monitorApp.stepModalCamera(-1);}else if(window.monitorApp?.changePage){window.monitorApp.changePage(-1);} })();"
                 KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT ->
-                    "window.monitorApp && window.monitorApp.changePage && window.monitorApp.changePage(1);"
+                    "(function(){ const m=document.getElementById('cameraModal'); if(m&&m.classList.contains('active')&&window.monitorApp?.stepModalCamera){window.monitorApp.stepModalCamera(1);}else if(window.monitorApp?.changePage){window.monitorApp.changePage(1);} })();"
                 KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE ->
                     "window.monitorApp && window.monitorApp.toggleAutoTour && window.monitorApp.toggleAutoTour();"
                 KeyEvent.KEYCODE_SEARCH ->
@@ -1597,6 +1597,33 @@ class AndroidNativeBridge(
                         null
                     )
                 } catch (_: Exception) {}
+            }
+        }
+        return true
+    }
+
+    /**
+     * 原生呼叫系統分享面板分享指定視角或即時鏡頭直連網址
+     */
+    @JavascriptInterface
+    fun shareLink(title: String, url: String): Boolean {
+        if (!isTrustedOrigin() || !isActivityAlive()) return false
+        val safeUrl = WebAssetRouting.sanitizeShareUrl(url) ?: return false
+        val cleanTitle = title.replace(Regex("[\\r\\n\\t]+"), " ").trim().take(120).ifEmpty { "雙埔生活 × 世界即時之窗" }
+        activity.runOnUiThread {
+            if (!isActivityAlive()) return@runOnUiThread
+            try {
+                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_SUBJECT, cleanTitle)
+                    putExtra(Intent.EXTRA_TEXT, "$cleanTitle\n$safeUrl")
+                }
+                val chooser = Intent.createChooser(sendIntent, "分享即時視角").apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                activity.startActivity(chooser)
+            } catch (_: Exception) {
+                Toast.makeText(activity, "此裝置未安裝支援分享的應用程式", Toast.LENGTH_SHORT).show()
             }
         }
         return true
@@ -2907,6 +2934,17 @@ internal object WebAssetRouting {
         if (pageHtml.isNullOrEmpty()) return null
         val m = sizenkenImgPathRegex.find(pageHtml) ?: return null
         return "https://www.sizenken.biodic.go.jp/${m.groupValues[1]}"
+    }
+
+    fun sanitizeShareUrl(rawUrl: String?): String? {
+        val trimmed = rawUrl?.trim().orEmpty()
+        if (trimmed.isEmpty() || trimmed.length > 1024) return null
+        if (trimmed.any { it <= '\u001F' || it.isWhitespace() || it == '"' || it == '\'' || it == '<' || it == '>' }) return null
+        return if (trimmed.startsWith("https://", ignoreCase = true) || trimmed.startsWith("http://", ignoreCase = true)) {
+            trimmed
+        } else {
+            null
+        }
     }
 
     fun fetchSizenkenJpegBytes(client: OkHttpClient, camNo: String): ByteArray? {

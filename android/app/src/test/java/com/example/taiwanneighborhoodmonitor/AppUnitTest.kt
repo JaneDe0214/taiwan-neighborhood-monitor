@@ -419,4 +419,16 @@ class AppUnitTest {
         assertNull(WebAssetRouting.extractSizenkenImageUrl(""))
         assertNull(WebAssetRouting.extractSizenkenImageUrl(null))
     }
+
+    @Test
+    fun sanitizeShareUrl_allowsCleanHttpLinksAndRejectsUnsafeInputs() {
+        val valid = "https://janede0214.github.io/taiwan-neighborhood-monitor/?center=japan&cam=jp-268-sizenken-tsushima-leopard-cat"
+        assertEquals(valid, WebAssetRouting.sanitizeShareUrl("  $valid  "))
+        assertNull(WebAssetRouting.sanitizeShareUrl("javascript:alert(1)"))
+        assertNull(WebAssetRouting.sanitizeShareUrl("intent://evil#Intent;end"))
+        assertNull(WebAssetRouting.sanitizeShareUrl("https://example.com/has space"))
+        assertNull(WebAssetRouting.sanitizeShareUrl("https://example.com/\"xss\""))
+        assertNull(WebAssetRouting.sanitizeShareUrl(""))
+        assertNull(WebAssetRouting.sanitizeShareUrl(null))
+    }
 }
