@@ -662,6 +662,9 @@ class MainActivity : ComponentActivity() {
                 if (uri.scheme.equals("https", ignoreCase = true) &&
                     uri.host.equals("appassets.androidplatform.net", ignoreCase = true)
                 ) {
+                    if (uri.path == "/api/sizenken/live") {
+                        return serveNativeSizenkenLive(uri, request.method.uppercase(Locale.US))
+                    }
                     return serveBundledAsset(uri)
                 }
                 if (url.startsWith("http://") || url.startsWith("https://")) {
@@ -778,6 +781,59 @@ class MainActivity : ComponentActivity() {
             .connectTimeout(6000, TimeUnit.MILLISECONDS)
             .readTimeout(10000, TimeUnit.MILLISECONDS)
             .build()
+    }
+
+    /**
+     * 日本環境省「網際網路自然研究所 (sizenken.biodic.go.jp)」動態時間戳即時影像原生解析與快取端點
+     */
+    private fun serveNativeSizenkenLive(uri: Uri, method: String): WebResourceResponse {
+        if (method == "OPTIONS") {
+            return WebResourceResponse(
+                "text/plain",
+                "utf-8",
+                204,
+                "No Content",
+                corsHeaders(),
+                ByteArrayInputStream(ByteArray(0))
+            )
+        }
+        if (method != "GET" && method != "HEAD") {
+            return WebResourceResponse(
+                "application/json",
+                "utf-8",
+                405,
+                "Method Not Allowed",
+                corsHeaders(),
+                ByteArrayInputStream("{\"success\":false}".toByteArray())
+            )
+        }
+        val camNo = WebAssetRouting.extractSizenkenCamNo(uri.toString())
+            ?: return WebResourceResponse(
+                "application/json",
+                "utf-8",
+                400,
+                "Bad Request",
+                corsHeaders(),
+                ByteArrayInputStream("{\"success\":false}".toByteArray())
+            )
+        val jpegBytes = WebAssetRouting.fetchSizenkenJpegBytes(interceptHttpClient, camNo)
+            ?: return WebResourceResponse(
+                "application/json",
+                "utf-8",
+                502,
+                "Bad Gateway",
+                corsHeaders(),
+                ByteArrayInputStream("{\"success\":false}".toByteArray())
+            )
+        val headers = corsHeaders().apply {
+            put("Cache-Control", "public, max-age=60")
+            put("X-Content-Type-Options", "nosniff")
+            if (method != "HEAD") {
+                put("Content-Length", jpegBytes.size.toString())
+            }
+        }
+        val stream = if (method == "HEAD") ByteArrayInputStream(ByteArray(0)) else ByteArrayInputStream(jpegBytes)
+        return WebResourceResponse("image/jpeg", null, 200, "OK", headers, stream)
     }
 
     private fun extractBoteCamKey(urlString: String): String = WebAssetRouting.extractBoteCamKey(urlString)
@@ -1665,12 +1721,21 @@ class AndroidNativeBridge(
     @JavascriptInterface
     fun saveImageFromUrl(imageUrl: String, fileName: String): Boolean {
         if (!isTrustedOrigin()) return false
-        val candidates = WebAssetRouting.buildSnapshotFallbackUrls(imageUrl)
-        if (candidates.isEmpty()) {
+        val sizenkenNo = WebAssetRouting.extractSizenkenCamNo(imageUrl)
+        val candidates = if (sizenkenNo != null) emptyList() else WebAssetRouting.buildSnapshotFallbackUrls(imageUrl)
+        if (sizenkenNo == null && candidates.isEmpty()) {
             return false
         }
         bridgeScope.launch {
             var savedName: String? = null
+            if (sizenkenNo != null) {
+                try {
+                    val bytes = WebAssetRouting.fetchSizenkenJpegBytes(okHttpClient, sizenkenNo)
+                    if (bytes != null && bytes.size > 512) {
+                        savedName = writeImageBytesToGallery(bytes, "image/jpeg", fileName)
+                    }
+                } catch (_: Exception) {}
+            }
             for (candidateUrl in candidates) {
                 try {
                     val request = Request.Builder()
@@ -2818,6 +2883,77 @@ internal data class AssetContentSpec(
 internal object WebAssetRouting {
     private val boteCamKeyRegex = Regex("/(?:hls/|streamapi_)([0-9A-Za-z_-]+)")
     private val ytThumbRegex = Regex("^https?://i\\.ytimg\\.com/vi/([0-9A-Za-z_-]{6,20})/[^/?#]+", RegexOption.IGNORE_CASE)
+    private val sizenkenQueryNoRegex = Regex("(?:^|[?&])no=(\\d{1,4})(?:&|$)")
+    private val sizenkenImgPathRegex = Regex(
+        "(?:https?://www\\.sizenken\\.biodic\\.go\\.jp)?/?(?:\\./)?(camera_img/\\d+_[a-z]/image/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9_.-]+\\.(?:jpg|jpeg))",
+        RegexOption.IGNORE_CASE
+    )
+    private val sizenkenCache = ConcurrentHashMap<String, Pair<Long, ByteArray>>()
+
+    fun extractSizenkenCamNo(rawUrl: String?): String? {
+        val trimmed = rawUrl?.trim().orEmpty()
+        if (trimmed.isEmpty()) return null
+        val allowedPrefix = trimmed.startsWith("/api/sizenken/live?") ||
+            trimmed.startsWith("https://appassets.androidplatform.net/api/sizenken/live?")
+        if (!allowedPrefix) return null
+        val query = trimmed.substringAfter('?', "")
+        val match = sizenkenQueryNoRegex.find(query) ?: return null
+        val no = match.groupValues[1]
+        val parsed = no.toIntOrNull() ?: return null
+        return if (parsed > 0) no else null
+    }
+
+    fun extractSizenkenImageUrl(pageHtml: String?): String? {
+        if (pageHtml.isNullOrEmpty()) return null
+        val m = sizenkenImgPathRegex.find(pageHtml) ?: return null
+        return "https://www.sizenken.biodic.go.jp/${m.groupValues[1]}"
+    }
+
+    fun fetchSizenkenJpegBytes(client: OkHttpClient, camNo: String): ByteArray? {
+        if (!camNo.matches(Regex("^\\d{1,4}$"))) return null
+        val now = System.currentTimeMillis()
+        val cached = sizenkenCache[camNo]
+        if (cached != null && now < cached.first) {
+            return cached.second
+        }
+        return try {
+            val viewReq = Request.Builder()
+                .url("https://www.sizenken.biodic.go.jp/view_new.php?no=$camNo")
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36")
+                .header("Accept", "text/html,application/xhtml+xml,*/*;q=0.8")
+                .build()
+            val html = client.newCall(viewReq).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                resp.body.string()
+            } ?: return cached?.second
+
+            val imgUrl = extractSizenkenImageUrl(html) ?: return cached?.second
+            val imgReq = Request.Builder()
+                .url(imgUrl)
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36")
+                .header("Referer", "https://www.sizenken.biodic.go.jp/")
+                .header("Accept", "image/jpeg,image/*;q=0.9,*/*;q=0.8")
+                .build()
+            val bytes = client.newCall(imgReq).execute().use { resp ->
+                if (!resp.isSuccessful) return@use null
+                resp.body.byteStream().use { stream ->
+                    readBoundedBytes(stream, maxBytes = 6 * 1024 * 1024, rejectOnOverflow = true)
+                }
+            }
+            if (bytes != null && bytes.size >= 512 && (bytes[0].toInt() and 0xFF) == 0xFF && (bytes[1].toInt() and 0xFF) == 0xD8) {
+                if (sizenkenCache.size >= 80 && !sizenkenCache.containsKey(camNo)) {
+                    val dropKeys = sizenkenCache.keys.asSequence().filter { it != camNo }.take(16).toList()
+                    for (k in dropKeys) sizenkenCache.remove(k)
+                }
+                sizenkenCache[camNo] = (now + 90_000L) to bytes
+                bytes
+            } else {
+                cached?.second
+            }
+        } catch (_: Exception) {
+            cached?.second
+        }
+    }
 
     fun buildSnapshotFallbackUrls(rawUrl: String?): List<String> {
         val trimmed = rawUrl?.trim().orEmpty()
@@ -2906,6 +3042,7 @@ internal object WebAssetRouting {
         "iwate-u.ac.jp",
         "fujiyama.tv",
         "fujigoko.tv",
+        "sizenken.biodic.go.jp",
         "france24.com",
         "skycdp.com",
         "flightradar24.com",

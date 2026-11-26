@@ -306,6 +306,7 @@ class AppUnitTest {
         assertTrue(WebAssetRouting.isNativeInterceptHost("media-tyo.hls.nhkworld.jp"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("fujiyama.tv"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("cam.fujigoko.tv"))
+        assertTrue(WebAssetRouting.isNativeInterceptHost("www.sizenken.biodic.go.jp"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("data-cloud.flightradar24.com"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("opendata.adsb.fi"))
         assertTrue(WebAssetRouting.isNativeInterceptHost("api.adsbdb.com"))
@@ -394,5 +395,28 @@ class AppUnitTest {
         val (rate, pitch) = GentleVoiceSelector.acousticParams("phrase")
         assertTrue(rate in 0.85f..0.95f)
         assertTrue(pitch in 1.04f..1.12f)
+    }
+
+    @Test
+    fun sizenkenRouting_extractsValidCameraNoAndTimestampedImageUrl() {
+        assertEquals("57", WebAssetRouting.extractSizenkenCamNo("/api/sizenken/live?no=57"))
+        assertEquals("125", WebAssetRouting.extractSizenkenCamNo("https://appassets.androidplatform.net/api/sizenken/live?no=125&_t=1700000000"))
+        assertNull(WebAssetRouting.extractSizenkenCamNo("/api/sizenken/live?no=0"))
+        assertNull(WebAssetRouting.extractSizenkenCamNo("/api/sizenken/live?no=12345"))
+        assertNull(WebAssetRouting.extractSizenkenCamNo("/api/sizenken/live?no=abc"))
+        assertNull(WebAssetRouting.extractSizenkenCamNo("https://evil.example.com/api/sizenken/live?no=57"))
+
+        val sampleHtml = """
+            <html><body>
+              <img src="./camera_img/57_c/image/2026/11/26/NCS20261126090002410.jpg" alt="ツシマヤマネコ" />
+            </body></html>
+        """.trimIndent()
+        assertEquals(
+            "https://www.sizenken.biodic.go.jp/camera_img/57_c/image/2026/11/26/NCS20261126090002410.jpg",
+            WebAssetRouting.extractSizenkenImageUrl(sampleHtml)
+        )
+        assertNull(WebAssetRouting.extractSizenkenImageUrl("<img src=\"https://evil.example.com/ncs.jpg\" />"))
+        assertNull(WebAssetRouting.extractSizenkenImageUrl(""))
+        assertNull(WebAssetRouting.extractSizenkenImageUrl(null))
     }
 }

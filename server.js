@@ -95,7 +95,8 @@ const cache = {
   travelToolkit: { fx: null, fxExp: 0, kp: null, kpExp: 0 },
   flightsNearbyMap: new Map(),
   immersiveLocalMap: new Map(),
-  wallSyncMap: new Map()
+  wallSyncMap: new Map(),
+  sizenkenMap: new Map()
 };
 
 // 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
@@ -4872,6 +4873,150 @@ const STATIC_ROOT_ALLOWMAP = new Map([
   ['dpulogo_icon.png', 'dpuLogo_icon.png']
 ]);
 
+// 解析日本環境省「生物多樣性中心・網際網路自然研究所 (sizenken.biodic.go.jp)」動態時間戳即時影像網址
+function extractSizenkenImageUrl(pageHtml) {
+  if (!pageHtml || typeof pageHtml !== 'string') return null;
+  const m = pageHtml.match(/(?:https?:\/\/www\.sizenken\.biodic\.go\.jp)?\/?(?:\.\/)?(camera_img\/\d+_[a-z]\/image\/\d{4}\/\d{2}\/\d{2}\/[A-Za-z0-9_.-]+\.(?:jpg|jpeg))/i);
+  if (!m) return null;
+  return `https://www.sizenken.biodic.go.jp/${m[1]}`;
+}
+
+function fetchSizenkenJpegBuffer(imageUrl, timeoutMs = 9000) {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = new URL(imageUrl);
+    } catch (e) {
+      return reject(e);
+    }
+    if (
+      parsed.protocol !== 'https:' ||
+      parsed.hostname !== 'www.sizenken.biodic.go.jp' ||
+      !/^\/camera_img\/\d+_[a-z]\/image\/\d{4}\/\d{2}\/\d{2}\/[A-Za-z0-9_.-]+\.(?:jpg|jpeg)$/i.test(parsed.pathname)
+    ) {
+      return reject(new Error('不允許的日本環境省影像路徑'));
+    }
+
+    let settled = false;
+    const doneResolve = (val) => { if (!settled) { settled = true; clearTimeout(totalTimer); resolve(val); } };
+    const doneReject = (err) => { if (!settled) { settled = true; clearTimeout(totalTimer); reject(err); } };
+
+    const req = https.get(parsed.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+        'Referer': 'https://www.sizenken.biodic.go.jp/',
+        'Accept': 'image/jpeg,image/*;q=0.9,*/*;q=0.8',
+        'Accept-Encoding': 'identity'
+      }
+    }, (res) => {
+      res.on('error', doneReject);
+      if (res.statusCode !== 200) {
+        res.resume();
+        return doneReject(new Error(`Sizenken Image HTTP ${res.statusCode}`));
+      }
+      const chunks = [];
+      let totalBytes = 0;
+      res.on('data', (chunk) => {
+        totalBytes += chunk.length;
+        if (totalBytes > 6 * 1024 * 1024) {
+          req.destroy();
+          doneReject(new Error('日本環境省影像超過 6MB 安全上限'));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        if (buf.length < 512 || buf[0] !== 0xff || buf[1] !== 0xd8) {
+          return doneReject(new Error('回傳內容非有效 JPEG 影像'));
+        }
+        doneResolve(buf);
+      });
+    });
+
+    const totalTimer = setTimeout(() => {
+      req.destroy();
+      doneReject(new Error('日本環境省影像抓取總逾時'));
+    }, timeoutMs + 1500);
+    req.on('error', doneReject);
+    req.setTimeout(timeoutMs, () => {
+      req.destroy();
+      doneReject(new Error('日本環境省影像連線逾時'));
+    });
+  });
+}
+
+async function handleSizenkenLiveProxy(req, res, parsedUrl) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ success: false, error: '不支援的請求方法' }));
+    return;
+  }
+
+  const no = String(parsedUrl.searchParams.get('no') || '').trim();
+  if (!/^\d{1,4}$/.test(no) || Number(no) <= 0) {
+    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(req.method === 'HEAD' ? '' : JSON.stringify({ success: false, error: '無效的日本環境省鏡頭編號' }));
+    return;
+  }
+
+  const now = Date.now();
+  const cached = cache.sizenkenMap.get(no);
+  if (cached && cached.buffer && now < cached.expireAt) {
+    res.writeHead(200, {
+      'Content-Type': 'image/jpeg',
+      'Content-Length': cached.buffer.length,
+      'Cache-Control': 'public, max-age=60'
+    });
+    res.end(req.method === 'HEAD' ? undefined : cached.buffer);
+    return;
+  }
+
+  try {
+    const viewUrl = `https://www.sizenken.biodic.go.jp/view_new.php?no=${no}`;
+    const pageHtml = await fetchRemoteHtml(viewUrl, 8500);
+    const imgUrl = extractSizenkenImageUrl(pageHtml);
+    if (!imgUrl) {
+      throw new Error(`找不到編號 ${no} 之最新影像路徑`);
+    }
+    const jpegBuf = await fetchSizenkenJpegBuffer(imgUrl, 9000);
+    setBoundedMap(cache.sizenkenMap, no, {
+      buffer: jpegBuf,
+      imageUrl: imgUrl,
+      expireAt: now + 90000
+    }, 80);
+    res.writeHead(200, {
+      'Content-Type': 'image/jpeg',
+      'Content-Length': jpegBuf.length,
+      'Cache-Control': 'public, max-age=60'
+    });
+    res.end(req.method === 'HEAD' ? undefined : jpegBuf);
+  } catch (err) {
+    if (cached && cached.buffer) {
+      res.writeHead(200, {
+        'Content-Type': 'image/jpeg',
+        'Content-Length': cached.buffer.length,
+        'Cache-Control': 'public, max-age=30'
+      });
+      res.end(req.method === 'HEAD' ? undefined : cached.buffer);
+      return;
+    }
+    res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(req.method === 'HEAD' ? '' : JSON.stringify({
+      success: false,
+      error: '無法取得日本環境省國立公園即時影像',
+      detail: err ? err.message : ''
+    }));
+  }
+}
+
 function runAsyncRoute(fn, req, res, ...args) {
   Promise.resolve(fn(req, res, ...args)).catch((err) => {
     if (!res.headersSent && !res.writableEnded && !res.destroyed) {
@@ -5040,6 +5185,10 @@ const server = http.createServer((req, res) => {
     runAsyncRoute(handleWallSyncApi, req, res, parsedUrl);
     return;
   }
+  if (pathname === '/api/sizenken/live') {
+    runAsyncRoute(handleSizenkenLiveProxy, req, res, parsedUrl);
+    return;
+  }
   if (pathname === '/api/bote/prewarm') {
     runAsyncRoute(handleBotePrewarm, req, res, parsedUrl);
     return;
@@ -5185,6 +5334,8 @@ server.parseCsvToJson = parseCsvToJson;
 server.parseTycgParkingXml = parseTycgParkingXml;
 server.setBoundedMap = setBoundedMap;
 server.twd97ToWgs84 = twd97ToWgs84;
+server.extractSizenkenImageUrl = extractSizenkenImageUrl;
+server.handleSizenkenLiveProxy = handleSizenkenLiveProxy;
 server._internal = { cache, boteCookieJar, botePrewarmCooldown };
 
 module.exports = server;
