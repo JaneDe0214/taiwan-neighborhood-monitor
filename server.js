@@ -96,7 +96,9 @@ const cache = {
   flightsNearbyMap: new Map(),
   immersiveLocalMap: new Map(),
   wallSyncMap: new Map(),
-  sizenkenMap: new Map()
+  wallSyncRateMap: new Map(),
+  sizenkenMap: new Map(),
+  sizenkenInFlight: new Map()
 };
 
 // 臺北市交工處 (hls.bote.gov.taipei) Keep-Alive 連線池與 Cookie 狀態
@@ -216,11 +218,15 @@ function requestBoteUpstream(targetPath, reqHeaders, onResponse, onError, client
     failOnce(502, err);
   });
 
-  if (clientRes && hopCount === 0) {
-    clientRes.once('close', () => {
+  if (clientRes) {
+    const onClientClose = () => {
       if (!clientRes.writableFinished) {
         try { upstreamReq.destroy(); } catch (_) {}
       }
+    };
+    clientRes.once('close', onClientClose);
+    upstreamReq.once('close', () => {
+      try { clientRes.off('close', onClientClose); } catch (_) {}
     });
   }
 
@@ -383,10 +389,27 @@ function handleBotePrewarm(req, res, parsedUrl) {
 }
 
 function isDisallowedRedirectHost(hostname) {
-  const h = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '');
-  if (!h || h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal') || h === '::1' || h === '0.0.0.0') return true;
-  if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)) return true;
-  if (/^(fc|fd|fe80):/i.test(h)) return true;
+  let h = String(hostname || '').trim().toLowerCase().replace(/^\[|\]$/g, '');
+  if (!h) return true;
+  if (h.includes('%')) h = h.split('%')[0];
+  if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal') || h.endsWith('.localhost') || h === '::1' || h === '::' || h === '0.0.0.0') return true;
+  // 攔截 IPv4-mapped IPv6（含十進位 ::ffff:127.0.0.1 與 Node URL 正規化後之十六進位 ::ffff:7f00:1）
+  if (h.startsWith('::ffff:')) {
+    const tail = h.slice(7);
+    if (tail.includes('.')) return isDisallowedRedirectHost(tail);
+    const hexParts = tail.split(':');
+    if (hexParts.length === 2 && /^[0-9a-f]{1,4}$/.test(hexParts[0]) && /^[0-9a-f]{1,4}$/.test(hexParts[1])) {
+      const hi = parseInt(hexParts[0], 16);
+      const lo = parseInt(hexParts[1], 16);
+      const mappedIpv4 = `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+      return isDisallowedRedirectHost(mappedIpv4);
+    }
+    return true;
+  }
+  // 攔截 IPv4 私有網段、迴路、鏈路本地與 CGNAT (100.64.0.0/10)
+  if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/.test(h)) return true;
+  // 攔截 IPv6 唯一本地 (fc00::/7)、鏈路本地 (fe80::/10) 與未指定位址 (0:0:...)
+  if (/^(f[cd][0-9a-f]{0,2}:|fe[89ab][0-9a-f]:|0*:0*:0*:0*:0*:0*:0*:[01]$)/i.test(h)) return true;
   return false;
 }
 
@@ -510,11 +533,15 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
       }
     };
 
+    let settled = false;
+    const doneResolve = (val) => { if (!settled) { settled = true; clearTimeout(totalTimer); resolve(val); } };
+    const doneReject = (err) => { if (!settled) { settled = true; clearTimeout(totalTimer); reject(err); } };
+
     const req = https.request(THSR_SEARCH_URL, options, (res) => {
-      res.on('error', reject);
+      res.on('error', doneReject);
       if (res.statusCode !== 200) {
         res.resume();
-        return reject(new Error(`HTTP Status ${res.statusCode}`));
+        return doneReject(new Error(`HTTP Status ${res.statusCode}`));
       }
       const chunks = [];
       let totalBytes = 0;
@@ -522,7 +549,7 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
         totalBytes += chunk.length;
         if (totalBytes > 8 * 1024 * 1024) {
           req.destroy();
-          reject(new Error('高鐵回應超過安全容量上限'));
+          doneReject(new Error('高鐵回應超過安全容量上限'));
           return;
         }
         chunks.push(chunk);
@@ -575,20 +602,24 @@ function fetchOfficialThsrTimetable(startStation, endStation) {
           }
 
           if (cleanTrains.length === 0) {
-            return reject(new Error('高鐵官方回傳空白班表'));
+            return doneReject(new Error('高鐵官方回傳空白班表'));
           }
           cleanTrains.sort((a, b) => a.depMinutes - b.depMinutes);
-          resolve(cleanTrains);
+          doneResolve(cleanTrains);
         } catch (e) {
-          reject(new Error(`解析高鐵官方資料失敗: ${e.message}`));
+          doneReject(new Error(`解析高鐵官方資料失敗: ${e.message}`));
         }
       });
     });
 
-    req.on('error', reject);
+    const totalTimer = setTimeout(() => {
+      req.destroy();
+      doneReject(new Error('高鐵官方連線總逾時'));
+    }, 12000);
+    req.on('error', doneReject);
     req.setTimeout(10000, () => {
       req.destroy();
-      reject(new Error('高鐵官方連線逾時'));
+      doneReject(new Error('高鐵官方連線逾時'));
     });
 
     req.write(postData);
@@ -653,16 +684,20 @@ function fetchOfficialTymetroTimetable(direction) {
     const tableIndex = direction === 'south' ? 1 : 0;
     const targetUrl = `https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable.php?station=${stationCode}`;
 
+    let settled = false;
+    const doneResolve = (val) => { if (!settled) { settled = true; clearTimeout(totalTimer); resolve(val); } };
+    const doneReject = (err) => { if (!settled) { settled = true; clearTimeout(totalTimer); reject(err); } };
+
     const req = https.get(targetUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NeighborhoodMonitor/1.0',
         'Accept-Encoding': 'gzip, deflate, br'
       }
     }, (res) => {
-      res.on('error', reject);
+      res.on('error', doneReject);
       if (res.statusCode !== 200) {
         res.resume();
-        return reject(new Error(`HTTP Status ${res.statusCode}`));
+        return doneReject(new Error(`HTTP Status ${res.statusCode}`));
       }
       const chunks = [];
       let totalBytes = 0;
@@ -670,7 +705,7 @@ function fetchOfficialTymetroTimetable(direction) {
         totalBytes += chunk.length;
         if (totalBytes > 8 * 1024 * 1024) {
           req.destroy();
-          reject(new Error('機捷回應超過安全容量上限'));
+          doneReject(new Error('機捷回應超過安全容量上限'));
           return;
         }
         chunks.push(chunk);
@@ -681,7 +716,7 @@ function fetchOfficialTymetroTimetable(direction) {
           const tables = rawData.match(/<table[\s\S]*?<\/table>/g) || [];
           const tbl = tables[tableIndex];
           if (!tbl) {
-            return reject(new Error('未找到官方時刻表表格'));
+            return doneReject(new Error('未找到官方時刻表表格'));
           }
           const rows = tbl.match(/<tr>[\s\S]*?<\/tr>/g) || [];
           const list = [];
@@ -726,20 +761,24 @@ function fetchOfficialTymetroTimetable(direction) {
           });
 
           if (list.length === 0) {
-            return reject(new Error('機捷官方回傳空白班表'));
+            return doneReject(new Error('機捷官方回傳空白班表'));
           }
           list.sort((a, b) => a.depMinutes - b.depMinutes);
-          resolve(list);
+          doneResolve(list);
         } catch (e) {
-          reject(new Error(`解析機捷官方資料失敗: ${e.message}`));
+          doneReject(new Error(`解析機捷官方資料失敗: ${e.message}`));
         }
       });
     });
 
-    req.on('error', reject);
+    const totalTimer = setTimeout(() => {
+      req.destroy();
+      doneReject(new Error('機捷官方連線總逾時'));
+    }, 12000);
+    req.on('error', doneReject);
     req.setTimeout(10000, () => {
       req.destroy();
-      reject(new Error('機捷官方連線逾時'));
+      doneReject(new Error('機捷官方連線逾時'));
     });
   });
 }
@@ -1130,9 +1169,9 @@ function parseParkingHtml(html) {
     if (tr.includes('桃園') || tr.includes('板橋')) {
       const tds = tr.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
       if (tds.length >= 4) {
-        const name = tds[0].replace(/<[^>]+>/g, '').trim();
-        const spaceText = tds[1].replace(/<[^>]+>/g, '').trim();
-        const status = tds[3].replace(/<[^>]+>/g, '').trim();
+        const name = tds[0].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        const spaceText = tds[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        const status = tds[3].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
         let available = 0;
         let total = 0;
         if (spaceText.includes('/')) {
@@ -1873,13 +1912,17 @@ async function handleBusRouteStopsProxy(req, res, parsedUrl) {
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
   const city = String(parsedUrl.searchParams.get('city') || '').trim();
-  const routeName = String(parsedUrl.searchParams.get('routeName') || '').trim();
-  const baseRouteName = String(parsedUrl.searchParams.get('baseRouteName') || routeName).trim();
-  const routeId = String(parsedUrl.searchParams.get('routeId') || '').trim();
+  const routeName = String(parsedUrl.searchParams.get('routeName') || '').trim().slice(0, 80);
+  const baseRouteName = String(parsedUrl.searchParams.get('baseRouteName') || routeName).trim().slice(0, 80);
+  const routeId = String(parsedUrl.searchParams.get('routeId') || '').trim().slice(0, 80);
   const direction = parseInt(parsedUrl.searchParams.get('direction') || '0', 10) || 0;
-  const currentStopName = String(parsedUrl.searchParams.get('stopName') || '').trim();
+  const currentStopName = String(parsedUrl.searchParams.get('stopName') || '').trim().slice(0, 80);
 
-  if (!city || !routeName || (city !== 'InterCity' && !VALID_TDX_CITIES.has(city))) {
+  if (
+    !city || !routeName || !baseRouteName ||
+    (city !== 'InterCity' && !VALID_TDX_CITIES.has(city)) ||
+    baseRouteName.includes('..') || /[\/\\\x00-\x1f]/.test(baseRouteName)
+  ) {
     res.writeHead(400);
     res.end(JSON.stringify({ success: false, error: '缺少有效路線參數' }));
     return;
@@ -3321,7 +3364,9 @@ function decodeXmlEntities(str) {
     .replace(/&apos;|&#39;/g, "'")
     .replace(/&#(\d+);/g, (_, d) => {
       const code = parseInt(d, 10);
-      return Number.isFinite(code) && code > 0 ? String.fromCodePoint(code) : '';
+      return Number.isFinite(code) && code > 0 && code <= 0x10FFFF && (code < 0xD800 || code > 0xDFFF)
+        ? String.fromCodePoint(code)
+        : '';
     })
     .trim();
 }
@@ -3882,6 +3927,10 @@ const AIRPORT_HUB_CATALOG = [
   { iata: 'HKG', icao: 'VHHH', name: '香港國際機場', city: '香港', country: '香港', countryCode: 'HK', lat: 22.3080, lon: 113.9185, twinIatas: ['MFM'] },
   { iata: 'DXB', icao: 'OMDB', name: '杜拜國際機場', city: '杜拜', country: '阿聯', countryCode: 'AE', lat: 25.2532, lon: 55.3657, twinIatas: ['DWC'] },
   { iata: 'JED', icao: 'OEJN', name: '吉達阿卜杜勒阿齊茲國王機場', city: '麥加／吉達', country: '沙烏地阿拉伯', countryCode: 'SA', lat: 21.6796, lon: 39.1565, twinIatas: [] },
+  { iata: 'KTM', icao: 'VNKT', name: '加德滿都特里布萬國際機場', city: '尼泊爾加德滿都／喜馬拉雅', country: '尼泊爾', countryCode: 'NP', lat: 27.6966, lon: 85.3591, twinIatas: ['PKR'] },
+  { iata: 'CTU', icao: 'ZUUU', name: '成都雙流國際機場', city: '成都／熊貓基地', country: '中國', countryCode: 'CN', lat: 30.5785, lon: 103.9471, twinIatas: ['TFU'] },
+  { iata: 'GYD', icao: 'UBBB', name: '巴庫蓋達爾阿利耶夫國際機場', city: '亞塞拜然巴庫', country: '亞塞拜然', countryCode: 'AZ', lat: 40.4675, lon: 50.0467, twinIatas: [] },
+  { iata: 'JRO', icao: 'HTKJ', name: '吉力馬札羅國際機場', city: '坦尚尼亞吉力馬札羅', country: '坦尚尼亞', countryCode: 'TZ', lat: -3.4294, lon: 37.0745, twinIatas: ['ARK', 'NBO'] },
   // 歐洲與極地核心機場
   { iata: 'LHR', icao: 'EGLL', name: '倫敦希斯洛國際機場', city: '倫敦', country: '英國', countryCode: 'GB', lat: 51.4700, lon: -0.4543, twinIatas: ['LGW', 'LCY', 'STN'] },
   { iata: 'CDG', icao: 'LFPG', name: '巴黎戴高樂國際機場', city: '巴黎', country: '法國', countryCode: 'FR', lat: 49.0097, lon: 2.5479, twinIatas: ['ORY'] },
@@ -3893,6 +3942,7 @@ const AIRPORT_HUB_CATALOG = [
   { iata: 'CTA', icao: 'LICC', name: '卡塔尼亞國際機場', city: '西西里島埃特納', country: '義大利', countryCode: 'IT', lat: 37.4668, lon: 15.0664, twinIatas: [] },
   { iata: 'PMI', icao: 'LEPA', name: '馬約卡島帕爾馬國際機場', city: '馬約卡島', country: '西班牙', countryCode: 'ES', lat: 39.5517, lon: 2.7388, twinIatas: ['BCN', 'IBZ'] },
   { iata: 'FNC', icao: 'LPMA', name: '馬德拉豐沙爾國際機場', city: '馬德拉島', country: '葡萄牙', countryCode: 'PT', lat: 32.6979, lon: -16.7745, twinIatas: ['LIS'] },
+  { iata: 'TER', icao: 'LPLA', name: '亞速爾群島拉日什機場', city: '葡萄牙亞速爾群島', country: '葡萄牙', countryCode: 'PT', lat: 38.7618, lon: -27.0908, twinIatas: ['PDL'] },
   { iata: 'MRY', icao: 'KMRY', name: '加州蒙特雷半島機場', city: '蒙特雷灣', country: '美國', countryCode: 'US', lat: 36.5870, lon: -121.8430, twinIatas: ['SFO', 'SJC'] },
   { iata: 'AES', icao: 'ENAL', name: '奧勒松維格拉機場', city: '蓋朗厄爾峽灣', country: '挪威', countryCode: 'NO', lat: 62.5625, lon: 6.1197, twinIatas: ['OSL', 'BGO'] },
   { iata: 'RVN', icao: 'EFRO', name: '羅瓦涅米北極圈機場', city: '拉普蘭羅瓦涅米', country: '芬蘭', countryCode: 'FI', lat: 66.5648, lon: 25.8304, twinIatas: ['KTT', 'IVL', 'HEL'] },
@@ -4400,7 +4450,10 @@ const COUNTRY_NEWS_QUERY_MAP = {
   PA: '巴拿馬 運河 雨林',
   BR: '巴西 里約熱內盧',
   AR: '阿根廷 烏斯懷亞 南極',
-  CW: '加勒比海 珊瑚礁 海洋'
+  CW: '加勒比海 珊瑚礁 海洋',
+  NP: '尼泊爾 喜馬拉雅 聖母峰 觀光',
+  TZ: '坦尚尼亞 吉力馬札羅 東非大草原 生態',
+  AZ: '亞塞拜然 巴庫 裏海 觀光'
 };
 
 function decodeXmlEntitiesSimple(str) {
@@ -4729,6 +4782,20 @@ function handleWallSyncApi(req, res, parsedUrl) {
   for (const [k, v] of cache.wallSyncMap.entries()) {
     if (!v || now >= v.expireAt) cache.wallSyncMap.delete(k);
   }
+  const clientIp = String(req.socket?.remoteAddress || 'unknown');
+  const rateKey = `${req.method}:${clientIp}`;
+  const rateLimitMax = req.method === 'POST' ? 30 : 60;
+  let rateRec = cache.wallSyncRateMap.get(rateKey);
+  if (!rateRec || now >= rateRec.resetAt) {
+    rateRec = { count: 0, resetAt: now + 60000 };
+    setBoundedMap(cache.wallSyncRateMap, rateKey, rateRec, 300);
+  }
+  rateRec.count += 1;
+  if (rateRec.count > rateLimitMax) {
+    res.writeHead(429);
+    res.end(JSON.stringify({ success: false, error: '配對同步請求過於頻繁，請稍後再試' }));
+    return;
+  }
 
   if (req.method === 'GET') {
     const code = String(parsedUrl.searchParams.get('code') || '').trim();
@@ -4754,7 +4821,7 @@ function handleWallSyncApi(req, res, parsedUrl) {
     let aborted = false;
     req.setTimeout(6000, () => {
       aborted = true;
-      if (!res.headersSent && !res.writableEnded) {
+      if (!res.headersSent && !res.writableEnded && !res.destroyed) {
         res.writeHead(408);
         res.end(JSON.stringify({ success: false, error: '讀取同步內容逾時' }));
       }
@@ -4762,7 +4829,7 @@ function handleWallSyncApi(req, res, parsedUrl) {
     });
     req.on('error', () => {
       aborted = true;
-      if (!res.headersSent && !res.writableEnded) {
+      if (!res.headersSent && !res.writableEnded && !res.destroyed) {
         res.writeHead(400);
         res.end(JSON.stringify({ success: false, error: '請求串流中斷' }));
       }
@@ -4772,7 +4839,7 @@ function handleWallSyncApi(req, res, parsedUrl) {
       totalBytes += chunk.length;
       if (totalBytes > 49152) {
         aborted = true;
-        if (!res.headersSent && !res.writableEnded) {
+        if (!res.headersSent && !res.writableEnded && !res.destroyed) {
           res.writeHead(413);
           res.end(JSON.stringify({ success: false, error: '同步資料超過容量上限' }));
         }
@@ -4782,7 +4849,7 @@ function handleWallSyncApi(req, res, parsedUrl) {
       chunks.push(chunk);
     });
     req.on('end', () => {
-      if (aborted || res.headersSent || res.writableEnded) return;
+      if (aborted || res.headersSent || res.writableEnded || res.destroyed) return;
       try {
         const rawBody = Buffer.concat(chunks).toString('utf8');
         const parsed = JSON.parse(rawBody || '{}');
@@ -4817,7 +4884,13 @@ function handleWallSyncApi(req, res, parsedUrl) {
             const safeUrl = (u) => {
               const s = String(u || '').trim();
               if (!/^https?:\/\//i.test(s) || /["'<>\\\s\x00-\x1f]/.test(s)) return '';
-              return s.slice(0, 400);
+              try {
+                const parsedU = new URL(s);
+                if ((parsedU.protocol !== 'https:' && parsedU.protocol !== 'http:') || isDisallowedRedirectHost(parsedU.hostname)) return '';
+                return parsedU.toString().slice(0, 400);
+              } catch (_) {
+                return '';
+              }
             };
             const allowedTypes = new Set(['hls', 'flv', 'mjpeg', 'snapshot', 'youtube', 'iframe']);
             const rawType = String(m.type || '').trim().toLowerCase();
@@ -4980,18 +5053,29 @@ async function handleSizenkenLiveProxy(req, res, parsedUrl) {
   }
 
   try {
-    const viewUrl = `https://www.sizenken.biodic.go.jp/view_new.php?no=${no}`;
-    const pageHtml = await fetchRemoteHtml(viewUrl, 8500);
-    const imgUrl = extractSizenkenImageUrl(pageHtml);
-    if (!imgUrl) {
-      throw new Error(`找不到編號 ${no} 之最新影像路徑`);
+    let pending = cache.sizenkenInFlight.get(no);
+    if (!pending) {
+      pending = (async () => {
+        const viewUrl = `https://www.sizenken.biodic.go.jp/view_new.php?no=${no}`;
+        const pageHtml = await fetchRemoteHtml(viewUrl, 8500);
+        const imgUrl = extractSizenkenImageUrl(pageHtml);
+        if (!imgUrl) {
+          throw new Error(`找不到編號 ${no} 之最新影像路徑`);
+        }
+        const jpegBuf = await fetchSizenkenJpegBuffer(imgUrl, 9000);
+        setBoundedMap(cache.sizenkenMap, no, {
+          buffer: jpegBuf,
+          imageUrl: imgUrl,
+          expireAt: Date.now() + 90000
+        }, 80);
+        return jpegBuf;
+      })().finally(() => {
+        cache.sizenkenInFlight.delete(no);
+      });
+      cache.sizenkenInFlight.set(no, pending);
     }
-    const jpegBuf = await fetchSizenkenJpegBuffer(imgUrl, 9000);
-    setBoundedMap(cache.sizenkenMap, no, {
-      buffer: jpegBuf,
-      imageUrl: imgUrl,
-      expireAt: now + 90000
-    }, 80);
+    const jpegBuf = await pending;
+    if (res.headersSent || res.writableEnded || res.destroyed) return;
     res.writeHead(200, {
       'Content-Type': 'image/jpeg',
       'Content-Length': jpegBuf.length,
@@ -4999,6 +5083,7 @@ async function handleSizenkenLiveProxy(req, res, parsedUrl) {
     });
     res.end(req.method === 'HEAD' ? undefined : jpegBuf);
   } catch (err) {
+    if (res.headersSent || res.writableEnded || res.destroyed) return;
     if (cached && cached.buffer) {
       res.writeHead(200, {
         'Content-Type': 'image/jpeg',
@@ -5235,6 +5320,7 @@ const server = http.createServer((req, res) => {
   }
 
   fs.stat(filePath, (err, stats) => {
+    if (res.headersSent || res.writableEnded || res.destroyed) return;
     if (err || !stats.isFile()) {
       res.writeHead(404, normLower.startsWith('data/')
         ? { 'Content-Type': 'application/json; charset=utf-8' }
@@ -5336,6 +5422,9 @@ server.setBoundedMap = setBoundedMap;
 server.twd97ToWgs84 = twd97ToWgs84;
 server.extractSizenkenImageUrl = extractSizenkenImageUrl;
 server.handleSizenkenLiveProxy = handleSizenkenLiveProxy;
+server.isDisallowedRedirectHost = isDisallowedRedirectHost;
+server.decodeXmlEntities = decodeXmlEntities;
+server.parseParkingHtml = parseParkingHtml;
 server._internal = { cache, boteCookieJar, botePrewarmCooldown };
 
 module.exports = server;

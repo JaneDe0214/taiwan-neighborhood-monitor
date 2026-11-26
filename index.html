@@ -28,7 +28,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="雙埔生活">
-  <title>雙埔生活</title>
+  <meta name="description" content="新埔與青埔雙核心高鐵、機捷、北捷通勤走廊與 YouBike 2.0，整合全台與世界 957 處 4K 實況鏡頭、日本私藏秘境與自然療癒即時之窗。">
+  <meta property="og:title" content="雙埔生活 × 世界即時之窗">
+  <meta property="og:description" content="雙埔即時軌道通勤走廊 × 全球 957 處 4K 風景與秘境即時實況監看系統。">
+  <meta property="og:type" content="website">
+  <title>雙埔生活 × 世界即時之窗</title>
   
   <!-- 雙埔生活專屬網頁頁籤與 Web App 圖示 (Favicon, Touch Icon & PWA Manifest) -->
   <link rel="manifest" href="manifest.json">
@@ -37,33 +41,19 @@
   <link rel="icon" type="image/png" sizes="512x512" href="dpuLogo_icon.png">
   <link rel="apple-touch-icon" href="dpuLogo_icon.png">
   
-  <!-- FontAwesome 7 圖示庫 -->
-    <!-- 官方交控與全球高畫質串流伺服器 DNS 預解析與 TLS 連線預熱 (最少轉圈等待 ‧ 極速秒開) -->
-  <link rel="dns-prefetch" href="https://www.youtube-nocookie.com">
-  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
-  <link rel="dns-prefetch" href="https://i.ytimg.com">
-  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
-  <link rel="dns-prefetch" href="https://www.youtube.com">
-  <link rel="preconnect" href="https://www.youtube.com" crossorigin>
-  <link rel="dns-prefetch" href="https://googlevideo.com">
-  <link rel="dns-prefetch" href="https://cctvtraffic.tycg.gov.tw">
-  <link rel="preconnect" href="https://cctvtraffic.tycg.gov.tw" crossorigin>
-  <link rel="dns-prefetch" href="https://cctvatis1.ntpc.gov.tw">
-  <link rel="preconnect" href="https://cctvatis1.ntpc.gov.tw" crossorigin>
-  <link rel="dns-prefetch" href="https://cctvatis2.ntpc.gov.tw">
-  <link rel="preconnect" href="https://cctvatis2.ntpc.gov.tw" crossorigin>
-  <link rel="dns-prefetch" href="https://cctvatis3.ntpc.gov.tw">
-  <link rel="preconnect" href="https://cctvatis3.ntpc.gov.tw" crossorigin>
-  <link rel="dns-prefetch" href="https://cctvatis4.ntpc.gov.tw">
-  <link rel="preconnect" href="https://cctvatis4.ntpc.gov.tw" crossorigin>
-  <link rel="dns-prefetch" href="https://cctvatis5.ntpc.gov.tw">
-  <link rel="preconnect" href="https://cctvatis5.ntpc.gov.tw" crossorigin>
-  <link rel="dns-prefetch" href="https://hls.bote.gov.taipei">
-  <link rel="preconnect" href="https://hls.bote.gov.taipei" crossorigin>
-  <link rel="dns-prefetch" href="https://cctv1.freeway.gov.tw">
-  <link rel="preconnect" href="https://cctv1.freeway.gov.tw" crossorigin>
+  <!-- 關鍵資源預連線（精簡 TLS 握手數量避免連線池競爭）與次要交控網域 DNS 預解析 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin>
+  <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+  <link rel="dns-prefetch" href="https://www.youtube.com">
+  <link rel="dns-prefetch" href="https://googlevideo.com">
+  <link rel="dns-prefetch" href="https://cctvtraffic.tycg.gov.tw">
+  <link rel="dns-prefetch" href="https://cctvatis1.ntpc.gov.tw">
+  <link rel="dns-prefetch" href="https://cctvatis2.ntpc.gov.tw">
+  <link rel="dns-prefetch" href="https://hls.bote.gov.taipei">
+  <link rel="dns-prefetch" href="https://cctv1.freeway.gov.tw">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" media="print" onload="this.media='all'">
   
@@ -869,6 +859,15 @@ body {
   grid-auto-rows: minmax(150px, 1fr);
   overflow-y: auto !important;
 }
+.adaptive-fit .sidebar-section {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding-right: 2px;
+}
+.adaptive-fit .sidebar-hub-dock {
+  top: 0;
+}
 
 /* 自適應模式下卡片與視訊容器最大化填滿，零邊角裁切 */
 .adaptive-fit .cam-card {
@@ -1148,7 +1147,12 @@ body {
   white-space: nowrap;
 }
 
-/* 鍵盤無障礙焦點指示器 */
+/* 全站鍵盤與遙控器無障礙焦點指示器 (WCAG 2.1 AA) */
+:where(button, a[href], input, select, textarea, [tabindex="0"], .cam-card):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+}
 .center-btn:focus-visible,
 .grid-btn:focus-visible,
 .pager-btn:focus-visible,
@@ -1688,7 +1692,7 @@ a.coord-tag:hover {
 .cmd-palette-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2200;
+  z-index: 2400;
   background: rgba(3, 6, 12, 0.72);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -1697,13 +1701,16 @@ a.coord-tag:hover {
   justify-content: center;
   padding: min(12vh, 110px) 16px 24px;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.2s;
 }
 
 .cmd-palette-overlay.active {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
 }
 
 .cmd-palette-dialog {
@@ -2714,19 +2721,22 @@ a.coord-tag:hover {
   background: rgba(3, 6, 12, 0.86);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  z-index: 1000;
+  z-index: 2600;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0.22s;
 }
 
 .modal-overlay.active {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
 }
 
 .modal-content {
@@ -7379,7 +7389,7 @@ body {
     padding: 7px 12px;
     gap: 6px;
   }
-  .disaster-compact-pill {
+  .disaster-compact-pill:not(.has-warning):not(.active) {
     display: none;
   }
   .cmd-palette-trigger .cmd-trigger-label,
@@ -8281,10 +8291,12 @@ body.native-mobile-mode .parking-lot-chip {
   gap: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 240, 255, 0.15);
   animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-             toast-fade-out 0.3s ease 2.2s forwards;
+             toast-fade-out 0.3s ease var(--toast-fade-delay, 2.2s) forwards;
   pointer-events: auto;
   white-space: nowrap;
-  max-width: 90vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(92vw, 560px);
 }
 
 .toast-notification.toast-success {
@@ -9083,18 +9095,18 @@ html[data-theme="light"] {
   --border-glow: rgba(2, 132, 199, 0.38);
   --specular-top: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 
-  --color-primary: #0284c7;
-  --color-primary-dim: rgba(2, 132, 199, 0.12);
-  --color-success: #059669;
-  --color-warning: #d97706;
+  --color-primary: #0369a1;
+  --color-primary-dim: rgba(3, 105, 161, 0.12);
+  --color-success: #047857;
+  --color-warning: #b45309;
   --color-danger: #dc2626;
-  --color-purple: #7c3aed;
+  --color-purple: #6d28d9;
 
   --text-main: #0f172a;
   --text-primary: var(--text-main);
   --text-secondary: #1e293b;
-  --text-muted: #475569;
-  --text-dim: #64748b;
+  --text-muted: #334155;
+  --text-dim: #475569;
 }
 
 html[data-theme="light"] body {
@@ -9592,13 +9604,21 @@ html[data-theme="light"] .cmd-palette-overlay {
 html[data-theme="light"] .cmd-palette-dialog,
 html[data-theme="light"] .modal-content,
 html[data-theme="light"] .fav-empty-placeholder,
-html[data-theme="light"] .toast-notification,
 html[data-theme="light"] .pull-refresh-indicator {
   background: #ffffff !important;
   border-color: rgba(15, 23, 42, 0.14) !important;
   color: #0f172a !important;
   box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18) !important;
 }
+html[data-theme="light"] .toast-notification {
+  background: #ffffff !important;
+  border-color: rgba(3, 105, 161, 0.32);
+  color: #0f172a !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.16) !important;
+}
+html[data-theme="light"] .toast-notification.toast-success { border-color: rgba(4, 120, 87, 0.55) !important; }
+html[data-theme="light"] .toast-notification.toast-warning { border-color: rgba(180, 83, 9, 0.55) !important; }
+html[data-theme="light"] .toast-notification.toast-error { border-color: rgba(220, 38, 38, 0.55) !important; }
 html[data-theme="light"] .cmd-palette-footer,
 html[data-theme="light"] .modal-header {
   background: #f8fafc !important;
@@ -9624,6 +9644,8 @@ body.in-pip-mode .section-header-bar,
 body.in-pip-mode .transit-corridor-bar,
 body.in-pip-mode .smart-commute-capsule,
 body.in-pip-mode .freeway-speed-bar,
+body.in-pip-mode .world-presence-bar,
+body.in-pip-mode .cinema-floating-hud,
 body.in-pip-mode .scene-preset-bar,
 body.in-pip-mode .camera-filter-bar,
 body.in-pip-mode .sidebar-section,
@@ -11608,7 +11630,7 @@ html[data-theme="light"] .filter-search-input::placeholder {
 /* 右側智慧分頁控制中樞 (Sticky 5-Tab Telemetry Hub Dock) */
 .sidebar-hub-dock {
   position: sticky;
-  top: 0;
+  top: var(--top-nav-height, 88px);
   z-index: 28;
   display: flex;
   flex-direction: column;
@@ -12512,6 +12534,172 @@ body.cinema-zen-mode #toastContainer {
   color: #ffffff;
 }
 
+/* 5b. 淺色系 × 劇院沉浸模式高對比保護 + 全站雙主題 WCAG 2.1 AA 對比度強化 */
+html[data-theme="light"] body.cinema-zen-mode {
+  background: #030712 !important;
+  color: #f8fafc !important;
+}
+html[data-theme="light"] body.cinema-zen-mode .cam-card {
+  background: #090e1a !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55) !important;
+}
+html[data-theme="light"] body.cinema-zen-mode .cam-card-header {
+  background: rgba(8, 13, 25, 0.86) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+html[data-theme="light"] body.cinema-zen-mode .cam-name-text {
+  color: #f8fafc !important;
+}
+html[data-theme="light"] body.cinema-zen-mode .tool-icon-btn,
+html[data-theme="light"] body.cinema-zen-mode .fav-star-btn {
+  background: rgba(30, 41, 59, 0.82) !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #f1f5f9 !important;
+}
+html[data-theme="light"] body.cinema-zen-mode .tool-icon-btn:hover,
+html[data-theme="light"] body.cinema-zen-mode .fav-star-btn:hover {
+  background: rgba(56, 189, 248, 0.25) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+}
+html[data-theme="light"] body.cinema-zen-mode .cam-map-tag {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+}
+html[data-theme="light"] .cinema-floating-hud {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  color: #f8fafc !important;
+}
+html[data-theme="light"] .cinema-floating-hud button:not(.cinema-hud-exit-btn) {
+  background: rgba(30, 41, 59, 0.88) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+}
+html[data-theme="light"] .cinema-floating-hud button.active:not(.cinema-hud-exit-btn),
+html[data-theme="light"] .cinema-floating-hud .wp-pill-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #38bdf8 !important;
+}
+/* 淺色主題：雙埔出門搭車建議與方向切換高對比強化 */
+html[data-theme="light"] .dir-toggle-btn.active {
+  background: #0369a1 !important;
+  color: #ffffff !important;
+  border-color: #0369a1 !important;
+  box-shadow: 0 2px 10px rgba(3, 105, 161, 0.24) !important;
+}
+html[data-theme="light"] .hub-dest-indicator {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  color: #1e293b !important;
+}
+html[data-theme="light"] .hub-dest-indicator .dest-highlight {
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .badge-save-time,
+html[data-theme="light"] .badge-total-time {
+  color: #334155 !important;
+}
+html[data-theme="light"] .badge-save-time strong {
+  color: #92400e !important;
+}
+html[data-theme="light"] .pids-thsr-hub .hub-pids-time {
+  color: #b45309 !important;
+}
+html[data-theme="light"] .pids-tymetro-hub .hub-pids-time {
+  color: #6d28d9 !important;
+}
+html[data-theme="light"] .plan-timeline-hint {
+  background: #f1f5f9 !important;
+  border: 1px solid rgba(15, 23, 42, 0.10) !important;
+  color: #1e293b !important;
+}
+html[data-theme="light"] .plan-timeline-hint .hint-leave strong {
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .plan-timeline-hint .dest-time {
+  color: #334155 !important;
+}
+html[data-theme="light"] .plan-timeline-hint .dest-time strong {
+  color: #047857 !important;
+}
+html[data-theme="light"] .plan-timeline-hint .hint-arrow {
+  color: #64748b !important;
+}
+/* 淺色主題細部元件對比度齊全 */
+html[data-theme="light"] .fav-quick-jump-btn {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #1e293b;
+}
+html[data-theme="light"] .fav-quick-jump-btn:hover {
+  background: #e0f2fe;
+  border-color: #0369a1;
+  color: #0c4a6e;
+}
+html[data-theme="light"] .domain-fav-count {
+  background: rgba(180, 83, 9, 0.14);
+  color: #92400e;
+  border-color: rgba(180, 83, 9, 0.32);
+}
+html[data-theme="light"] .radar-hud-mini-btn,
+html[data-theme="light"] .geo-radar-frame-tag {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #1e293b;
+}
+html[data-theme="light"] .flight-phase-badge,
+html[data-theme="light"] .flight-map-locate-tag,
+html[data-theme="light"] .flight-ac-tag {
+  background: rgba(3, 105, 161, 0.12);
+  color: #0369a1;
+  border-color: rgba(3, 105, 161, 0.32);
+}
+html[data-theme="light"] .flight-telemetry-row,
+html[data-theme="light"] .phrase-sub-txt,
+html[data-theme="light"] .immersive-news-meta,
+html[data-theme="light"] .fav-empty-desc {
+  color: #334155 !important;
+}
+html[data-theme="light"] .weekly-day-rain {
+  color: #0369a1 !important;
+}
+html[data-theme="light"] .circular-train-pill {
+  background: rgba(180, 83, 9, 0.12);
+  border-color: rgba(180, 83, 9, 0.35);
+  color: #92400e;
+}
+html[data-theme="light"] .station-dot-node {
+  color: #334155;
+}
+html[data-theme="light"] .station-dot-node:hover {
+  color: #0369a1;
+}
+html[data-theme="light"] .fav-star-btn.active {
+  color: #b45309 !important;
+}
+html[data-theme="light"] .wp-journey-pill.is-active-mood {
+  background: #0369a1 !important;
+  color: #ffffff !important;
+  border-color: #0369a1 !important;
+}
+html[data-theme="light"] .domain-tab-btn:hover:not(.active),
+html[data-theme="light"] .sidebar-tab-btn:hover:not(.active) {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+.fav-quick-add-btn {
+  background: linear-gradient(135deg, #b45309, #92400e);
+  color: #ffffff;
+}
+.eq-dismiss-btn {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+}
+
 /* 6. 淺色系主題 (Light Theme) 完整高對比適配 */
 html[data-theme="light"] .grid-more-toggle-btn {
   background: #f8fafc;
@@ -12643,7 +12831,7 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
   </div>
 
   <!-- 國家級地震緊急避難全螢幕通知遮罩 (平時完全不佔空間，唯有地震時喚醒) -->
-  <div id="earthquakeModalOverlay" class="earthquake-alert-overlay" role="alertdialog" aria-modal="true" aria-labelledby="eqTitleText">
+  <div id="earthquakeModalOverlay" class="earthquake-alert-overlay" role="alertdialog" aria-modal="true" aria-hidden="true" aria-labelledby="eqTitleText">
     <div class="earthquake-alert-card">
       <div class="eq-header-tag" id="eqHeaderTag">
         <i class="fa-solid fa-triangle-exclamation"></i>
@@ -13031,7 +13219,7 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
           <button class="filter-tag-pill" data-filter-tag="商圈" type="button">都會商圈</button>
         </div>
         <div class="filter-meta-controls">
-          <button id="btnWorldTeleport" class="sort-priority-btn" type="button" onclick="window.monitorApp && window.monitorApp.teleportRandomWorldWindow()" title="世界即時之窗任意門：隨機探索全球一處高畫質實況視窗並同步當地時區、氣象與匯率">
+          <button id="btnWorldTeleport" class="sort-priority-btn" type="button" title="世界即時之窗任意門：隨機探索全球一處高畫質實況視窗並同步當地時區、氣象與匯率">
             <i class="fa-solid fa-earth-asia" aria-hidden="true"></i> <span>世界任意門</span>
           </button>
           <button id="btnShareCurrentView" class="sort-priority-btn" type="button" onclick="window.monitorApp && window.monitorApp.shareViewLink()" title="複製或分享目前分頁、篩選主題與鏡頭視角直連網址">
@@ -13074,16 +13262,16 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
       <!-- 固定置頂：即時環境摘要脈動列 ＋ 4+1 當地透鏡智慧分頁中樞 -->
       <div id="sidebarHubDock" class="sidebar-hub-dock">
         <div id="sidebarQuickSummaryStrip" class="sidebar-quick-summary" aria-label="即時環境與空域摘要">
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('weather')" title="切換至當地氣候分頁">
+          <span class="quick-sum-chip" role="button" tabindex="0" onclick="window.monitorApp?.switchSidebarTab('weather')" title="切換至當地氣候分頁">
             <span>🌤️</span><strong id="quickSumTemp">--°C</strong>
           </span>
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="切換至在地人文音場分頁">
+          <span class="quick-sum-chip" role="button" tabindex="0" onclick="window.monitorApp?.switchSidebarTab('immersive')" title="切換至在地人文音場分頁">
             <span>🧭</span><strong id="quickSumPulse">現場脈動</strong>
           </span>
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('radar')" title="切換至天空雷達飛航分頁">
+          <span class="quick-sum-chip" role="button" tabindex="0" onclick="window.monitorApp?.switchSidebarTab('radar')" title="切換至天空雷達飛航分頁">
             <span>✈️</span><strong id="quickSumFlights">掃描空域</strong>
           </span>
-          <span class="quick-sum-chip" onclick="window.monitorApp?.switchSidebarTab('transit')" title="切換至周邊交通分頁">
+          <span class="quick-sum-chip" role="button" tabindex="0" onclick="window.monitorApp?.switchSidebarTab('transit')" title="切換至周邊交通分頁">
             <span>🚌</span><strong id="quickSumTransit">公車/單車</strong>
           </span>
         </div>
@@ -13303,8 +13491,8 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
           </button>
         </div>
 
-        <div id="radarPreviewBox" class="radar-preview-box" onclick="if(!window.monitorApp?.isInternationalCenter()){window.monitorApp?.openFullscreen('RADAR_CWA');}">
-          <img id="radarImg" class="radar-img" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png" referrerpolicy="no-referrer" alt="中央氣象署即時雷達回波" />
+        <div id="radarPreviewBox" class="radar-preview-box" role="button" tabindex="0" aria-label="氣象雷達回波預覽，按 Enter 放大檢視" onclick="if(!window.monitorApp?.isInternationalCenter()){window.monitorApp?.openFullscreen('RADAR_CWA');}">
+          <img id="radarImg" class="radar-img" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png" loading="lazy" decoding="async" referrerpolicy="no-referrer" alt="中央氣象署即時雷達回波" />
           <iframe id="radarWindyFrame" title="全球即時氣象雷達" loading="lazy" style="display:none; width:100%; height:100%; border:none;" referrerpolicy="no-referrer-when-downgrade"></iframe>
           <canvas id="weatherRadarLiveCanvas" class="weather-radar-live-canvas" width="380" height="380" aria-label="全球即時氣象雷達動態飛機與風場戰術疊加層"></canvas>
           <div id="wRadarFloatingHudTop" class="w-radar-floating-hud-top">
@@ -13431,7 +13619,7 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
   <div id="cinemaFloatingHud" class="cinema-floating-hud" style="display:none;" role="region" aria-label="劇院沉浸視窗懸浮控制列"></div>
 
   <!-- 全螢幕大圖放大檢視 Modal 視窗 (符合 WAI-ARIA Dialog 標準) -->
-  <div id="cameraModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div id="cameraModal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modalTitle">
     <div class="modal-content">
       <div class="modal-header">
         <span id="modalTitle" class="modal-title">監視器畫面檢視</span>
@@ -13444,7 +13632,7 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
   </div>
 
   <!-- ⌘K 快速指令與鏡頭搜尋面板 (Obsidian Command Palette) -->
-  <div id="commandPaletteOverlay" class="cmd-palette-overlay" role="dialog" aria-modal="true" aria-label="快速指令面板">
+  <div id="commandPaletteOverlay" class="cmd-palette-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-label="快速指令面板">
     <div class="cmd-palette-dialog">
       <div class="cmd-palette-input-row">
         <i class="fa-solid fa-terminal" aria-hidden="true"></i>
@@ -13460,7 +13648,7 @@ html[data-theme="light"] .wp-journey-pill.is-teleport {
   </div>
 
   <!-- 手機 ⇄ Google TV 電視端 QR Code 與配對碼跨裝置同步視窗 -->
-  <div id="wallSyncModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="wallSyncModalTitle" onclick="if(event.target===this) window.monitorApp?.closeWallSyncModal()">
+  <div id="wallSyncModal" class="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="wallSyncModalTitle" onclick="if(event.target===this) window.monitorApp?.closeWallSyncModal()">
     <div class="wall-sync-dialog">
       <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(148,163,184,0.16);">
         <span id="wallSyncModalTitle" class="modal-title" style="font-size:0.95rem;font-weight:800;">
@@ -13625,10 +13813,12 @@ window.buildYoutubeEmbedUrl = function buildYoutubeEmbedUrl(videoId) {
 window.GentleVoiceEngine = (function createGentleVoiceEngine() {
   let cachedVoices = [];
   let pendingWaiters = [];
+  let pendingWaitTimer = null;
+  let activeUtterance = null;
 
   const MALE_PATTERNS = [
     /\bmale\b/i, /\bman\b/i, /男/,
-    /zhiwei|yunjhe|yunjian|yunxi|kangkang|david|mark|george|daniel|richard|james|guy|ryan|christopher|eric|steffan|ichiro|keita|otoya|injoon|paul|henri|stefan|conrad|cosimo|diego|pablo|alvaro|antonio|duarte|niwat|namminh|ardi|osman|alex|fred|bruce|ralph|albert|junior|aaron|arthur|oliver|martin|thomas|luca|jorge|carlos|henrik|finn|harri|soren|marek|jakub|tamas|nestoras|ahmet|avri|hamed|sagar|daudi|babek|gunnar/i,
+    /\b(zhiwei|yunjhe|yunjian|yunxi|kangkang|david|mark|george|daniel|richard|james|guy|ryan|christopher|eric|steffan|ichiro|keita|otoya|injoon|paul|henri|stefan|conrad|cosimo|diego|pablo|alvaro|antonio|duarte|niwat|namminh|ardi|osman|alex|fred|bruce|ralph|albert|junior|aaron|arthur|oliver|martin|thomas|luca|jorge|carlos|henrik|finn|harri|soren|marek|jakub|tamas|nestoras|ahmet|avri|hamed|sagar|daudi|babek|gunnar)\b/i,
     /cmn-tw-x-ctd|ja-jp-x-jad|en-us-x-iom|en-us-x-iol|en-us-x-tpd|ko-kr-x-koc|ko-kr-x-kod/i
   ];
 
@@ -13680,11 +13870,18 @@ window.GentleVoiceEngine = (function createGentleVoiceEngine() {
     return MALE_PATTERNS.some(re => re.test(name));
   }
 
+  function normalizeLangPrefix(prefix) {
+    if (prefix === 'cmn' || prefix === 'yue') return 'zh';
+    if (prefix === 'nb' || prefix === 'nn') return 'no';
+    if (prefix === 'iw') return 'he';
+    return prefix;
+  }
+
   function scoreVoice(voice, targetLang) {
     const vLang = String(voice?.lang || '').replace(/_/g, '-').toLowerCase();
     const tLang = String(targetLang || 'zh-TW').replace(/_/g, '-').toLowerCase();
-    const vPrefix = vLang.split('-')[0];
-    const tPrefix = tLang.split('-')[0];
+    const vPrefix = normalizeLangPrefix(vLang.split('-')[0]);
+    const tPrefix = normalizeLangPrefix(tLang.split('-')[0]);
     if (!vPrefix || vPrefix !== tPrefix) return -9999;
 
     const name = String(voice?.name || '');
@@ -13770,12 +13967,34 @@ window.GentleVoiceEngine = (function createGentleVoiceEngine() {
     return isNeural ? { rate: 0.90, pitch: 1.05, volume: 0.92 } : { rate: 0.89, pitch: 1.09, volume: 0.90 };
   }
 
+  function stop() {
+    if (pendingWaitTimer) {
+      clearTimeout(pendingWaitTimer);
+      pendingWaitTimer = null;
+    }
+    pendingWaiters = [];
+    activeUtterance = null;
+    try {
+      if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.stopSpeaking === 'function') {
+        window.AndroidBridge.stopSpeaking();
+      }
+    } catch (_) {}
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (_) {}
+  }
+
   function speakWeb(text, langCode, style, voices) {
     if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
       return null;
     }
     try {
       window.speechSynthesis.cancel();
+      if (window.speechSynthesis.paused && typeof window.speechSynthesis.resume === 'function') {
+        window.speechSynthesis.resume();
+      }
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = langCode || 'zh-TW';
       const chosen = pickBestVoice(voices, utter.lang);
@@ -13784,6 +14003,10 @@ window.GentleVoiceEngine = (function createGentleVoiceEngine() {
       utter.rate = profile.rate;
       utter.pitch = profile.pitch;
       utter.volume = profile.volume;
+      activeUtterance = utter;
+      const releaseUtter = () => { if (activeUtterance === utter) activeUtterance = null; };
+      utter.onend = releaseUtter;
+      utter.onerror = releaseUtter;
       window.speechSynthesis.speak(utter);
       return { voiceName: chosen?.name || 'default', ...profile };
     } catch (_) {
@@ -13805,20 +14028,28 @@ window.GentleVoiceEngine = (function createGentleVoiceEngine() {
       }
     } catch (_) {}
 
-    // 2. Web Speech API：若尚未載入語音清單則短暫等待 voiceschanged (最多 220ms) 以避免首次誤用系統粗聲預設
+    // 2. Web Speech API：若尚未載入語音清單則僅保留最新一筆並短暫等待 voiceschanged (最多 220ms)
     const voices = refreshVoices();
     if (voices.length > 0) {
       return speakWeb(cleanText, langCode, style, voices);
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (pendingWaitTimer) {
+        clearTimeout(pendingWaitTimer);
+        pendingWaitTimer = null;
+      }
       let fired = false;
       const runOnce = (vList) => {
         if (fired) return;
         fired = true;
+        if (pendingWaitTimer) {
+          clearTimeout(pendingWaitTimer);
+          pendingWaitTimer = null;
+        }
         speakWeb(cleanText, langCode, style, vList || refreshVoices());
       };
-      pendingWaiters.push(runOnce);
-      setTimeout(() => runOnce(refreshVoices()), 220);
+      pendingWaiters = [runOnce];
+      pendingWaitTimer = setTimeout(() => runOnce(refreshVoices()), 220);
       return { voiceName: 'pending-gentle-female' };
     }
     return null;
@@ -13826,6 +14057,7 @@ window.GentleVoiceEngine = (function createGentleVoiceEngine() {
 
   return {
     speak,
+    stop,
     pickBestVoice,
     scoreVoice,
     getAcousticProfile,
@@ -14024,7 +14256,8 @@ class CameraPlayerEngine {
             labelText = `${cam.fps >= 50 ? '720P 60FPS' : '720P HD'} ‧ 最高畫質`;
             resEl.classList.remove('is-4k', 'is-2k');
           }
-          if (labelText) {
+          if (labelText && entry._lastBadgeText !== labelText) {
+            entry._lastBadgeText = labelText;
             resEl.innerHTML = `<i class="fa-solid fa-video"></i> ${labelText}`;
           }
         }
@@ -14032,11 +14265,26 @@ class CameraPlayerEngine {
     });
   }
 
+  // 釋放單一 YouTube IFrame 之註冊與所有握手計時器
+  unregisterYoutubeFrame(frameId) {
+    if (!frameId || !this.ytFrames) return;
+    const entry = this.ytFrames.get(String(frameId));
+    if (entry && entry.timers) {
+      entry.timers.forEach(t => {
+        clearTimeout(t);
+        if (this.ytHandshakeTimers) this.ytHandshakeTimers.delete(t);
+      });
+      entry.timers.clear();
+    }
+    this.ytFrames.delete(String(frameId));
+  }
+
   // 註冊 YouTube IFrame 並發送 listening 握手以啟動最高畫質鎖定與秒速狀態回報
   registerYoutubeFrame(cam, frameEl) {
     if (!frameEl || !frameEl.id) return;
     if (!this.ytFrames) this.ytFrames = new Map();
     const frameId = String(frameEl.id);
+    this.unregisterYoutubeFrame(frameId);
     const entry = {
       cam,
       frameEl,
@@ -14044,13 +14292,16 @@ class CameraPlayerEngine {
       bestQuality: null,
       lockedInitial: false,
       lockedOnPlay: false,
-      lastEnforceTs: 0
+      lastEnforceTs: 0,
+      _handshakeStarted: false,
+      _lastBadgeText: '',
+      timers: new Set()
     };
     this.ytFrames.set(frameId, entry);
 
     const postHandshake = () => {
       if (!this.ytFrames || this.ytFrames.get(frameId) !== entry) return;
-      if (!frameEl.contentWindow) return;
+      if (!frameEl.isConnected || !frameEl.contentWindow) return;
       try {
         frameEl.contentWindow.postMessage(JSON.stringify({
           event: 'listening',
@@ -14068,24 +14319,35 @@ class CameraPlayerEngine {
       } catch (_) {}
     };
 
+    const scheduleTimer = (fn, ms) => {
+      const t = setTimeout(() => {
+        entry.timers.delete(t);
+        this.ytHandshakeTimers.delete(t);
+        if (this.ytFrames && this.ytFrames.get(frameId) === entry && frameEl.isConnected) {
+          fn();
+        }
+      }, ms);
+      entry.timers.add(t);
+      this.ytHandshakeTimers.add(t);
+      return t;
+    };
+
     const triggerHandshakeSequence = () => {
+      if (entry._handshakeStarted) return;
+      entry._handshakeStarted = true;
       postHandshake();
       [260, 950, 2200].forEach(ms => {
-        const t = setTimeout(() => {
-          this.ytHandshakeTimers.delete(t);
+        scheduleTimer(() => {
           if (!entry.ack) postHandshake();
         }, ms);
-        this.ytHandshakeTimers.add(t);
       });
     };
     frameEl.addEventListener('load', triggerHandshakeSequence, { once: true });
-    const earlyTimer = setTimeout(() => {
-      this.ytHandshakeTimers.delete(earlyTimer);
-      if (!entry.ack && frameEl.getAttribute('src') && frameEl.getAttribute('src') !== 'about:blank') {
+    scheduleTimer(() => {
+      if (!entry.ack && !entry._handshakeStarted && frameEl.getAttribute('src') && frameEl.getAttribute('src') !== 'about:blank') {
         triggerHandshakeSequence();
       }
     }, 420);
-    this.ytHandshakeTimers.add(earlyTimer);
   }
 
   // 清理所有排隊中的階梯式啟動計時器與視口觀察器
@@ -14253,8 +14515,10 @@ class CameraPlayerEngine {
           trackerState.frames = 0;
           trackerState.lastTime = now;
         }
-        if (!videoEl.paused && !videoEl.ended) {
+        if (!videoEl.paused && !videoEl.ended && videoEl.isConnected) {
           trackerState.rvfcId = videoEl.requestVideoFrameCallback(onVideoFrame);
+        } else {
+          trackerState.active = false;
         }
       };
       trackerState.rvfcId = videoEl.requestVideoFrameCallback(onVideoFrame);
@@ -14439,13 +14703,30 @@ class CameraPlayerEngine {
       clearInterval(this.timerId);
       this.timerId = null;
     }
-    this.flvPlayers.forEach(p => { try { p.pause(); } catch(e){} });
+    this.flvPlayers.forEach((p, camId) => {
+      try {
+        const v = document.getElementById(`video-${camId}`);
+        if (v) v.pause();
+        p.pause();
+        p.unload();
+      } catch (_) {}
+    });
     this.hlsPlayers.forEach(h => {
       try {
         const media = h.media;
         if (media) media.pause();
-      } catch(e){}
+        h.stopLoad();
+      } catch (_) {}
     });
+    try {
+      const mVid = document.getElementById('modalVideo');
+      if (mVid && !mVid.paused) {
+        mVid.dataset.bgPaused = '1';
+        mVid.pause();
+      }
+      if (window.monitorApp?.modalHlsPlayer) window.monitorApp.modalHlsPlayer.stopLoad();
+      if (window.monitorApp?.modalFlvPlayer) window.monitorApp.modalFlvPlayer.unload();
+    } catch (_) {}
   }
 
   resume() {
@@ -14453,25 +14734,49 @@ class CameraPlayerEngine {
     if (typeof document !== 'undefined' && document.querySelector('img.snapshot-feed')) {
       this.restartLoop();
     }
-    this.flvPlayers.forEach(p => { try { p.play(); } catch(e){} });
+    this.flvPlayers.forEach((p, camId) => {
+      try {
+        const v = document.getElementById(`video-${camId}`);
+        if (v && v.dataset.offscreenPaused === '1') return;
+        p.load();
+        const fp = p.play();
+        if (fp && typeof fp.catch === 'function') fp.catch(() => {});
+      } catch (_) {}
+    });
     this.hlsPlayers.forEach(h => {
       try {
         const media = h.media;
-        if (media) media.play();
-      } catch(e){}
+        if (media && media.dataset.offscreenPaused === '1') return;
+        h.startLoad(-1);
+        if (media) {
+          const hp = media.play();
+          if (hp && typeof hp.catch === 'function') hp.catch(() => {});
+        }
+      } catch (_) {}
     });
+    try {
+      const mVid = document.getElementById('modalVideo');
+      if (mVid && mVid.dataset.bgPaused === '1') {
+        delete mVid.dataset.bgPaused;
+        if (window.monitorApp?.modalHlsPlayer) window.monitorApp.modalHlsPlayer.startLoad(-1);
+        if (window.monitorApp?.modalFlvPlayer) window.monitorApp.modalFlvPlayer.load();
+        const mp = mVid.play();
+        if (mp && typeof mp.catch === 'function') mp.catch(() => {});
+      }
+    } catch (_) {}
   }
 
   destroyAllPlayers() {
     this.clearStaggerTimers();
     this.clearAllWatchdogs();
     this.clearAllLiveClocks();
-    if (this.ytHandshakeTimers) {
-      this.ytHandshakeTimers.forEach(t => clearTimeout(t));
-      this.ytHandshakeTimers.clear();
-    }
+    this.clearAllFpsTrackers();
     if (this.ytFrames) {
-      this.ytFrames.clear();
+      for (const [k, entry] of Array.from(this.ytFrames.entries())) {
+        if (!String(k).startsWith('modal-')) {
+          this.unregisterYoutubeFrame(k);
+        }
+      }
     }
     if (this.videoAbortControllers) {
       this.videoAbortControllers.forEach(ctrl => { try { ctrl.abort(); } catch (_) {} });
@@ -14503,9 +14808,10 @@ class CameraPlayerEngine {
     });
     this.hlsPlayers.clear();
 
-    // 徹底釋放所有 video 標籤，中斷底層長連線並釋放 MSE 緩衝區
+    const gridScope = (typeof document !== 'undefined' && document.getElementById('cameraGrid')) || document;
+    // 徹底釋放網格內所有 video 標籤，中斷底層長連線並釋放 MSE 緩衝區
     try {
-      const videos = document.querySelectorAll('video.cam-feed');
+      const videos = gridScope.querySelectorAll('video.cam-feed');
       videos.forEach(v => {
         try {
           v.pause();
@@ -14516,23 +14822,23 @@ class CameraPlayerEngine {
       });
     } catch(e) {}
 
-    // 釋放內嵌 iframe 媒體解碼與連線資源
+    // 釋放網格內嵌 iframe 媒體解碼與連線資源（不影響開啟中的放大檢視 Modal）
     try {
-      const frames = document.querySelectorAll('iframe.cam-feed');
+      const frames = gridScope.querySelectorAll('iframe.cam-feed');
       frames.forEach(f => {
         try { f.src = 'about:blank'; } catch (e) {}
       });
     } catch (e) {}
 
-    // 主動終止所有 MJPEG 與快照長連線，防止切換分頁後 Chromium HTTP 連線池洩漏
+    // 主動終止所有網格 MJPEG 與快照長連線，並清除 data-fallback-url 防止幽靈重試
     try {
-      const imgs = document.querySelectorAll('img.mjpeg-feed, img.snapshot-feed');
+      const imgs = gridScope.querySelectorAll('img.mjpeg-feed, img.snapshot-feed');
       imgs.forEach(img => {
         try {
           img.onload = null;
           img.onerror = null;
           img.removeAttribute('data-raw-url');
-          img.src = 'about:blank';
+          img.removeAttribute('data-fallback-url');
           img.removeAttribute('src');
         } catch (e) {}
       });
@@ -14609,7 +14915,7 @@ class CameraPlayerEngine {
       const ytUrl = window.buildYoutubeEmbedUrl(cam.videoId);
       const safeVid = encodeURIComponent(String(cam.videoId || '').trim());
       const backdropStyle = safeVid
-        ? `style="background-image:url('https://i.ytimg.com/vi/${safeVid}/maxresdefault_live.jpg'),url('https://i.ytimg.com/vi/${safeVid}/hqdefault_live.jpg'),url('https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg');"`
+        ? `style="background-image:url('https://i.ytimg.com/vi/${safeVid}/hqdefault_live.jpg');"`
         : '';
       const deferLoad = index >= 12;
       mediaHtml = `
@@ -14801,7 +15107,8 @@ class CameraPlayerEngine {
         }
       };
       const onSnapError = () => {
-        const fb = imgEl.dataset ? imgEl.dataset.fallbackUrl : '';
+        if (!imgEl.isConnected || !imgEl.dataset || !imgEl.dataset.rawUrl) return;
+        const fb = imgEl.dataset.fallbackUrl || '';
         if (fb && imgEl.dataset.rawUrl !== fb) {
           imgEl.dataset.rawUrl = fb;
           imgEl.addEventListener('load', onSnapReady, { once: true });
@@ -14873,9 +15180,15 @@ class CameraPlayerEngine {
       state.dragging = false;
       wrapEl.classList.remove('is-dragging-pano');
     });
-    wrapEl.addEventListener('touchstart', () => { state.hovered = true; }, { passive: true });
+    wrapEl.addEventListener('touchstart', () => {
+      if (state.touchResumeTimer) { clearTimeout(state.touchResumeTimer); state.touchResumeTimer = null; }
+      state.hovered = true;
+    }, { passive: true });
     wrapEl.addEventListener('touchend', () => {
-      setTimeout(() => {
+      if (state.touchResumeTimer) clearTimeout(state.touchResumeTimer);
+      state.touchResumeTimer = setTimeout(() => {
+        state.touchResumeTimer = null;
+        if (!wrapEl.isConnected) return;
         state.pos = wrapEl.scrollLeft;
         state.hovered = false;
       }, 1500);
@@ -14887,9 +15200,14 @@ class CameraPlayerEngine {
     if (!this.panoGlideTimer) {
       this.panoGlideTimer = setInterval(() => {
         if (this.isPaused || (typeof document !== 'undefined' && document.hidden)) return;
-        if (!this.panoWrappers || this.panoWrappers.size === 0) return;
+        if (!this.panoWrappers || this.panoWrappers.size === 0) {
+          clearInterval(this.panoGlideTimer);
+          this.panoGlideTimer = null;
+          return;
+        }
         this.panoWrappers.forEach(st => {
           if (!st.wrapEl || !st.wrapEl.isConnected) {
+            if (st.touchResumeTimer) clearTimeout(st.touchResumeTimer);
             this.panoWrappers.delete(st);
             return;
           }
@@ -15087,13 +15405,16 @@ class CameraPlayerEngine {
     const videoEl = document.getElementById(`video-${cam.id}`);
     if (!videoEl) return;
 
-    let streamUrl = cam.streamUrl;
+    let streamUrl = String(cam.streamUrl || '').trim();
+    if (!streamUrl) return;
+    let usedFallbackHls = false;
     // HEVC 4K 與通用 H.264 1080P 智慧雙軌自動協商：支援硬體 HEVC 之裝置直出 3840×2160 4K，無 HEVC 解碼器之瀏覽器 0ms 無縫切換至通用 H.264 1080P 最高畫質
-    if (cam.fallbackHlsUrl && (cam.requiresHevc || (streamUrl && streamUrl.includes('Love_Nature_4K')))) {
+    if (cam.fallbackHlsUrl && (cam.requiresHevc || streamUrl.includes('Love_Nature_4K'))) {
       const hevcSupported = typeof MediaSource !== 'undefined' && typeof MediaSource.isTypeSupported === 'function' &&
         (MediaSource.isTypeSupported('video/mp4; codecs="hvc1.1.6.L153.B0"') || MediaSource.isTypeSupported('video/mp4; codecs="hev1.1.6.L153.B0"'));
       if (!hevcSupported) {
         streamUrl = cam.fallbackHlsUrl;
+        usedFallbackHls = true;
       }
     }
     // 若處於本機 file:// 協定且為代理路徑，指向本機伺服器 (預設 3000 埠)
@@ -15239,6 +15560,7 @@ class CameraPlayerEngine {
         let stallRecoveryTimer = null;
         const stallKey = `stall-${cam.id}`;
         const handleBufferingStall = () => {
+          if (this.isPaused || videoEl.dataset.offscreenPaused === '1') return;
           if (wm) {
             wm.style.background = '#f59e0b';
             wm.title = '緩衝中...';
@@ -15247,7 +15569,7 @@ class CameraPlayerEngine {
             stallRecoveryTimer = setTimeout(() => {
               this.watchdogs.delete(stallKey);
               stallRecoveryTimer = null;
-              if (!videoEl.isConnected) return;
+              if (!videoEl.isConnected || this.isPaused || videoEl.dataset.offscreenPaused === '1') return;
               try {
                 if (videoEl.paused) {
                   videoEl.play().catch(() => {});
@@ -15360,6 +15682,13 @@ class CameraPlayerEngine {
 
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
+            if (cam.fallbackHlsUrl && !usedFallbackHls && (data.type === Hls.ErrorTypes.MEDIA_ERROR || data.type === Hls.ErrorTypes.NETWORK_ERROR)) {
+              usedFallbackHls = true;
+              streamUrl = cam.fallbackHlsUrl;
+              hls.loadSource(streamUrl);
+              hls.startLoad();
+              return;
+            }
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
                 const isAndroidApp = typeof window !== 'undefined' && window.AndroidBridge != null;
@@ -15426,11 +15755,36 @@ class CameraPlayerEngine {
                   this.fallbackBoteToIframe(cam, videoEl);
                   return;
                 }
-                hls.startLoad();
+                {
+                  const genericRetries = (this.retryCounts.get(cam.id) || 0) + 1;
+                  this.retryCounts.set(cam.id, genericRetries);
+                  const waitMs = genericRetries <= 5 ? Math.min(1000 * genericRetries, 5000) : 12000;
+                  const netTimer = setTimeout(() => {
+                    this.watchdogs.delete(`hls-net-${cam.id}`);
+                    if (this.hlsPlayers.get(cam.id) === hls && videoEl.isConnected && !this.isPaused && videoEl.dataset.offscreenPaused !== '1') {
+                      hls.startLoad();
+                    }
+                  }, waitMs);
+                  this.watchdogs.set(`hls-net-${cam.id}`, netTimer);
+                }
                 break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                hls.recoverMediaError();
+              case Hls.ErrorTypes.MEDIA_ERROR: {
+                const mediaRetries = (this.retryCounts.get(`m-${cam.id}`) || 0) + 1;
+                this.retryCounts.set(`m-${cam.id}`, mediaRetries);
+                if (mediaRetries <= 4) {
+                  hls.recoverMediaError();
+                } else {
+                  const mediaTimer = setTimeout(() => {
+                    this.watchdogs.delete(`hls-med-${cam.id}`);
+                    if (this.hlsPlayers.get(cam.id) === hls && videoEl.isConnected && !this.isPaused) {
+                      this.retryCounts.delete(`m-${cam.id}`);
+                      this.initHlsPlayer(cam);
+                    }
+                  }, 6000);
+                  this.watchdogs.set(`hls-med-${cam.id}`, mediaTimer);
+                }
                 break;
+              }
               default: {
                 const defTimer = setTimeout(() => {
                   this.watchdogs.delete(`hls-def-${cam.id}`);
@@ -15484,7 +15838,7 @@ class CameraPlayerEngine {
       let nativeLastCt = -1;
       let nativeStuck = 0;
       const nativeSync = setInterval(() => {
-        if (!videoEl || !videoEl.isConnected || (typeof document !== 'undefined' && document.hidden)) return;
+        if (!videoEl || !videoEl.isConnected || this.isPaused || videoEl.dataset.offscreenPaused === '1' || (typeof document !== 'undefined' && document.hidden)) return;
         const ct = Number(videoEl.currentTime) || 0;
         if (videoEl.paused) {
           tryNativePlay();
@@ -15661,6 +16015,7 @@ class CameraPlayerEngine {
 
         // 啟動 8 秒起播看門狗 (給予新北交控 GOP 關鍵影格充足到達窗口，連線成功後自動取消)
         const watchdogTimer = setTimeout(() => {
+          if (this.isPaused || (videoEl && videoEl.dataset.offscreenPaused === '1')) return;
           if (!videoEl || videoEl.paused || videoEl.currentTime === 0 || videoEl.readyState < 2) {
             triggerRecovery('起播逾時轉圈');
           }
@@ -16105,6 +16460,7 @@ class WeatherEnvironmentMonitor {
     this.currentRegionCityKeys = {
       world: 'tokyo',
       japan: 'tokyo',
+      jp_campus: 'sendai',
       korea: 'seoul',
       apac: 'sydney',
       europe: 'venice',
@@ -16796,20 +17152,29 @@ class WeatherEnvironmentMonitor {
         phaseLabel = h > 0 ? `距日落 ${h}h${String(m).padStart(2, '0')}m` : `距日落 ${m}m`;
         rightStatusText = `已過 ${Math.round(progress * 100)}%`;
       }
-    } else if (isDayHint === 0 || isDayHint === false) {
-      isDaylight = false;
-      progress = 0;
-      phaseLabel = '極夜時段';
-      rightStatusText = '全日夜空';
-      if (srText === '--:--') srText = '極夜無日出';
-      if (ssText === '--:--') ssText = '全日黑夜';
     } else {
-      isDaylight = true;
-      progress = 0.5;
-      phaseLabel = '極晝日不落';
-      rightStatusText = '24H 白晝';
-      if (srText === '--:--') srText = '極晝';
-      if (ssText === '--:--') ssText = '日不落';
+      const refLat = Number(this.activeSingleParams?.lat ?? window.monitorApp?.currentCenterData?.lat ?? 25);
+      const isPolarLat = Number.isFinite(refLat) && Math.abs(refLat) >= 64;
+      if (!isPolarLat) {
+        isDaylight = !(isDayHint === 0 || isDayHint === false);
+        progress = isDaylight ? 0.5 : 0;
+        phaseLabel = isDaylight ? '日間監測' : '夜間時段';
+        rightStatusText = '日照同步中';
+      } else if (isDayHint === 0 || isDayHint === false) {
+        isDaylight = false;
+        progress = 0;
+        phaseLabel = '極夜時段';
+        rightStatusText = '全日夜空';
+        if (srText === '--:--') srText = '極夜無日出';
+        if (ssText === '--:--') ssText = '全日黑夜';
+      } else {
+        isDaylight = true;
+        progress = 0.5;
+        phaseLabel = '極晝日不落';
+        rightStatusText = '24H 白晝';
+        if (srText === '--:--') srText = '極晝';
+        if (ssText === '--:--') ssText = '日不落';
+      }
     }
 
     // 二次貝茲曲線：P0=(14,44), P1=(110,-6), P2=(206,44) -> 頂點 y=19
@@ -17302,6 +17667,8 @@ class WeatherEnvironmentMonitor {
     if (!found) return;
     if (!this.currentRegionCityKeys) this.currentRegionCityKeys = {};
     this.currentRegionCityKeys[regionId] = found.key;
+    this._lastRainUserScrollTime = 0;
+    this._isRainUserTouching = false;
     if (regionId === 'japan') {
       this.currentJapanCityKey = found.key;
     }
@@ -17452,6 +17819,7 @@ class WeatherEnvironmentMonitor {
     const reqToken = (this._envRequestToken = (this._envRequestToken || 0) + 1);
     this.isDualMode = false;
     this.activeMode = 'single';
+    this.currentDualData = null;
     this.activeTimezone = targetTz;
     this.activeTzOffsetHours = targetOffset;
     this.activeSingleParams = { lat: safeLat, lon: safeLon, locationName, timezone: targetTz };
@@ -17523,6 +17891,7 @@ class WeatherEnvironmentMonitor {
     const reqToken = (this._envRequestToken = (this._envRequestToken || 0) + 1);
     this.isDualMode = true;
     this.activeMode = 'dual';
+    this.activeSingleParams = null;
     this.activeTimezone = 'Asia/Taipei';
     this.activeTzOffsetHours = 8;
     this.activeDualParams = { qpInfo, bpInfo };
@@ -17881,14 +18250,16 @@ class WeatherEnvironmentMonitor {
     }
 
     const timeList = qpHourly.time || bpHourly.time || [];
+    const bpTimeList = bpHourly.time || timeList;
     const startIdx = this.getFutureStartIndex(timeList);
+    const bpStartIdx = this.getFutureStartIndex(bpTimeList);
 
     const qpAllProbs = qpHourly.precipitation_probability || [];
     const bpAllProbs = bpHourly.precipitation_probability || [];
 
     const rawTimes = timeList.slice(startIdx);
     const qpProbs = qpAllProbs.slice(startIdx);
-    const bpProbs = bpAllProbs.slice(startIdx);
+    const bpProbs = bpAllProbs.slice(bpStartIdx);
     const svgChartHtml = this.renderRainSvgChartHtml(rawTimes, qpProbs, bpProbs, 'rainStageDual');
 
     card.innerHTML = `
@@ -18051,7 +18422,7 @@ class WeatherEnvironmentMonitor {
     const weatherInfo = this.getWeatherCodeInfo(cur.weather_code);
     this.latestQuickWeather = {
       tempC: cur.temperature_2m != null ? Math.round(Number(cur.temperature_2m)) : null,
-      desc: weatherInfo ? weatherInfo.desc : '',
+      desc: weatherInfo ? (weatherInfo.text || weatherInfo.desc || '') : '',
       locationName: locationName || ''
     };
     if (typeof window !== 'undefined' && window.monitorApp && typeof window.monitorApp.refreshWorldPresenceBar === 'function') {
@@ -20826,6 +21197,12 @@ class LocalGeoBusService {
     this.refreshNow(true);
   }
 
+  getScopedRouteCacheKey(routeKey) {
+    const cityTag = this.activeStop?.city || this.adminInfo?.tdxCity || '';
+    const stopTag = this.activeStop?.stopId || this.activeStop?.name || '';
+    return `${cityTag}|${stopTag}|${routeKey}`;
+  }
+
   async selectRoute(routeKey) {
     if (typeof window !== 'undefined' && typeof window.triggerHaptic === 'function') window.triggerHaptic();
     if (this.selectedRouteKey === routeKey) {
@@ -20836,11 +21213,14 @@ class LocalGeoBusService {
     }
     this.selectedRouteKey = routeKey;
     const bus = this.buses.find(b => `${b.routeName}|${b.direction}` === routeKey);
-    if (bus && !this.routeStopsMap.has(routeKey)) {
-      this.routeStopsMap.set(routeKey, { loading: true, stops: [] });
+    const cacheKey = this.getScopedRouteCacheKey(routeKey);
+    const prevRec = this.routeStopsMap.get(cacheKey);
+    const needsFetch = !prevRec || (!prevRec.loading && (!prevRec.stops || prevRec.stops.length === 0) && (Date.now() - (prevRec.ts || 0) > 15000));
+    if (bus && needsFetch) {
+      this.routeStopsMap.set(cacheKey, { loading: true, stops: [], ts: Date.now() });
       this.renderSidebarWidget();
       if (window.transitMonitor) window.transitMonitor.render();
-      await this.fetchRouteSequenceForBus(bus, routeKey);
+      await this.fetchRouteSequenceForBus(bus, cacheKey);
     }
     this.renderSidebarWidget();
     if (window.transitMonitor) window.transitMonitor.render();
@@ -21081,7 +21461,8 @@ class LocalGeoBusService {
 
   renderRouteSequenceHtml(bus, routeKey) {
     const eHtml = (typeof window !== 'undefined' && window.escHtml) ? window.escHtml : (v => String(v ?? ''));
-    const seqState = this.routeStopsMap.get(routeKey);
+    const cacheKey = this.getScopedRouteCacheKey(routeKey);
+    const seqState = this.routeStopsMap.get(cacheKey) || this.routeStopsMap.get(routeKey);
     const stopName = this.activeStop ? this.activeStop.name : '';
     const gmapUrl = this.activeStop
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${this.adminInfo?.county || ''} 公車 ${bus.routeName} ${stopName}`)}`
@@ -22201,7 +22582,7 @@ class NeighborhoodRadarMap {
   // 同步篩選後之攝影機清單至地圖標記（與上方分類膠囊／關鍵字即時聯動）
   updateFilteredCameras(cameras) {
     if (!Array.isArray(cameras)) return;
-    const valid = cameras.filter(c => Number.isFinite(Number(c?.lat)) && Number(c?.lon));
+    const valid = cameras.filter(c => c?.lat != null && c?.lat !== '' && Number.isFinite(Number(c.lat)) && c?.lon != null && c?.lon !== '' && Number.isFinite(Number(c.lon)));
     this._lastCameras = valid;
     const markerCamList = (this._lastCenterInfo?.id === 'nearby' && valid.length > 64) ? valid.slice(0, 64) : valid;
     this._activeMarkerSource = markerCamList;
@@ -22289,7 +22670,7 @@ class NeighborhoodRadarMap {
   setCenterAndCameras(centerInfo, cameras) {
     const safeCenter = centerInfo || {};
     const validCamList = Array.isArray(cameras)
-      ? cameras.filter(c => Number.isFinite(Number(c?.lat)) && Number.isFinite(Number(c?.lon)))
+      ? cameras.filter(c => c?.lat != null && c?.lat !== '' && Number.isFinite(Number(c.lat)) && c?.lon != null && c?.lon !== '' && Number.isFinite(Number(c.lon)))
       : [];
     this._lastCenterInfo = safeCenter;
     this._lastCameras = validCamList;
@@ -22479,10 +22860,14 @@ class NeighborhoodRadarMap {
 
   // 當切換國際或觀光鏡頭焦點時，將地理雷達同步平滑錨定至當前鏡頭與最近機場空域
   anchorToActiveSpot(lat, lon, label = '') {
-    if (!this.map || !Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) return;
-    this._lastCenterInfo = { ...(this._lastCenterInfo || {}), lat: Number(lat), lon: Number(lon), name: label || this._lastCenterInfo?.name };
+    if (lat == null || lat === '' || lon == null || lon === '') return;
+    const nLat = Number(lat);
+    const nLon = Number(lon);
+    if (!Number.isFinite(nLat) || !Number.isFinite(nLon)) return;
+    this._lastCenterInfo = { ...(this._lastCenterInfo || {}), lat: nLat, lon: nLon, name: label || this._lastCenterInfo?.name };
+    if (!this.map) return;
     if (this.viewPreset !== 'region') {
-      this.map.setView([Number(lat), Number(lon)], this.viewPreset === 'camera' ? 13 : 9, { animate: true });
+      this.map.setView([nLat, nLon], this.viewPreset === 'camera' ? 13 : 9, { animate: true });
     }
   }
 
@@ -22520,8 +22905,20 @@ class NeighborhoodRadarMap {
       }).addTo(this.map);
     }
 
+    const visLabelLive = issData.visibility === 'eclipsed' ? '🌑 地球本影區' : '☀️ 軌道日照區';
+    const issPopupHtml = `
+        <div style="color:#0f172a;font-family:sans-serif;font-size:0.82rem;line-height:1.45;min-width:185px;">
+          <b style="color:#4f46e5;"><i class="fa-solid fa-satellite"></i> 國際太空站 (ISS 25544)</b><br/>
+          <span style="color:#334155;font-size:0.74rem;">軌道高度：<b>${Number(issData.altKm || 420)} km</b> ‧ 時速：<b>${Number(issData.velocityKmh || 27550).toLocaleString()} km/h</b></span><br/>
+          <span style="color:#475569;font-size:0.73rem;">光照狀態：${visLabelLive} ‧ 距目前鏡頭 <b>${Number(issData.distKm || 0).toLocaleString()} km</b></span><br/>
+          <button onclick="window.immersivePulseService?.jumpToIssCamera()" style="margin-top:5px;width:100%;background:#4f46e5;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:0.74rem;font-weight:700;">
+            🎥 切換太空站俯瞰地球 4K 視角
+          </button>
+        </div>
+      `;
     if (this.issMarker && this.map.hasLayer(this.issMarker)) {
       this.issMarker.setLatLng([lat, lon]);
+      this.issMarker.setPopupContent(issPopupHtml);
       return;
     }
 
@@ -22870,7 +23267,8 @@ class NeighborhoodRadarMap {
       }
       window.ensureLeafletLoaded()
         .then(() => {
-          if (typeof L !== 'undefined' && this._lastCenterInfo) {
+          if (typeof L === 'undefined') return;
+          if (this._lastCenterInfo) {
             this.setCenterAndCameras(this._lastCenterInfo, this._lastCameras || []);
           }
           this.onContainerShown();
@@ -23119,6 +23517,7 @@ class EarthquakeEmergencyMonitor {
         taiwan: '雙埔',
         world: '全球觀測點',
         japan: '日本當地',
+        jp_campus: '日本校園',
         korea: '韓國當地',
         apac: '亞太當地',
         europe: '歐洲當地',
@@ -23136,7 +23535,7 @@ class EarthquakeEmergencyMonitor {
         place: parsedPlace,
         time: new Date(eventTime),
         ageMinutes: Math.round(ageMinutes),
-        url: window.sanitizeHttpUrl(props.url, 'https://earthquake.usgs.gov/earthquakes/map/'),
+        url: window.sanitizeHttpUrl(props.url, false) || 'https://earthquake.usgs.gov/earthquakes/map/',
         estIntensity: estIntensity,
         regionMode: reqRegion,
         regionLabel: regionLabels[reqRegion] || '雙埔'
@@ -23175,6 +23574,7 @@ class EarthquakeEmergencyMonitor {
       taiwan: { lat: 25.0, lon: 121.3 },
       world: { lat: 35.6895, lon: 139.6917 },
       japan: { lat: 35.6895, lon: 139.6917 },
+      jp_campus: { lat: 38.2682, lon: 140.8694 },
       korea: { lat: 37.5665, lon: 126.9780 },
       apac: { lat: -33.8523, lon: 151.2108 },
       europe: { lat: 46.8, lon: 8.2 },
@@ -23291,7 +23691,7 @@ class EarthquakeEmergencyMonitor {
     const timeEl = document.getElementById('eqTimeText');
     const linkEl = document.getElementById('eqDetailLink');
     const rMode = eq.regionMode || this.regionMode || 'taiwan';
-    const defaultReportUrl = rMode === 'japan'
+    const defaultReportUrl = (rMode === 'japan' || rMode === 'jp_campus')
       ? 'https://www.jma.go.jp/bosai/map.html#contents=earthquake_map'
       : (rMode === 'taiwan' ? 'https://www.cwa.gov.tw/V8/C/E/index.html' : 'https://earthquake.usgs.gov/earthquakes/map/');
 
@@ -23300,10 +23700,16 @@ class EarthquakeEmergencyMonitor {
     if (magEl) magEl.textContent = eq.mag || '5.8';
     if (depthEl) depthEl.textContent = `${eq.depth || 15}km`;
     if (timeEl) timeEl.textContent = `${eq.ageMinutes <= 1 ? '剛剛' : eq.ageMinutes + '分鐘前'} 發震 (${eq.time.toLocaleTimeString('zh-TW', { hour12: false })})`;
-    if (linkEl) linkEl.href = window.sanitizeHttpUrl(eq.url, defaultReportUrl);
+    if (linkEl) linkEl.href = window.sanitizeHttpUrl(eq.url, false) || defaultReportUrl;
 
+    this._lastTriggerEl = document.activeElement;
     overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
     this.isAlertActive = true;
+    requestAnimationFrame(() => {
+      const dismissBtn = overlay.querySelector('.eq-dismiss-btn');
+      if (dismissBtn && typeof dismissBtn.focus === 'function') dismissBtn.focus();
+    });
   }
 
   // 關閉全螢幕通知
@@ -23312,11 +23718,16 @@ class EarthquakeEmergencyMonitor {
     const overlay = document.getElementById('earthquakeModalOverlay');
     if (overlay) {
       overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
     }
     this.isAlertActive = false;
     if (this.latestEarthquake) {
       this.dismissedIds.add(this.latestEarthquake.id);
     }
+    if (this._lastTriggerEl && typeof this._lastTriggerEl.focus === 'function' && this._lastTriggerEl.isConnected) {
+      try { this._lastTriggerEl.focus(); } catch (_) {}
+    }
+    this._lastTriggerEl = null;
   }
 
   // 播放安全警報提示嗶聲與語音播報 (Web Audio API 合成 + SpeechSynthesis，無須外部音效檔)
@@ -24019,7 +24430,9 @@ class TwinCityTransitMonitor {
   // 月台 PIDS 電子看板倒數秒數格式化 (MM:SS 每秒跳秒，無括號，模擬真實車站月台看板)
   formatPlatformCountdown(sec, isOutOfService = false) {
     if (isOutOfService) {
-      return '<span class="pids-countdown-chip is-muted">明日首班</span>';
+      const twH = new Date(Date.now() + 8 * 3600000).getUTCHours();
+      const firstLabel = (twH >= 4 && twH < 6) ? '今日首班' : '明日首班';
+      return `<span class="pids-countdown-chip is-muted">${firstLabel}</span>`;
     }
     if (sec <= 0) {
       return '<span class="pids-countdown-chip is-urgent pulse-live">即將發車</span>';
@@ -26343,7 +26756,7 @@ class TwinCityTransitMonitor {
         return;
       }
       // 台灣漫遊、世界之窗、自然療癒、附近與收藏模式：鄰近公車已完整收納於右側「交通」透鏡分頁 (#busWidgetCard)，隱藏頂部重複巨型公車框以釋放視訊牆高度
-      const isIntlMode = ['world', 'japan', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(curCenterId);
+      const isIntlMode = ['world', 'japan', 'jp_campus', 'korea', 'apac', 'europe', 'americas', 'polar', 'rainforest', 'ocean', 'scenic', 'daynight'].includes(curCenterId);
       const isTwTourMode = typeof window !== 'undefined' && typeof window.isTaiwanTourCenter === 'function' && window.isTaiwanTourCenter(curCenterId);
       const isNearbyBusMode = isIntlMode || curCenterId === 'nearby' || isTwTourMode || (curCenterId === 'favorites' && Boolean(window.localBusService && window.localBusService.target));
       if (isNearbyBusMode) {
@@ -51352,11 +51765,13 @@ class TravelToolkitService {
       this.foreignAmount = (this.currencyCatalog[nextCurr] || this.currencyCatalog.USD).defaultAmt;
       this._userChangedCurrency = false;
     }
+    const parsedLat = (opts.lat != null && opts.lat !== '' && Number.isFinite(Number(opts.lat))) ? Number(opts.lat) : 35.68;
+    const parsedLon = (opts.lon != null && opts.lon !== '' && Number.isFinite(Number(opts.lon))) ? Number(opts.lon) : 139.76;
     this.context = {
       centerId,
       countryCode: opts.countryCode || '',
-      lat: Number(opts.lat) || 35.68,
-      lon: Number(opts.lon) || 139.76,
+      lat: parsedLat,
+      lon: parsedLon,
       label: opts.label || '海外觀測點',
       tz: opts.tz || (window.monitorApp ? window.monitorApp.getActiveTimezone() : 'Asia/Tokyo'),
       weather: opts.weather || null
@@ -51406,7 +51821,8 @@ class TravelToolkitService {
   }
 
   async ensureToolkitData() {
-    if (this.rates && Date.now() - this._lastFetchMs < 10 * 60000) return;
+    if (this.rates && this.auroraKp != null && Date.now() - this._lastFetchMs < 10 * 60000) return;
+    if (this.rates && Date.now() - this._lastFetchMs < 60000) return;
     if (this._inflightFetch) return this._inflightFetch;
     this._inflightFetch = (async () => {
       try {
@@ -52042,14 +52458,14 @@ class FlightRadarService {
       this.flights = [];
     }
     this.renderWidget();
-    // 立即自本機預同步快照極速預載周邊航班，確保氣象雷達與地理雷達 50ms 內即展現動態飛機，再由即時 API 無縫覆蓋
-    if (this.flights.length === 0) {
-      this._prehydrateFromSnapshot(lat, lon);
-    }
     this.refreshNow(true);
+    // 立即自本機預同步快照極速預載周邊航班（帶入最新 _reqToken 防切換競態覆寫），再由即時 API 無縫覆蓋
+    if (this.flights.length === 0) {
+      this._prehydrateFromSnapshot(lat, lon, this._reqToken);
+    }
   }
 
-  async _prehydrateFromSnapshot(lat, lon) {
+  async _prehydrateFromSnapshot(lat, lon, expectedToken = null) {
     try {
       if (!this._snapHubsCache) {
         const snapRes = await fetch('./data/parking.json', {
@@ -52072,7 +52488,8 @@ class FlightRadarService {
           bestHub = h;
         }
       }
-      if (bestHub && this.flights.length === 0) {
+      if (expectedToken != null && expectedToken !== this._reqToken) return;
+      if (bestHub && bestDist <= 350 && this.flights.length === 0) {
         this.airport = { ...bestHub.airport, distKm: +bestDist.toFixed(1) };
         this.flights = bestHub.flights
           .map(f => this.normalizeFlight(f, lat, lon, this.airport, null))
@@ -53726,10 +54143,11 @@ class ImmersiveLocalPulseService {
     const clean = String(hintCc || '').trim().toUpperCase();
     if (/^[A-Z]{2}$/.test(clean)) return clean;
     if (typeof LocalGeoBusService !== 'undefined' && LocalGeoBusService.isTaiwanCoords(lat, lon)) return 'TW';
-    if (lat >= 24.0 && lat <= 46.5 && lon >= 122.8 && lon <= 149.0) return 'JP';
-    if (lat >= 33.0 && lat <= 39.0 && lon >= 124.0 && lon <= 131.5) return 'KR';
-    if (centerId === 'japan' || centerId === 'jp_campus') return 'JP';
     if (centerId === 'korea') return 'KR';
+    if (centerId === 'japan' || centerId === 'jp_campus') return 'JP';
+    // 韓國半島與濟州島經度 (124.0~131.0) 與日本西側 (122.8~149.0) 重疊，必須優先判定韓國（排除對馬島/九州東側）
+    if (lat >= 33.0 && lat <= 39.0 && lon >= 124.0 && lon <= 129.6 && !(lat <= 34.8 && lon >= 129.1)) return 'KR';
+    if (lat >= 24.0 && lat <= 46.5 && lon >= 122.8 && lon <= 149.0) return 'JP';
     if (window.flightRadarService) {
       const ap = window.flightRadarService.findNearestAirport(lat, lon);
       if (ap && ap.country && ap.distKm <= 800) return ap.country;
@@ -53901,13 +54319,16 @@ class ImmersiveLocalPulseService {
     }
   }
 
-  static analyzeClientTideSeries(times = [], levels = []) {
+  static analyzeClientTideSeries(times = [], levels = [], utcOffsetSec = 0) {
     if (!Array.isArray(times) || !Array.isArray(levels) || levels.length < 6) return null;
     const nowMs = Date.now();
+    const offsetMs = (Number.isFinite(Number(utcOffsetSec)) ? Number(utcOffsetSec) : 0) * 1000;
     let curIdx = 0;
     let minDiff = Infinity;
     for (let i = 0; i < times.length; i++) {
-      const tMs = Date.parse(times[i] + 'Z');
+      const rawT = String(times[i] || '');
+      const hasTz = /(?:Z|[+-]d{2}:?d{2})$/i.test(rawT);
+      const tMs = hasTz ? Date.parse(rawT) : (Date.parse(rawT + 'Z') - offsetMs);
       const diff = Math.abs(tMs - nowMs);
       if (Number.isFinite(diff) && diff < minDiff) {
         minDiff = diff;
@@ -54137,7 +54558,7 @@ class ImmersiveLocalPulseService {
     };
 
     const [marineRes, alpineRes, issRes, wikiRes, radioRes, holidayRes, snapRes] = await Promise.allSettled([
-      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl&hourly=sea_level_height_msl&forecast_days=2`, {
+      fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wave_height,wave_direction,wave_period,swell_wave_height,sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl&hourly=sea_level_height_msl&forecast_days=2&timezone=auto`, {
         signal: window.createTimeoutSignal ? window.createTimeoutSignal(3200) : undefined
       }).then(r => r.ok ? r.json() : null),
       fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,snowfall,snow_depth&hourly=freezing_level_height&forecast_days=1`, {
@@ -54164,7 +54585,8 @@ class ImmersiveLocalPulseService {
       if (mc.wave_height != null || mc.sea_surface_temperature != null || mc.sea_level_height_msl != null) {
         const tideInfo = ImmersiveLocalPulseService.analyzeClientTideSeries(
           marineRes.value.hourly?.time,
-          marineRes.value.hourly?.sea_level_height_msl
+          marineRes.value.hourly?.sea_level_height_msl,
+          Number(marineRes.value.utc_offset_seconds) || 0
         );
         marine = {
           waveHeightM: mc.wave_height != null ? +Number(mc.wave_height).toFixed(2) : null,
@@ -54995,7 +55417,14 @@ class MonitorApp {
     let localTime = '';
     if (cam.tz && cam.tz !== 'auto') {
       try {
-        localTime = new Intl.DateTimeFormat('en-GB', { timeZone: cam.tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now);
+        if (!this._solarFmtCache) this._solarFmtCache = new Map();
+        let fmt = this._solarFmtCache.get(cam.tz);
+        if (!fmt) {
+          fmt = new Intl.DateTimeFormat('en-GB', { timeZone: cam.tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+          if (this._solarFmtCache.size > 120) this._solarFmtCache.clear();
+          this._solarFmtCache.set(cam.tz, fmt);
+        }
+        localTime = fmt.format(now);
       } catch (_) {
         localTime = '';
       }
@@ -55535,7 +55964,7 @@ class MonitorApp {
     try {
       const sp = new URLSearchParams(window.location.search || '');
       const qCenter = (sp.get('center') || '').trim();
-      if (!importedWall && qCenter && (window.CAMERAS_DATA?.cameras?.[qCenter] || ['dual', 'nearby', 'favorites', 'daynight'].includes(qCenter))) {
+      if (!importedWall && qCenter && (window.CAMERAS_DATA?.cameras?.[qCenter] || ['dual', 'nearby', 'favorites', 'world', 'scenic', 'daynight'].includes(qCenter))) {
         bootCenter = qCenter;
       }
       bootTag = (sp.get('tag') || '').trim();
@@ -55552,10 +55981,15 @@ class MonitorApp {
         }
       }
     } catch (_) {}
-    if (bootGrid && ['grid-1', 'grid-4', 'grid-6', 'grid-9', 'grid-10', 'grid-12', 'grid-16', 'grid-all'].includes(bootGrid)) {
-      this.currentGridMode = bootGrid;
-    }
+    this._suppressUrlSync = true;
     await this.switchCenter(bootCenter);
+    const validBootGrid = bootGrid && ['grid-1', 'grid-4', 'grid-6', 'grid-9', 'grid-10', 'grid-12', 'grid-16', 'grid-all'].includes(bootGrid) ? bootGrid : '';
+    if (validBootGrid && validBootGrid !== this.currentGridMode) {
+      this.currentGridMode = validBootGrid;
+      const gridEl = document.getElementById('cameraGrid');
+      if (gridEl) gridEl.className = `camera-grid ${validBootGrid}`;
+      document.querySelectorAll('.grid-btn').forEach(b => b.classList.toggle('active', b.dataset.grid === validBootGrid));
+    }
     if (bootTag && bootTag !== 'all') {
       const tagPill = [...document.querySelectorAll('.filter-tag-pill:not(.daynight-mode-pill)')].find(p => p.dataset.filterTag === bootTag);
       if (tagPill) {
@@ -55571,8 +56005,11 @@ class MonitorApp {
       if (sInp) sInp.value = bootQuery;
       if (sClr) sClr.classList.toggle('is-visible', true);
     }
-    if (bootTag || bootQuery) {
+    this._suppressUrlSync = false;
+    if (validBootGrid || bootTag || bootQuery) {
       this.renderVideoMatrix();
+    } else {
+      this.syncUrlQueryState();
     }
     if (bootCam) {
       setTimeout(() => this.scrollToCamera(bootCam), 160);
@@ -55605,7 +56042,10 @@ class MonitorApp {
       this.commuteCapsuleTimer = null;
     }
     this.updateCommuteCapsule();
-    this.commuteCapsuleTimer = setInterval(() => this.updateCommuteCapsule(), 10000);
+    this.commuteCapsuleTimer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      this.updateCommuteCapsule();
+    }, 30000);
 
 
     // 視窗自適應計算
@@ -55706,19 +56146,29 @@ class MonitorApp {
       const showForeignSuffix = isIntl || ((this.currentCenterId === 'nearby' || this.currentCenterId === 'favorites') && targetTz !== 'Asia/Taipei');
       if (targetTz && targetTz !== 'auto') {
         try {
-          const timeStr = new Intl.DateTimeFormat('zh-TW', {
-            timeZone: targetTz,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-          }).format(now);
-          const parts = new Intl.DateTimeFormat('zh-TW', {
-            timeZone: targetTz,
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric'
-          }).formatToParts(now);
+          if (!this._clockFmtCache) this._clockFmtCache = new Map();
+          let pair = this._clockFmtCache.get(targetTz);
+          if (!pair) {
+            pair = {
+              timeFmt: new Intl.DateTimeFormat('zh-TW', {
+                timeZone: targetTz,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              }),
+              dateFmt: new Intl.DateTimeFormat('zh-TW', {
+                timeZone: targetTz,
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+              })
+            };
+            if (this._clockFmtCache.size > 80) this._clockFmtCache.clear();
+            this._clockFmtCache.set(targetTz, pair);
+          }
+          const timeStr = pair.timeFmt.format(now);
+          const parts = pair.dateFmt.formatToParts(now);
           const y = parts.find(p => p.type === 'year')?.value || '';
           const m = parts.find(p => p.type === 'month')?.value || '';
           const d = parts.find(p => p.type === 'day')?.value || '';
@@ -56630,6 +57080,7 @@ class MonitorApp {
     if (!modal || !body) return;
     if (typeof document !== 'undefined') this._lastWallSyncTriggerEl = document.activeElement;
     modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
 
     const token = this.encodeCompactWallToken();
     const baseOrigin = (window.location.hostname === 'appassets.androidplatform.net')
@@ -56726,7 +57177,10 @@ class MonitorApp {
 
   closeWallSyncModal() {
     const modal = document.getElementById('wallSyncModal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
     if (this._lastWallSyncTriggerEl && typeof this._lastWallSyncTriggerEl.focus === 'function' && this._lastWallSyncTriggerEl.isConnected) {
       try { this._lastWallSyncTriggerEl.focus(); } catch (_) {}
     }
@@ -56920,12 +57374,39 @@ class MonitorApp {
     });
   }
 
+  buildCommandPaletteIndex() {
+    const centerMap = window.CAMERAS_DATA?.cameras || {};
+    const list = [];
+    const seenIds = new Set();
+    const pushEntry = (cam, cid) => {
+      if (!cam || !cam.id || seenIds.has(cam.id)) return;
+      seenIds.add(cam.id);
+      const nameLower = String(cam.name || '').toLowerCase();
+      const hay = `${cam.name || ''} ${cam.authority || ''} ${cam.areaTag || ''} ${cam.district || ''} ${cam.tag || ''} ${cam.cctvCode || ''} ${cid}`.toLowerCase();
+      list.push({ cam, cid, nameLower, hay });
+    };
+    Object.keys(centerMap).forEach(cid => {
+      const arr = centerMap[cid];
+      if (Array.isArray(arr)) arr.forEach(c => pushEntry(c, cid));
+    });
+    const favIdSet = new Set(this.getFavorites());
+    this.getAllUniqueCameras().forEach(c => {
+      if (!c || !c.id || seenIds.has(c.id)) return;
+      if (this.currentCenterId !== 'nearby' && !favIdSet.has(c.id)) return;
+      pushEntry(c, this.currentCenterId === 'nearby' ? 'nearby' : 'favorites');
+    });
+    this._cpCamIndex = list;
+    return list;
+  }
+
   openCommandPalette() {
     const overlay = document.getElementById('commandPaletteOverlay');
     const input = document.getElementById('commandPaletteInput');
     if (!overlay || !input) return;
     if (typeof document !== 'undefined') this._lastCmdTriggerEl = document.activeElement;
+    this.buildCommandPaletteIndex();
     overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden', 'false');
     input.value = '';
     this._cpSelectedIndex = 0;
     this.renderCommandPaletteResults('');
@@ -56934,7 +57415,11 @@ class MonitorApp {
 
   closeCommandPalette() {
     const overlay = document.getElementById('commandPaletteOverlay');
-    if (overlay) overlay.classList.remove('active');
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    this._cpCamIndex = null;
     if (this._lastCmdTriggerEl && typeof this._lastCmdTriggerEl.focus === 'function' && this._lastCmdTriggerEl.isConnected) {
       try { this._lastCmdTriggerEl.focus(); } catch (_) {}
     }
@@ -56943,12 +57428,22 @@ class MonitorApp {
 
   updateCommandPaletteSelection() {
     const container = document.getElementById('commandPaletteResults');
+    const input = document.getElementById('commandPaletteInput');
     if (!container) return;
+    let activeId = '';
     container.querySelectorAll('.cmd-palette-item').forEach((el, idx) => {
       const isSel = idx === this._cpSelectedIndex;
       el.classList.toggle('selected', isSel);
-      if (isSel) el.scrollIntoView({ block: 'nearest' });
+      el.setAttribute('aria-selected', String(isSel));
+      if (isSel) {
+        activeId = el.id || '';
+        el.scrollIntoView({ block: 'nearest' });
+      }
     });
+    if (input) {
+      if (activeId) input.setAttribute('aria-activedescendant', activeId);
+      else input.removeAttribute('aria-activedescendant');
+    }
   }
 
   renderCommandPaletteResults(rawQuery = '') {
@@ -57016,25 +57511,7 @@ class MonitorApp {
       { title: '切換「6 格」黃金標準分割', sub: '預設均衡雙排視角', badge: '網格模式', icon: 'fa-table-cells', run: () => this.setGridMode('grid-6') }
     ];
 
-    const centerMap = window.CAMERAS_DATA?.cameras || {};
-    const allCamEntries = [];
-    const seenIds = new Set();
-    Object.keys(centerMap).forEach(cid => {
-      const list = centerMap[cid];
-      if (!Array.isArray(list)) return;
-      list.forEach(c => {
-        if (seenIds.has(c.id)) return;
-        seenIds.add(c.id);
-        allCamEntries.push({ cam: c, cid });
-      });
-    });
-    const favIdSet = new Set(this.getFavorites());
-    this.getAllUniqueCameras().forEach(c => {
-      if (!c || !c.id || seenIds.has(c.id)) return;
-      if (this.currentCenterId !== 'nearby' && !favIdSet.has(c.id)) return;
-      seenIds.add(c.id);
-      allCamEntries.push({ cam: c, cid: this.currentCenterId === 'nearby' ? 'nearby' : 'favorites' });
-    });
+    const allCamEntries = Array.isArray(this._cpCamIndex) ? this._cpCamIndex : this.buildCommandPaletteIndex();
 
     const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
     const matchAllTokens = (haystack) => {
@@ -57067,13 +57544,11 @@ class MonitorApp {
     const matchedCenters = [...specialtyTagItems, ...centerItems.filter(it => matchAllTokens(`${it.title} ${it.sub}`))];
     const matchedOps = quickOps.filter(it => matchAllTokens(`${it.title} ${it.sub}`));
     const matchedCams = allCamEntries
-      .filter(({ cam, cid }) => matchAllTokens(`${cam.name} ${cam.authority || ''} ${cam.areaTag || ''} ${cam.district || ''} ${cam.tag || ''} ${cam.cctvCode || ''} ${cid}`))
+      .filter((entry) => tokens.length === 0 || tokens.every(tk => entry.hay.includes(tk)))
       .sort((a, b) => {
         if (!tokens.length) return (Number(b.cam.popScore) || 0) - (Number(a.cam.popScore) || 0);
-        const na = String(a.cam.name || '').toLowerCase();
-        const nb = String(b.cam.name || '').toLowerCase();
-        const hitA = tokens.every(tk => na.includes(tk)) ? 1 : 0;
-        const hitB = tokens.every(tk => nb.includes(tk)) ? 1 : 0;
+        const hitA = tokens.every(tk => a.nameLower.includes(tk)) ? 1 : 0;
+        const hitB = tokens.every(tk => b.nameLower.includes(tk)) ? 1 : 0;
         if (hitA !== hitB) return hitB - hitA;
         const curA = a.cid === this.currentCenterId ? 1 : 0;
         const curB = b.cid === this.currentCenterId ? 1 : 0;
@@ -57109,7 +57584,7 @@ class MonitorApp {
         ${items.map((it, offset) => {
           const globalIdx = startIdx + offset;
           return `
-            <button type="button" class="cmd-palette-item ${globalIdx === this._cpSelectedIndex ? 'selected' : ''}" data-cp-idx="${globalIdx}">
+            <button type="button" id="cp-opt-${globalIdx}" role="option" aria-selected="${globalIdx === this._cpSelectedIndex ? 'true' : 'false'}" class="cmd-palette-item ${globalIdx === this._cpSelectedIndex ? 'selected' : ''}" data-cp-idx="${globalIdx}">
               <span class="cmd-item-left">
                 <span class="cmd-item-icon"><i class="fa-solid ${safeIcon(it.icon)}"></i></span>
                 <span style="min-width:0; display:flex; flex-direction:column;">
@@ -57292,9 +57767,23 @@ class MonitorApp {
 
       centerSwitchGroup.addEventListener('scroll', updateCenterScrollUI, { passive: true });
       window.addEventListener('resize', updateCenterScrollUI, { passive: true });
+      const syncTopNavHeight = () => {
+        const topNav = document.querySelector('.top-nav');
+        if (topNav && typeof document !== 'undefined') {
+          const h = Math.ceil(topNav.getBoundingClientRect().height);
+          if (h > 30) {
+            document.documentElement.style.setProperty('--top-nav-height', `${h + 8}px`);
+          }
+        }
+      };
+      syncTopNavHeight();
+      window.addEventListener('resize', syncTopNavHeight, { passive: true });
       if (typeof ResizeObserver !== 'undefined') {
         try {
-          const ro = new ResizeObserver(() => updateCenterScrollUI());
+          const ro = new ResizeObserver(() => {
+            updateCenterScrollUI();
+            syncTopNavHeight();
+          });
           ro.observe(centerSwitchGroup);
           const topNav = document.querySelector('.top-nav');
           if (topNav) ro.observe(topNav);
@@ -57372,9 +57861,9 @@ class MonitorApp {
     }
     if (btnPageNext) {
       const prewarmNextPage = () => {
-        if (this.totalPages <= 1) return;
-        const gridSizeMap = { 'grid-4': 4, 'grid-6': 6, 'grid-9': 9, 'grid-10': 10, 'grid-12': 12, 'grid-16': 16 };
-        const pageSize = gridSizeMap[this.currentGridMode] || 4;
+        if (this.totalPages <= 1 || this.currentGridMode === 'grid-all') return;
+        const gridSizeMap = { 'grid-1': 1, 'grid-4': 4, 'grid-6': 6, 'grid-9': 9, 'grid-10': 10, 'grid-12': 12, 'grid-16': 16 };
+        const pageSize = gridSizeMap[this.currentGridMode] || 6;
         const ordered = this.getFilteredOrderedCameras();
         const nextStart = ((this.currentPage + 1) % this.totalPages) * pageSize;
         this.prewarmCameras(ordered.slice(nextStart, nextStart + Math.min(6, pageSize)));
@@ -57499,8 +57988,13 @@ class MonitorApp {
             btnToggleSidebar.title = '點擊收合右側當地透鏡面板，讓視訊牆全寬展開';
           }
         }
-        if (!this.isSidebarCollapsed && this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
-          setTimeout(() => this.radarMap.onContainerShown(), 420);
+        if (!this.isSidebarCollapsed) {
+          if (this.radarMap && typeof this.radarMap.onContainerShown === 'function') {
+            setTimeout(() => this.radarMap.onContainerShown(), 420);
+          }
+          if (window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.startLoop === 'function') {
+            setTimeout(() => window.weatherSkyTacticalOverlay.startLoop(), 440);
+          }
         }
         this.applyAdaptiveViewportFit();
       });
@@ -57542,9 +58036,9 @@ class MonitorApp {
           if (icon) icon.className = 'fa-solid fa-up-right-and-down-left-from-center';
           btnFullscreen.title = '切換全螢幕模式';
         }
-        // 全螢幕切換或退出全螢幕縮小時，確保所有活躍視訊保持連續播放 (完全對齊影片原生縮小行為，無中斷)
+        // 全螢幕切換或退出全螢幕縮小時，僅恢復可視範圍內活躍視訊（跳過已離屏節能暫停的鏡頭）
         document.querySelectorAll('video.cam-feed').forEach(v => {
-          if (v.paused && !v.ended) {
+          if (v.paused && !v.ended && v.dataset.offscreenPaused !== '1') {
             v.play().catch(() => {});
           }
         });
@@ -57591,14 +58085,35 @@ class MonitorApp {
     const filterInput = document.getElementById('cameraSearchInput');
     const filterClearBtn = document.getElementById('cameraFilterClearBtn');
     if (filterInput) {
-      filterInput.addEventListener('input', () => {
-        this.filterKeyword = filterInput.value.trim();
-        this.currentPage = 0;
-        if (filterClearBtn) {
-          filterClearBtn.classList.toggle('is-visible', this.filterKeyword.length > 0);
+      let searchDebounceTimer = null;
+      let isComposing = false;
+      const applySearchFilter = () => {
+        if (searchDebounceTimer) {
+          clearTimeout(searchDebounceTimer);
+          searchDebounceTimer = null;
         }
+        const nextKw = filterInput.value.trim();
+        if (filterClearBtn) {
+          filterClearBtn.classList.toggle('is-visible', nextKw.length > 0);
+        }
+        if (nextKw === this.filterKeyword) return;
+        this.filterKeyword = nextKw;
+        this.currentPage = 0;
         this.renderVideoMatrix();
         this.applyAdaptiveViewportFit();
+      };
+      filterInput.addEventListener('compositionstart', () => { isComposing = true; });
+      filterInput.addEventListener('compositionend', () => {
+        isComposing = false;
+        applySearchFilter();
+      });
+      filterInput.addEventListener('input', () => {
+        if (filterClearBtn) {
+          filterClearBtn.classList.toggle('is-visible', filterInput.value.trim().length > 0);
+        }
+        if (isComposing) return;
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(applySearchFilter, 180);
       });
     }
     if (filterClearBtn) {
@@ -57652,6 +58167,34 @@ class MonitorApp {
     }
 
     window.addEventListener('keydown', (e) => {
+      // 全站無障礙焦點鎖定 (Focus Trap)：確保 Tab / Shift+Tab 在任何開啟中的 Modal 內循環不外逸
+      if (e.key === 'Tab') {
+        const activeDialog = ['earthquakeModalOverlay', 'wallSyncModal', 'commandPaletteOverlay', 'cameraModal']
+          .map(id => document.getElementById(id))
+          .find(el => el && el.classList.contains('active'));
+        if (activeDialog) {
+          const focusables = Array.from(activeDialog.querySelectorAll(
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )).filter(el => el.offsetParent !== null || el === document.activeElement);
+          if (focusables.length > 0) {
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey) {
+              if (!activeDialog.contains(document.activeElement) || document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+                return;
+              }
+            } else {
+              if (!activeDialog.contains(document.activeElement) || document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+                return;
+              }
+            }
+          }
+        }
+      }
       const cpOverlay = document.getElementById('commandPaletteOverlay');
       const isCpActive = cpOverlay && cpOverlay.classList.contains('active');
       const isInputFocused = document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
@@ -57745,7 +58288,7 @@ class MonitorApp {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const target = e.target;
       if (!target || typeof target.closest !== 'function') return;
-      const interactiveEl = target.closest('.disaster-compact-pill, .compact-info-stream, .hub-plan-item, .nearby-bus-card');
+      const interactiveEl = target.closest('.disaster-compact-pill, .compact-info-stream, .hub-plan-item, .nearby-bus-card, .quick-sum-chip, #radarPreviewBox');
       if (interactiveEl && target === interactiveEl) {
         e.preventDefault();
         interactiveEl.click();
@@ -57763,9 +58306,11 @@ class MonitorApp {
       });
     }
 
-    // 全域 Page Visibility 視窗智慧能耗管理 (App 縮至背景暫停串流與週期計時器省電省流量，返回前景即刻喚醒)
+    // 全域 Page Visibility 視窗智慧能耗管理 (App 縮至背景暫停串流與週期計時器省電省流量，返回前景依背景時長智慧喚醒)
+    this._lastHiddenAt = 0;
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
+        this._lastHiddenAt = Date.now();
         if (this.playerEngine && typeof this.playerEngine.pause === 'function') {
           this.playerEngine.pause();
         }
@@ -57782,6 +58327,7 @@ class MonitorApp {
           this.autoTourTimer = null;
         }
       } else if (document.visibilityState === 'visible') {
+        const hiddenDurationMs = this._lastHiddenAt ? (Date.now() - this._lastHiddenAt) : 60000;
         if (this.playerEngine && typeof this.playerEngine.resume === 'function') {
           this.playerEngine.resume();
         }
@@ -57792,12 +58338,20 @@ class MonitorApp {
           }
         }
         if (!this.commuteCapsuleTimer) {
-          this.commuteCapsuleTimer = setInterval(() => this.updateCommuteCapsule(), 10000);
+          this.commuteCapsuleTimer = setInterval(() => {
+            if (typeof document !== 'undefined' && document.hidden) return;
+            this.updateCommuteCapsule();
+          }, 30000);
         }
         if (this.isAutoTourActive) {
           this.restartAutoTourTimer();
         }
-        this.refreshAll();
+        if (window.weatherSkyTacticalOverlay && typeof window.weatherSkyTacticalOverlay.startLoop === 'function') {
+          requestAnimationFrame(() => window.weatherSkyTacticalOverlay.startLoop());
+        }
+        if (hiddenDurationMs >= 20000) {
+          this.refreshAll();
+        }
       }
     });
   }
@@ -59005,6 +59559,9 @@ class MonitorApp {
             </div>
           </div>
         `;
+        if (this.radarMap && typeof this.radarMap.updateFilteredCameras === 'function') {
+          this.radarMap.updateFilteredCameras([]);
+        }
         return;
       }
 
@@ -59025,6 +59582,9 @@ class MonitorApp {
             </button>
           </div>
         `;
+        if (this.radarMap && typeof this.radarMap.updateFilteredCameras === 'function') {
+          this.radarMap.updateFilteredCameras([]);
+        }
         return;
       }
 
@@ -59344,6 +59904,7 @@ class MonitorApp {
   refreshAll(skipLocalBus = false) {
     this.playerEngine.refreshSnapshots(true);
     if (this.currentCenterId === 'daynight') {
+      this.currentCameras = this.buildDayNightCameras(this.dayNightFilterMode || 'opposite');
       this.renderVideoMatrix();
     }
     if (!this.weatherMonitor) return;
@@ -59413,15 +59974,26 @@ class MonitorApp {
       || this.getAllUniqueCameras().find(c => c.id === camId);
     if (!cam) return;
     if (cam.type === 'iframe') {
-      const rawUrl = cam.sourceUrl || cam.streamUrl;
-      if (rawUrl) window.open(rawUrl, '_blank', 'noopener,noreferrer');
+      const safeRawUrl = typeof window.sanitizeHttpUrl === 'function' ? window.sanitizeHttpUrl(cam.sourceUrl || cam.streamUrl, false) : (cam.sourceUrl || cam.streamUrl);
+      if (safeRawUrl) window.open(safeRawUrl, '_blank', 'noopener,noreferrer');
       if (window.showToast) window.showToast('官方內嵌即時串流請於新分頁檢視截圖', 'info');
       return;
     }
 
+    const fetchWithTimeout = async (url, timeoutMs = 8000) => {
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const tid = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+      try {
+        return await fetch(url, { mode: 'cors', cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+      } finally {
+        if (tid) clearTimeout(tid);
+      }
+    };
+
     const filename = `${cam.id}_${Date.now()}.jpg`;
     if (cam.type === 'youtube' && cam.videoId) {
-      const ytPrimaryUrl = `https://i.ytimg.com/vi/${cam.videoId}/maxresdefault_live.jpg`;
+      const safeVid = encodeURIComponent(String(cam.videoId).trim());
+      const ytPrimaryUrl = `https://i.ytimg.com/vi/${safeVid}/maxresdefault_live.jpg`;
       if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.saveImageFromUrl === 'function') {
         const queued = window.AndroidBridge.saveImageFromUrl(ytPrimaryUrl, filename);
         if (queued) {
@@ -59431,14 +60003,14 @@ class MonitorApp {
       }
       const ytCandidates = [
         ytPrimaryUrl,
-        `https://i.ytimg.com/vi/${cam.videoId}/sddefault_live.jpg`,
-        `https://i.ytimg.com/vi/${cam.videoId}/hqdefault_live.jpg`,
-        `https://i.ytimg.com/vi/${cam.videoId}/maxresdefault.jpg`,
-        `https://i.ytimg.com/vi/${cam.videoId}/hqdefault.jpg`
+        `https://i.ytimg.com/vi/${safeVid}/sddefault_live.jpg`,
+        `https://i.ytimg.com/vi/${safeVid}/hqdefault_live.jpg`,
+        `https://i.ytimg.com/vi/${safeVid}/maxresdefault.jpg`,
+        `https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg`
       ];
       for (const candidateUrl of ytCandidates) {
         try {
-          const res = await fetch(candidateUrl, { mode: 'cors', cache: 'no-store' });
+          const res = await fetchWithTimeout(candidateUrl, 7000);
           if (res.ok) {
             const blob = await res.blob();
             if (blob && blob.size > 512) {
@@ -59466,7 +60038,7 @@ class MonitorApp {
           }
         } catch (_ytFetchErr) {}
       }
-      window.open(`https://i.ytimg.com/vi/${cam.videoId}/hqdefault_live.jpg`, '_blank', 'noopener,noreferrer');
+      window.open(`https://i.ytimg.com/vi/${safeVid}/hqdefault_live.jpg`, '_blank', 'noopener,noreferrer');
       if (window.showToast) window.showToast('已在新分頁開啟直播即時快照', 'info');
       return;
     }
@@ -59477,18 +60049,23 @@ class MonitorApp {
           if (window.showToast) window.showToast('視訊畫面尚未緩衝就緒，請稍候再截圖', 'warning');
           return;
         }
+        const canvas = document.createElement('canvas');
         try {
-          const canvas = document.createElement('canvas');
-          canvas.width = videoEl.videoWidth;
-          canvas.height = videoEl.videoHeight;
+          const maxEdge = 2560;
+          const scale = Math.min(1, maxEdge / Math.max(videoEl.videoWidth, videoEl.videoHeight));
+          canvas.width = Math.max(1, Math.round(videoEl.videoWidth * scale));
+          canvas.height = Math.max(1, Math.round(videoEl.videoHeight * scale));
           const ctx = canvas.getContext('2d');
           ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
           this.dispatchImageDataUrlDownload(dataUrl, filename);
           return;
         } catch (e) {
           console.warn('Video Canvas 截圖受限:', e);
           if (window.showToast) window.showToast('因跨域安全限制，無法直接截圖下載', 'warning');
+        } finally {
+          canvas.width = 0;
+          canvas.height = 0;
         }
       }
       return;
@@ -59506,19 +60083,24 @@ class MonitorApp {
         fullTargetUrl = new URL(rawTargetUrl, window.location.origin).toString();
       } catch (_) {}
 
+      const canvas = document.createElement('canvas');
       try {
-        const w = img.naturalWidth;
-        const h = img.naturalHeight;
-        const canvas = document.createElement('canvas');
+        const maxEdge = 2560;
+        const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.94);
         this.dispatchImageDataUrlDownload(dataUrl, filename);
         return;
       } catch (_taintedErr) {
-        // 跨網域圖片觸發 Canvas Tainted：改走 Android 原生下載或 CORS Blob 下載
+        // 跨網域圖片觸發 Canvas Tainted：改走 Android 原生下載或靜態圖 CORS Blob 下載
+      } finally {
+        canvas.width = 0;
+        canvas.height = 0;
       }
 
       if (typeof window !== 'undefined' && window.AndroidBridge && typeof window.AndroidBridge.saveImageFromUrl === 'function') {
@@ -59530,27 +60112,36 @@ class MonitorApp {
         }
       }
 
-      try {
-        const resp = await fetch(fullTargetUrl, { mode: 'cors', cache: 'no-store' });
-        if (resp.ok) {
-          const blob = await resp.blob();
-          if (blob && blob.size > 512) {
-            const objUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = objUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(objUrl), 30000);
-            if (window.showToast) window.showToast('即時快照已下載儲存', 'success');
-            return;
+      // 嚴禁對無盡 MJPEG 串流呼叫 resp.blob()，防止記憶體無限成長造成 OOM
+      if (cam.type !== 'mjpeg') {
+        try {
+          const resp = await fetchWithTimeout(fullTargetUrl, 8000);
+          const ct = String(resp.headers.get('content-type') || '').toLowerCase();
+          if (resp.ok && !ct.includes('multipart/x-mixed-replace')) {
+            const blob = await resp.blob();
+            if (blob && blob.size > 512 && blob.size <= 16 * 1024 * 1024) {
+              const objUrl = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = objUrl;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(objUrl), 30000);
+              if (window.showToast) window.showToast('即時快照已下載儲存', 'success');
+              return;
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
 
-      window.open(fullTargetUrl, '_blank', 'noopener,noreferrer');
-      if (window.showToast) window.showToast('已在新分頁開啟原始影像，可長按或按右鍵儲存', 'info');
+      const safeOpenUrl = typeof window.sanitizeHttpUrl === 'function' ? window.sanitizeHttpUrl(fullTargetUrl, false) : '';
+      if (safeOpenUrl) {
+        window.open(safeOpenUrl, '_blank', 'noopener,noreferrer');
+        if (window.showToast) window.showToast('已在新分頁開啟原始影像，可長按或按右鍵儲存', 'info');
+      } else if (window.showToast) {
+        window.showToast('此影像網址不支援外部另開', 'warning');
+      }
     }
   }
 
@@ -59676,23 +60267,39 @@ class MonitorApp {
   }
 
   // 備援彈窗檢視模式 (用於雷達圖特寫或不支援全螢幕之瀏覽器環境)
-  openModalView(camId) {
+  openModalView(camId, preserveTrigger = false) {
     // 開啟新彈窗前先徹底釋放前一次殘留播放器與重新整理定時器
-    const prevTrigger = (typeof document !== 'undefined' && document.activeElement) ? document.activeElement : null;
-    this.closeModal();
-    this._lastModalTriggerEl = prevTrigger;
+    const savedTrigger = preserveTrigger
+      ? this._lastModalTriggerEl
+      : ((typeof document !== 'undefined' && document.activeElement) ? document.activeElement : null);
+    this.closeModal(true);
+    this._lastModalTriggerEl = savedTrigger;
 
     const modal = document.getElementById('cameraModal');
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
     if (!modal || !modalTitle || !modalBody) return;
 
+    const activateModalAccessibility = () => {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      void modal.offsetWidth;
+      const closeBtn = document.getElementById('modalCloseBtn');
+      if (closeBtn && typeof closeBtn.focus === 'function') {
+        try { closeBtn.focus(); } catch (_) {}
+      }
+      requestAnimationFrame(() => {
+        if (modal.classList.contains('active')) {
+          document.getElementById('modalCloseBtn')?.focus();
+        }
+      });
+    };
+
     // 氣象署雷達回波圖特寫
     if (camId === 'RADAR_CWA') {
       modalTitle.innerText = '中央氣象署 (CWA) - 台灣全區即時降雨雷達回波圖';
       modalBody.innerHTML = '<img referrerpolicy="no-referrer" alt="中央氣象署台灣全區即時降雨雷達回波圖" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0058-001.png?_t=' + Date.now() + '" style="width: 100%; max-height: 75vh; object-fit: contain;" />';
-      modal.classList.add('active');
-      requestAnimationFrame(() => document.getElementById('modalCloseBtn')?.focus());
+      activateModalAccessibility();
       return;
     }
 
@@ -59731,7 +60338,7 @@ class MonitorApp {
       modalBody.innerHTML = `
         <video id="modalVideo" style="width: 100%; max-height: 72vh; object-fit: contain; background: #000;" autoplay muted playsinline controls></video>
       `;
-      modal.classList.add('active');
+      activateModalAccessibility();
 
       const modalVideo = document.getElementById('modalVideo');
       let activeStreamUrl = cam.streamUrl;
@@ -59858,7 +60465,7 @@ class MonitorApp {
       modalBody.innerHTML = `
         <video id="modalVideo" style="width: 100%; max-height: 72vh; object-fit: contain; background: #000;" autoplay muted playsinline controls></video>
       `;
-      modal.classList.add('active');
+      activateModalAccessibility();
 
       if (typeof flvjs !== 'undefined' && flvjs.isSupported()) {
         const modalVideo = document.getElementById('modalVideo');
@@ -59884,12 +60491,19 @@ class MonitorApp {
           autoCleanupMinBackwardDuration: 5,
           seekType: 'range'
         });
-          this.modalFlvPlayer.on(flvjs.Events.ERROR, () => {
-            if (modalFlvTries >= 5 || !modal.classList.contains('active')) return;
+          const currentFlv = this.modalFlvPlayer;
+          currentFlv.on(flvjs.Events.ERROR, () => {
+            if (modalFlvTries >= 5 || this.modalFlvPlayer !== currentFlv || this._activeModalCamId !== cam.id || !modal.classList.contains('active')) return;
             modalFlvTries++;
             modalFlvUrl = this.playerEngine ? this.playerEngine.getNextFailoverUrl(modalFlvUrl) : modalFlvUrl;
             cam._activeFlvUrl = modalFlvUrl;
-            setTimeout(() => { if (modal.classList.contains('active')) mountModalFlv(modalFlvUrl); }, 600);
+            if (this._modalRetryTimer) clearTimeout(this._modalRetryTimer);
+            this._modalRetryTimer = setTimeout(() => {
+              this._modalRetryTimer = null;
+              if (this.modalFlvPlayer === currentFlv && this._activeModalCamId === cam.id && modal.classList.contains('active')) {
+                mountModalFlv(modalFlvUrl);
+              }
+            }, 600);
           });
           try {
             this.modalFlvPlayer.attachMediaElement(modalVideo);
@@ -59914,7 +60528,7 @@ class MonitorApp {
             allowfullscreen style="width: 100%; height: 100%; border: none; background: #000;" frameborder="0"></iframe>
         </div>
       `;
-      modal.classList.add('active');
+      activateModalAccessibility();
       const modalYtEl = document.getElementById(modalFrameId);
       if (modalYtEl && this.playerEngine && typeof this.playerEngine.registerYoutubeFrame === 'function') {
         this.playerEngine.registerYoutubeFrame(cam, modalYtEl);
@@ -59929,7 +60543,7 @@ class MonitorApp {
           ${CameraPlayerEngine.buildBoteIframeHtml(cam, 'modal-iframe')}
         </div>
       `;
-      modal.classList.add('active');
+      activateModalAccessibility();
       return;
     }
 
@@ -59956,7 +60570,7 @@ class MonitorApp {
         <img id="modalImgFeed" referrerpolicy="no-referrer" alt="${eHtml(cam.name)} 即時畫面" src="${initialSrc}" style="width: 100%; max-height: 70vh; object-fit: contain;" />
       `;
     }
-    modal.classList.add('active');
+    activateModalAccessibility();
 
     const modalImg = document.getElementById('modalImgFeed');
     const panoVp = document.getElementById('modalPanoViewport');
@@ -60021,12 +60635,12 @@ class MonitorApp {
     const nextIdx = ((curIdx + delta) % pool.length + pool.length) % pool.length;
     const nextCam = pool[nextIdx];
     if (nextCam) {
-      this._lastModalTriggerEl = null;
-      this.openModalView(nextCam.id);
+      this.openModalView(nextCam.id, true);
     }
   }
 
   syncUrlQueryState() {
+    if (this._suppressUrlSync) return;
     if (typeof window === 'undefined' || !window.history || typeof window.history.replaceState !== 'function') return;
     if (window.location.protocol === 'file:' || window.location.hostname === 'appassets.androidplatform.net') return;
     try {
@@ -60102,7 +60716,7 @@ class MonitorApp {
     if (window.showToast) window.showToast(`🔗 分享網址：${shareUrl}`, 'info');
   }
 
-  closeModal() {
+  closeModal(skipFocusRestore = false) {
     this._activeModalCamId = null;
     if (this._modalAbortController) {
       try { this._modalAbortController.abort(); } catch (_) {}
@@ -60121,7 +60735,10 @@ class MonitorApp {
       try { window.AndroidBridge.setPipAutoEnterEnabled(false); } catch (_) {}
     }
     const modal = document.getElementById('cameraModal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
 
     if (this.modalFlvPlayer) {
       try {
@@ -60155,9 +60772,13 @@ class MonitorApp {
       }
       modalBody.querySelectorAll('iframe').forEach(fr => {
         if (this.playerEngine?.ytFrames && fr.id) {
-          for (const [k, entry] of this.playerEngine.ytFrames.entries()) {
+          for (const [k, entry] of Array.from(this.playerEngine.ytFrames.entries())) {
             if (entry?.frameEl === fr || entry?.iframe === fr || k === fr.id || fr.id === `modal-yt-${k}`) {
-              this.playerEngine.ytFrames.delete(k);
+              if (typeof this.playerEngine.unregisterYoutubeFrame === 'function') {
+                this.playerEngine.unregisterYoutubeFrame(k);
+              } else {
+                this.playerEngine.ytFrames.delete(k);
+              }
             }
           }
         }
@@ -60165,10 +60786,10 @@ class MonitorApp {
       });
       modalBody.innerHTML = '';
     }
-    if (this._lastModalTriggerEl && typeof this._lastModalTriggerEl.focus === 'function' && this._lastModalTriggerEl.isConnected) {
+    if (!skipFocusRestore && this._lastModalTriggerEl && typeof this._lastModalTriggerEl.focus === 'function' && this._lastModalTriggerEl.isConnected) {
       try { this._lastModalTriggerEl.focus(); } catch (_) {}
     }
-    this._lastModalTriggerEl = null;
+    if (!skipFocusRestore) this._lastModalTriggerEl = null;
   }
 
   // 地圖或指令面板跳轉捲動並突顯特定攝影機 (優先維持當前多宮格大小並智慧跳轉至目標分頁，避免強制撐開全部鏡頭)
@@ -60182,6 +60803,10 @@ class MonitorApp {
     };
 
     if (this.currentGridMode === 'grid-1') {
+      const filteredNow = this.getFilteredOrderedCameras();
+      if (!filteredNow.some(c => c.id === camId) && (this.filterKeyword || (this.filterTag && this.filterTag !== 'all'))) {
+        this.clearFilters();
+      }
       this.focusedCamId = camId;
       this.renderVideoMatrix();
       const singleEl = document.getElementById(`cam-card-${camId}`);
@@ -60272,9 +60897,12 @@ function showToast(message, type = 'info', durationMs = 2500) {
     ? window.escHtml(String(message ?? ''))
     : String(message ?? '').replace(/[&<>"']/g, '');
   
+  const safeDur = Math.max(1200, Number(durationMs) || 2500);
+  const fadeDelaySec = Math.max(0.8, (safeDur - 300) / 1000).toFixed(2);
   const toast = document.createElement('div');
   toast.className = `toast-notification ${typeClass}`.trim();
-  toast.innerHTML = `<i class="${iconMap[type] || iconMap.info}"></i> ${safeMsg}`;
+  toast.style.setProperty('--toast-fade-delay', `${fadeDelaySec}s`);
+  toast.innerHTML = `<i class="${iconMap[type] || iconMap.info}"></i> <span>${safeMsg}</span>`;
   container.appendChild(toast);
   
   setTimeout(() => {

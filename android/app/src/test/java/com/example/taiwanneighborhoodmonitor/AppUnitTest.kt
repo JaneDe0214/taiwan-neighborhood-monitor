@@ -430,5 +430,71 @@ class AppUnitTest {
         assertNull(WebAssetRouting.sanitizeShareUrl("https://example.com/\"xss\""))
         assertNull(WebAssetRouting.sanitizeShareUrl(""))
         assertNull(WebAssetRouting.sanitizeShareUrl(null))
+        assertNull(WebAssetRouting.sanitizeShareUrl("https://"))
+    }
+
+    @Test
+    fun parseDepartureHtml_filtersGhostStatusesAndNormalizesParkingWhitespace() {
+        val html = """
+            <div class="row"><div class="departStation">板橋</div><div class="destinationStation">南港展覽館</div><span class="countDown" data-start="--:--">--:--</span></div>
+            <div class="row"><div class="departStation">板橋</div><div class="destinationStation">頂埔</div><span class="countDown" data-start="收班">收班</span></div>
+            <div class="row"><div class="departStation">板橋</div><div class="destinationStation">頂埔</div><span class="countDown" data-start="系統維護中">系統維護中</span></div>
+            <div class="row"><div class="departStation">板橋</div><div class="destinationStation">亞東醫院</div><span class="countDown" data-start="約 3 分">約 3 分</span></div>
+        """.trimIndent()
+        val trains = TransitParsers.parseDepartureHtml(html, "板橋")
+        assertEquals(1, trains.size)
+        assertEquals("亞東醫院", trains[0].getString("dest"))
+        assertEquals(180, trains[0].getInt("remainSec"))
+
+        val parkingHtml = "<table><tr><td>桃園\n  P2停車場\r\n</td><td>88 / \n 200</td><td>-</td><td>尚有\n車位</td></tr></table>"
+        val lots = TransitParsers.parseParkingHtml(parkingHtml)
+        assertEquals(1, lots.length())
+        assertEquals("桃園 P2停車場", lots.getJSONObject(0).getString("name"))
+        assertEquals("88 / 200", lots.getJSONObject(0).getString("spaceText"))
+        assertEquals("尚有 車位", lots.getJSONObject(0).getString("status"))
+    }
+
+    @Test
+    fun imageSecurityAndDeepLink_validatePublicHostsMagicBytesAndParams() {
+        assertTrue(WebAssetRouting.isSafePublicImageHost("i.ytimg.com"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("localhost"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("127.0.0.1"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("169.254.169.254"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("100.64.0.1"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("fd00::1"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("::ffff:127.0.0.1"))
+        assertFalse(WebAssetRouting.isSafePublicImageHost("::ffff:7f00:1"))
+        assertTrue(WebAssetRouting.buildSnapshotFallbackUrls("http://127.0.0.1/secret.jpg").isEmpty())
+        assertTrue(WebAssetRouting.buildSnapshotFallbackUrls("HTTPS://i.ytimg.com/vi/5gVrWGRZo9s/hqdefault.jpg").isNotEmpty())
+
+        val jpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte(), 0, 0, 0, 0, 0, 0, 0, 0)
+        val png = byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0)
+        val htmlText = "<html>not image</html>".toByteArray()
+        assertTrue(WebAssetRouting.isValidImageMagicBytes(jpeg))
+        assertTrue(WebAssetRouting.isValidImageMagicBytes(png))
+        assertFalse(WebAssetRouting.isValidImageMagicBytes(htmlText))
+
+        assertEquals(
+            "https://appassets.androidplatform.net/index.html?center=japan&grid=grid-1",
+            WebAssetRouting.buildDeepLinkAppUrl("center=japan&evil=1&grid=grid-1&bad=<xss>")
+        )
+        assertEquals(
+            "https://appassets.androidplatform.net/index.html",
+            WebAssetRouting.buildDeepLinkAppUrl(null)
+        )
+    }
+
+    @Test
+    fun gentleVoiceSelector_supportsCmnLocaleAndDoesNotPenalizePaulinaOrDenmark() {
+        val cmnTw = GentleVoiceSelector.VoiceCandidate("cmn-tw-x-ctc-local", "cmn-Hant-TW", 400, false)
+        assertTrue(GentleVoiceSelector.scoreCandidate(cmnTw, "zh-TW") > 250)
+
+        val paulina = GentleVoiceSelector.VoiceCandidate("es-MX-Paulina", "es-MX", 400, false)
+        val pablo = GentleVoiceSelector.VoiceCandidate("es-ES-Pablo", "es-ES", 400, false)
+        assertEquals(0, GentleVoiceSelector.pickBestVoiceIndex(listOf(paulina, pablo), "es-MX"))
+
+        val denmarkFemale = GentleVoiceSelector.VoiceCandidate("Microsoft Christel - Danish (Denmark)", "da-DK", 400, false)
+        val denmarkMale = GentleVoiceSelector.VoiceCandidate("da-DK-Male-Jeppe", "da-DK", 400, false)
+        assertEquals(0, GentleVoiceSelector.pickBestVoiceIndex(listOf(denmarkFemale, denmarkMale), "da-DK"))
     }
 }

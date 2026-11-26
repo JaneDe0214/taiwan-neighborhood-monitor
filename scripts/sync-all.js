@@ -18,6 +18,10 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
     let parsed;
     try {
       parsed = new URL(url);
+      if ((parsed.protocol !== 'https:' && parsed.protocol !== 'http:') ||
+          (typeof server.isDisallowedRedirectHost === 'function' && server.isDisallowedRedirectHost(parsed.hostname))) {
+        return reject(new Error(`不允許的同步目標網址: ${url}`));
+      }
     } catch (e) {
       return reject(e);
     }
@@ -40,10 +44,14 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
           return doneReject(new Error('重新導向次數過多'));
         }
         try {
-          const nextUrl = new URL(res.headers.location, url).toString();
+          const nextParsed = new URL(res.headers.location, url);
+          if ((nextParsed.protocol !== 'https:' && nextParsed.protocol !== 'http:') ||
+              (typeof server.isDisallowedRedirectHost === 'function' && server.isDisallowedRedirectHost(nextParsed.hostname))) {
+            return doneReject(new Error(`不允許的重新導向目標: ${nextParsed.hostname}`));
+          }
           clearTimeout(totalTimer);
           settled = true;
-          return fetchUrl(nextUrl, timeoutMs, hopCount + 1).then(resolve).catch(reject);
+          return fetchUrl(nextParsed.toString(), timeoutMs, hopCount + 1).then(resolve).catch(reject);
         } catch (e) {
           return doneReject(e);
         }
@@ -83,15 +91,27 @@ function fetchUrl(url, timeoutMs = 8000, hopCount = 0) {
   });
 }
 
-function invokeServerApi(urlPath) {
+function invokeServerApi(urlPath, timeoutMs = 15000) {
   return new Promise((resolve) => {
     const headers = {};
     let statusCode = 200;
     const chunks = [];
+    let settled = false;
+    const finish = (val) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(val);
+    };
+    const timer = setTimeout(() => {
+      mockRes.destroyed = true;
+      finish(null);
+    }, timeoutMs);
     const mockReq = {
       method: 'GET',
       url: urlPath,
       headers: { host: 'localhost' },
+      socket: { remoteAddress: '127.0.0.1' },
       on: () => {},
       once: () => {},
       setTimeout: () => {},
@@ -114,24 +134,38 @@ function invokeServerApi(urlPath) {
         if (body) chunks.push(Buffer.isBuffer(body) ? body : Buffer.from(String(body), 'utf8'));
         try {
           const raw = Buffer.concat(chunks).toString('utf8');
-          resolve(statusCode === 200 ? JSON.parse(raw) : null);
+          finish(statusCode === 200 ? JSON.parse(raw) : null);
         } catch (_) {
-          resolve(null);
+          finish(null);
         }
       },
       destroy: () => {
         mockRes.destroyed = true;
-        resolve(null);
+        finish(null);
       },
       on: () => {},
-      once: () => {}
+      once: () => {},
+      off: () => {}
     };
     try {
       server.emit('request', mockReq, mockRes);
     } catch (_) {
-      resolve(null);
+      finish(null);
     }
   });
+}
+
+async function runWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let cursor = 0;
+  const workerCount = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (cursor < items.length) {
+      const idx = cursor++;
+      results[idx] = await worker(items[idx], idx);
+    }
+  }));
+  return results;
 }
 
 function getTaiwanNow() {
@@ -467,7 +501,7 @@ async function syncParking(outDir) {
       invokeServerApi('/api/rail/tra-nearby?lat=25.0134&lon=121.2148'),
       invokeServerApi('/api/rail/tra-nearby?lat=25.0225&lon=121.4685'),
       invokeServerApi('/api/freeway/live'),
-      Promise.all(flightHubTargets.map(async (h) => {
+      runWithConcurrency(flightHubTargets, 8, async (h) => {
         try {
           if (typeof server.fetchNearbyFlightsData === 'function') {
             const d = await server.fetchNearbyFlightsData(h.lat, h.lon);
@@ -477,8 +511,8 @@ async function syncParking(outDir) {
           }
         } catch (_) {}
         return null;
-      })),
-      Promise.all(newsCountries.map(async (cc) => {
+      }),
+      runWithConcurrency(newsCountries, 6, async (cc) => {
         try {
           if (typeof server.fetchLocalNewsHeadlines === 'function') {
             const list = await server.fetchLocalNewsHeadlines(cc);
@@ -486,7 +520,7 @@ async function syncParking(outDir) {
           }
         } catch (_) {}
         return null;
-      }))
+      })
     ]);
 
     const outFile = path.join(outDir, 'parking.json');

@@ -52,7 +52,7 @@
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode">
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode|keyboard|keyboardHidden|navigation">
             <!-- 手機版主畫面啟動器 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -14,15 +14,15 @@ const OWNER = 'JaneDe0214';
 const REPO = 'taiwan-neighborhood-monitor';
 const EVENT_TYPE = 'sync-transit-data';
 
-const token = process.argv[2] || process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || process.argv[2];
 
 if (!token) {
-  console.log('【使用說明】請提供 GitHub Personal Access Token (PAT)：');
-  console.log('  node scripts/trigger-workflow.js ghp_xxxxxxxxxxxxxxxxxxxx');
-  console.log('或設定環境變數：');
-  console.log('  $env:GITHUB_TOKEN="ghp_xxx"; node scripts/trigger-workflow.js');
-  console.log('\n提示：Token 僅需勾選「repo」或「contents:write / metadata:read」權限即可。');
-  process.exit(0);
+  console.error('【使用說明】請優先透過環境變數提供 GitHub Personal Access Token (PAT)：');
+  console.error('  $env:GITHUB_TOKEN="ghp_xxx"; node scripts/trigger-workflow.js');
+  console.error('或傳入參數（不建議於多使用者環境使用）：');
+  console.error('  node scripts/trigger-workflow.js ghp_xxxxxxxxxxxxxxxxxxxx');
+  console.error('\n提示：Token 僅需勾選「repo」或「contents:write / metadata:read」權限即可。');
+  process.exit(1);
 }
 
 const payload = JSON.stringify({
@@ -50,6 +50,7 @@ console.log(`正在發送即時觸發請求至 GitHub API (${OWNER}/${REPO})...`
 
 const req = https.request(options, (res) => {
   if (res.statusCode === 204) {
+    res.resume();
     console.log('✅ 成功觸發 GitHub Actions！(HTTP 204 No Content)');
     console.log('GitHub Runner 將在數秒內立即啟動並更新大眾運輸與 YouBike 即時資料。');
   } else {
@@ -58,12 +59,20 @@ const req = https.request(options, (res) => {
     res.on('end', () => {
       console.error(`❌ 觸發失敗 (HTTP ${res.statusCode}):`);
       console.error(body);
+      process.exit(1);
     });
   }
 });
 
+req.setTimeout(15000, () => {
+  console.error('❌ 連線逾時 (15s)');
+  req.destroy();
+  process.exit(1);
+});
+
 req.on('error', (err) => {
   console.error('❌ 連線錯誤:', err.message);
+  process.exit(1);
 });
 
 req.write(payload);

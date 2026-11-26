@@ -89,10 +89,19 @@ import java.util.concurrent.TimeUnit
  */
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        @Volatile
+        private var renderCrashCount: Int = 0
+        @Volatile
+        private var lastRenderCrashMs: Long = 0L
+    }
+
     private lateinit var webView: WebView
     private var rootLayoutRef: FrameLayout? = null
     private var isTvDevice: Boolean = false
     private lateinit var nativeBridge: AndroidNativeBridge
+    @Volatile
+    private var pipAutoEnterPreferred: Boolean = false
 
     private val pendingLocationRequests = mutableListOf<Pair<String?, android.webkit.GeolocationPermissions.Callback>>()
     private val locationPermissionLauncher = registerForActivityResult(
@@ -200,8 +209,8 @@ class MainActivity : ComponentActivity() {
         lastTriggerRefreshMs = System.currentTimeMillis()
         nativeBridge.prewarmAllData()
 
-        // 5. 透過官方建議的 HTTPS 虛擬網域載入本機資產應用程式（確保 YouTube/外部嵌入接收合法 HTTPS Referer，徹底消除錯誤 153）
-        webView.loadUrl("https://appassets.androidplatform.net/index.html")
+        // 5. 透過官方建議的 HTTPS 虛擬網域載入本機資產應用程式（確保 YouTube/外部嵌入接收合法 HTTPS Referer，徹底消除錯誤 153，並支援深層連結參數）
+        webView.loadUrl(WebAssetRouting.buildDeepLinkAppUrl(intent?.data?.encodedQuery))
     }
 
     /**
@@ -400,8 +409,9 @@ class MainActivity : ComponentActivity() {
                 isUserGesture: Boolean,
                 resultMsg: android.os.Message?
             ): Boolean {
+                if (!isUserGesture) return false
                 val hitUrl = view?.hitTestResult?.extra
-                if (!hitUrl.isNullOrBlank() && (hitUrl.startsWith("https://") || hitUrl.startsWith("http://"))) {
+                if (!hitUrl.isNullOrBlank() && (hitUrl.startsWith("https://", ignoreCase = true) || hitUrl.startsWith("http://", ignoreCase = true))) {
                     if (!openExternalUri(hitUrl.toUri())) {
                         Toast.makeText(this@MainActivity, "此裝置未安裝可開啟外部連結的應用程式", Toast.LENGTH_SHORT).show()
                     }
@@ -422,7 +432,10 @@ class MainActivity : ComponentActivity() {
                 tempWebView.webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
                         val u = req?.url
-                        if (u != null && !u.host.equals("appassets.androidplatform.net", ignoreCase = true)) {
+                        val sch = u?.scheme?.lowercase(Locale.US)
+                        if (u != null && (sch == "https" || sch == "http") &&
+                            !u.host.equals("appassets.androidplatform.net", ignoreCase = true)
+                        ) {
                             if (!openExternalUri(u)) {
                                 Toast.makeText(this@MainActivity, "此裝置未安裝可開啟外部連結的應用程式", Toast.LENGTH_SHORT).show()
                             }
@@ -477,6 +490,25 @@ class MainActivity : ComponentActivity() {
 
             override fun onHideCustomView() {
                 hideCustomFullscreenView()
+            }
+
+            override fun onJsAlert(
+                view: WebView?,
+                url: String?,
+                message: String?,
+                result: JsResult?
+            ): Boolean {
+                val isTrusted = url?.startsWith("https://appassets.androidplatform.net/") == true
+                if (isFinishing || isDestroyed || !isTrusted) {
+                    result?.cancel()
+                    return true
+                }
+                android.app.AlertDialog.Builder(this@MainActivity)
+                    .setMessage(message ?: "")
+                    .setPositiveButton("確定") { _, _ -> result?.confirm() }
+                    .setOnCancelListener { result?.cancel() }
+                    .show()
+                return true
             }
 
             override fun onJsPrompt(
@@ -575,7 +607,7 @@ class MainActivity : ComponentActivity() {
 
         wv.webViewClient = object : WebViewClient() {
             override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
-                // 攔截 Chromium WebView 子程序崩潰，避免直接彈出顛倒 Android 機器人圖示
+                // 攔截 Chromium WebView 子程序崩潰，避免直接彈出顛倒 Android 機器人圖示；並防止短時間內無限重建迴圈
                 try {
                     view?.let {
                         val parent = it.parent as? ViewGroup
@@ -583,7 +615,18 @@ class MainActivity : ComponentActivity() {
                         it.destroy()
                     }
                 } catch (_: Exception) {}
-                recreate()
+                val now = System.currentTimeMillis()
+                if (now - lastRenderCrashMs > 30_000L) {
+                    renderCrashCount = 0
+                }
+                lastRenderCrashMs = now
+                renderCrashCount += 1
+                if (renderCrashCount <= 2 && !isFinishing && !isDestroyed) {
+                    recreate()
+                } else if (!isFinishing && !isDestroyed) {
+                    Toast.makeText(this@MainActivity, "畫面轉譯程序連續異常，請重新開啟應用程式", Toast.LENGTH_LONG).show()
+                    finish()
+                }
                 return true
             }
 
@@ -629,6 +672,7 @@ class MainActivity : ComponentActivity() {
                 val modeClass = if (isTvDevice) "native-tv-mode" else "native-mobile-mode"
                 val initJs = """
                     (function() {
+                        document.documentElement.classList.add('$modeClass');
                         document.body.classList.add('$modeClass');
                         if ($isTvDevice) {
                             // 電視版：調大字體與電視牆卡片比重，最佳化 3 公尺客廳視距，並聚焦導航列起點支援 D-Pad 移動
@@ -710,6 +754,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openExternalUri(uri: Uri): Boolean {
+        val scheme = uri.scheme?.lowercase(Locale.US)
+        if (scheme !in setOf("https", "http", "geo", "google.navigation")) {
+            return false
+        }
         return try {
             val intent = Intent(Intent.ACTION_VIEW, uri).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -898,7 +946,9 @@ class MainActivity : ComponentActivity() {
                         attempt.close()
                         if (location.isNullOrBlank()) return null
                         val nextUrl = URL(URL(currentUrl), location)
-                        if (!nextUrl.host.equals("hls.bote.gov.taipei", ignoreCase = true)) return null
+                        if (!nextUrl.protocol.equals("https", ignoreCase = true) ||
+                            !nextUrl.host.equals("hls.bote.gov.taipei", ignoreCase = true)
+                        ) return null
                         currentUrl = nextUrl.toString()
                         continue
                     }
@@ -1093,6 +1143,9 @@ class MainActivity : ComponentActivity() {
      * 電視遙控器功能鍵支援 (方向鍵交由 WebView 原生空間焦點導航處理)
      */
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if ((event?.repeatCount ?: 0) > 0) {
+            return super.onKeyDown(keyCode, event)
+        }
         if (keyCode == KeyEvent.KEYCODE_MENU) {
             triggerForceRefreshAll(force = true)
             return true
@@ -1103,7 +1156,7 @@ class MainActivity : ComponentActivity() {
                     "(function(){ const m=document.getElementById('cameraModal'); if(m&&m.classList.contains('active')&&window.monitorApp?.stepModalCamera){window.monitorApp.stepModalCamera(-1);}else if(window.monitorApp?.changePage){window.monitorApp.changePage(-1);} })();"
                 KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT ->
                     "(function(){ const m=document.getElementById('cameraModal'); if(m&&m.classList.contains('active')&&window.monitorApp?.stepModalCamera){window.monitorApp.stepModalCamera(1);}else if(window.monitorApp?.changePage){window.monitorApp.changePage(1);} })();"
-                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE ->
+                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE ->
                     "window.monitorApp && window.monitorApp.toggleAutoTour && window.monitorApp.toggleAutoTour();"
                 KeyEvent.KEYCODE_SEARCH ->
                     "window.monitorApp && window.monitorApp.openCommandPalette && window.monitorApp.openCommandPalette();"
@@ -1120,6 +1173,10 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        val rawQuery = intent.data?.encodedQuery
+        if (!rawQuery.isNullOrBlank() && ::webView.isInitialized) {
+            webView.loadUrl(WebAssetRouting.buildDeepLinkAppUrl(rawQuery))
+        }
     }
 
     /**
@@ -1184,7 +1241,7 @@ class MainActivity : ComponentActivity() {
                 layout.post { ViewCompat.requestApplyInsets(layout) }
             }
         }
-        if (::webView.isInitialized) {
+        if (!isFinishing && !isDestroyed && ::webView.isInitialized) {
             webView.evaluateJavascript(
                 """
                 (function() {
@@ -1196,6 +1253,17 @@ class MainActivity : ComponentActivity() {
                 """.trimIndent(),
                 null
             )
+        }
+    }
+
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (!isTvDevice && pipAutoEnterPreferred && Build.VERSION.SDK_INT in Build.VERSION_CODES.O until Build.VERSION_CODES.S) {
+            if (!isInPictureInPictureMode && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                try {
+                    buildPipParams(autoEnter = true)?.let { enterPictureInPictureMode(it) }
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -1219,6 +1287,7 @@ class MainActivity : ComponentActivity() {
     }
 
     internal fun updatePipParams(autoEnter: Boolean) {
+        pipAutoEnterPreferred = autoEnter
         if (isTvDevice || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) return
         try {
@@ -1281,7 +1350,15 @@ class MainActivity : ComponentActivity() {
         super.onStop()
     }
 
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+            WebAssetRouting.clearSizenkenCache()
+        }
+    }
+
     override fun onDestroy() {
+        WebAssetRouting.clearSizenkenCache()
         try {
             networkCallback?.let { cb ->
                 val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
@@ -1378,7 +1455,10 @@ class AndroidNativeBridge(
                 }
                 val bestIdx = GentleVoiceSelector.pickBestVoiceIndex(candidates, normTag)
                 if (bestIdx in availableVoices.indices) {
-                    tts.voice = availableVoices[bestIdx]
+                    val setRes = tts.setVoice(availableVoices[bestIdx])
+                    if (setRes != TextToSpeech.SUCCESS) {
+                        tts.language = targetLocale
+                    }
                 } else {
                     tts.language = targetLocale
                 }
@@ -1411,7 +1491,8 @@ class AndroidNativeBridge(
                 if (!ttsInitializing && ttsEngine == null) {
                     ttsInitializing = true
                     try {
-                        ttsEngine = TextToSpeech(activity.applicationContext) { status ->
+                        var createdEngine: TextToSpeech? = null
+                        createdEngine = TextToSpeech(activity.applicationContext) { status ->
                             ttsInitializing = false
                             if (status == TextToSpeech.SUCCESS && isActivityAlive()) {
                                 ttsReady = true
@@ -1427,12 +1508,21 @@ class AndroidNativeBridge(
                             } else {
                                 ttsReady = false
                                 pendingSpeech = null
+                                try {
+                                    (createdEngine ?: ttsEngine)?.shutdown()
+                                } catch (_: Exception) {}
+                                if (ttsEngine === createdEngine) {
+                                    ttsEngine = null
+                                }
                             }
                         }
+                        ttsEngine = createdEngine
                     } catch (_: Exception) {
                         ttsInitializing = false
                         ttsReady = false
                         pendingSpeech = null
+                        try { ttsEngine?.shutdown() } catch (_: Exception) {}
+                        ttsEngine = null
                     }
                 }
             }
@@ -1607,7 +1697,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun shareLink(title: String, url: String): Boolean {
-        if (!isTrustedOrigin() || !isActivityAlive()) return false
+        if (isTv || !isTrustedOrigin() || !isActivityAlive()) return false
         val safeUrl = WebAssetRouting.sanitizeShareUrl(url) ?: return false
         val cleanTitle = title.replace(Regex("[\\r\\n\\t]+"), " ").trim().take(120).ifEmpty { "雙埔生活 × 世界即時之窗" }
         activity.runOnUiThread {
@@ -1618,9 +1708,7 @@ class AndroidNativeBridge(
                     putExtra(Intent.EXTRA_SUBJECT, cleanTitle)
                     putExtra(Intent.EXTRA_TEXT, "$cleanTitle\n$safeUrl")
                 }
-                val chooser = Intent.createChooser(sendIntent, "分享即時視角").apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
+                val chooser = Intent.createChooser(sendIntent, "分享即時視角")
                 activity.startActivity(chooser)
             } catch (_: Exception) {
                 Toast.makeText(activity, "此裝置未安裝支援分享的應用程式", Toast.LENGTH_SHORT).show()
@@ -1664,7 +1752,7 @@ class AndroidNativeBridge(
             mimeType.contains("webp", ignoreCase = true) -> ".webp"
             else -> ".jpg"
         }
-        val cleanBase = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank {
+        val cleanBase = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_").trim('.').take(110).ifBlank {
             "snapshot_${System.currentTimeMillis()}$ext"
         }
         val hasImageExt = Regex("\\.(jpg|jpeg|png|webp)$", RegexOption.IGNORE_CASE).containsMatchIn(cleanBase)
@@ -1763,25 +1851,66 @@ class AndroidNativeBridge(
                     }
                 } catch (_: Exception) {}
             }
+            val snapshotClient = if (candidates.isNotEmpty()) {
+                okHttpClient.newBuilder()
+                    .followRedirects(false)
+                    .followSslRedirects(false)
+                    .connectTimeout(8000, TimeUnit.MILLISECONDS)
+                    .readTimeout(12000, TimeUnit.MILLISECONDS)
+                    .build()
+            } else {
+                null
+            }
             for (candidateUrl in candidates) {
                 try {
-                    val request = Request.Builder()
-                        .url(candidateUrl)
-                        .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
-                        .build()
-                    okHttpClient.newCall(request).execute().use { response ->
+                    var currentUrl = candidateUrl
+                    var finalResp: okhttp3.Response? = null
+                    val visited = mutableSetOf<String>()
+                    for (hop in 0..3) {
+                        if (!visited.add(currentUrl)) break
+                        val req = Request.Builder()
+                            .url(currentUrl)
+                            .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) TaiwanNeighborhoodMonitor/1.0")
+                            .build()
+                        val attempt = snapshotClient!!.newCall(req).execute()
+                        if (attempt.code in 300..399) {
+                            val loc = attempt.header("Location")
+                            attempt.close()
+                            if (loc.isNullOrBlank()) break
+                            val nextUrl = URL(URL(currentUrl), loc)
+                            if ((!nextUrl.protocol.equals("https", ignoreCase = true) && !nextUrl.protocol.equals("http", ignoreCase = true)) ||
+                                !WebAssetRouting.isSafePublicImageHost(nextUrl.host)
+                            ) {
+                                break
+                            }
+                            currentUrl = nextUrl.toString()
+                            continue
+                        }
+                        finalResp = attempt
+                        break
+                    }
+                    finalResp?.use { response ->
                         if (response.isSuccessful) {
                             val contentType = response.header("Content-Type").orEmpty()
                             val isMultipart = contentType.contains("multipart/x-mixed-replace", ignoreCase = true)
-                            response.body.byteStream().use { stream ->
-                                val extracted = if (isMultipart) {
-                                    WebAssetRouting.extractFirstJpegFrame(stream)
-                                } else {
-                                    WebAssetRouting.readBoundedBytes(stream)
-                                }
-                                if (extracted != null && extracted.size > 512) {
-                                    val mime = if (isMultipart || contentType.isBlank()) "image/jpeg" else contentType
-                                    savedName = writeImageBytesToGallery(extracted, mime, fileName)
+                            val isAllowedType = isMultipart || contentType.isBlank() ||
+                                contentType.startsWith("image/", ignoreCase = true) ||
+                                contentType.startsWith("application/octet-stream", ignoreCase = true)
+                            if (isAllowedType) {
+                                response.body.byteStream().use { stream ->
+                                    val extracted = if (isMultipart) {
+                                        WebAssetRouting.extractFirstJpegFrame(stream)
+                                    } else {
+                                        WebAssetRouting.readBoundedBytes(stream, maxBytes = 8 * 1024 * 1024, rejectOnOverflow = true)
+                                    }
+                                    if (extracted != null && extracted.size > 512 && WebAssetRouting.isValidImageMagicBytes(extracted)) {
+                                        val mime = if (isMultipart || contentType.isBlank() || contentType.startsWith("application/octet-stream", ignoreCase = true)) {
+                                            "image/jpeg"
+                                        } else {
+                                            contentType
+                                        }
+                                        savedName = writeImageBytesToGallery(extracted, mime, fileName)
+                                    }
                                 }
                             }
                         }
@@ -1964,6 +2093,7 @@ class AndroidNativeBridge(
      */
     @JavascriptInterface
     fun onFrontendReady() {
+        if (!isTrustedOrigin()) return
         bridgeScope.launch(Dispatchers.Main) {
             notifyDataUpdated("ready")
         }
@@ -2551,11 +2681,19 @@ internal object TransitParsers {
             val from = m.groupValues[1].trim().ifEmpty { defaultStation }
             val to = m.groupValues[2].trim()
             val countdown = m.groupValues[3].trim()
+            if (countdown.isEmpty() || countdown.contains("--") || countdown.contains("離站") ||
+                countdown.contains("收班") || countdown.contains("停駛") || countdown.contains("無資料") ||
+                countdown.contains("擷取") || countdown.contains("維護")
+            ) {
+                continue
+            }
             var totalSec = 0
             if (countdown.contains(":")) {
                 val parts = countdown.split(":").mapNotNull { it.toIntOrNull() }
                 if (parts.size >= 2) {
                     totalSec = parts[0] * 60 + parts[1]
+                } else {
+                    continue
                 }
             } else if (countdown.contains("進站")) {
                 totalSec = 20
@@ -2563,10 +2701,8 @@ internal object TransitParsers {
                 val am = approxMinRegex.find(countdown)
                 if (am != null) {
                     totalSec = (am.groupValues[1].toIntOrNull() ?: 1) * 60
-                } else if (countdown.contains("離站")) {
-                    continue
                 } else {
-                    totalSec = 60
+                    continue
                 }
             }
             val line = when {
@@ -2661,9 +2797,10 @@ internal object TransitParsers {
             if (tr.contains("桃園") || tr.contains("板橋")) {
                 val tds = tdRegex.findAll(tr).map { it.groupValues[1] }.toList()
                 if (tds.size >= 4) {
-                    val name = tds[0].replace(tagRegex, "").trim()
-                    val spaceText = tds[1].replace(tagRegex, "").trim()
-                    val status = tds[3].replace(tagRegex, "").trim()
+                    val wsRegex = Regex("\\s+")
+                    val name = tds[0].replace(tagRegex, "").replace(wsRegex, " ").trim()
+                    val spaceText = tds[1].replace(tagRegex, "").replace(wsRegex, " ").trim()
+                    val status = tds[3].replace(tagRegex, "").replace(wsRegex, " ").trim()
                     var available = 0
                     var total = 0
                     if (spaceText.contains("/")) {
@@ -2936,15 +3073,81 @@ internal object WebAssetRouting {
         return "https://www.sizenken.biodic.go.jp/${m.groupValues[1]}"
     }
 
+    fun clearSizenkenCache() {
+        sizenkenCache.clear()
+    }
+
+    fun buildDeepLinkAppUrl(rawEncodedQuery: String?): String {
+        val base = "https://appassets.androidplatform.net/index.html"
+        if (rawEncodedQuery.isNullOrBlank()) return base
+        val allowedKeys = setOf("center", "tag", "q", "grid", "cam")
+        val kept = rawEncodedQuery.split('&').mapNotNull { pair ->
+            val eqIdx = pair.indexOf('=')
+            if (eqIdx <= 0) return@mapNotNull null
+            val k = pair.substring(0, eqIdx).trim()
+            val v = pair.substring(eqIdx + 1).trim()
+            if (k in allowedKeys && v.isNotEmpty() && v.length <= 160 && !v.any { it <= '\u001F' || it == '"' || it == '\'' || it == '<' || it == '>' }) {
+                "$k=$v"
+            } else {
+                null
+            }
+        }
+        return if (kept.isEmpty()) base else "$base?${kept.joinToString("&")}"
+    }
+
     fun sanitizeShareUrl(rawUrl: String?): String? {
         val trimmed = rawUrl?.trim().orEmpty()
         if (trimmed.isEmpty() || trimmed.length > 1024) return null
         if (trimmed.any { it <= '\u001F' || it.isWhitespace() || it == '"' || it == '\'' || it == '<' || it == '>' }) return null
-        return if (trimmed.startsWith("https://", ignoreCase = true) || trimmed.startsWith("http://", ignoreCase = true)) {
-            trimmed
-        } else {
+        return try {
+            val parsed = URL(trimmed)
+            val proto = parsed.protocol.lowercase(Locale.US)
+            if ((proto == "https" || proto == "http") && parsed.host.isNotBlank()) trimmed else null
+        } catch (_: Exception) {
             null
         }
+    }
+
+    fun isSafePublicImageHost(rawHost: String?): Boolean {
+        var h = rawHost?.trim()?.lowercase(Locale.US)?.removePrefix("[")?.removeSuffix("]") ?: return false
+        if (h.isEmpty()) return false
+        if (h.contains('%')) h = h.substringBefore('%')
+        if (h == "localhost" || h.endsWith(".local") || h.endsWith(".internal") || h.endsWith(".localhost") || h == "::1" || h == "::" || h == "0.0.0.0") {
+            return false
+        }
+        if (h.startsWith("::ffff:")) {
+            val tail = h.removePrefix("::ffff:")
+            if (tail.contains('.')) return isSafePublicImageHost(tail)
+            val hexParts = tail.split(':')
+            if (hexParts.size == 2) {
+                val hi = hexParts[0].toIntOrNull(16) ?: return false
+                val lo = hexParts[1].toIntOrNull(16) ?: return false
+                val mapped = "${(hi shr 8) and 0xFF}.${hi and 0xFF}.${(lo shr 8) and 0xFF}.${lo and 0xFF}"
+                return isSafePublicImageHost(mapped)
+            }
+            return false
+        }
+        if (Regex("^(127\\.|10\\.|192\\.168\\.|169\\.254\\.|0\\.|172\\.(1[6-9]|2\\d|3[01])\\.|100\\.(6[4-9]|[7-9]\\d|1[01]\\d|12[0-7])\\.)").containsMatchIn(h)) {
+            return false
+        }
+        if (Regex("^(f[cd][0-9a-f]{0,2}:|fe[89ab][0-9a-f]:)").containsMatchIn(h)) {
+            return false
+        }
+        return true
+    }
+
+    fun isValidImageMagicBytes(bytes: ByteArray): Boolean {
+        if (bytes.size < 12) return false
+        val b0 = bytes[0].toInt() and 0xFF
+        val b1 = bytes[1].toInt() and 0xFF
+        val b2 = bytes[2].toInt() and 0xFF
+        val b3 = bytes[3].toInt() and 0xFF
+        val isJpeg = b0 == 0xFF && b1 == 0xD8
+        val isPng = b0 == 0x89 && b1 == 0x50 && b2 == 0x4E && b3 == 0x47
+        val isWebp = b0 == 0x52 && b1 == 0x49 && b2 == 0x46 && b3 == 0x46 &&
+            (bytes[8].toInt() and 0xFF) == 0x57 && (bytes[9].toInt() and 0xFF) == 0x45 &&
+            (bytes[10].toInt() and 0xFF) == 0x42 && (bytes[11].toInt() and 0xFF) == 0x50
+        return isJpeg || isPng || isWebp
     }
 
     fun fetchSizenkenJpegBytes(client: OkHttpClient, camNo: String): ByteArray? {
@@ -2954,16 +3157,23 @@ internal object WebAssetRouting {
         if (cached != null && now < cached.first) {
             return cached.second
         }
+        val safeClient = client.newBuilder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .build()
         return try {
             val viewReq = Request.Builder()
                 .url("https://www.sizenken.biodic.go.jp/view_new.php?no=$camNo")
                 .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36")
                 .header("Accept", "text/html,application/xhtml+xml,*/*;q=0.8")
                 .build()
-            val html = client.newCall(viewReq).execute().use { resp ->
+            val htmlBytes = safeClient.newCall(viewReq).execute().use { resp ->
                 if (!resp.isSuccessful) return@use null
-                resp.body.string()
+                resp.body.byteStream().use { stream ->
+                    readBoundedBytes(stream, maxBytes = 512 * 1024, rejectOnOverflow = true)
+                }
             } ?: return cached?.second
+            val html = String(htmlBytes, Charsets.UTF_8)
 
             val imgUrl = extractSizenkenImageUrl(html) ?: return cached?.second
             val imgReq = Request.Builder()
@@ -2972,7 +3182,7 @@ internal object WebAssetRouting {
                 .header("Referer", "https://www.sizenken.biodic.go.jp/")
                 .header("Accept", "image/jpeg,image/*;q=0.9,*/*;q=0.8")
                 .build()
-            val bytes = client.newCall(imgReq).execute().use { resp ->
+            val bytes = safeClient.newCall(imgReq).execute().use { resp ->
                 if (!resp.isSuccessful) return@use null
                 resp.body.byteStream().use { stream ->
                     readBoundedBytes(stream, maxBytes = 6 * 1024 * 1024, rejectOnOverflow = true)
@@ -2995,7 +3205,11 @@ internal object WebAssetRouting {
 
     fun buildSnapshotFallbackUrls(rawUrl: String?): List<String> {
         val trimmed = rawUrl?.trim().orEmpty()
-        if (!trimmed.startsWith("https://") && !trimmed.startsWith("http://")) {
+        if (!trimmed.startsWith("https://", ignoreCase = true) && !trimmed.startsWith("http://", ignoreCase = true)) {
+            return emptyList()
+        }
+        val parsedHost = try { URL(trimmed).host } catch (_: Exception) { null }
+        if (!isSafePublicImageHost(parsedHost)) {
             return emptyList()
         }
         val ytMatch = ytThumbRegex.find(trimmed)
@@ -3270,20 +3484,27 @@ internal object GentleVoiceSelector {
     )
 
     private val maleRegex = Regex(
-        "\\b(male|man)\\b|男|zhiwei|yunjhe|yunjian|yunxi|kangkang|david|mark|george|daniel|ichiro|keita|injoon|paul|stefan|cosimo|pablo|cmn-tw-x-ctd|ja-jp-x-jad|en-us-x-iom|en-us-x-iol|en-us-x-tpd|ko-kr-x-koc|ko-kr-x-kod",
+        "\\b(male|man|zhiwei|yunjhe|yunjian|yunxi|kangkang|david|mark|george|daniel|ichiro|keita|injoon|paul|stefan|cosimo|pablo)\\b|男|cmn-tw-x-ctd|ja-jp-x-jad|en-us-x-iom|en-us-x-iol|en-us-x-tpd|ko-kr-x-koc|ko-kr-x-kod",
         RegexOption.IGNORE_CASE
     )
     private val gentleFemaleRegex = Regex(
-        "female|女|cmn-tw-x-ctc|cmn-tw-x-cte|ja-jp-x-jab|ja-jp-x-jac|en-us-x-sfg|en-us-x-tpf|en-us-x-iob|en-us-x-iog|ko-kr-x-ism|ko-kr-x-kob|hsiaochen|hsiaoyu|yating|meijia|nanami|kyoko|sayaka|ayumi|sunhi|yuna|aria|jenny|samantha|ava|emma|sonia|denise|katja|elsa|elvira",
+        "female|女|cmn-tw-x-ctc|cmn-tw-x-cte|ja-jp-x-jab|ja-jp-x-jac|en-us-x-sfg|en-us-x-tpf|en-us-x-iob|en-us-x-iog|ko-kr-x-ism|ko-kr-x-kob|hsiaochen|hsiaoyu|yating|meijia|nanami|kyoko|sayaka|ayumi|sunhi|yuna|aria|jenny|samantha|ava|emma|sonia|denise|katja|elsa|elvira|paulina",
         RegexOption.IGNORE_CASE
     )
     private val legacyCoarseRegex = Regex("hanhan|haruka|espeak|pico", RegexOption.IGNORE_CASE)
 
+    private fun normalizeLangPrefix(prefix: String): String = when (prefix) {
+        "cmn", "yue" -> "zh"
+        "nb", "nn" -> "no"
+        "iw" -> "he"
+        else -> prefix
+    }
+
     fun scoreCandidate(c: VoiceCandidate, targetLangTag: String): Int {
         val vLang = c.languageTag.replace('_', '-').lowercase(Locale.US)
         val tLang = targetLangTag.ifBlank { "zh-TW" }.replace('_', '-').lowercase(Locale.US)
-        val vPrefix = vLang.substringBefore('-')
-        val tPrefix = tLang.substringBefore('-')
+        val vPrefix = normalizeLangPrefix(vLang.substringBefore('-'))
+        val tPrefix = normalizeLangPrefix(tLang.substringBefore('-'))
         if (vPrefix.isEmpty() || vPrefix != tPrefix) return Int.MIN_VALUE
 
         var score = 0
@@ -3311,9 +3532,9 @@ internal object GentleVoiceSelector {
         } else if (c.quality >= Voice.QUALITY_HIGH) {
             score += 35
         }
-        // 同品質優先選用本機低延遲封包，避免網路波動卡頓
+        // 同品質優先選用本機低延遲離線封包，避免網路波動卡頓
         if (!c.isNetworkRequired) {
-            score += 12
+            score += 25
         }
         return score
     }
